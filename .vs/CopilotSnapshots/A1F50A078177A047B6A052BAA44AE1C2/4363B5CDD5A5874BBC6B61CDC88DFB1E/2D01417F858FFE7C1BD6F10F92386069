@@ -1,0 +1,33 @@
+﻿package com.strongwine.strongwine.controller;
+
+import com.strongwine.strongwine.service.WineService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+
+/**
+ * Controller for home page and general navigation
+ */
+@Controller
+public class HomeController {
+    
+    @Autowired
+    private WineService wineService;
+    
+    /**
+     * Home page
+     */
+    @GetMapping("/home")
+    public String home(Model model) {
+        // Get featured wines (first 6 wines)
+        model.addAttribute("featuredWines", wineService.getAllWines().stream().limit(6).toList());
+        return "home";
+    }
+}
+
+
+
+
+
+

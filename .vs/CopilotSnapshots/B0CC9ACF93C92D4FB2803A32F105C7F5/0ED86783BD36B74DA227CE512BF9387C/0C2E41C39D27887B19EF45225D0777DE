@@ -1,0 +1,41 @@
+﻿package com.strongwine.strongwine.controller;
+
+import com.strongwine.strongwine.entity.User;
+import com.strongwine.strongwine.repository.UserRepository;
+import com.strongwine.strongwine.service.CartService;
+import jakarta.servlet.http.HttpSession;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.ModelAttribute;
+
+@ControllerAdvice
+public class GlobalModelAttributes {
+
+    @Autowired
+    private CartService cartService;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    private Long getUserId(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getPrincipal())) {
+            return null;
+        }
+        if (!(authentication.getPrincipal() instanceof UserDetails userDetails)) {
+            return null;
+        }
+        String username = userDetails.getUsername();
+        User user = userRepository.findByUsername(username).orElse(null);
+        return user != null ? user.getId() : null;
+    }
+
+    @ModelAttribute("cartCount")
+    public int cartCount(HttpSession session, Authentication authentication) {
+        return cartService.getCart(session.getId(), getUserId(authentication)).getItems().stream()
+                .filter(item -> item.getQuantity() != null && item.getQuantity() > 0)
+                .mapToInt(item -> item.getQuantity())
+                .sum();
+    }
+}

@@ -1,0 +1,147 @@
+﻿<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout - StrongWine</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-modern py-3">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/home">
+                <span class="brand-logo"><i class="fa-solid fa-wine-glass"></i></span> StrongWine
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/home">Trang chủ</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/wines">Danh sách rượu</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/cart">
+                            <i class="fa-solid fa-cart-shopping"></i> Giỏ hàng
+                        </a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item" sec:authorize="!isAuthenticated()">
+                        <a class="nav-link" href="/login">Đăng nhập</a>
+                    </li>
+                    <li class="nav-item" sec:authorize="!isAuthenticated()">
+                        <a class="nav-link" href="/register">Đăng ký</a>
+                    </li>
+                    <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                        <a class="nav-link" href="/admin">Bảng điều khiển Admin</a>
+                    </li>
+                    <li class="nav-item" sec:authorize="isAuthenticated()">
+                        <form th:action="@{/logout}" method="post" class="d-inline">
+                            <button type="submit" class="btn btn-link nav-link">Đăng xuất</button>
+                        </form>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-4">
+        <h2 class="mb-4 fw-bold">Secure checkout</h2>
+
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-header bg-dark text-white">
+                        <h5 class="mb-0">Shipping information</h5>
+                    </div>
+                    <div class="card-body">
+                        <form th:action="@{/cart/checkout/process}" method="post" th:object="${checkoutForm}">
+                            <div class="mb-3">
+                                <label for="fullName" class="form-label">Họ và tên <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="fullName" name="fullName" th:field="*{fullName}" placeholder="Nhập họ và tên" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="phone" class="form-label">Số điện thoại <span class="text-danger">*</span></label>
+                                <input type="tel" class="form-control" id="phone" name="phone" th:field="*{phone}" placeholder="Nhập số điện thoại" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="address" class="form-label">Địa chỉ <span class="text-danger">*</span></label>
+                                <textarea class="form-control" id="address" name="address" th:field="*{address}" rows="3" placeholder="Nhập địa chỉ giao hàng" required></textarea>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="note" class="form-label">Ghi chú</label>
+                                <textarea class="form-control" id="note" name="note" th:field="*{note}" rows="3" placeholder="Ghi chú thêm (tùy chọn)"></textarea>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="paymentMethod" class="form-label">Payment method <span class="text-danger">*</span></label>
+                                <select class="form-select" id="paymentMethod" name="paymentMethod" th:field="*{paymentMethod}" required>
+                                    <option value="">Choose payment gateway</option>
+                                    <option th:each="method : ${paymentMethods}" th:value="${method}" th:text="${method}"></option>
+                                </select>
+                                <small class="text-muted">Order will be created first with `PENDING`, then redirected to secure payment page.</small>
+                            </div>
+                            
+                            <div class="d-flex gap-2">
+                                <a href="/cart" class="btn btn-outline-secondary">Quay lại giỏ hàng</a>
+                                <button type="submit" class="btn btn-dark btn-lg">Place order and continue to payment</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card shadow-sm border-0 sticky-top" style="top: 20px;">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">Tóm tắt đơn hàng</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <div th:each="entry : ${cartItems}" class="d-flex justify-content-between mb-2 pb-2 border-bottom">
+                                <div>
+                                    <div class="fw-semibold" th:text="${entry.key.name}"></div>
+                                    <small class="text-muted" th:text="'Số lượng: ' + ${entry.value}"></small>
+                                </div>
+                                <div class="text-end">
+                                    <div class="fw-bold" th:text="${#numbers.formatDecimal(entry.key.price * entry.value, 0, 'COMMA', 0, 'POINT') + ' đ'}"></div>
+                                    <small class="text-muted" th:text="${#numbers.formatDecimal(entry.key.price, 0, 'COMMA', 0, 'POINT') + ' đ/SP'}"></small>
+                                </div>
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="fs-5 fw-semibold">Tổng cộng:</span>
+                            <span class="fs-4 fw-bold text-primary" th:text="${#numbers.formatDecimal(total, 0, 'COMMA', 0, 'POINT') + ' đ'}"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-dark text-light text-center py-4 mt-5">
+        <div class="container">
+            <p class="mb-0">&copy; 2025 StrongWine. Tất cả quyền được bảo lưu.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+
+

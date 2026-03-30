@@ -1,0 +1,189 @@
+# StrongWine - Wine Selling Website
+
+A complete Java Spring Boot web application for selling wines online with full CRUD operations, authentication, payment processing, and admin dashboard.
+
+## 🚀 Latest Updates
+
+### ✅ Payment System Fixed (2024)
+- **Fixed**: "Could not commit JPA transaction" error
+- **Added**: Stripe payment integration with proper transaction management
+- **Improved**: Security - moved sensitive keys to environment variables
+- **See**: [`PAYMENT_FIX_COMPLETE.md`](PAYMENT_FIX_COMPLETE.md) for details
+
+## Features
+
+- **Database**: SQL Server with 5 main tables (Wine, User, Order, OrderItem, Review)
+- **CRUD Operations**: Full CRUD for all entities
+- **Search & Filter**: Search wines by name, type, year, and price range
+- **Admin Dashboard**: View all data and statistics
+- **Authentication & Authorization**: Spring Security with role-based access
+- **💳 Payment Processing**: Stripe Checkout integration
+- **Frontend**: Bootstrap-based responsive HTML pages
+- **REST API**: RESTful endpoints for all operations
+
+## Technology Stack
+
+- **Backend**: Spring Boot 4.0.0, Spring Data JPA, Spring Security
+- **Database**: SQL Server
+- **Payment**: Stripe Checkout API
+- **Frontend**: HTML, CSS, Bootstrap 5, Thymeleaf
+- **Build Tool**: Maven
+
+## Database Schema
+
+### Tables
+
+1. **users** - User accounts (id, username, password, role)
+2. **wines** - Wine products (id, name, type, year, price, description)
+3. **orders** - Customer orders (id, user_id, order_date, total_price)
+4. **order_items** - Items in orders (id, order_id, wine_id, quantity, price)
+5. **reviews** - Wine reviews (id, wine_id, user_id, rating, comment, created_at)
+6. **payments** - Payment transactions (id, order_id, method, status, amount)
+7. **payment_transactions** - Payment audit log
+
+## Setup Instructions
+
+### Prerequisites
+
+- Java 21 or higher
+- Maven 3.6+
+- SQL Server (local or remote)
+- SQL Server JDBC Driver (included in pom.xml)
+- **Stripe Account** (for payment features)
+
+### Quick Start
+
+1. **Clone the project**
+
+2. **Setup Stripe Configuration**:
+   ```bash
+   # Copy .env.example to .env
+   copy .env.example .env
+   
+   # Edit .env and add your Stripe keys
+   # Get keys from: https://dashboard.stripe.com/test/apikeys
+   ```
+
+3. **Database Configuration**:
+   
+   Create a database named `winestore` in SQL Server and update `src/main/resources/application.properties`:
+   ```properties
+   spring.datasource.url=jdbc:sqlserver://localhost:1433;databaseName=winestore;encrypt=true;trustServerCertificate=true
+   spring.datasource.username=sa
+   spring.datasource.password=123456
+   ```
+
+4. **Build and Run**:
+   ```bash
+   mvn clean install
+   mvn spring-boot:run
+   ```
+
+5. **Access the application**:
+   - Home page: `http://localhost:8080/home`
+   - Admin dashboard: `http://localhost:8080/admin` (requires admin login)
+
+### Default Users
+
+The application automatically creates default users on startup:
+
+- **Admin**: 
+  - Username: `admin`
+  - Password: `admin123`
+  - Role: ADMIN
+
+- **Test User**:
+  - Username: `user1`
+  - Password: `password`
+  - Role: USER
+
+## Payment Testing
+
+Use Stripe test cards for payment testing:
+
+- **Success**: `4242 4242 4242 4242`
+- **Decline**: `4000 0000 0000 0002`
+- **Expiry**: Any future date
+- **CVC**: Any 3 digits
+
+See [`docs/STRIPE_SETUP.md`](docs/STRIPE_SETUP.md) for detailed payment configuration.
+
+## Application Structure
+
+```
+src/main/java/com/strongwine/strongwine/
+├── entity/          # JPA Entity classes
+├── repository/      # Spring Data JPA repositories
+├── service/         # Business logic services
+├── controller/      # MVC and REST controllers
+│   └── api/        # REST API controllers
+├── security/        # Spring Security configuration
+└── config/          # Configuration classes
+
+src/main/resources/
+├── templates/       # Thymeleaf HTML templates
+├── sql/            # SQL scripts
+├── db/migration/   # Flyway migrations
+└── application.properties
+
+docs/               # Documentation
+├── STRIPE_SETUP.md
+├── FIX_PAYMENT_ERROR.md
+└── PAYMENT_FLOW_DIAGRAM.md
+```
+
+## 📚 Documentation
+
+- [`QUICK_START.md`](QUICK_START.md) - Quick start guide
+- [`PAYMENT_FIX_COMPLETE.md`](PAYMENT_FIX_COMPLETE.md) - Payment fix summary
+- [`docs/STRIPE_SETUP.md`](docs/STRIPE_SETUP.md) - Stripe configuration
+- [`docs/FIX_PAYMENT_ERROR.md`](docs/FIX_PAYMENT_ERROR.md) - Troubleshooting
+- [`docs/PAYMENT_FLOW_DIAGRAM.md`](docs/PAYMENT_FLOW_DIAGRAM.md) - Technical flow
+
+## 🔒 Security
+
+- Sensitive configuration (Stripe keys, DB passwords) should be stored in `.env` file
+- `.env` file is gitignored and never committed
+- Use `.env.example` as template
+- Production: Use environment variables or secret management service
+
+## 🐛 Troubleshooting
+
+### "Could not commit JPA transaction"
+- **Status**: ✅ FIXED
+- **See**: [`PAYMENT_FIX_COMPLETE.md`](PAYMENT_FIX_COMPLETE.md)
+
+### "Stripe secret key is missing"
+- Create `.env` file from `.env.example`
+- Add your Stripe keys
+- Restart the application
+
+### Payment not working
+- Check `.env` file exists and has valid keys
+- Check console logs for Stripe initialization
+- See [`docs/FIX_PAYMENT_ERROR.md`](docs/FIX_PAYMENT_ERROR.md)
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit changes (`git commit -m 'Add amazing feature'`)
+4. Push to branch (`git push origin feature/amazing-feature`)
+5. Open Pull Request
+
+## 📄 License
+
+This project is for educational purposes.
+
+## 📞 Support
+
+For issues and questions:
+- Check documentation in `docs/` folder
+- Review [`PAYMENT_FIX_COMPLETE.md`](PAYMENT_FIX_COMPLETE.md) for payment issues
+- Check console logs for error details
+
+
+
+
+
+

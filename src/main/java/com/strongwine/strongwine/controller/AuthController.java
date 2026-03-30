@@ -1,0 +1,76 @@
+package com.strongwine.strongwine.controller;
+
+import com.strongwine.strongwine.entity.User;
+import com.strongwine.strongwine.service.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+/**
+ * Controller for authentication pages (login, register)
+ */
+@Controller
+public class AuthController {
+
+    @Autowired
+    private UserService userService;
+
+    /**
+     * Login page
+     */
+    @GetMapping("/login")
+    public String login(@RequestParam(required = false) String error, Model model) {
+        if (error != null) {
+            model.addAttribute("error", "Sai ten dang nhap hoac mat khau");
+        }
+        return "login";
+    }
+
+    /**
+     * Register page
+     */
+    @GetMapping("/register")
+    public String register() {
+        return "register";
+    }
+
+    /**
+     * Handle registration
+     */
+    @PostMapping("/register")
+    public String handleRegister(
+            @RequestParam String username,
+            @RequestParam String password,
+            @RequestParam String confirmPassword,
+            RedirectAttributes redirectAttributes) {
+
+        if (!password.equals(confirmPassword)) {
+            redirectAttributes.addFlashAttribute("error", "Mat khau xac nhan khong khop");
+            return "redirect:/register";
+        }
+
+        if (userService.usernameExists(username)) {
+            redirectAttributes.addFlashAttribute("error", "Ten dang nhap da ton tai");
+            return "redirect:/register";
+        }
+
+        User user = new User(username, password, "USER");
+        try {
+            userService.createUser(user);
+            redirectAttributes.addFlashAttribute("success", "Dang ky thanh cong. Vui long dang nhap.");
+            return "redirect:/login";
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Dang ky that bai: " + e.getMessage());
+            return "redirect:/register";
+        }
+    }
+}
+
+
+
+
+

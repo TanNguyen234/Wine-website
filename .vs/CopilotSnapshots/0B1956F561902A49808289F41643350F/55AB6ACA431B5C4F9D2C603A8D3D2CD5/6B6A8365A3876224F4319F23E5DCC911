@@ -1,0 +1,337 @@
+﻿package com.strongwine.strongwine.controller;
+
+import com.strongwine.strongwine.dto.CheckoutForm;
+import com.strongwine.strongwine.entity.Order;
+import com.strongwine.strongwine.entity.User;
+import com.strongwine.strongwine.entity.Wine;
+import com.strongwine.strongwine.repository.UserRepository;
+import com.strongwine.strongwine.service.OrderService;
+import com.strongwine.strongwine.service.PaymentService;
+import com.strongwine.strongwine.service.InventoryService;
+import com.strongwine.strongwine.service.WineService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpServletRequest;
+import java.math.BigDecimal;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+
+/**
+ * Controller for shopping cart functionality
+ */
+@Controller
+@RequestMapping("/cart")
+public class CartController {
+    
+    @Autowired
+    private WineService wineService;
+    
+    @Autowired
+    private OrderService orderService;
+    
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private PaymentService paymentService;
+
+    @Autowired
+    private InventoryService inventoryService;
+    
+    /**
+     * View cart
+     */
+    @GetMapping
+    public String viewCart(HttpSession session, Model model) {
+        @SuppressWarnings("unchecked")
+        Map<Long, Integer> cart = (Map<Long, Integer>) session.getAttribute("cart");
+        
+        if (cart == null || cart.isEmpty()) {
+            model.addAttribute("empty", true);
+            return "cart";
+        }
+        
+        Map<Wine, Integer> cartItems = new HashMap<>();
+        Map<Long, Integer> availableStockByWineId = new HashMap<>();
+        BigDecimal total = BigDecimal.ZERO;
+        BigDecimal subtotal = BigDecimal.ZERO;
+        
+        for (Map.Entry<Long, Integer> entry : cart.entrySet()) {
+            Wine wine = wineService.getWineById(entry.getKey()).orElse(null);
+            if (wine != null) {
+                int quantity = entry.getValue();
+                int available = inventoryService.getAvailableStockByWineIds(Arrays.asList(wine.getId())).getOrDefault(wine.getId(), 0);
+                availableStockByWineId.put(wine.getId(), available);
+                if (quantity > available && available >= 0) {
+                    quantity = Math.max(1, available);
+                    cart.put(wine.getId(), quantity);
+                }
+                cartItems.put(wine, quantity);
+                BigDecimal lineTotal = wine.getPrice().multiply(BigDecimal.valueOf(quantity));
+                subtotal = subtotal.add(lineTotal);
+                total = total.add(lineTotal);
+            }
+        }
+        
+        model.addAttribute("cartItems", cartItems);
+        model.addAttribute("availableStockByWineId", availableStockByWineId);
+        model.addAttribute("subtotal", subtotal);
+        model.addAttribute("total", total);
+        return "cart";
+    }
+    
+    /**
+     * Add item to cart
+     */
+    @PostMapping("/add/{wineId}")
+    public String addToCart(@PathVariable Long wineId, 
+                            @RequestParam(defaultValue = "1") Integer quantity,
+                            @RequestParam(required = false, defaultValue = "/cart") String redirectTo,
+                            HttpSession session,
+                            RedirectAttributes redirectAttributes) {
+        @SuppressWarnings("unchecked")
+        Map<Long, Integer> cart = (Map<Long, Integer>) session.getAttribute("cart");
+        
+        if (cart == null) {
+            cart = new HashMap<>();
+            session.setAttribute("cart", cart);
+        }
+        
+        if (quantity == null || quantity <= 0) {
+            redirectAttributes.addFlashAttribute("error", "Số lượng không hợp lệ.");
+            return "redirect:" + redirectTo;
+        }
+
+        Wine wine = wineService.getWineById(wineId).orElse(null);
+        if (wine == null) {
+            redirectAttributes.addFlashAttribute("error", "Không tìm thấy sản phẩm.");
+            return "redirect:" + redirectTo;
+        }
+
+        int available = inventoryService.getAvailableStockByWineIds(Arrays.asList(wineId)).getOrDefault(wineId, 0);
+        int current = cart.getOrDefault(wineId, 0);
+        if (available <= 0) {
+            redirectAttributes.addFlashAttribute("error", "Sản phẩm hiện đã hết hàng.");
+            return "redirect:" + redirectTo;
+        }
+
+        int updatedQuantity = current + quantity;
+        if (updatedQuantity > available) {
+            cart.put(wineId, available);
+            redirectAttributes.addFlashAttribute("error", "Số lượng vượt quá tồn kho. Giỏ hàng đã được cập nhật theo tồn kho hiện tại.");
+            return "redirect:" + redirectTo;
+        }
+
+        cart.put(wineId, updatedQuantity);
+        redirectAttributes.addFlashAttribute("success", "Sản phẩm đã được thêm vào giỏ hàng.");
+        return "redirect:" + redirectTo;
+    }
+    
+    /**
+     * Update cart item quantity
+     */
+    @PostMapping("/update/{wineId}")
+    public String updateCart(@PathVariable Long wineId,
+                            @RequestParam Integer quantity,
+                            HttpSession session,
+                            RedirectAttributes redirectAttributes) {
+        @SuppressWarnings("unchecked")
+        Map<Long, Integer> cart = (Map<Long, Integer>) session.getAttribute("cart");
+        
+        if (cart != null) {
+            if (quantity <= 0) {
+                cart.remove(wineId);
+                redirectAttributes.addFlashAttribute("success", "Đã xóa sản phẩm khỏi giỏ hàng.");
+            } else {
+                int available = inventoryService.getAvailableStockByWineIds(Arrays.asList(wineId)).getOrDefault(wineId, 0);
+                if (quantity > available) {
+                    cart.put(wineId, Math.max(1, available));
+                    redirectAttributes.addFlashAttribute("error", "Số lượng vượt quá tồn kho. Đã cập nhật theo số lượng có sẵn.");
+                } else {
+                    cart.put(wineId, quantity);
+                    redirectAttributes.addFlashAttribute("success", "Cập nhật giỏ hàng thành công.");
+                }
+            }
+        }
+        
+        return "redirect:/cart";
+    }
+    
+    /**
+     * Remove item from cart
+     */
+    @PostMapping("/remove/{wineId}")
+    public String removeFromCart(@PathVariable Long wineId, HttpSession session) {
+        @SuppressWarnings("unchecked")
+        Map<Long, Integer> cart = (Map<Long, Integer>) session.getAttribute("cart");
+        
+        if (cart != null) {
+            cart.remove(wineId);
+        }
+
+        return "redirect:/cart";
+    }
+    
+    /**
+     * Redirect to checkout page
+     */
+    @PostMapping("/checkout")
+    public String redirectToCheckout(HttpSession session, Authentication authentication, RedirectAttributes redirectAttributes) {
+        @SuppressWarnings("unchecked")
+        Map<Long, Integer> cart = (Map<Long, Integer>) session.getAttribute("cart");
+        
+        if (cart == null || cart.isEmpty()) {
+            redirectAttributes.addFlashAttribute("error", "Giỏ hàng trống");
+            return "redirect:/cart";
+        }
+        
+        if (authentication == null || !authentication.isAuthenticated()) {
+            redirectAttributes.addFlashAttribute("error", "Vui lòng đăng nhập để thanh toán");
+            return "redirect:/login";
+        }
+        
+        return "redirect:/cart/checkout";
+    }
+    
+    /**
+     * Show checkout form
+     */
+    @GetMapping("/checkout")
+    public String showCheckout(HttpSession session, Authentication authentication, Model model, RedirectAttributes redirectAttributes) {
+        @SuppressWarnings("unchecked")
+        Map<Long, Integer> cart = (Map<Long, Integer>) session.getAttribute("cart");
+        
+        if (cart == null || cart.isEmpty()) {
+            redirectAttributes.addFlashAttribute("error", "Giỏ hàng trống");
+            return "redirect:/cart";
+        }
+        
+        if (authentication == null || !authentication.isAuthenticated()) {
+            redirectAttributes.addFlashAttribute("error", "Vui lòng đăng nhập để thanh toán");
+            return "redirect:/login";
+        }
+        
+        Map<Wine, Integer> cartItems = new HashMap<>();
+        BigDecimal total = BigDecimal.ZERO;
+        
+        for (Map.Entry<Long, Integer> entry : cart.entrySet()) {
+            Wine wine = wineService.getWineById(entry.getKey()).orElse(null);
+            if (wine != null) {
+                int quantity = entry.getValue();
+                if (quantity > 0) {
+                    cartItems.put(wine, quantity);
+                    total = total.add(wine.getPrice().multiply(BigDecimal.valueOf(quantity)));
+                }
+            }
+        }
+        
+        if (cartItems.isEmpty()) {
+            redirectAttributes.addFlashAttribute("error", "Giỏ hàng trống");
+            return "redirect:/cart";
+        }
+        
+        model.addAttribute("cartItems", cartItems);
+        model.addAttribute("total", total);
+        model.addAttribute("checkoutForm", new CheckoutForm());
+        model.addAttribute("paymentMethods", Arrays.asList("STRIPE", "PAYPAL", "VNPAY", "MOMO", "COD"));
+        
+        return "checkout";
+    }
+    
+    /**
+     * Process checkout and create order
+     */
+    @PostMapping("/checkout/process")
+    public String processCheckout(
+            @ModelAttribute CheckoutForm checkoutForm,
+            HttpSession session,
+            Authentication authentication,
+            HttpServletRequest request,
+            RedirectAttributes redirectAttributes) {
+        
+        @SuppressWarnings("unchecked")
+        Map<Long, Integer> cart = (Map<Long, Integer>) session.getAttribute("cart");
+        
+        if (cart == null || cart.isEmpty()) {
+            redirectAttributes.addFlashAttribute("error", "Giỏ hàng trống");
+            return "redirect:/cart";
+        }
+        
+        if (authentication == null || !authentication.isAuthenticated()) {
+            redirectAttributes.addFlashAttribute("error", "Vui lòng đăng nhập để thanh toán");
+            return "redirect:/login";
+        }
+        
+        // Validate form fields
+        if (checkoutForm.getFullName() == null || checkoutForm.getFullName().trim().isEmpty()) {
+            redirectAttributes.addFlashAttribute("error", "Vui lòng nhập họ tên");
+            return "redirect:/cart/checkout";
+        }
+        
+        if (checkoutForm.getPhone() == null || checkoutForm.getPhone().trim().isEmpty()) {
+            redirectAttributes.addFlashAttribute("error", "Vui lòng nhập số điện thoại");
+            return "redirect:/cart/checkout";
+        }
+
+        if (!checkoutForm.getPhone().matches("^(0|\\+84)[0-9]{9,10}$")) {
+            redirectAttributes.addFlashAttribute("error", "Số điện thoại không hợp lệ");
+            return "redirect:/cart/checkout";
+        }
+        
+        if (checkoutForm.getAddress() == null || checkoutForm.getAddress().trim().isEmpty()) {
+            redirectAttributes.addFlashAttribute("error", "Vui lòng nhập địa chỉ");
+            return "redirect:/cart/checkout";
+        }
+
+        if (checkoutForm.getPaymentMethod() == null || checkoutForm.getPaymentMethod().trim().isEmpty()) {
+            redirectAttributes.addFlashAttribute("error", "Vui lòng chọn phương thức thanh toán");
+            return "redirect:/cart/checkout";
+        }
+        
+        // Validate cart quantities
+        for (Integer quantity : cart.values()) {
+            if (quantity == null || quantity <= 0) {
+                redirectAttributes.addFlashAttribute("error", "Số lượng sản phẩm không hợp lệ");
+                return "redirect:/cart/checkout";
+            }
+        }
+        
+        String username = ((UserDetails) authentication.getPrincipal()).getUsername();
+        Optional<User> userOpt = userRepository.findByUsername(username);
+        if (userOpt.isEmpty()) {
+            redirectAttributes.addFlashAttribute("error", "Không tìm thấy người dùng");
+            return "redirect:/login";
+        }
+        
+        try {
+            Order order = orderService.createPendingOrder(
+                    userOpt.get().getId(),
+                    cart,
+                    checkoutForm.getFullName(),
+                    checkoutForm.getPhone(),
+                    checkoutForm.getAddress(),
+                    checkoutForm.getNote(),
+                    checkoutForm.getPaymentMethod());
+
+            String baseUrl = request.getScheme() + "://" + request.getServerName() + (request.getServerPort() == 80 || request.getServerPort() == 443 ? "" : ":" + request.getServerPort());
+            String paymentRedirectUrl = paymentService.createPaymentSession(order, checkoutForm.getPaymentMethod(), baseUrl);
+
+            session.removeAttribute("cart");
+            return "redirect:" + paymentRedirectUrl;
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Thanh toán thất bại: " + e.getMessage());
+            return "redirect:/cart/checkout";
+        }
+    }
+    
+}
+

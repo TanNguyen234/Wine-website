@@ -1,0 +1,46 @@
+﻿spring.application.name=strongwine
+
+# UTF-8 encoding configuration
+server.servlet.encoding.charset=UTF-8
+server.servlet.encoding.enabled=true
+server.servlet.encoding.force=true
+spring.thymeleaf.encoding=UTF-8
+spring.messages.encoding=UTF-8
+spring.web.locale=vi_VN
+spring.web.locale-resolver=fixed
+
+# SQL Server Database Configuration
+spring.datasource.url=jdbc:sqlserver://localhost:1433;databaseName=winestore;encrypt=true;trustServerCertificate=true
+spring.datasource.username=sa
+spring.datasource.password=123456
+spring.datasource.driver-class-name=com.microsoft.sqlserver.jdbc.SQLServerDriver
+
+# JPA/Hibernate Configuration
+spring.jpa.hibernate.ddl-auto=validate
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.format_sql=true
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.SQLServerDialect
+
+# Execute schema.sql and data.sql on startup safely
+spring.sql.init.mode=always
+spring.sql.init.continue-on-error=true
+spring.sql.init.separator=;
+
+# Flyway migration settings
+spring.flyway.enabled=true
+spring.flyway.locations=classpath:db/migration
+spring.flyway.baseline-on-migrate=true
+spring.flyway.baseline-version=1
+
+# File Upload Configuration
+spring.servlet.multipart.enabled=true
+spring.servlet.multipart.max-file-size=5MB
+spring.servlet.multipart.max-request-size=5MB
+
+# Application Configuration
+app.upload.dir=uploads
+
+# Payment Configuration
+stripe.secretKey=sk_test_51TEXgOH9vWoAs7j9qBrtuKLUovD3GnAXXKdeNwHJlhUS4CyJgYDT4AbYmmb5A7FxNDPW1q4IYGWwshO8gVgJdcU500arkIcmou
+stripe.publicKey=pk_test_51TEXgOH9vWoAs7j9B3zkj9Cluef9p9OifA9demKqIhAQAETGxG83Vx11LOHJDlUcZzrADaFCP3ZQXsrXTdrMmw5O004Mo7fTyz
+stripe.webhookSecret=

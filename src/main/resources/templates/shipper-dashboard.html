@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bảng shipper - StrongWine</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+<nav class="navbar navbar-dark navbar-modern py-3">
+    <div class="container d-flex justify-content-between">
+        <a class="navbar-brand" href="/home">StrongWine Shipper</a>
+        <div class="d-flex gap-2">
+            <a class="btn btn-sm btn-outline-light" sec:authorize="hasRole('ADMIN')" href="/admin">Admin</a>
+            <a class="btn btn-sm btn-outline-light" sec:authorize="hasRole('ADMIN')" href="/admin/shipments">Shipments</a>
+            <form th:action="@{/logout}" method="post">
+                <button type="submit" class="btn btn-sm btn-light">Đăng xuất</button>
+            </form>
+        </div>
+    </div>
+</nav>
+
+<main class="container my-4">
+    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+    <div class="panel p-3">
+        <h1 class="h5 mb-3">Danh sách đơn giao của tôi</h1>
+        <div class="table-responsive">
+            <table class="table table-modern table-sm align-middle">
+                <thead>
+                <tr>
+                    <th>Mã shipment</th>
+                    <th>Đơn hàng</th>
+                    <th>Tên nhận</th>
+                    <th>SĐT</th>
+                    <th>Địa chỉ</th>
+                    <th>Trạng thái</th>
+                    <th>Hành động</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="s : ${shipments}">
+                    <td th:text="${s.id}"></td>
+                    <td th:text="${s.order.id}"></td>
+                    <td th:text="${s.shippingName}"></td>
+                    <td th:text="${s.shippingPhone}"></td>
+                    <td th:text="${s.shippingAddress}"></td>
+                    <td>
+                        <span class="badge"
+                              th:classappend="${s.status.name() == 'COMPLETED' ? ' text-bg-success' : (s.status.name() == 'FAILED' ? ' text-bg-danger' : (s.status.name() == 'DELIVERING' ? ' text-bg-warning' : ' text-bg-secondary'))}"
+                              th:text="${s.status}"></span>
+                    </td>
+                    <td>
+                        <div class="d-flex flex-column gap-1" style="min-width: 250px;">
+                            <form th:if="${s.status.name() == 'ASSIGNED'}" th:action="@{/shipper/shipments/{id}/pickup(id=${s.id})}" method="post">
+                                <button class="btn btn-sm btn-outline-primary w-100" type="submit">Xác nhận lấy hàng</button>
+                            </form>
+                            <form th:if="${s.status.name() == 'PICKED_UP'}" th:action="@{/shipper/shipments/{id}/start(id=${s.id})}" method="post">
+                                <button class="btn btn-sm btn-outline-warning w-100" type="submit">Bắt đầu giao</button>
+                            </form>
+                            <form th:if="${s.status.name() == 'DELIVERING'}" th:action="@{/shipper/shipments/{id}/complete(id=${s.id})}" method="post" class="d-flex gap-1">
+                                <input class="form-control form-control-sm" name="otp" pattern="\\d{6}" maxlength="6" placeholder="OTP 6 số" required>
+                                <button class="btn btn-sm btn-outline-success" type="submit">Hoàn tất</button>
+                            </form>
+                            <form th:if="${s.status.name() == 'DELIVERING'}" th:action="@{/shipper/shipments/{id}/fail(id=${s.id})}" method="post" class="d-flex gap-1">
+                                <input class="form-control form-control-sm" name="note" placeholder="Lý do thất bại">
+                                <button class="btn btn-sm btn-outline-danger" type="submit">Thất bại</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+</body>
+</html>

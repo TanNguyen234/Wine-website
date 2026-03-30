@@ -1,0 +1,96 @@
+﻿package com.strongwine.strongwine.controller.api;
+
+import com.strongwine.strongwine.entity.Wine;
+import com.strongwine.strongwine.service.WineService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Optional;
+
+/**
+ * REST API Controller for Wine operations
+ */
+@RestController
+@RequestMapping("/api/wines")
+public class WineApiController {
+    
+    @Autowired
+    private WineService wineService;
+    
+    /**
+     * Get all wines
+     */
+    @GetMapping
+    public ResponseEntity<List<Wine>> getAllWines() {
+        return ResponseEntity.ok(wineService.getAllWines());
+    }
+    
+    /**
+     * Get wine by ID
+     */
+    @GetMapping("/{id}")
+    public ResponseEntity<Wine> getWineById(@PathVariable Long id) {
+        Optional<Wine> wine = wineService.getWineById(id);
+        return wine.map(ResponseEntity::ok)
+                   .orElse(ResponseEntity.notFound().build());
+    }
+    
+    /**
+     * Search wines
+     */
+    @GetMapping("/search")
+    public ResponseEntity<List<Wine>> searchWines(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String type,
+            @RequestParam(required = false) String country,
+            @RequestParam(required = false) Integer year,
+            @RequestParam(required = false) BigDecimal minPrice,
+            @RequestParam(required = false) BigDecimal maxPrice) {
+        List<Wine> wines = wineService.searchWines(name, type, country, year, minPrice, maxPrice);
+        return ResponseEntity.ok(wines);
+    }
+    
+    /**
+     * Create a new wine (Admin only)
+     */
+    @PostMapping
+    public ResponseEntity<Wine> createWine(@RequestBody Wine wine) {
+        Wine createdWine = wineService.createWine(wine);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdWine);
+    }
+    
+    /**
+     * Update a wine (Admin only)
+     */
+    @PutMapping("/{id}")
+    public ResponseEntity<Wine> updateWine(@PathVariable Long id, @RequestBody Wine wine) {
+        try {
+            Wine updatedWine = wineService.updateWine(id, wine);
+            return ResponseEntity.ok(updatedWine);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+    
+    /**
+     * Delete a wine (Admin only)
+     */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteWine(@PathVariable Long id) {
+        try {
+            wineService.deleteWine(id);
+            return ResponseEntity.noContent().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+}
+
+
+
+
+

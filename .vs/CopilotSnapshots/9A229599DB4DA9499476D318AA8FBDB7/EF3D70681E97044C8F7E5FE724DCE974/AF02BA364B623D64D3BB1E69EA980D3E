@@ -1,0 +1,172 @@
+﻿# Copilot Instructions
+
+## 1. Core Working Rules
+
+- Always read relevant files BEFORE making changes.
+- NEVER assume logic — trace full flow:
+  Controller → Service → Repository → Entity → View.
+
+- When fixing issues:
+  - Identify root cause (not symptoms)
+  - Apply real code changes (no pseudo-fix)
+  - Ensure consistency across all layers
+
+- After each change:
+  - Re-check related code paths
+  - Ensure no broken references
+  - Ensure build consistency
+
+---
+
+## 2. Fixing Philosophy (MANDATORY)
+
+- Do NOT stop at detecting issues — ALWAYS fix them.
+- Continue fixing until:
+  - No logical inconsistencies remain
+  - No invalid edge cases exist
+
+- If a fix introduces new issues → continue iterating.
+
+- Prefer:
+  - Correctness > minimal change
+  - Stability > quick patch
+
+---
+
+## 3. Spring Boot Best Practices
+
+### Architecture
+- Controllers must be thin (no business logic)
+- Business logic MUST be in Service layer
+- Repositories only handle data access
+
+### DTO & Entity
+- Always keep DTO ↔ Entity mapping consistent
+- Never expose Entity directly to frontend
+- Validate all DTO inputs
+
+### Transactions
+- Use `@Transactional` for critical flows:
+  - checkout
+  - stock update
+  - order creation
+
+---
+
+## 4. Validation & Security
+
+- NEVER trust frontend input
+- Validate in Service layer (not only Controller)
+
+Always validate:
+- null values
+- invalid IDs
+- negative numbers (price, stock, quantity)
+- invalid enum values (payment, status)
+
+Sanitize:
+- user input (especially description, text fields)
+
+---
+
+## 5. Product (Wine) Rules
+
+- price >= 0
+- stock >= 0
+- discount in [0, 100]
+
+- final price must be consistent everywhere:
+  finalPrice = price * (1 - discount / 100)
+
+- Do NOT allow:
+  - selling when stock = 0
+  - inconsistent price between UI and backend
+
+---
+
+## 6. Cart & Checkout Rules
+
+- Always validate stock before:
+  - adding to cart
+  - updating quantity
+  - checkout
+
+- Prevent:
+  - negative quantity
+  - duplicate cart items
+  - double checkout (must use idempotency)
+
+- Cart source must be SINGLE (no session + DB mismatch)
+
+---
+
+## 7. Data Consistency
+
+- Ensure:
+  - DB state = Service logic = UI display
+
+- Fix all mismatches:
+  - DTO fields
+  - Thymeleaf bindings
+  - API responses
+
+---
+
+## 8. Debugging Strategy (REQUIRED)
+
+For every change:
+
+1. Simulate real scenarios:
+   - invalid input
+   - edge cases
+   - concurrent actions
+
+2. Check:
+   - logic correctness
+   - data integrity
+   - UI consistency
+
+3. Fix issues and re-test
+
+Repeat until stable.
+
+---
+
+## 9. Code Quality
+
+- Refactor when necessary:
+  - remove duplicated logic
+  - improve naming
+  - separate concerns clearly
+
+- Avoid:
+  - magic numbers
+  - hardcoded values
+  - hidden side effects
+
+---
+
+## 10. Output Requirements
+
+When reporting issues:
+
+1. ❌ Problem
+2. 🔍 Root cause
+3. ✅ Fix (real code)
+4. 🧪 Test scenario
+
+---
+
+## 11. Hard Constraints
+
+- Do NOT leave partial fixes
+- Do NOT ignore related issues
+- Do NOT break existing functionality
+- Do NOT introduce inconsistent logic
+
+---
+
+## Final Rule
+
+If the system is not fully correct → continue working.
+Do NOT stop early.

@@ -1,0 +1,182 @@
+﻿package com.strongwine.strongwine.service;
+
+import com.strongwine.strongwine.entity.*;
+import com.strongwine.strongwine.repository.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+@Service
+@Transactional
+public class InventoryService {
+
+    @Autowired
+    private InventoryRepository inventoryRepository;
+
+    @Autowired
+    private WarehouseRepository warehouseRepository;
+
+    @Autowired
+    private InventoryTransactionRepository inventoryTransactionRepository;
+
+    @Autowired
+    private StockLogRepository stockLogRepository;
+
+    @Autowired
+    private WineRepository wineRepository;
+
+    public Warehouse getDefaultWarehouse() {
+        return warehouseRepository.findByName("Main Warehouse")
+                .orElseGet(() -> {
+                    Warehouse warehouse = new Warehouse();
+                    warehouse.setName("Main Warehouse");
+                    warehouse.setLocation("HCM City");
+                    warehouse.setActive(true);
+                    return warehouseRepository.save(warehouse);
+                });
+    }
+
+    public Inventory getOrCreateInventory(Long wineId) {
+        Warehouse warehouse = getDefaultWarehouse();
+        return inventoryRepository.findByWineIdAndWarehouseId(wineId, warehouse.getId())
+                .orElseGet(() -> {
+                    Wine wine = wineRepository.findById(wineId)
+                            .orElseThrow(() -> new RuntimeException("Wine not found with id: " + wineId));
+                    Inventory inventory = new Inventory();
+                    inventory.setWine(wine);
+                    inventory.setWarehouse(warehouse);
+                    inventory.setCurrentQuantity(100);
+                    inventory.setReservedQuantity(0);
+                    inventory.setReorderLevel(10);
+                    return inventoryRepository.save(inventory);
+                });
+    }
+
+    public void ensureInventoryForAllWines() {
+        wineRepository.findAll().forEach(wine -> getOrCreateInventory(wine.getId()));
+    }
+
+    public Map<Long, Integer> getAvailableStockByWineIds(List<Long> wineIds) {
+        Map<Long, Integer> stockMap = new HashMap<>();
+        for (Long wineId : wineIds) {
+            Inventory inventory = getOrCreateInventory(wineId);
+            stockMap.put(wineId, inventory.getAvailableQuantity());
+        }
+        return stockMap;
+    }
+
+    public List<Inventory> getInventoryOverview() {
+        ensureInventoryForAllWines();
+        return inventoryRepository.findAll();
+    }
+
+    public List<Inventory> getLowStockInventories() {
+        return getInventoryOverview().stream()
+                .filter(inv -> inv.getAvailableQuantity() <= inv.getReorderLevel())
+                .collect(Collectors.toList());
+    }
+
+    public List<InventoryTransaction> getRecentTransactions() {
+        return inventoryTransactionRepository.findTop100ByOrderByCreatedAtDesc();
+    }
+
+    public Inventory importStock(Long wineId, Integer quantity, Long userId, String note) {
+        if (quantity == null || quantity <= 0) {
+            throw new RuntimeException("Import quantity must be greater than 0");
+        }
+        Inventory inventory = getOrCreateInventory(wineId);
+        inventory.setCurrentQuantity(inventory.getCurrentQuantity() + quantity);
+        Inventory saved = inventoryRepository.save(inventory);
+        recordTransaction(saved, quantity, InventoryOperationType.IMPORT, "ADMIN_IMPORT", null, userId, note);
+        createStockLog(saved, "Stock import +" + quantity);
+        return saved;
+    }
+
+    public Inventory exportStock(Long wineId, Integer quantity, Long userId, String note) {
+        if (quantity == null || quantity <= 0) {
+            throw new RuntimeException("Export quantity must be greater than 0");
+        }
+        Inventory inventory = getPessimisticallyLockedInventory(wineId);
+        if (inventory.getAvailableQuantity() < quantity) {
+            throw new RuntimeException("Not enough available stock");
+        }
+        inventory.setCurrentQuantity(inventory.getCurrentQuantity() - quantity);
+        Inventory saved = inventoryRepository.save(inventory);
+        recordTransaction(saved, quantity, InventoryOperationType.EXPORT, "ADMIN_EXPORT", null, userId, note);
+        createStockLog(saved, "Stock export -" + quantity);
+        return saved;
+    }
+
+    public Inventory getPessimisticallyLockedInventory(Long wineId) {
+        Warehouse warehouse = getDefaultWarehouse();
+        return inventoryRepository.findByWineIdAndWarehouseIdWithPessimisticLock(wineId, warehouse.getId())
+                .orElseGet(() -> getOrCreateInventory(wineId));
+    }
+
+    public void reserveForOrder(Order order) {
+        for (OrderItem item : order.getOrderItems()) {
+            Inventory inventory = getPessimisticallyLockedInventory(item.getWine().getId());
+            if (inventory.getAvailableQuantity() < item.getQuantity()) {
+                throw new RuntimeException("Insufficient stock for wine: " + item.getWine().getName());
+            }
+            inventory.setReservedQuantity(inventory.getReservedQuantity() + item.getQuantity());
+            Inventory saved = inventoryRepository.save(inventory);
+            recordTransaction(saved, item.getQuantity(), InventoryOperationType.ORDER, "ORDER", order.getId(), order.getUser().getId(), "Reserved stock for order");
+            createStockLog(saved, "Reserved " + item.getQuantity() + " for order #" + order.getId());
+        }
+    }
+
+    public void confirmOrderPayment(Order order) {
+        for (OrderItem item : order.getOrderItems()) {
+            Inventory inventory = getPessimisticallyLockedInventory(item.getWine().getId());
+            inventory.setReservedQuantity(Math.max(0, inventory.getReservedQuantity() - item.getQuantity()));
+            inventory.setCurrentQuantity(Math.max(0, inventory.getCurrentQuantity() - item.getQuantity()));
+            Inventory saved = inventoryRepository.save(inventory);
+            recordTransaction(saved, item.getQuantity(), InventoryOperationType.EXPORT, "PAYMENT", order.getId(), order.getUser().getId(), "Confirmed stock deduction for paid order");
+            createStockLog(saved, "Deducted " + item.getQuantity() + " for paid order #" + order.getId());
+        }
+    }
+
+    public void releaseOrderReservation(Order order) {
+        for (OrderItem item : order.getOrderItems()) {
+            Inventory inventory = getPessimisticallyLockedInventory(item.getWine().getId());
+            inventory.setReservedQuantity(Math.max(0, inventory.getReservedQuantity() - item.getQuantity()));
+            Inventory saved = inventoryRepository.save(inventory);
+            recordTransaction(saved, item.getQuantity(), InventoryOperationType.CANCEL, "ORDER_CANCEL", order.getId(), order.getUser().getId(), "Released reserved stock");
+            createStockLog(saved, "Released reservation " + item.getQuantity() + " for order #" + order.getId());
+        }
+    }
+
+    private void recordTransaction(Inventory inventory,
+                                   Integer quantity,
+                                   InventoryOperationType operationType,
+                                   String referenceType,
+                                   Long referenceId,
+                                   Long userId,
+                                   String note) {
+        InventoryTransaction transaction = new InventoryTransaction();
+        transaction.setInventory(inventory);
+        transaction.setWine(inventory.getWine());
+        transaction.setWarehouse(inventory.getWarehouse());
+        transaction.setQuantity(quantity);
+        transaction.setOperationType(operationType);
+        transaction.setReferenceType(referenceType);
+        transaction.setReferenceId(referenceId);
+        transaction.setUserId(userId);
+        transaction.setNote(note);
+        inventoryTransactionRepository.save(transaction);
+    }
+
+    private void createStockLog(Inventory inventory, String message) {
+        StockLog log = new StockLog();
+        log.setInventory(inventory);
+        log.setAvailableQuantity(inventory.getAvailableQuantity());
+        log.setMessage(message);
+        stockLogRepository.save(log);
+    }
+}

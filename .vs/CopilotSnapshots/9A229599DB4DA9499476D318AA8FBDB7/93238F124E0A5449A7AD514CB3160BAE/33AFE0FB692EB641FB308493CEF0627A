@@ -1,0 +1,66 @@
+﻿package com.strongwine.strongwine.controller;
+
+import com.strongwine.strongwine.dto.PaymentCallbackResult;
+import com.strongwine.strongwine.entity.Order;
+import com.strongwine.strongwine.entity.Payment;
+import com.strongwine.strongwine.service.OrderService;
+import com.strongwine.strongwine.service.PaymentService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+@Controller
+@RequestMapping("/payments")
+public class PaymentController {
+
+    @Autowired
+    private PaymentService paymentService;
+
+    @Autowired
+    private OrderService orderService;
+
+    @GetMapping("/session/{paymentReference}")
+    public String paymentSession(@PathVariable String paymentReference,
+                                 @RequestParam(required = false, defaultValue = "") String error,
+                                 Model model) {
+        Payment payment = paymentService.getPaymentByReference(paymentReference);
+        String successSignature = paymentService.buildCallbackSignature(paymentReference, "success");
+        String failSignature = paymentService.buildCallbackSignature(paymentReference, "failed");
+        String cancelSignature = paymentService.buildCallbackSignature(paymentReference, "cancel");
+
+        model.addAttribute("payment", payment);
+        model.addAttribute("order", payment.getOrder());
+        model.addAttribute("successUrl", "/payments/callback?paymentRef=" + paymentReference + "&status=success&signature=" + successSignature);
+        model.addAttribute("failedUrl", "/payments/callback?paymentRef=" + paymentReference + "&status=failed&signature=" + failSignature);
+        model.addAttribute("cancelUrl", "/payments/callback?paymentRef=" + paymentReference + "&status=cancel&signature=" + cancelSignature);
+        model.addAttribute("error", error);
+        return "payment-session";
+    }
+
+    @GetMapping("/callback")
+    public String paymentCallback(@RequestParam("paymentRef") String paymentRef,
+                                  @RequestParam("status") String status,
+                                  @RequestParam("signature") String signature,
+                                  RedirectAttributes redirectAttributes) {
+        PaymentCallbackResult result = paymentService.handleCallback(paymentRef, status, signature);
+        if (result.isSuccess()) {
+            Order order = orderService.getOrderById(result.getOrderId()).orElse(null);
+            redirectAttributes.addFlashAttribute("orderId", result.getOrderId());
+            if (order != null) {
+                redirectAttributes.addFlashAttribute("fullName", order.getShippingFullName());
+                redirectAttributes.addFlashAttribute("phone", order.getShippingPhone());
+                redirectAttributes.addFlashAttribute("address", order.getShippingAddress());
+            }
+            redirectAttributes.addFlashAttribute("success", result.getMessage());
+            return "redirect:/order-confirmation";
+        }
+
+        redirectAttributes.addFlashAttribute("error", result.getMessage());
+        return "redirect:/cart";
+    }
+}

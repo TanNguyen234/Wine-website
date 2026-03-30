@@ -1,0 +1,49 @@
+﻿package com.strongwine.strongwine.config;
+
+import com.strongwine.strongwine.entity.User;
+import com.strongwine.strongwine.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Component;
+
+/**
+ * Data initializer to create default admin user if it doesn't exist
+ */
+@Component
+public class DataInitializer implements CommandLineRunner {
+    
+    @Autowired
+    private UserRepository userRepository;
+    
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+    
+    @Override
+    public void run(String... args) throws Exception {
+        // Create admin user if it doesn't exist
+        if (!userRepository.existsByUsername("admin")) {
+            User admin = new User();
+            admin.setUsername("admin");
+            admin.setPassword(passwordEncoder.encode("admin123"));
+            admin.setRole("ADMIN");
+            userRepository.save(admin);
+            System.out.println("Admin user created: username=admin, password=admin123");
+        }
+        
+        // Create a test user if it doesn't exist
+        if (!userRepository.existsByUsername("user1")) {
+            User user = new User();
+            user.setUsername("user1");
+            user.setPassword(passwordEncoder.encode("password"));
+            user.setRole("USER");
+            userRepository.save(user);
+            System.out.println("Test user created: username=user1, password=password");
+        }
+    }
+}
+
+
+
+
+

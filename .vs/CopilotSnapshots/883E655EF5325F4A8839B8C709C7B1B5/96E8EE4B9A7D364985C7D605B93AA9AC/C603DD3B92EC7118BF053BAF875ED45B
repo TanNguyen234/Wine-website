@@ -1,0 +1,62 @@
+﻿package com.strongwine.strongwine.controller.api;
+
+import com.strongwine.strongwine.dto.InventoryOperationResponse;
+import com.strongwine.strongwine.dto.StockOperationRequest;
+import com.strongwine.strongwine.entity.Inventory;
+import com.strongwine.strongwine.entity.InventoryOperationType;
+import com.strongwine.strongwine.service.InventoryService;
+import jakarta.validation.Valid;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("/inventory")
+public class InventoryApiController {
+
+    private final InventoryService inventoryService;
+
+    public InventoryApiController(InventoryService inventoryService) {
+        this.inventoryService = inventoryService;
+    }
+
+    @PostMapping("/import")
+    public ResponseEntity<InventoryOperationResponse> importStock(@Valid @RequestBody StockOperationRequest request,
+                                                                  Authentication authentication) {
+        String actor = getActor(authentication);
+        Inventory updated = inventoryService.importStock(
+                request.getWineId(),
+                request.getWarehouseId(),
+                request.getQuantity(),
+                actor,
+                request.getNote()
+        );
+
+        return ResponseEntity.ok(InventoryOperationResponse.from(updated, InventoryOperationType.IMPORT, "Stock imported successfully"));
+    }
+
+    @PostMapping("/export")
+    public ResponseEntity<InventoryOperationResponse> exportStock(@Valid @RequestBody StockOperationRequest request,
+                                                                  Authentication authentication) {
+        String actor = getActor(authentication);
+        Inventory updated = inventoryService.exportStock(
+                request.getWineId(),
+                request.getWarehouseId(),
+                request.getQuantity(),
+                actor,
+                request.getNote()
+        );
+
+        return ResponseEntity.ok(InventoryOperationResponse.from(updated, InventoryOperationType.EXPORT, "Stock exported successfully"));
+    }
+
+    private String getActor(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return "system";
+        }
+        return authentication.getName();
+    }
+}

@@ -1,0 +1,94 @@
+﻿-- SQL Server Database Schema for StrongWine Application
+-- This script creates all necessary tables
+
+-- Users table
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[users]') AND type in (N'U'))
+BEGIN
+    CREATE TABLE users (
+        id BIGINT IDENTITY(1,1) PRIMARY KEY,
+        username NVARCHAR(255) NOT NULL UNIQUE,
+        password NVARCHAR(255) NOT NULL,
+        role NVARCHAR(50) NOT NULL DEFAULT 'USER'
+    );
+END
+GO
+
+-- Wines table
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[wines]') AND type in (N'U'))
+BEGIN
+    CREATE TABLE wines (
+        id BIGINT IDENTITY(1,1) PRIMARY KEY,
+        name NVARCHAR(255) NOT NULL,
+        type NVARCHAR(50) NOT NULL,
+        year INT NOT NULL,
+        price DECIMAL(10,2) NOT NULL,
+        description NVARCHAR(1000)
+    );
+END
+GO
+
+-- Orders table
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[orders]') AND type in (N'U'))
+BEGIN
+    CREATE TABLE orders (
+        id BIGINT IDENTITY(1,1) PRIMARY KEY,
+        user_id BIGINT NOT NULL,
+        order_date DATETIME NOT NULL DEFAULT GETDATE(),
+        total_price DECIMAL(10,2) NOT NULL,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+END
+GO
+
+-- Order Items table
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[order_items]') AND type in (N'U'))
+BEGIN
+    CREATE TABLE order_items (
+        id BIGINT IDENTITY(1,1) PRIMARY KEY,
+        order_id BIGINT NOT NULL,
+        wine_id BIGINT NOT NULL,
+        quantity INT NOT NULL,
+        price DECIMAL(10,2) NOT NULL,
+        FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
+        FOREIGN KEY (wine_id) REFERENCES wines(id) ON DELETE CASCADE
+    );
+END
+GO
+
+-- Reviews table
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[reviews]') AND type in (N'U'))
+BEGIN
+    CREATE TABLE reviews (
+        id BIGINT IDENTITY(1,1) PRIMARY KEY,
+        wine_id BIGINT NOT NULL,
+        user_id BIGINT NOT NULL,
+        rating INT NOT NULL CHECK (rating >= 1 AND rating <= 5),
+        comment NVARCHAR(1000),
+        created_at DATETIME NOT NULL DEFAULT GETDATE(),
+        FOREIGN KEY (wine_id) REFERENCES wines(id) ON DELETE CASCADE,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+END
+GO
+
+-- Create indexes for better performance
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'idx_wines_type' AND object_id = OBJECT_ID('wines'))
+    CREATE INDEX idx_wines_type ON wines(type);
+GO
+
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'idx_wines_year' AND object_id = OBJECT_ID('wines'))
+    CREATE INDEX idx_wines_year ON wines(year);
+GO
+
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'idx_orders_user_id' AND object_id = OBJECT_ID('orders'))
+    CREATE INDEX idx_orders_user_id ON orders(user_id);
+GO
+
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'idx_reviews_wine_id' AND object_id = OBJECT_ID('reviews'))
+    CREATE INDEX idx_reviews_wine_id ON reviews(wine_id);
+GO
+
+
+
+
+

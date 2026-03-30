@@ -1,0 +1,2302 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "D:\\Download\\strongwine\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\pom.xml||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:pom.xml||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\StrongwineApplication.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\StrongwineApplication.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\service\\ShipperService.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\service\\ShipperService.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\resources\\static\\css\\app.css||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\resources\\static\\css\\app.css||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\resources\\templates\\admin-shippers.html||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\resources\\templates\\admin-shippers.html||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\repository\\ShipmentRepository.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\repository\\ShipmentRepository.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\resources\\templates\\shipper-dashboard.html||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\resources\\templates\\shipper-dashboard.html||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\resources\\templates\\admin-dashboard.html||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\resources\\templates\\admin-dashboard.html||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\controller\\AdminShipperController.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\controller\\AdminShipperController.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\resources\\templates\\home.html||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\resources\\templates\\home.html||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\service\\UserService.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\service\\UserService.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\repository\\ShipperRepository.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\repository\\ShipperRepository.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\repository\\UserRepository.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\repository\\UserRepository.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\entity\\Warehouse.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\entity\\Warehouse.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\config\\DataInitializer.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\config\\DataInitializer.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\resources\\db\\migration\\V1__create_core_ecommerce_schema.sql||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\resources\\db\\migration\\V1__create_core_ecommerce_schema.sql||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\.env.example||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:.env.example||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\entity\\Shipper.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\entity\\Shipper.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\entity\\Shipment.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\entity\\Shipment.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\entity\\ShipperStatus.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\entity\\ShipperStatus.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\resources\\application.properties||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\resources\\application.properties||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\service\\PaymentService.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\service\\PaymentService.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\.env||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:.env||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\config\\DotEnvLoader.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\config\\DotEnvLoader.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\resources\\META-INF\\spring.factories||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\resources\\META-INF\\spring.factories||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\config\\DatabaseMigrationInitializer.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\config\\DatabaseMigrationInitializer.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\service\\InventoryService.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\service\\InventoryService.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\controller\\CartController.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\controller\\CartController.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\repository\\PaymentRepository.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\repository\\PaymentRepository.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\resources\\static\\js\\cart-client.js||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\resources\\static\\js\\cart-client.js||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\resources\\templates\\wine-list.html||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\resources\\templates\\wine-list.html||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\service\\StripeService.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\service\\StripeService.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\repository\\PaymentTransactionRepository.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\repository\\PaymentTransactionRepository.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\resources\\templates\\payment-session.html||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\resources\\templates\\payment-session.html||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\resources\\templates\\layout.html||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\resources\\templates\\layout.html||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\resources\\templates\\checkout.html||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\resources\\templates\\checkout.html||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\dto\\CheckoutRequest.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\dto\\CheckoutRequest.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\resources\\templates\\cart.html||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\resources\\templates\\cart.html||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\controller\\GlobalModelAttributes.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\controller\\GlobalModelAttributes.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\.github\\copilot-instructions.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:.github\\copilot-instructions.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\controller\\WineController.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\controller\\WineController.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\controller\\api\\WineApiController.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\controller\\api\\WineApiController.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\service\\WineService.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\service\\WineService.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\repository\\WineRepository.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\repository\\WineRepository.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\dto\\CategoryDto.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\dto\\CategoryDto.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\dto\\ProductDto.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\dto\\ProductDto.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\controller\\AdminInventoryController.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\controller\\AdminInventoryController.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\dto\\StockOperationRequest.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\dto\\StockOperationRequest.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\resources\\sql\\schema.sql||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\resources\\sql\\schema.sql||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\exception\\InsufficientStockException.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\exception\\InsufficientStockException.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\dto\\InventoryOperationResponse.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\dto\\InventoryOperationResponse.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\exception\\ApiExceptionHandler.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\exception\\ApiExceptionHandler.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\entity\\InventoryTransaction.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\entity\\InventoryTransaction.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\resources\\sql\\sample-data.sql||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\resources\\sql\\sample-data.sql||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\resources\\db\\migration\\V3__reconcile_entity_schema_with_jpa.sql||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\resources\\db\\migration\\V3__reconcile_entity_schema_with_jpa.sql||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\resources\\templates\\wine-form.html||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\resources\\templates\\wine-form.html||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\resources\\db\\migration\\V2__add_audit_columns_to_wines.sql||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\resources\\db\\migration\\V2__add_audit_columns_to_wines.sql||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\resources\\schema.sql||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\resources\\schema.sql||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\config\\RedisConfig.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\config\\RedisConfig.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\controller\\api\\AdminInventoryApiController.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\controller\\api\\AdminInventoryApiController.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\resources\\data.sql||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\resources\\data.sql||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\controller\\api\\AuthApiController.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\controller\\api\\AuthApiController.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\entity\\Wine.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\entity\\Wine.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\entity\\Cart.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\entity\\Cart.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\entity\\Inventory.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\entity\\Inventory.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\dto\\CartDto.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\dto\\CartDto.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\repository\\CartRepository.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\repository\\CartRepository.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\repository\\CartItemRepository.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\repository\\CartItemRepository.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\resources\\sql\\seed-data.sql||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\resources\\sql\\seed-data.sql||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\resources\\sql\\migration_initialize_new_tables.sql||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\resources\\sql\\migration_initialize_new_tables.sql||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\controller\\AuthController.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\controller\\AuthController.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\resources\\templates\\wine-details.html||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\resources\\templates\\wine-details.html||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\README.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:README.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\resources\\sql\\migration-v2.sql||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\resources\\sql\\migration-v2.sql||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\entity\\Payment.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\entity\\Payment.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\entity\\PaymentStatus.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\entity\\PaymentStatus.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\entity\\PaymentMethod.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\entity\\PaymentMethod.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\entity\\InventoryOperationType.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\entity\\InventoryOperationType.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\entity\\OrderStatus.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\entity\\OrderStatus.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\entity\\StockLog.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\entity\\StockLog.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\entity\\PaymentTransaction.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\entity\\PaymentTransaction.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\repository\\WarehouseRepository.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\repository\\WarehouseRepository.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\repository\\StockLogRepository.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\repository\\StockLogRepository.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\repository\\InventoryRepository.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\repository\\InventoryRepository.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\repository\\InventoryTransactionRepository.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\repository\\InventoryTransactionRepository.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\dto\\PaymentCallbackResult.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\dto\\PaymentCallbackResult.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\entity\\Order.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\entity\\Order.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\dto\\CheckoutForm.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\dto\\CheckoutForm.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\service\\OrderService.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\service\\OrderService.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\controller\\PaymentController.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\controller\\PaymentController.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\controller\\OrderController.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\controller\\OrderController.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\controller\\HomeController.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\controller\\HomeController.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\controller\\AdminController.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\controller\\AdminController.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\security\\SecurityConfig.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\security\\SecurityConfig.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\repository\\OrderRepository.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\repository\\OrderRepository.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\resources\\static\\js\\ai-assistant.js||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\resources\\static\\js\\ai-assistant.js||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\controller\\ReviewController.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\controller\\ReviewController.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\resources\\templates\\login.html||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\resources\\templates\\login.html||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\resources\\templates\\register.html||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\resources\\templates\\register.html||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\entity\\CartItem.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\entity\\CartItem.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\dto\\CartItemDto.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\dto\\CartItemDto.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\security\\LoginSuccessHandler.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\security\\LoginSuccessHandler.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\entity\\Auditable.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\entity\\Auditable.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\config\\JpaAuditingConfig.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\config\\JpaAuditingConfig.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\config\\AuditorAwareImpl.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\config\\AuditorAwareImpl.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\entity\\Category.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\entity\\Category.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\repository\\CategoryRepository.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\repository\\CategoryRepository.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\service\\CategoryService.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\service\\CategoryService.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\controller\\api\\AdminCategoryApiController.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\controller\\api\\AdminCategoryApiController.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\security\\JwtTokenProvider.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\security\\JwtTokenProvider.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\security\\JwtAuthenticationFilter.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\security\\JwtAuthenticationFilter.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\controller\\api\\InventoryApiController.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\controller\\api\\InventoryApiController.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\resources\\db\\migration\\V4__add_created_by_to_inventory_transactions.sql||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\resources\\db\\migration\\V4__add_created_by_to_inventory_transactions.sql||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\resources\\db\\migration\\V5__fix_inventory_version_not_null.sql||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\resources\\db\\migration\\V5__fix_inventory_version_not_null.sql||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\dto\\CartItemRequest.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\dto\\CartItemRequest.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\service\\CartService.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\service\\CartService.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\docs\\STRIPE_SETUP.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:docs\\STRIPE_SETUP.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\docs\\FIX_PAYMENT_ERROR.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:docs\\FIX_PAYMENT_ERROR.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\docs\\FIX_PAYMENT_TRANSACTION_SUMMARY.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:docs\\FIX_PAYMENT_TRANSACTION_SUMMARY.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\QUICK_START.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:QUICK_START.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\PAYMENT_FIX_COMPLETE.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:PAYMENT_FIX_COMPLETE.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\docs\\PAYMENT_FLOW_DIAGRAM.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:docs\\PAYMENT_FLOW_DIAGRAM.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\DEPLOYMENT_CHECKLIST.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:DEPLOYMENT_CHECKLIST.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\PAYMENT_FIX_ANNOUNCEMENT.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:PAYMENT_FIX_ANNOUNCEMENT.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\GIT_COMMIT_MESSAGE.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:GIT_COMMIT_MESSAGE.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\resources\\db\\migration\\V6__create_delivery_module.sql||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\resources\\db\\migration\\V6__create_delivery_module.sql||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\resources\\db\\migration\\V7__seed_delivery_data.sql||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\resources\\db\\migration\\V7__seed_delivery_data.sql||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\entity\\ShipmentStatus.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\entity\\ShipmentStatus.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\entity\\ShipmentTracking.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\entity\\ShipmentTracking.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\repository\\ShipmentTrackingRepository.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\repository\\ShipmentTrackingRepository.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\dto\\ShipmentResponse.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\dto\\ShipmentResponse.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\dto\\ShipmentFailRequest.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\dto\\ShipmentFailRequest.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\dto\\ShipmentCompleteRequest.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\dto\\ShipmentCompleteRequest.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\service\\EmailService.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\service\\EmailService.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\service\\ShipmentService.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\service\\ShipmentService.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\controller\\api\\ShipmentApiController.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\controller\\api\\ShipmentApiController.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\controller\\AdminUserController.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\controller\\AdminUserController.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\controller\\ShipperController.java||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\java\\com\\strongwine\\strongwine\\controller\\ShipperController.java||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\resources\\templates\\admin-users.html||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\resources\\templates\\admin-users.html||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\resources\\templates\\admin-user-form.html||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\resources\\templates\\admin-user-form.html||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\resources\\templates\\admin-shipper-form.html||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\resources\\templates\\admin-shipper-form.html||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Download\\strongwine\\src\\main\\resources\\templates\\admin-dashboard-v2.html||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\main\\resources\\templates\\admin-dashboard-v2.html||{8B382828-6202-11D1-8870-0000F87579D2}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 5,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{40ea2e6b-2121-4bb8-a43e-c83c04b51041}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{3ae79031-e1bc-11d0-8f78-00a0c9110057}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{aa2115a1-9712-457b-9047-dbb71ca2cdd2}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "app.css",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\resources\\static\\css\\app.css",
+              "RelativeDocumentMoniker": "src\\main\\resources\\static\\css\\app.css",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\resources\\static\\css\\app.css",
+              "RelativeToolTip": "src\\main\\resources\\static\\css\\app.css",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003000|",
+              "WhenOpened": "2026-03-15T12:14:07.475Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "StrongwineApplication.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\StrongwineApplication.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\StrongwineApplication.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\StrongwineApplication.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\StrongwineApplication.java",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAMAAAA8AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-24T13:59:36.953Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "pom.xml",
+              "DocumentMoniker": "D:\\Download\\strongwine\\pom.xml",
+              "RelativeDocumentMoniker": "pom.xml",
+              "ToolTip": "D:\\Download\\strongwine\\pom.xml",
+              "RelativeToolTip": "pom.xml",
+              "ViewState": "AgIAACoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003576|",
+              "WhenOpened": "2026-03-19T09:21:24.456Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "admin-shippers.html",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\resources\\templates\\admin-shippers.html",
+              "RelativeDocumentMoniker": "src\\main\\resources\\templates\\admin-shippers.html",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\resources\\templates\\admin-shippers.html",
+              "RelativeToolTip": "src\\main\\resources\\templates\\admin-shippers.html",
+              "ViewState": "AgIAACkAAAAAAAAAAAAvwFEAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001512|",
+              "WhenOpened": "2026-03-28T16:22:56.355Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "ShipperService.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\service\\ShipperService.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\service\\ShipperService.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\service\\ShipperService.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\service\\ShipperService.java",
+              "ViewState": "AgIAAC4AAAAAAAAAAAAAAIQAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-28T16:21:13.612Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 141,
+              "Title": "admin-dashboard-v2.html",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\resources\\templates\\admin-dashboard-v2.html",
+              "RelativeDocumentMoniker": "src\\main\\resources\\templates\\admin-dashboard-v2.html",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\resources\\templates\\admin-dashboard-v2.html",
+              "RelativeToolTip": "src\\main\\resources\\templates\\admin-dashboard-v2.html",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAK8AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001512|",
+              "WhenOpened": "2026-03-28T16:44:36.577Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "ShipmentRepository.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\repository\\ShipmentRepository.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\repository\\ShipmentRepository.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\repository\\ShipmentRepository.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\repository\\ShipmentRepository.java",
+              "ViewState": "AgIAAAYAAAAAAAAAAAAcwBwAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-28T11:20:14.153Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "shipper-dashboard.html",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\resources\\templates\\shipper-dashboard.html",
+              "RelativeDocumentMoniker": "src\\main\\resources\\templates\\shipper-dashboard.html",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\resources\\templates\\shipper-dashboard.html",
+              "RelativeToolTip": "src\\main\\resources\\templates\\shipper-dashboard.html",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAEsAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001512|",
+              "WhenOpened": "2026-03-28T16:22:55.658Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "admin-dashboard.html",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\resources\\templates\\admin-dashboard.html",
+              "RelativeDocumentMoniker": "src\\main\\resources\\templates\\admin-dashboard.html",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\resources\\templates\\admin-dashboard.html",
+              "RelativeToolTip": "src\\main\\resources\\templates\\admin-dashboard.html",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001512|",
+              "WhenOpened": "2026-03-15T12:32:31.674Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "AdminShipperController.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\controller\\AdminShipperController.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\controller\\AdminShipperController.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\controller\\AdminShipperController.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\controller\\AdminShipperController.java",
+              "ViewState": "AgIAABAAAAAAAAAAAAAvwHgAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-28T16:21:42.841Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "home.html",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\resources\\templates\\home.html",
+              "RelativeDocumentMoniker": "src\\main\\resources\\templates\\home.html",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\resources\\templates\\home.html",
+              "RelativeToolTip": "src\\main\\resources\\templates\\home.html",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001512|",
+              "WhenOpened": "2026-03-15T12:15:04.128Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 137,
+              "Title": "ShipperController.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\controller\\ShipperController.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\controller\\ShipperController.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\controller\\ShipperController.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\controller\\ShipperController.java",
+              "ViewState": "AgIAAAgAAAAAAAAAAABRwFIAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-28T16:21:56.648Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 138,
+              "Title": "admin-users.html",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\resources\\templates\\admin-users.html",
+              "RelativeDocumentMoniker": "src\\main\\resources\\templates\\admin-users.html",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\resources\\templates\\admin-users.html",
+              "RelativeToolTip": "src\\main\\resources\\templates\\admin-users.html",
+              "ViewState": "AgIAAAAAAAAAAAAAAIBJwDkAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001512|",
+              "WhenOpened": "2026-03-28T16:22:55.972Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 140,
+              "Title": "admin-shipper-form.html",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\resources\\templates\\admin-shipper-form.html",
+              "RelativeDocumentMoniker": "src\\main\\resources\\templates\\admin-shipper-form.html",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\resources\\templates\\admin-shipper-form.html",
+              "RelativeToolTip": "src\\main\\resources\\templates\\admin-shipper-form.html",
+              "ViewState": "AgIAABYAAAAAAAAAAIBJwDkAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001512|",
+              "WhenOpened": "2026-03-28T16:22:56.207Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 139,
+              "Title": "admin-user-form.html",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\resources\\templates\\admin-user-form.html",
+              "RelativeDocumentMoniker": "src\\main\\resources\\templates\\admin-user-form.html",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\resources\\templates\\admin-user-form.html",
+              "RelativeToolTip": "src\\main\\resources\\templates\\admin-user-form.html",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAACcAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001512|",
+              "WhenOpened": "2026-03-28T16:22:56.089Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 136,
+              "Title": "AdminUserController.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\controller\\AdminUserController.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\controller\\AdminUserController.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\controller\\AdminUserController.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\controller\\AdminUserController.java",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAHAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-28T16:21:27.979Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "UserService.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\service\\UserService.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\service\\UserService.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\service\\UserService.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\service\\UserService.java",
+              "ViewState": "AgIAAFMAAAAAAAAAAAAwwAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-28T16:20:58.497Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 12,
+              "Title": "UserRepository.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\repository\\UserRepository.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\repository\\UserRepository.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\repository\\UserRepository.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\repository\\UserRepository.java",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-28T16:20:35.74Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 14,
+              "Title": "DataInitializer.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\config\\DataInitializer.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\config\\DataInitializer.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\config\\DataInitializer.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\config\\DataInitializer.java",
+              "ViewState": "AgIAAHIAAAAAAAAAAABRwHsAAAAtAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-15T14:48:30.577Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 13,
+              "Title": "Warehouse.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\entity\\Warehouse.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\entity\\Warehouse.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\entity\\Warehouse.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\entity\\Warehouse.java",
+              "ViewState": "AgIAAAYAAAAAAAAAAAAAABYAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-15T12:07:57.888Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "ShipperRepository.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\repository\\ShipperRepository.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\repository\\ShipperRepository.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\repository\\ShipperRepository.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\repository\\ShipperRepository.java",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAABWAwAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-28T11:20:05.968Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 16,
+              "Title": ".env.example",
+              "DocumentMoniker": "D:\\Download\\strongwine\\.env.example",
+              "RelativeDocumentMoniker": ".env.example",
+              "ToolTip": "D:\\Download\\strongwine\\.env.example",
+              "RelativeToolTip": ".env.example",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-27T05:34:16.145Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 17,
+              "Title": "Shipper.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\entity\\Shipper.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\entity\\Shipper.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\entity\\Shipper.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\entity\\Shipper.java",
+              "ViewState": "AgIAAB4AAAAAAAAAAAAAADMAAAAFAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-28T11:19:30.96Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 15,
+              "Title": "V1__create_core_ecommerce_schema.sql",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\resources\\db\\migration\\V1__create_core_ecommerce_schema.sql",
+              "RelativeDocumentMoniker": "src\\main\\resources\\db\\migration\\V1__create_core_ecommerce_schema.sql",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\resources\\db\\migration\\V1__create_core_ecommerce_schema.sql",
+              "RelativeToolTip": "src\\main\\resources\\db\\migration\\V1__create_core_ecommerce_schema.sql",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABkBAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000826|",
+              "WhenOpened": "2026-03-28T11:54:50.31Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 128,
+              "Title": "ShipmentTracking.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\entity\\ShipmentTracking.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\entity\\ShipmentTracking.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\entity\\ShipmentTracking.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\entity\\ShipmentTracking.java",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAEQAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-28T11:19:59.302Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 130,
+              "Title": "ShipmentResponse.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\dto\\ShipmentResponse.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\dto\\ShipmentResponse.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\dto\\ShipmentResponse.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\dto\\ShipmentResponse.java",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAH0AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-28T11:20:37.896Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 135,
+              "Title": "ShipmentApiController.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\controller\\api\\ShipmentApiController.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\controller\\api\\ShipmentApiController.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\controller\\api\\ShipmentApiController.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\controller\\api\\ShipmentApiController.java",
+              "ViewState": "AgIAAB8AAAAAAAAAAABBwFAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-28T11:21:25.282Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 134,
+              "Title": "ShipmentService.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\service\\ShipmentService.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\service\\ShipmentService.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\service\\ShipmentService.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\service\\ShipmentService.java",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAOEAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-28T11:21:14.788Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 133,
+              "Title": "EmailService.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\service\\EmailService.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\service\\EmailService.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\service\\EmailService.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\service\\EmailService.java",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAC0AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-28T11:20:48.117Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 132,
+              "Title": "ShipmentCompleteRequest.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\dto\\ShipmentCompleteRequest.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\dto\\ShipmentCompleteRequest.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\dto\\ShipmentCompleteRequest.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\dto\\ShipmentCompleteRequest.java",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABMAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-28T11:20:38.564Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 131,
+              "Title": "ShipmentFailRequest.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\dto\\ShipmentFailRequest.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\dto\\ShipmentFailRequest.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\dto\\ShipmentFailRequest.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\dto\\ShipmentFailRequest.java",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-28T11:20:38.249Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 18,
+              "Title": "Shipment.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\entity\\Shipment.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\entity\\Shipment.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\entity\\Shipment.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\entity\\Shipment.java",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAJ8AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-28T11:19:47.348Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 129,
+              "Title": "ShipmentTrackingRepository.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\repository\\ShipmentTrackingRepository.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\repository\\ShipmentTrackingRepository.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\repository\\ShipmentTrackingRepository.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\repository\\ShipmentTrackingRepository.java",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-28T11:20:21.849Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 19,
+              "Title": "ShipperStatus.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\entity\\ShipperStatus.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\entity\\ShipperStatus.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\entity\\ShipperStatus.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\entity\\ShipperStatus.java",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-28T11:19:15.522Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 125,
+              "Title": "V6__create_delivery_module.sql",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\resources\\db\\migration\\V6__create_delivery_module.sql",
+              "RelativeDocumentMoniker": "src\\main\\resources\\db\\migration\\V6__create_delivery_module.sql",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\resources\\db\\migration\\V6__create_delivery_module.sql",
+              "RelativeToolTip": "src\\main\\resources\\db\\migration\\V6__create_delivery_module.sql",
+              "ViewState": "AgIAAAsAAAAAAAAAAABBwIkAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000826|",
+              "WhenOpened": "2026-03-28T11:18:55.542Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 20,
+              "Title": "application.properties",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\resources\\application.properties",
+              "RelativeDocumentMoniker": "src\\main\\resources\\application.properties",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\resources\\application.properties",
+              "RelativeToolTip": "src\\main\\resources\\application.properties",
+              "ViewState": "AgIAACQAAAAAAAAAAAAawBUAAABIAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-15T12:35:16.322Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 126,
+              "Title": "V7__seed_delivery_data.sql",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\resources\\db\\migration\\V7__seed_delivery_data.sql",
+              "RelativeDocumentMoniker": "src\\main\\resources\\db\\migration\\V7__seed_delivery_data.sql",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\resources\\db\\migration\\V7__seed_delivery_data.sql",
+              "RelativeToolTip": "src\\main\\resources\\db\\migration\\V7__seed_delivery_data.sql",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAF0AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000826|",
+              "WhenOpened": "2026-03-28T11:19:09.398Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 127,
+              "Title": "ShipmentStatus.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\entity\\ShipmentStatus.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\entity\\ShipmentStatus.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\entity\\ShipmentStatus.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\entity\\ShipmentStatus.java",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-28T11:19:21.231Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 22,
+              "Title": ".env",
+              "DocumentMoniker": "D:\\Download\\strongwine\\.env",
+              "RelativeDocumentMoniker": ".env",
+              "ToolTip": "D:\\Download\\strongwine\\.env",
+              "RelativeToolTip": ".env",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAA0AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-27T05:39:13.62Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 21,
+              "Title": "PaymentService.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\service\\PaymentService.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\service\\PaymentService.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\service\\PaymentService.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\service\\PaymentService.java",
+              "ViewState": "AgIAAAkAAAAAAAAAAAAvwBAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-15T12:09:56.028Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 23,
+              "Title": "DotEnvLoader.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\config\\DotEnvLoader.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\config\\DotEnvLoader.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\config\\DotEnvLoader.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\config\\DotEnvLoader.java",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAD8AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-27T05:36:01.823Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 24,
+              "Title": "spring.factories",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\resources\\META-INF\\spring.factories",
+              "RelativeDocumentMoniker": "src\\main\\resources\\META-INF\\spring.factories",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\resources\\META-INF\\spring.factories",
+              "RelativeToolTip": "src\\main\\resources\\META-INF\\spring.factories",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-27T05:36:18.138Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 25,
+              "Title": "DatabaseMigrationInitializer.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\config\\DatabaseMigrationInitializer.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\config\\DatabaseMigrationInitializer.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\config\\DatabaseMigrationInitializer.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\config\\DatabaseMigrationInitializer.java",
+              "ViewState": "AgIAAEMAAAAAAAAAAIBZwA8AAAAOAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-15T14:57:34.16Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 26,
+              "Title": "InventoryService.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\service\\InventoryService.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\service\\InventoryService.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\service\\InventoryService.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\service\\InventoryService.java",
+              "ViewState": "AgIAAFgAAAAAAAAAAAAuwAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-27T06:04:05.784Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 27,
+              "Title": "CartController.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\controller\\CartController.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\controller\\CartController.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\controller\\CartController.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\controller\\CartController.java",
+              "ViewState": "AgIAAAUAAAAAAAAAAAAawLcAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-24T13:54:30.539Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 116,
+              "Title": "STRIPE_SETUP.md",
+              "DocumentMoniker": "D:\\Download\\strongwine\\docs\\STRIPE_SETUP.md",
+              "RelativeDocumentMoniker": "docs\\STRIPE_SETUP.md",
+              "ToolTip": "D:\\Download\\strongwine\\docs\\STRIPE_SETUP.md",
+              "RelativeToolTip": "docs\\STRIPE_SETUP.md",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAFYAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001818|",
+              "WhenOpened": "2026-03-27T05:35:18.725Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 124,
+              "Title": "GIT_COMMIT_MESSAGE.md",
+              "DocumentMoniker": "D:\\Download\\strongwine\\GIT_COMMIT_MESSAGE.md",
+              "RelativeDocumentMoniker": "GIT_COMMIT_MESSAGE.md",
+              "ToolTip": "D:\\Download\\strongwine\\GIT_COMMIT_MESSAGE.md",
+              "RelativeToolTip": "GIT_COMMIT_MESSAGE.md",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAFwAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001818|",
+              "WhenOpened": "2026-03-27T05:43:04.172Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 123,
+              "Title": "PAYMENT_FIX_ANNOUNCEMENT.md",
+              "DocumentMoniker": "D:\\Download\\strongwine\\PAYMENT_FIX_ANNOUNCEMENT.md",
+              "RelativeDocumentMoniker": "PAYMENT_FIX_ANNOUNCEMENT.md",
+              "ToolTip": "D:\\Download\\strongwine\\PAYMENT_FIX_ANNOUNCEMENT.md",
+              "RelativeToolTip": "PAYMENT_FIX_ANNOUNCEMENT.md",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAFwAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001818|",
+              "WhenOpened": "2026-03-27T05:42:43.298Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 122,
+              "Title": "DEPLOYMENT_CHECKLIST.md",
+              "DocumentMoniker": "D:\\Download\\strongwine\\DEPLOYMENT_CHECKLIST.md",
+              "RelativeDocumentMoniker": "DEPLOYMENT_CHECKLIST.md",
+              "ToolTip": "D:\\Download\\strongwine\\DEPLOYMENT_CHECKLIST.md",
+              "RelativeToolTip": "DEPLOYMENT_CHECKLIST.md",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAPUAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001818|",
+              "WhenOpened": "2026-03-27T05:42:19.133Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 121,
+              "Title": "PAYMENT_FLOW_DIAGRAM.md",
+              "DocumentMoniker": "D:\\Download\\strongwine\\docs\\PAYMENT_FLOW_DIAGRAM.md",
+              "RelativeDocumentMoniker": "docs\\PAYMENT_FLOW_DIAGRAM.md",
+              "ToolTip": "D:\\Download\\strongwine\\docs\\PAYMENT_FLOW_DIAGRAM.md",
+              "RelativeToolTip": "docs\\PAYMENT_FLOW_DIAGRAM.md",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABgBAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001818|",
+              "WhenOpened": "2026-03-27T05:41:01.458Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 120,
+              "Title": "PAYMENT_FIX_COMPLETE.md",
+              "DocumentMoniker": "D:\\Download\\strongwine\\PAYMENT_FIX_COMPLETE.md",
+              "RelativeDocumentMoniker": "PAYMENT_FIX_COMPLETE.md",
+              "ToolTip": "D:\\Download\\strongwine\\PAYMENT_FIX_COMPLETE.md",
+              "RelativeToolTip": "PAYMENT_FIX_COMPLETE.md",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAHEAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001818|",
+              "WhenOpened": "2026-03-27T05:39:45.433Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 119,
+              "Title": "QUICK_START.md",
+              "DocumentMoniker": "D:\\Download\\strongwine\\QUICK_START.md",
+              "RelativeDocumentMoniker": "QUICK_START.md",
+              "ToolTip": "D:\\Download\\strongwine\\QUICK_START.md",
+              "RelativeToolTip": "QUICK_START.md",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAADsAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001818|",
+              "WhenOpened": "2026-03-27T05:39:00.586Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 118,
+              "Title": "FIX_PAYMENT_TRANSACTION_SUMMARY.md",
+              "DocumentMoniker": "D:\\Download\\strongwine\\docs\\FIX_PAYMENT_TRANSACTION_SUMMARY.md",
+              "RelativeDocumentMoniker": "docs\\FIX_PAYMENT_TRANSACTION_SUMMARY.md",
+              "ToolTip": "D:\\Download\\strongwine\\docs\\FIX_PAYMENT_TRANSACTION_SUMMARY.md",
+              "RelativeToolTip": "docs\\FIX_PAYMENT_TRANSACTION_SUMMARY.md",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAADkBAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001818|",
+              "WhenOpened": "2026-03-27T05:38:34.564Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 117,
+              "Title": "FIX_PAYMENT_ERROR.md",
+              "DocumentMoniker": "D:\\Download\\strongwine\\docs\\FIX_PAYMENT_ERROR.md",
+              "RelativeDocumentMoniker": "docs\\FIX_PAYMENT_ERROR.md",
+              "ToolTip": "D:\\Download\\strongwine\\docs\\FIX_PAYMENT_ERROR.md",
+              "RelativeToolTip": "docs\\FIX_PAYMENT_ERROR.md",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAJIAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001818|",
+              "WhenOpened": "2026-03-27T05:36:48.617Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 30,
+              "Title": "wine-list.html",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\resources\\templates\\wine-list.html",
+              "RelativeDocumentMoniker": "src\\main\\resources\\templates\\wine-list.html",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\resources\\templates\\wine-list.html",
+              "RelativeToolTip": "src\\main\\resources\\templates\\wine-list.html",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001512|",
+              "WhenOpened": "2026-03-15T12:16:26.315Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 28,
+              "Title": "PaymentRepository.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\repository\\PaymentRepository.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\repository\\PaymentRepository.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\repository\\PaymentRepository.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\repository\\PaymentRepository.java",
+              "ViewState": "AgIAABgAAAAAAAAAAAAAABgAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-15T12:08:56.64Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 29,
+              "Title": "cart-client.js",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\resources\\static\\js\\cart-client.js",
+              "RelativeDocumentMoniker": "src\\main\\resources\\static\\js\\cart-client.js",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\resources\\static\\js\\cart-client.js",
+              "RelativeToolTip": "src\\main\\resources\\static\\js\\cart-client.js",
+              "ViewState": "AgIAAC4BAAAAAAAAAAAvwG8BAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
+              "WhenOpened": "2026-03-24T14:43:33.968Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 31,
+              "Title": "StripeService.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\service\\StripeService.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\service\\StripeService.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\service\\StripeService.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\service\\StripeService.java",
+              "ViewState": "AgIAAA0AAAAAAAAAAABBwCYAAABEAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-24T16:49:59.814Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 34,
+              "Title": "layout.html",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\resources\\templates\\layout.html",
+              "RelativeDocumentMoniker": "src\\main\\resources\\templates\\layout.html",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\resources\\templates\\layout.html",
+              "RelativeToolTip": "src\\main\\resources\\templates\\layout.html",
+              "ViewState": "AgIAACgAAAAAAAAAAAAowDkAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001512|",
+              "WhenOpened": "2026-03-24T15:59:21.208Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 33,
+              "Title": "payment-session.html",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\resources\\templates\\payment-session.html",
+              "RelativeDocumentMoniker": "src\\main\\resources\\templates\\payment-session.html",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\resources\\templates\\payment-session.html",
+              "RelativeToolTip": "src\\main\\resources\\templates\\payment-session.html",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001512|",
+              "WhenOpened": "2026-03-15T12:30:58.845Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 32,
+              "Title": "PaymentTransactionRepository.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\repository\\PaymentTransactionRepository.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\repository\\PaymentTransactionRepository.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\repository\\PaymentTransactionRepository.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\repository\\PaymentTransactionRepository.java",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAtwAsAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-15T12:08:56.898Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 115,
+              "Title": "CartService.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\service\\CartService.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\service\\CartService.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\service\\CartService.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\service\\CartService.java",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-24T15:43:42.989Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 35,
+              "Title": "checkout.html",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\resources\\templates\\checkout.html",
+              "RelativeDocumentMoniker": "src\\main\\resources\\templates\\checkout.html",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\resources\\templates\\checkout.html",
+              "RelativeToolTip": "src\\main\\resources\\templates\\checkout.html",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001512|",
+              "WhenOpened": "2026-03-15T12:18:10.589Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 36,
+              "Title": "CheckoutRequest.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\dto\\CheckoutRequest.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\dto\\CheckoutRequest.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\dto\\CheckoutRequest.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\dto\\CheckoutRequest.java",
+              "ViewState": "AgIAAAYAAAAAAAAAAAAAAEUAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-24T15:16:25.937Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 114,
+              "Title": "CartItemRequest.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\dto\\CartItemRequest.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\dto\\CartItemRequest.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\dto\\CartItemRequest.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\dto\\CartItemRequest.java",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABYAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-24T15:16:17.505Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 37,
+              "Title": "cart.html",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\resources\\templates\\cart.html",
+              "RelativeDocumentMoniker": "src\\main\\resources\\templates\\cart.html",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\resources\\templates\\cart.html",
+              "RelativeToolTip": "src\\main\\resources\\templates\\cart.html",
+              "ViewState": "AgIAABsAAAAAAAAAAAAAAAwAAAA1AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001512|",
+              "WhenOpened": "2026-03-24T13:47:44.361Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 38,
+              "Title": "GlobalModelAttributes.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\controller\\GlobalModelAttributes.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\controller\\GlobalModelAttributes.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\controller\\GlobalModelAttributes.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\controller\\GlobalModelAttributes.java",
+              "ViewState": "AgIAAAoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-24T13:54:31.653Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 39,
+              "Title": "copilot-instructions.md",
+              "DocumentMoniker": "D:\\Download\\strongwine\\.github\\copilot-instructions.md",
+              "RelativeDocumentMoniker": ".github\\copilot-instructions.md",
+              "ToolTip": "D:\\Download\\strongwine\\.github\\copilot-instructions.md",
+              "RelativeToolTip": ".github\\copilot-instructions.md",
+              "ViewState": "AgIAAK8AAAAAAAAAAIBJwLEAAAASAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001818|",
+              "WhenOpened": "2026-03-15T13:00:01.035Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 40,
+              "Title": "WineController.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\controller\\WineController.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\controller\\WineController.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\controller\\WineController.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\controller\\WineController.java",
+              "ViewState": "AgIAAJIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-15T12:12:34.879Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 41,
+              "Title": "WineApiController.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\controller\\api\\WineApiController.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\controller\\api\\WineApiController.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\controller\\api\\WineApiController.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\controller\\api\\WineApiController.java",
+              "ViewState": "AgIAAIwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-15T14:38:39.187Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 42,
+              "Title": "WineService.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\service\\WineService.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\service\\WineService.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\service\\WineService.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\service\\WineService.java",
+              "ViewState": "AgIAAGUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-15T13:27:00.463Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 43,
+              "Title": "WineRepository.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\repository\\WineRepository.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\repository\\WineRepository.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\repository\\WineRepository.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\repository\\WineRepository.java",
+              "ViewState": "AgIAAFIAAAAAAAAAAAAYwAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-15T13:26:59.723Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 44,
+              "Title": "CategoryDto.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\dto\\CategoryDto.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\dto\\CategoryDto.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\dto\\CategoryDto.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\dto\\CategoryDto.java",
+              "ViewState": "AgIAAB4AAAAAAAAAAAAAACQAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-19T09:04:29.711Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 45,
+              "Title": "ProductDto.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\dto\\ProductDto.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\dto\\ProductDto.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\dto\\ProductDto.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\dto\\ProductDto.java",
+              "ViewState": "AgIAAGoAAAAAAAAAAAAAAHoAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-19T09:04:58.989Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 46,
+              "Title": "AdminInventoryController.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\controller\\AdminInventoryController.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\controller\\AdminInventoryController.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\controller\\AdminInventoryController.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\controller\\AdminInventoryController.java",
+              "ViewState": "AgIAABkAAAAAAAAAAAAgwFgAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-15T12:13:22.446Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 47,
+              "Title": "StockOperationRequest.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\dto\\StockOperationRequest.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\dto\\StockOperationRequest.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\dto\\StockOperationRequest.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\dto\\StockOperationRequest.java",
+              "ViewState": "AgIAAAMAAAAAAAAAAAAAADMAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-15T12:09:09.185Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 113,
+              "Title": "V5__fix_inventory_version_not_null.sql",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\resources\\db\\migration\\V5__fix_inventory_version_not_null.sql",
+              "RelativeDocumentMoniker": "src\\main\\resources\\db\\migration\\V5__fix_inventory_version_not_null.sql",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\resources\\db\\migration\\V5__fix_inventory_version_not_null.sql",
+              "RelativeToolTip": "src\\main\\resources\\db\\migration\\V5__fix_inventory_version_not_null.sql",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABMAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000826|",
+              "WhenOpened": "2026-03-20T03:09:30.327Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 48,
+              "Title": "schema.sql",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\resources\\sql\\schema.sql",
+              "RelativeDocumentMoniker": "src\\main\\resources\\sql\\schema.sql",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\resources\\sql\\schema.sql",
+              "RelativeToolTip": "src\\main\\resources\\sql\\schema.sql",
+              "ViewState": "AgIAAJcAAAAAAAAAAIAwwO0AAAACAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000826|",
+              "WhenOpened": "2026-03-15T12:29:28.248Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 50,
+              "Title": "InventoryOperationResponse.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\dto\\InventoryOperationResponse.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\dto\\InventoryOperationResponse.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\dto\\InventoryOperationResponse.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\dto\\InventoryOperationResponse.java",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAFIAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-19T14:33:23.499Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 51,
+              "Title": "ApiExceptionHandler.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\exception\\ApiExceptionHandler.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\exception\\ApiExceptionHandler.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\exception\\ApiExceptionHandler.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\exception\\ApiExceptionHandler.java",
+              "ViewState": "AgIAABYAAAAAAAAAAIBZwCYAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-19T14:33:35.21Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 111,
+              "Title": "InventoryApiController.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\controller\\api\\InventoryApiController.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\controller\\api\\InventoryApiController.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\controller\\api\\InventoryApiController.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\controller\\api\\InventoryApiController.java",
+              "ViewState": "AgIAABAAAAAAAAAAAABBwD4AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-19T14:34:58.644Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 112,
+              "Title": "V4__add_created_by_to_inventory_transactions.sql",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\resources\\db\\migration\\V4__add_created_by_to_inventory_transactions.sql",
+              "RelativeDocumentMoniker": "src\\main\\resources\\db\\migration\\V4__add_created_by_to_inventory_transactions.sql",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\resources\\db\\migration\\V4__add_created_by_to_inventory_transactions.sql",
+              "RelativeToolTip": "src\\main\\resources\\db\\migration\\V4__add_created_by_to_inventory_transactions.sql",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAUAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000826|",
+              "WhenOpened": "2026-03-19T14:35:23.221Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 49,
+              "Title": "InsufficientStockException.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\exception\\InsufficientStockException.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\exception\\InsufficientStockException.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\exception\\InsufficientStockException.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\exception\\InsufficientStockException.java",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-19T14:33:12.844Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 52,
+              "Title": "InventoryTransaction.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\entity\\InventoryTransaction.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\entity\\InventoryTransaction.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\entity\\InventoryTransaction.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\entity\\InventoryTransaction.java",
+              "ViewState": "AgIAADsAAAAAAAAAAIAwwJMAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-15T12:07:58.187Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 53,
+              "Title": "sample-data.sql",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\resources\\sql\\sample-data.sql",
+              "RelativeDocumentMoniker": "src\\main\\resources\\sql\\sample-data.sql",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\resources\\sql\\sample-data.sql",
+              "RelativeToolTip": "src\\main\\resources\\sql\\sample-data.sql",
+              "ViewState": "AgIAAGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000826|",
+              "WhenOpened": "2026-03-15T13:34:48.348Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 54,
+              "Title": "V3__reconcile_entity_schema_with_jpa.sql",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\resources\\db\\migration\\V3__reconcile_entity_schema_with_jpa.sql",
+              "RelativeDocumentMoniker": "src\\main\\resources\\db\\migration\\V3__reconcile_entity_schema_with_jpa.sql",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\resources\\db\\migration\\V3__reconcile_entity_schema_with_jpa.sql",
+              "RelativeToolTip": "src\\main\\resources\\db\\migration\\V3__reconcile_entity_schema_with_jpa.sql",
+              "ViewState": "AgIAAOEAAAAAAAAAAAAAACMBAAAFAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000826|",
+              "WhenOpened": "2026-03-19T13:24:52.107Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 55,
+              "Title": "wine-form.html",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\resources\\templates\\wine-form.html",
+              "RelativeDocumentMoniker": "src\\main\\resources\\templates\\wine-form.html",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\resources\\templates\\wine-form.html",
+              "RelativeToolTip": "src\\main\\resources\\templates\\wine-form.html",
+              "ViewState": "AgIAAIkAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001512|",
+              "WhenOpened": "2026-03-15T13:34:09.524Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 56,
+              "Title": "V2__add_audit_columns_to_wines.sql",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\resources\\db\\migration\\V2__add_audit_columns_to_wines.sql",
+              "RelativeDocumentMoniker": "src\\main\\resources\\db\\migration\\V2__add_audit_columns_to_wines.sql",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\resources\\db\\migration\\V2__add_audit_columns_to_wines.sql",
+              "RelativeToolTip": "src\\main\\resources\\db\\migration\\V2__add_audit_columns_to_wines.sql",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000826|",
+              "WhenOpened": "2026-03-19T13:13:41.004Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 58,
+              "Title": "RedisConfig.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\config\\RedisConfig.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\config\\RedisConfig.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\config\\RedisConfig.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\config\\RedisConfig.java",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABUAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-19T10:48:00.463Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 59,
+              "Title": "AdminInventoryApiController.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\controller\\api\\AdminInventoryApiController.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\controller\\api\\AdminInventoryApiController.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\controller\\api\\AdminInventoryApiController.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\controller\\api\\AdminInventoryApiController.java",
+              "ViewState": "AgIAAAcAAAAAAAAAAABBwEUAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-19T10:15:09.379Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 57,
+              "Title": "schema.sql",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\resources\\schema.sql",
+              "RelativeDocumentMoniker": "src\\main\\resources\\schema.sql",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\resources\\schema.sql",
+              "RelativeToolTip": "src\\main\\resources\\schema.sql",
+              "ViewState": "AgIAALgAAAAAAAAAAAAAAL8AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000826|",
+              "WhenOpened": "2026-03-19T10:33:29.199Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 60,
+              "Title": "data.sql",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\resources\\data.sql",
+              "RelativeDocumentMoniker": "src\\main\\resources\\data.sql",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\resources\\data.sql",
+              "RelativeToolTip": "src\\main\\resources\\data.sql",
+              "ViewState": "AgIAAEAAAAAAAAAAAAAgwFcAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000826|",
+              "WhenOpened": "2026-03-19T10:33:58.346Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 61,
+              "Title": "AuthApiController.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\controller\\api\\AuthApiController.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\controller\\api\\AuthApiController.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\controller\\api\\AuthApiController.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\controller\\api\\AuthApiController.java",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAACkAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-19T10:14:22.218Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 109,
+              "Title": "JwtTokenProvider.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\security\\JwtTokenProvider.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\security\\JwtTokenProvider.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\security\\JwtTokenProvider.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\security\\JwtTokenProvider.java",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAADoAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-19T10:13:21.169Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 110,
+              "Title": "JwtAuthenticationFilter.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\security\\JwtAuthenticationFilter.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\security\\JwtAuthenticationFilter.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\security\\JwtAuthenticationFilter.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\security\\JwtAuthenticationFilter.java",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAADkAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-19T10:13:32.11Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 107,
+              "Title": "CategoryService.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\service\\CategoryService.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\service\\CategoryService.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\service\\CategoryService.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\service\\CategoryService.java",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAADEAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-19T09:04:38.861Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 64,
+              "Title": "Inventory.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\entity\\Inventory.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\entity\\Inventory.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\entity\\Inventory.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\entity\\Inventory.java",
+              "ViewState": "AgIAAA0AAAAAAAAAAIBZwGwAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-15T12:07:58.487Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 62,
+              "Title": "Wine.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\entity\\Wine.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\entity\\Wine.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\entity\\Wine.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\entity\\Wine.java",
+              "ViewState": "AgIAAAAAAAAAAAAAAAApwAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-15T13:26:58.941Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 108,
+              "Title": "AdminCategoryApiController.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\controller\\api\\AdminCategoryApiController.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\controller\\api\\AdminCategoryApiController.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\controller\\api\\AdminCategoryApiController.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\controller\\api\\AdminCategoryApiController.java",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAEoAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-19T09:04:48.94Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 63,
+              "Title": "Cart.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\entity\\Cart.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\entity\\Cart.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\entity\\Cart.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\entity\\Cart.java",
+              "ViewState": "AgIAAA4AAAAAAAAAAAAgwCYAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-19T08:55:49.168Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 106,
+              "Title": "CategoryRepository.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\repository\\CategoryRepository.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\repository\\CategoryRepository.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\repository\\CategoryRepository.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\repository\\CategoryRepository.java",
+              "ViewState": "AgIAAAwAAAAAAAAAAABRwBAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-19T09:04:20.988Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 104,
+              "Title": "AuditorAwareImpl.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\config\\AuditorAwareImpl.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\config\\AuditorAwareImpl.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\config\\AuditorAwareImpl.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\config\\AuditorAwareImpl.java",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABUAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-19T09:03:12.282Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 103,
+              "Title": "JpaAuditingConfig.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\config\\JpaAuditingConfig.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\config\\JpaAuditingConfig.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\config\\JpaAuditingConfig.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\config\\JpaAuditingConfig.java",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-19T09:03:03.388Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 102,
+              "Title": "Auditable.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\entity\\Auditable.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\entity\\Auditable.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\entity\\Auditable.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\entity\\Auditable.java",
+              "ViewState": "AgIAAEoAAAAAAAAAAABBwEwAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-19T09:02:56.166Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 101,
+              "Title": "LoginSuccessHandler.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\security\\LoginSuccessHandler.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\security\\LoginSuccessHandler.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\security\\LoginSuccessHandler.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\security\\LoginSuccessHandler.java",
+              "ViewState": "AgIAAAEAAAAAAAAAAABBwBQAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-19T09:01:43.573Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 105,
+              "Title": "Category.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\entity\\Category.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\entity\\Category.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\entity\\Category.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\entity\\Category.java",
+              "ViewState": "AgIAAAIAAAAAAAAAAABBwCoAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-19T09:03:18.881Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 67,
+              "Title": "CartItemRepository.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\repository\\CartItemRepository.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\repository\\CartItemRepository.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\repository\\CartItemRepository.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\repository\\CartItemRepository.java",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-19T08:56:20.545Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 66,
+              "Title": "CartRepository.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\repository\\CartRepository.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\repository\\CartRepository.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\repository\\CartRepository.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\repository\\CartRepository.java",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-19T08:56:11.066Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 65,
+              "Title": "CartDto.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\dto\\CartDto.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\dto\\CartDto.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\dto\\CartDto.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\dto\\CartDto.java",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABUAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-19T08:56:31.043Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 99,
+              "Title": "CartItem.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\entity\\CartItem.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\entity\\CartItem.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\entity\\CartItem.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\entity\\CartItem.java",
+              "ViewState": "AgIAAB4AAAAAAAAAAABBwCAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-19T08:56:01.18Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 100,
+              "Title": "CartItemDto.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\dto\\CartItemDto.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\dto\\CartItemDto.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\dto\\CartItemDto.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\dto\\CartItemDto.java",
+              "ViewState": "AgIAABIAAAAAAAAAAABBwBQAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-19T08:56:43.997Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 68,
+              "Title": "seed-data.sql",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\resources\\sql\\seed-data.sql",
+              "RelativeDocumentMoniker": "src\\main\\resources\\sql\\seed-data.sql",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\resources\\sql\\seed-data.sql",
+              "RelativeToolTip": "src\\main\\resources\\sql\\seed-data.sql",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAADkAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000826|",
+              "WhenOpened": "2026-03-15T14:48:52.639Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 69,
+              "Title": "migration_initialize_new_tables.sql",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\resources\\sql\\migration_initialize_new_tables.sql",
+              "RelativeDocumentMoniker": "src\\main\\resources\\sql\\migration_initialize_new_tables.sql",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\resources\\sql\\migration_initialize_new_tables.sql",
+              "RelativeToolTip": "src\\main\\resources\\sql\\migration_initialize_new_tables.sql",
+              "ViewState": "AgIAACsAAAAAAAAAAAApwFgAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000826|",
+              "WhenOpened": "2026-03-15T14:58:58.344Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 70,
+              "Title": "AuthController.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\controller\\AuthController.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\controller\\AuthController.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\controller\\AuthController.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\controller\\AuthController.java",
+              "ViewState": "AgIAADcAAAAAAAAAAAAYwEwAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-15T13:27:47.164Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 71,
+              "Title": "wine-details.html",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\resources\\templates\\wine-details.html",
+              "RelativeDocumentMoniker": "src\\main\\resources\\templates\\wine-details.html",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\resources\\templates\\wine-details.html",
+              "RelativeToolTip": "src\\main\\resources\\templates\\wine-details.html",
+              "ViewState": "AgIAACAAAAAAAAAAAAAnwGIAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001512|",
+              "WhenOpened": "2026-03-15T12:17:35.526Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 98,
+              "Title": "register.html",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\resources\\templates\\register.html",
+              "RelativeDocumentMoniker": "src\\main\\resources\\templates\\register.html",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\resources\\templates\\register.html",
+              "RelativeToolTip": "src\\main\\resources\\templates\\register.html",
+              "ViewState": "AgIAAAgAAAAAAAAAAABBwAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001512|",
+              "WhenOpened": "2026-03-15T13:32:39.621Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 97,
+              "Title": "login.html",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\resources\\templates\\login.html",
+              "RelativeDocumentMoniker": "src\\main\\resources\\templates\\login.html",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\resources\\templates\\login.html",
+              "RelativeToolTip": "src\\main\\resources\\templates\\login.html",
+              "ViewState": "AgIAAAgAAAAAAAAAAABBwAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001512|",
+              "WhenOpened": "2026-03-15T13:32:12.345Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 96,
+              "Title": "ReviewController.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\controller\\ReviewController.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\controller\\ReviewController.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\controller\\ReviewController.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\controller\\ReviewController.java",
+              "ViewState": "AgIAACkAAAAAAAAAAABBwAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-15T13:28:54.18Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 72,
+              "Title": "README.md",
+              "DocumentMoniker": "D:\\Download\\strongwine\\README.md",
+              "RelativeDocumentMoniker": "README.md",
+              "ToolTip": "D:\\Download\\strongwine\\README.md",
+              "RelativeToolTip": "README.md",
+              "ViewState": "AgIAALoAAAAAAAAAAABRwL0AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001818|",
+              "WhenOpened": "2026-03-15T12:35:29.421Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 95,
+              "Title": "ai-assistant.js",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\resources\\static\\js\\ai-assistant.js",
+              "RelativeDocumentMoniker": "src\\main\\resources\\static\\js\\ai-assistant.js",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\resources\\static\\js\\ai-assistant.js",
+              "RelativeToolTip": "src\\main\\resources\\static\\js\\ai-assistant.js",
+              "ViewState": "AgIAABoAAAAAAAAAAABBwAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
+              "WhenOpened": "2026-03-15T13:03:27.972Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 73,
+              "Title": "migration-v2.sql",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\resources\\sql\\migration-v2.sql",
+              "RelativeDocumentMoniker": "src\\main\\resources\\sql\\migration-v2.sql",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\resources\\sql\\migration-v2.sql",
+              "RelativeToolTip": "src\\main\\resources\\sql\\migration-v2.sql",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAIYAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000826|",
+              "WhenOpened": "2026-03-15T12:30:04.286Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 92,
+              "Title": "AdminController.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\controller\\AdminController.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\controller\\AdminController.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\controller\\AdminController.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\controller\\AdminController.java",
+              "ViewState": "AgIAAEcAAAAAAAAAAABBwAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-15T12:13:09.193Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 93,
+              "Title": "SecurityConfig.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\security\\SecurityConfig.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\security\\SecurityConfig.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\security\\SecurityConfig.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\security\\SecurityConfig.java",
+              "ViewState": "AgIAADwAAAAAAAAAAABRwAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-15T12:13:32.677Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 94,
+              "Title": "OrderRepository.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\repository\\OrderRepository.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\repository\\OrderRepository.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\repository\\OrderRepository.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\repository\\OrderRepository.java",
+              "ViewState": "AgIAAB0AAAAAAAAAAABBwAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-15T12:13:40.737Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 74,
+              "Title": "Payment.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\entity\\Payment.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\entity\\Payment.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\entity\\Payment.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\entity\\Payment.java",
+              "ViewState": "AgIAAF0AAAAAAAAAAAAAAJUAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-15T12:08:26.732Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 89,
+              "Title": "PaymentController.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\controller\\PaymentController.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\controller\\PaymentController.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\controller\\PaymentController.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\controller\\PaymentController.java",
+              "ViewState": "AgIAACMAAAAAAAAAAABBwFkAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-15T12:11:30.309Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 90,
+              "Title": "OrderController.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\controller\\OrderController.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\controller\\OrderController.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\controller\\OrderController.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\controller\\OrderController.java",
+              "ViewState": "AgIAAAQAAAAAAAAAAABBwAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-15T12:11:39.944Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 91,
+              "Title": "HomeController.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\controller\\HomeController.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\controller\\HomeController.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\controller\\HomeController.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\controller\\HomeController.java",
+              "ViewState": "AgIAABkAAAAAAAAAAABBwAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-15T12:12:18.098Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 75,
+              "Title": "PaymentStatus.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\entity\\PaymentStatus.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\entity\\PaymentStatus.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\entity\\PaymentStatus.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\entity\\PaymentStatus.java",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-15T12:07:22.138Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 86,
+              "Title": "Order.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\entity\\Order.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\entity\\Order.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\entity\\Order.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\entity\\Order.java",
+              "ViewState": "AgIAADwAAAAAAAAAAABBwAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-15T12:10:17.616Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 87,
+              "Title": "CheckoutForm.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\dto\\CheckoutForm.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\dto\\CheckoutForm.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\dto\\CheckoutForm.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\dto\\CheckoutForm.java",
+              "ViewState": "AgIAAAwAAAAAAAAAAABBwAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-15T12:10:34.349Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 88,
+              "Title": "OrderService.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\service\\OrderService.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\service\\OrderService.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\service\\OrderService.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\service\\OrderService.java",
+              "ViewState": "AgIAACgAAAAAAAAAAABBwAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-15T12:10:56.519Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 77,
+              "Title": "InventoryOperationType.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\entity\\InventoryOperationType.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\entity\\InventoryOperationType.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\entity\\InventoryOperationType.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\entity\\InventoryOperationType.java",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-15T12:07:21.413Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 76,
+              "Title": "PaymentMethod.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\entity\\PaymentMethod.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\entity\\PaymentMethod.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\entity\\PaymentMethod.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\entity\\PaymentMethod.java",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-15T12:07:19.475Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 78,
+              "Title": "OrderStatus.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\entity\\OrderStatus.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\entity\\OrderStatus.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\entity\\OrderStatus.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\entity\\OrderStatus.java",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-15T12:07:21.796Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 85,
+              "Title": "PaymentCallbackResult.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\dto\\PaymentCallbackResult.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\dto\\PaymentCallbackResult.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\dto\\PaymentCallbackResult.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\dto\\PaymentCallbackResult.java",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABkAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-15T12:09:08.893Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 84,
+              "Title": "InventoryTransactionRepository.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\repository\\InventoryTransactionRepository.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\repository\\InventoryTransactionRepository.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\repository\\InventoryTransactionRepository.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\repository\\InventoryTransactionRepository.java",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-15T12:08:47.065Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 83,
+              "Title": "InventoryRepository.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\repository\\InventoryRepository.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\repository\\InventoryRepository.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\repository\\InventoryRepository.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\repository\\InventoryRepository.java",
+              "ViewState": "AgIAABQAAAAAAAAAAABBwBgAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-15T12:08:46.825Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 82,
+              "Title": "StockLogRepository.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\repository\\StockLogRepository.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\repository\\StockLogRepository.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\repository\\StockLogRepository.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\repository\\StockLogRepository.java",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-15T12:08:46.558Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 81,
+              "Title": "WarehouseRepository.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\repository\\WarehouseRepository.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\repository\\WarehouseRepository.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\repository\\WarehouseRepository.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\repository\\WarehouseRepository.java",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-15T12:08:46.267Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 80,
+              "Title": "PaymentTransaction.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\entity\\PaymentTransaction.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\entity\\PaymentTransaction.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\entity\\PaymentTransaction.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\entity\\PaymentTransaction.java",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAE4AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-15T12:08:26.434Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 79,
+              "Title": "StockLog.java",
+              "DocumentMoniker": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\entity\\StockLog.java",
+              "RelativeDocumentMoniker": "src\\main\\java\\com\\strongwine\\strongwine\\entity\\StockLog.java",
+              "ToolTip": "D:\\Download\\strongwine\\src\\main\\java\\com\\strongwine\\strongwine\\entity\\StockLog.java",
+              "RelativeToolTip": "src\\main\\java\\com\\strongwine\\strongwine\\entity\\StockLog.java",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAEMAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-15T12:07:57.557Z"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

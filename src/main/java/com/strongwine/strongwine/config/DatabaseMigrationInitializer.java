@@ -1,0 +1,142 @@
+package com.strongwine.strongwine.config;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.ApplicationArguments;
+import org.springframework.boot.ApplicationRunner;
+import org.springframework.core.annotation.Order;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Component;
+
+@Component
+@Order(0)
+public class DatabaseMigrationInitializer implements ApplicationRunner {
+
+    private static final String MIGRATION_KEY = "initialize_new_tables_v1";
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
+    @Override
+    public void run(ApplicationArguments args) {
+        createMigrationHistoryTableIfNeeded();
+
+        Integer existing = jdbcTemplate.queryForObject(
+                "SELECT COUNT(1) FROM migration_history WHERE migration_key = ?",
+                Integer.class,
+                MIGRATION_KEY);
+
+        if (existing != null && existing > 0) {
+            repairInventoryLinksOnly();
+            repairInventoryVersionNullValues();
+            return;
+        }
+
+        initializeWarehouseAndInventory();
+        repairInventoryVersionNullValues();
+        initializePaymentsFromOrders();
+        initializeInventoryTransactions();
+
+        jdbcTemplate.update(
+                "INSERT INTO migration_history (migration_key, description, executed_at) VALUES (?, ?, GETDATE())",
+                MIGRATION_KEY,
+                "One-time initialization for warehouse, inventory, payments, and inventory transactions");
+    }
+
+    private void createMigrationHistoryTableIfNeeded() {
+        jdbcTemplate.execute("""
+                IF OBJECT_ID(N'[dbo].[migration_history]', N'U') IS NULL
+                BEGIN
+                    CREATE TABLE migration_history (
+                        id BIGINT IDENTITY(1,1) PRIMARY KEY,
+                        migration_key NVARCHAR(200) NOT NULL UNIQUE,
+                        description NVARCHAR(1000),
+                        executed_at DATETIME2 NOT NULL DEFAULT GETDATE()
+                    );
+                END
+                """);
+    }
+
+    private void initializeWarehouseAndInventory() {
+        jdbcTemplate.execute("""
+                DECLARE @warehouseId BIGINT;
+                SELECT TOP 1 @warehouseId = id FROM warehouse WHERE name = 'Main Warehouse';
+
+                IF @warehouseId IS NULL
+                BEGIN
+                    INSERT INTO warehouse (name, location, active, created_at)
+                    VALUES ('Main Warehouse', N'Ho Chi Minh City', 1, GETDATE());
+                    SET @warehouseId = SCOPE_IDENTITY();
+                END
+
+                INSERT INTO inventory (wine_id, warehouse_id, current_quantity, reserved_quantity, reorder_level, updated_at)
+                SELECT w.id, @warehouseId, 50, 0, 10, GETDATE()
+                FROM wines w
+                WHERE NOT EXISTS (
+                    SELECT 1 FROM inventory i WHERE i.wine_id = w.id AND i.warehouse_id = @warehouseId
+                );
+
+                UPDATE inventory
+                SET current_quantity = CASE WHEN current_quantity IS NULL OR current_quantity <= 0 THEN 50 ELSE current_quantity END,
+                    reserved_quantity = CASE WHEN reserved_quantity IS NULL OR reserved_quantity < 0 THEN 0 ELSE reserved_quantity END,
+                    reorder_level = CASE WHEN reorder_level IS NULL OR reorder_level <= 0 THEN 10 ELSE reorder_level END,
+                    updated_at = GETDATE()
+                WHERE warehouse_id = @warehouseId;
+                """);
+    }
+
+    private void repairInventoryLinksOnly() {
+        initializeWarehouseAndInventory();
+    }
+
+    private void repairInventoryVersionNullValues() {
+        jdbcTemplate.execute("""
+                IF OBJECT_ID(N'[dbo].[inventory]', N'U') IS NOT NULL
+                BEGIN
+                    UPDATE [dbo].[inventory]
+                    SET [version] = 0
+                    WHERE [version] IS NULL;
+                END
+                """);
+    }
+
+    private void initializePaymentsFromOrders() {
+        jdbcTemplate.execute("""
+                INSERT INTO payments (order_id, method, status, amount, currency, payment_reference, gateway_session_id, gateway_response, created_at, updated_at)
+                SELECT o.id,
+                       COALESCE(NULLIF(o.payment_method, ''), 'COD'),
+                       COALESCE(NULLIF(o.payment_status, ''), 'PENDING'),
+                       o.total_price,
+                       'VND',
+                       CONCAT('MIG-ORDER-', o.id),
+                       NULL,
+                       'MIGRATED_FROM_ORDERS',
+                       GETDATE(),
+                       GETDATE()
+                FROM orders o
+                WHERE NOT EXISTS (SELECT 1 FROM payments p WHERE p.order_id = o.id);
+                """);
+    }
+
+    private void initializeInventoryTransactions() {
+        jdbcTemplate.execute("""
+                INSERT INTO inventory_transactions (inventory_id, product_id, warehouse_id, quantity, operation_type, reference_type, reference_id, user_id, note, created_at)
+                SELECT i.id,
+                       i.wine_id,
+                       i.warehouse_id,
+                       i.current_quantity,
+                       'IMPORT',
+                       'MIGRATION',
+                       NULL,
+                       NULL,
+                       'Initial migration stock',
+                       GETDATE()
+                FROM inventory i
+                WHERE NOT EXISTS (
+                    SELECT 1
+                    FROM inventory_transactions t
+                    WHERE t.inventory_id = i.id
+                      AND t.reference_type = 'MIGRATION'
+                );
+                """);
+    }
+}

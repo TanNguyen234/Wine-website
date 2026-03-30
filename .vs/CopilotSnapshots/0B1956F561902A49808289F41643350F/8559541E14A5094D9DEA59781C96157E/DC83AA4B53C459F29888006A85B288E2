@@ -1,0 +1,30 @@
+﻿spring.application.name=strongwine
+
+# SQL Server Database Configuration
+spring.datasource.url=jdbc:sqlserver://localhost:1433;databaseName=winestore;encrypt=true;trustServerCertificate=true
+spring.datasource.username=sa
+spring.datasource.password=123456
+spring.datasource.driver-class-name=com.microsoft.sqlserver.jdbc.SQLServerDriver
+
+# JPA/Hibernate Configuration
+spring.jpa.hibernate.ddl-auto=none
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.format_sql=true
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.SQLServerDialect
+
+# Execute schema.sql and data.sql on startup safely
+spring.sql.init.mode=always
+spring.sql.init.continue-on-error=true
+spring.sql.init.separator=;
+
+# File Upload Configuration
+spring.servlet.multipart.enabled=true
+spring.servlet.multipart.max-file-size=5MB
+spring.servlet.multipart.max-request-size=5MB
+
+# Application Configuration
+app.upload.dir=uploads
+
+# Payment Configuration
+app.payment.callback-secret=strongwine-secure-callback-secret
+app.payment.stripe.secret-key=

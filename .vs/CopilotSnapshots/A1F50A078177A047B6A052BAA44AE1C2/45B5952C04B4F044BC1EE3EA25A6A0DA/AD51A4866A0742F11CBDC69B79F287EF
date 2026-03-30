@@ -1,0 +1,127 @@
+﻿package com.strongwine.strongwine.service;
+
+import com.strongwine.strongwine.dto.PaymentCallbackResult;
+import com.strongwine.strongwine.entity.*;
+import com.strongwine.strongwine.repository.PaymentRepository;
+import com.strongwine.strongwine.repository.PaymentTransactionRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.util.Base64;
+import java.util.List;
+import java.util.UUID;
+
+@Service
+@Transactional
+public class PaymentService {
+
+    @Autowired
+    private PaymentRepository paymentRepository;
+
+    @Autowired
+    private PaymentTransactionRepository paymentTransactionRepository;
+
+    @Autowired
+    private OrderService orderService;
+
+    @Value("${app.payment.callback-secret:strongwine-secure-callback-secret}")
+    private String callbackSecret;
+
+    public String createPaymentSession(Order order, String method, String baseUrl) {
+        PaymentMethod paymentMethod = parseMethod(method);
+
+        Payment payment = new Payment();
+        payment.setOrder(order);
+        payment.setMethod(paymentMethod);
+        payment.setStatus(PaymentStatus.PENDING);
+        payment.setAmount(order.getTotalPrice());
+        payment.setCurrency("VND");
+        payment.setPaymentReference("PAY-" + UUID.randomUUID().toString().replace("-", "").substring(0, 16));
+        payment.setGatewaySessionId(UUID.randomUUID().toString());
+        payment.setGatewayResponse("SESSION_CREATED");
+        payment.setCreatedAt(LocalDateTime.now());
+        payment.setUpdatedAt(LocalDateTime.now());
+
+        Payment saved = paymentRepository.save(payment);
+        saveTransaction(saved, "SESSION_CREATED", "PENDING", "Order " + order.getId());
+
+        return baseUrl + "/payments/session/" + saved.getPaymentReference();
+    }
+
+    public Payment getPaymentByReference(String paymentReference) {
+        return paymentRepository.findByPaymentReference(paymentReference)
+                .orElseThrow(() -> new RuntimeException("Payment session not found"));
+    }
+
+    public String buildCallbackSignature(String paymentReference, String status) {
+        try {
+            String payload = paymentReference + ":" + status;
+            Mac mac = Mac.getInstance("HmacSHA256");
+            mac.init(new SecretKeySpec(callbackSecret.getBytes(StandardCharsets.UTF_8), "HmacSHA256"));
+            byte[] signatureBytes = mac.doFinal(payload.getBytes(StandardCharsets.UTF_8));
+            return Base64.getUrlEncoder().withoutPadding().encodeToString(signatureBytes);
+        } catch (Exception e) {
+            throw new RuntimeException("Unable to build callback signature", e);
+        }
+    }
+
+    public PaymentCallbackResult handleCallback(String paymentReference, String status, String signature) {
+        if (!buildCallbackSignature(paymentReference, status).equals(signature)) {
+            return new PaymentCallbackResult(false, "Invalid payment signature", null);
+        }
+
+        Payment payment = getPaymentByReference(paymentReference);
+        if (payment.getStatus() == PaymentStatus.SUCCESS) {
+            return new PaymentCallbackResult(true, "Payment already confirmed", payment.getOrder().getId());
+        }
+
+        if ("success".equalsIgnoreCase(status)) {
+            payment.setStatus(PaymentStatus.SUCCESS);
+            payment.setGatewayResponse("PAYMENT_SUCCESS");
+            payment.setUpdatedAt(LocalDateTime.now());
+            paymentRepository.save(payment);
+            saveTransaction(payment, "CALLBACK", "SUCCESS", "Payment success callback");
+            orderService.markOrderPaid(payment.getOrder().getId(), paymentReference);
+            return new PaymentCallbackResult(true, "Payment completed", payment.getOrder().getId());
+        }
+
+        payment.setStatus("cancel".equalsIgnoreCase(status) ? PaymentStatus.CANCELLED : PaymentStatus.FAILED);
+        payment.setGatewayResponse("PAYMENT_" + status.toUpperCase());
+        payment.setUpdatedAt(LocalDateTime.now());
+        paymentRepository.save(payment);
+        saveTransaction(payment, "CALLBACK", payment.getStatus().name(), "Payment callback: " + status);
+        orderService.cancelPendingOrder(payment.getOrder().getId());
+        return new PaymentCallbackResult(false, "Payment was not successful", payment.getOrder().getId());
+    }
+
+    public List<Payment> getRecentPayments() {
+        return paymentRepository.findTop100ByOrderByCreatedAtDesc();
+    }
+
+    public List<PaymentTransaction> getRecentTransactions() {
+        return paymentTransactionRepository.findTop200ByOrderByCreatedAtDesc();
+    }
+
+    private PaymentMethod parseMethod(String method) {
+        try {
+            return PaymentMethod.valueOf(method == null ? "STRIPE" : method.toUpperCase());
+        } catch (Exception e) {
+            return PaymentMethod.STRIPE;
+        }
+    }
+
+    private void saveTransaction(Payment payment, String type, String status, String payload) {
+        PaymentTransaction tx = new PaymentTransaction();
+        tx.setPayment(payment);
+        tx.setTransactionType(type);
+        tx.setStatus(status);
+        tx.setPayload(payload);
+        paymentTransactionRepository.save(tx);
+    }
+}

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StrongWine | Sản phẩm rượu vang</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark navbar-modern py-3">
+    <div class="container">
+        <a class="navbar-brand d-flex align-items-center gap-2" href="/home"><span class="brand-logo"><i class="fa-solid fa-wine-glass"></i></span><span class="fw-semibold">StrongWine</span></a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"><span class="navbar-toggler-icon"></span></button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto ms-lg-4">
+                <li class="nav-item"><a class="nav-link" href="/home">Trang chủ</a></li>
+                <li class="nav-item"><a class="nav-link active" href="/wines">Sản phẩm</a></li>
+            </ul>
+            <ul class="navbar-nav gap-lg-2">
+                <li class="nav-item"><a class="nav-link" href="/cart"><i class="fa-solid fa-cart-shopping"></i> <span class="badge text-bg-light text-dark js-cart-count" th:text="${cartCount}">0</span></a></li>
+                <li class="nav-item" sec:authorize="!isAuthenticated()"><a class="nav-link" href="/login">Đăng nhập</a></li>
+                <li class="nav-item" sec:authorize="!isAuthenticated()"><a class="nav-link" href="/register">Đăng ký</a></li>
+                <li class="nav-item" sec:authorize="hasRole('ADMIN')"><a class="nav-link" href="/admin">Quản trị</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<main class="container my-4">
+    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+    <div class="panel p-3 p-lg-4 mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h1 class="h4 mb-0">Danh sách rượu vang</h1>
+            <span class="text-muted" th:text="${wines.size()} + ' sản phẩm'"></span>
+        </div>
+        <form method="get" action="/wines" class="row g-2 g-lg-3" id="filterForm">
+            <div class="col-md-3"><input type="text" class="form-control" name="name" th:value="${name}" placeholder="Tìm theo tên hoặc từ khóa"></div>
+            <div class="col-md-2">
+                <select class="form-select auto-submit" name="type">
+                    <option value="">Loại rượu</option>
+                    <option value="Red" th:selected="${type == 'Red'}">Vang đỏ</option>
+                    <option value="White" th:selected="${type == 'White'}">Vang trắng</option>
+                    <option value="Rose" th:selected="${type == 'Rose'}">Vang hồng</option>
+                    <option value="Sparkling" th:selected="${type == 'Sparkling'}">Vang sủi</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select class="form-select auto-submit" name="country">
+                    <option value="">Quốc gia</option>
+                    <option th:each="countryOption : ${countries}" th:value="${countryOption}" th:text="${countryOption}" th:selected="${country == countryOption}"></option>
+                </select>
+            </div>
+            <div class="col-md-2"><input type="number" class="form-control" name="year" th:value="${year}" placeholder="Năm"></div>
+            <div class="col-md-1"><input type="number" step="0.01" class="form-control" name="minPrice" th:value="${minPrice}" placeholder="Giá từ"></div>
+            <div class="col-md-1"><input type="number" step="0.01" class="form-control" name="maxPrice" th:value="${maxPrice}" placeholder="Giá đến"></div>
+            <div class="col-md-1 d-flex align-items-center">
+                <div class="form-check">
+                    <input class="form-check-input auto-submit" type="checkbox" name="inStock" value="true" id="inStock" th:checked="${inStock}">
+                    <label class="form-check-label small" for="inStock">Còn hàng</label>
+                </div>
+            </div>
+            <div class="col-md-1"><button class="btn btn-dark w-100"><i class="fa-solid fa-magnifying-glass"></i></button></div>
+        </form>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-md-6 col-lg-4" th:each="wine : ${wines}">
+            <article class="product-card h-100">
+                <img th:if="${wine.imageUrl != null}" th:src="${wine.imageUrl}" class="w-100" style="height:280px;object-fit:cover;" alt="Hình ảnh rượu">
+                <div th:unless="${wine.imageUrl != null}" class="bg-light d-flex align-items-center justify-content-center" style="height:280px;"><i class="fa-regular fa-image fs-1 text-muted"></i></div>
+                <div class="p-3 d-flex flex-column h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="badge text-bg-dark" th:text="${wine.type}"></span>
+                        <span class="text-muted small" th:text="${wine.year}"></span>
+                    </div>
+                    <p class="small text-muted mb-1" th:if="${wine.country != null and !wine.country.isBlank()}" th:text="'Xuất xứ: ' + ${wine.country}"></p>
+                    <h2 class="h6" th:text="${wine.name}">Tên rượu</h2>
+                    <p class="small text-muted" th:text="${wine.description != null ? (wine.description.length() > 90 ? wine.description.substring(0, 90) + '...' : wine.description) : ''}"></p>
+                    <p class="price-tag" th:text="${#numbers.formatDecimal(wine.price, 0, 'COMMA', 0, 'POINT') + ' đ'}"></p>
+                    <div class="mb-3" th:with="stock=${(availableStockByWineId != null and availableStockByWineId[wine.id] != null) ? availableStockByWineId[wine.id] : 0}">
+                        <span
+                              th:class="${stock > 20 ? 'stock-badge stock-ok' : (stock > 0 ? 'stock-badge stock-low' : 'stock-badge stock-out')}"
+                              th:text="${stock > 20 ? 'Còn hàng: ' + stock : (stock > 0 ? 'Sắp hết: ' + stock : 'Hết hàng')}"></span>
+                    </div>
+                    <div class="d-grid gap-2 mt-0" th:with="stock=${(availableStockByWineId != null and availableStockByWineId[wine.id] != null) ? availableStockByWineId[wine.id] : 0}">
+                        <a th:href="@{/wines/{id}(id=${wine.id})}" class="btn btn-outline-dark flex-fill">Chi tiết</a>
+                        <button type="button" class="btn btn-dark w-100" data-cart-add="true" th:disabled="${stock <= 0}" th:attr="data-cart-product-id=${wine.id},data-cart-name=${wine.name},data-cart-price=${wine.price},data-cart-image=${wine.imageUrl},data-cart-stock=${stock}"><i class="fa-solid fa-cart-plus me-1"></i>Thêm vào giỏ</button>
+                        <button type="button" class="btn btn-danger w-100" data-cart-add="true" data-cart-redirect="/cart/checkout" th:disabled="${stock <= 0}" th:attr="data-cart-product-id=${wine.id},data-cart-name=${wine.name},data-cart-price=${wine.price},data-cart-image=${wine.imageUrl},data-cart-stock=${stock}">Mua ngay</button>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </div>
+</main>
+
+<button id="aiToggle" class="ai-fab" title="AI gợi ý"><i class="fa-solid fa-robot"></i></button>
+<section id="aiPanel" class="ai-panel p-3">
+    <h6><i class="fa-solid fa-sparkles me-1"></i> AI gợi ý</h6>
+    <div id="aiFeed" class="border rounded p-2 mb-2" style="max-height: 170px; overflow-y:auto;"></div>
+    <form id="aiForm" class="d-flex gap-2">
+        <input id="aiPrompt" class="form-control form-control-sm" placeholder="Ví dụ: rượu dưới 500k">
+        <button class="btn btn-sm btn-dark">Gửi</button>
+    </form>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/js/cart-client.js"></script>
+<script src="/js/ai-assistant.js"></script>
+<script>
+    document.querySelectorAll('.auto-submit').forEach(el => {
+        el.addEventListener('change', () => document.getElementById('filterForm')?.submit());
+    });
+</script>
+</body>
+</html>

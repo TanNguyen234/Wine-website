@@ -1,0 +1,108 @@
+﻿package com.strongwine.strongwine.controller.api;
+
+import com.strongwine.strongwine.dto.ProductDto;
+import com.strongwine.strongwine.entity.Category;
+import com.strongwine.strongwine.entity.Wine;
+import com.strongwine.strongwine.repository.CategoryRepository;
+import com.strongwine.strongwine.service.WineService;
+import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/admin/products")
+public class AdminProductApiController {
+
+    @Autowired
+    private WineService wineService;
+
+    @Autowired
+    private CategoryRepository categoryRepository;
+
+    @GetMapping
+    public ResponseEntity<List<ProductDto>> getAllProducts() {
+        return ResponseEntity.ok(wineService.getAllWines().stream().map(this::toDto).toList());
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ProductDto> getProductById(@PathVariable Long id) {
+        return wineService.getWineById(id)
+                .map(wine -> ResponseEntity.ok(toDto(wine)))
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PostMapping
+    public ResponseEntity<ProductDto> createProduct(@Valid @RequestBody ProductDto dto) {
+        Wine wine = toEntity(dto);
+        Wine saved = wineService.createWine(wine);
+        return ResponseEntity.status(HttpStatus.CREATED).body(toDto(saved));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<ProductDto> updateProduct(@PathVariable Long id, @Valid @RequestBody ProductDto dto) {
+        try {
+            Wine current = wineService.getWineByIdOrThrow(id);
+            current.setName(dto.getName());
+            current.setType(dto.getType());
+            current.setYear(dto.getYear());
+            current.setPrice(dto.getPrice());
+            current.setDescription(dto.getDescription());
+            current.setCountry(dto.getCountry());
+            current.setImageUrl(dto.getImageUrl());
+            current.setCategory(resolveCategory(dto.getCategoryId()));
+            Wine updated = wineService.updateWine(id, current);
+            return ResponseEntity.ok(toDto(updated));
+        } catch (RuntimeException ex) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {
+        try {
+            wineService.deleteWine(id);
+            return ResponseEntity.noContent().build();
+        } catch (RuntimeException ex) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    private Wine toEntity(ProductDto dto) {
+        Wine wine = new Wine();
+        wine.setName(dto.getName());
+        wine.setType(dto.getType());
+        wine.setYear(dto.getYear());
+        wine.setPrice(dto.getPrice());
+        wine.setDescription(dto.getDescription());
+        wine.setCountry(dto.getCountry());
+        wine.setImageUrl(dto.getImageUrl());
+        wine.setCategory(resolveCategory(dto.getCategoryId()));
+        return wine;
+    }
+
+    private ProductDto toDto(Wine wine) {
+        ProductDto dto = new ProductDto();
+        dto.setId(wine.getId());
+        dto.setName(wine.getName());
+        dto.setType(wine.getType());
+        dto.setYear(wine.getYear());
+        dto.setPrice(wine.getPrice());
+        dto.setDescription(wine.getDescription());
+        dto.setCountry(wine.getCountry());
+        dto.setImageUrl(wine.getImageUrl());
+        dto.setCategoryId(wine.getCategory() != null ? wine.getCategory().getId() : null);
+        return dto;
+    }
+
+    private Category resolveCategory(Long categoryId) {
+        if (categoryId == null) {
+            return null;
+        }
+        return categoryRepository.findByIdAndDeletedFalse(categoryId)
+                .orElseThrow(() -> new IllegalArgumentException("Category not found with id: " + categoryId));
+    }
+}

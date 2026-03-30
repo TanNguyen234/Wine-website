@@ -1,0 +1,161 @@
+﻿package com.strongwine.strongwine.service;
+
+import com.strongwine.strongwine.entity.Wine;
+import com.strongwine.strongwine.repository.WineRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.math.BigDecimal;
+import java.time.Year;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+
+/**
+ * Service class for Wine business logic
+ */
+@Service
+@Transactional
+public class WineService {
+
+    private static final Set<String> ALLOWED_WINE_TYPES = new HashSet<>(Arrays.asList("Red", "White", "Rose", "Sparkling"));
+    private static final String DEFAULT_IMAGE_URL = "https://images.unsplash.com/photo-1516594915697-87eb3b1c14ea?auto=format&fit=crop&w=900&q=80";
+    
+    @Autowired
+    private WineRepository wineRepository;
+    
+    /**
+     * Get all wines
+     */
+    public List<Wine> getAllWines() {
+        return wineRepository.findByDeletedFalse();
+    }
+    
+    public Page<Wine> getAllWinesPage(Pageable pageable) {
+        return wineRepository.findByDeletedFalse(pageable);
+    }
+    
+    /**
+     * Get wine by ID
+     */
+    public Optional<Wine> getWineById(Long id) {
+        if (id == null || id <= 0) {
+            return Optional.empty();
+        }
+        return wineRepository.findById(id).filter(w -> !w.isDeleted());
+    }
+    
+    /**
+     * Create a new wine
+     */
+    public Wine createWine(Wine wine) {
+        normalizeAndValidateWine(wine, null);
+        return wineRepository.save(wine);
+    }
+    
+    /**
+     * Update an existing wine
+     */
+    public Wine updateWine(Long id, Wine wineDetails) {
+        Wine wine = wineRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Wine not found with id: " + id));
+        if (wine.isDeleted()) throw new RuntimeException("Wine is deleted");
+
+        normalizeAndValidateWine(wineDetails, id);
+        
+        wine.setName(wineDetails.getName());
+        wine.setType(wineDetails.getType());
+        wine.setYear(wineDetails.getYear());
+        wine.setPrice(wineDetails.getPrice());
+        wine.setDescription(wineDetails.getDescription());
+        wine.setCountry(wineDetails.getCountry());
+        wine.setImageUrl(wineDetails.getImageUrl());
+        wine.setCategory(wineDetails.getCategory());
+        
+        return wineRepository.save(wine);
+    }
+    
+    /**
+     * Delete a wine
+     * Note: Soft delete implemented
+     */
+    public void deleteWine(Long id) {
+        Wine wine = wineRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Wine not found with id: " + id));
+        if (wine.isDeleted()) {
+            return;
+        }
+        wine.setDeleted(true);
+        wineRepository.save(wine);
+    }
+    
+    /**
+     * Get wine by ID (throws exception if not found)
+     */
+    public Wine getWineByIdOrThrow(Long id) {
+        Wine wine = wineRepository.findById(id)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Wine not found with id: " + id));
+        if (wine.isDeleted()) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Wine is deleted");
+        return wine;
+    }
+
+    public Page<Wine> searchWinesPage(String keyword, String type, String country, Integer year,
+                                      BigDecimal minPrice, BigDecimal maxPrice, Pageable pageable) {
+        String normalizedKeyword = normalizeOptionalText(keyword, 255);
+        String normalizedCountry = normalizeOptionalText(country, 100);
+        String normalizedType = normalizeType(type, false);
+
+        if (year != null && (year < 1900 || year > Year.now().getValue() + 1)) {
+            throw new IllegalArgumentException("Năm sản xuất không hợp lệ");
+        }
+        if (minPrice != null && minPrice.compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("Giá tối thiểu không hợp lệ");
+        }
+        if (maxPrice != null && maxPrice.compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("Giá tối đa không hợp lệ");
+        }
+        if (minPrice != null && maxPrice != null && minPrice.compareTo(maxPrice) > 0) {
+            throw new IllegalArgumentException("Khoảng giá không hợp lệ");
+        }
+
+        return wineRepository.searchWines(normalizedKeyword, normalizedType, normalizedCountry, year, minPrice, maxPrice, pageable);
+    }
+    
+    /**
+     * Search wines by name, type, year, and price range
+     * Name search is case-insensitive and supports partial matching
+     */
+    public List<Wine> searchWines(String keyword, String type, String country, Integer year,
+                                 BigDecimal minPrice, BigDecimal maxPrice) {
+        return searchWinesPage(keyword, type, country, year, minPrice, maxPrice, Pageable.unpaged()).getContent();
+    }
+    
+    /**
+     * Get wines by type
+     */
+    public List<Wine> getWinesByType(String type) {
+        return wineRepository.findByTypeAndDeletedFalse(type);
+    }
+    
+    /**
+     * Get wines by year
+     */
+    public List<Wine> getWinesByYear(Integer year) {
+        return wineRepository.findByYearAndDeletedFalse(year);
+    }
+    
+    /**
+     * Get wines by price range
+     */
+    public List<Wine> getWinesByPriceRange(BigDecimal minPrice, BigDecimal maxPrice) {
+        return wineRepository.findByPriceBetween(minPrice, maxPrice);
+    }
+}
+

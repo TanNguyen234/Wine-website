@@ -1,0 +1,21 @@
+﻿package com.strongwine.strongwine.controller;
+
+import jakarta.servlet.http.HttpSession;
+import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.ModelAttribute;
+
+import java.util.Map;
+
+@ControllerAdvice
+public class GlobalModelAttributes {
+
+    @ModelAttribute("cartCount")
+    public int cartCount(HttpSession session) {
+        @SuppressWarnings("unchecked")
+        Map<Long, Integer> cart = (Map<Long, Integer>) session.getAttribute("cart");
+        if (cart == null || cart.isEmpty()) {
+            return 0;
+        }
+        return cart.values().stream().filter(q -> q != null && q > 0).mapToInt(Integer::intValue).sum();
+    }
+}

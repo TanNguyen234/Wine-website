@@ -1,0 +1,108 @@
+package com.strongwine.strongwine.entity;
+
+import jakarta.persistence.*;
+
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "inventory", uniqueConstraints = {
+        @UniqueConstraint(name = "uk_inventory_wine_warehouse", columnNames = {"wine_id", "warehouse_id"})
+})
+public class Inventory {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "wine_id", nullable = false)
+    private Wine wine;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "warehouse_id", nullable = false)
+    private Warehouse warehouse;
+
+    @Column(name = "current_quantity", nullable = false)
+    private Integer currentQuantity = 0;
+
+    @Column(name = "reserved_quantity", nullable = false)
+    private Integer reservedQuantity = 0;
+
+    @Column(name = "reorder_level", nullable = false)
+    private Integer reorderLevel = 10;
+
+    @Column(name = "updated_at", nullable = false)
+    private LocalDateTime updatedAt = LocalDateTime.now();
+
+    @Version
+    private Long version;
+
+    @Transient
+    public Integer getAvailableQuantity() {
+        return Math.max(0, currentQuantity - reservedQuantity);
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public Wine getWine() {
+        return wine;
+    }
+
+    public void setWine(Wine wine) {
+        this.wine = wine;
+    }
+
+    public Warehouse getWarehouse() {
+        return warehouse;
+    }
+
+    public void setWarehouse(Warehouse warehouse) {
+        this.warehouse = warehouse;
+    }
+
+    public Integer getCurrentQuantity() {
+        return currentQuantity;
+    }
+
+    public void setCurrentQuantity(Integer currentQuantity) {
+        this.currentQuantity = currentQuantity;
+    }
+
+    public Integer getReservedQuantity() {
+        return reservedQuantity;
+    }
+
+    public void setReservedQuantity(Integer reservedQuantity) {
+        this.reservedQuantity = reservedQuantity;
+    }
+
+    public Integer getReorderLevel() {
+        return reorderLevel;
+    }
+
+    public void setReorderLevel(Integer reorderLevel) {
+        this.reorderLevel = reorderLevel;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
+    public Long getVersion() {
+        return version;
+    }
+
+    public void setVersion(Long version) {
+        this.version = version;
+    }
+}

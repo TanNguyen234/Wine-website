@@ -1,0 +1,67 @@
+package com.strongwine.strongwine.controller;
+
+import com.strongwine.strongwine.entity.User;
+import com.strongwine.strongwine.repository.UserRepository;
+import com.strongwine.strongwine.service.ReviewService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.util.Optional;
+
+/**
+ * Controller for review operations
+ */
+@Controller
+@RequestMapping("/reviews")
+public class ReviewController {
+    
+    @Autowired
+    private ReviewService reviewService;
+    
+    @Autowired
+    private UserRepository userRepository;
+    
+    /**
+     * Create a new review
+     */
+    @PostMapping("/create")
+    public String createReview(
+            @RequestParam Long wineId,
+            @RequestParam Integer rating,
+            @RequestParam String comment,
+            Authentication authentication,
+            RedirectAttributes redirectAttributes) {
+        
+        if (authentication == null || !authentication.isAuthenticated()) {
+            redirectAttributes.addFlashAttribute("error", "Vui long dang nhap de gui danh gia");
+            return "redirect:/login";
+        }
+        
+        String username = ((UserDetails) authentication.getPrincipal()).getUsername();
+        Optional<User> userOpt = userRepository.findByUsername(username);
+        if (userOpt.isEmpty()) {
+            redirectAttributes.addFlashAttribute("error", "Khong tim thay nguoi dung");
+            return "redirect:/wines/" + wineId;
+        }
+        
+        com.strongwine.strongwine.entity.Review review = new com.strongwine.strongwine.entity.Review();
+        review.setRating(rating);
+        review.setComment(comment);
+        
+        try {
+            reviewService.createReview(wineId, userOpt.get().getId(), review);
+            redirectAttributes.addFlashAttribute("success", "Gui danh gia thanh cong!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Khong the gui danh gia: " + e.getMessage());
+        }
+        
+        return "redirect:/wines/" + wineId;
+    }
+}
+

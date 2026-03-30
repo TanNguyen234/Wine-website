@@ -1,0 +1,91 @@
+package com.strongwine.strongwine.security;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+/**
+ * Spring Security configuration
+ */
+@Configuration
+@EnableWebSecurity
+@EnableMethodSecurity
+public class SecurityConfig {
+    
+    @Autowired
+    private UserDetailsServiceImpl userDetailsService;
+    
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
+        return authConfig.getAuthenticationManager();
+    }
+    
+    /**
+     * Configure authentication
+     */
+    @Autowired
+    public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
+        auth.userDetailsService(userDetailsService).passwordEncoder(passwordEncoder);
+    }
+    
+    /**
+     * Configure HTTP security
+     */
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+            .authorizeHttpRequests(authz -> authz
+                // Admin only pages
+                .requestMatchers("/admin/**", "/api/admin/**", "/wines/admin/**").hasRole("ADMIN")
+                // Shipper pages for SHIPPER and ADMIN
+                .requestMatchers("/shipper/**").hasAnyRole("SHIPPER", "ADMIN")
+                // Public pages
+                .requestMatchers("/", "/home", "/wines", "/wines/**", "/cart/**", "/register", "/login", "/css/**", "/js/**", "/images/**", "/uploads/**", "/payment/webhook").permitAll()
+                // API Auth endpoint
+                .requestMatchers("/api/auth/**").permitAll()
+                // User pages (authenticated users)
+                .requestMatchers("/order-confirmation", "/orders/**", "/reviews/create").authenticated()
+                // REST API endpoints
+                .requestMatchers(HttpMethod.GET, "/api/wines/**").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/wines/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/api/wines/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/wines/**").hasRole("ADMIN")
+                .requestMatchers("/api/orders/**", "/api/reviews/**").authenticated()
+                .requestMatchers("/api/users/**").hasRole("ADMIN")
+                .anyRequest().authenticated()
+            )
+            .formLogin(form -> form
+                .loginPage("/login")
+                .defaultSuccessUrl("/home", true)
+                .failureUrl("/login?error=true")
+                .permitAll()
+            )
+            .logout(logout -> logout
+                .logoutUrl("/logout")
+                .logoutSuccessUrl("/home")
+                .permitAll()
+            )
+            .csrf(csrf -> csrf.disable()) // Disable CSRF for API endpoints (enable in production for web forms)
+            // Note: form login works so we aren't completely disabling session
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+        
+        return http.build();
+    }
+}
+

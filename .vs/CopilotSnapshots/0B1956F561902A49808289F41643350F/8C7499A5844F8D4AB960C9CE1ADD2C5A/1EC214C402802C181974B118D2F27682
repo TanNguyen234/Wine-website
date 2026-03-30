@@ -1,0 +1,267 @@
+﻿package com.strongwine.strongwine.controller;
+
+import com.strongwine.strongwine.dto.CartDto;
+import com.strongwine.strongwine.dto.CheckoutForm;
+import com.strongwine.strongwine.entity.User;
+import com.strongwine.strongwine.repository.UserRepository;
+import com.strongwine.strongwine.service.CartService;
+import com.strongwine.strongwine.service.OrderService;
+import com.strongwine.strongwine.service.PaymentService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import jakarta.servlet.http.HttpSession;
+
+/**
+ * Controller for shopping cart functionality
+ */
+@Controller
+@RequestMapping("/cart")
+public class CartController {
+    
+    @Autowired
+    private CartService cartService;
+    
+    @Autowired
+    private OrderService orderService;
+    
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private PaymentService paymentService;
+
+    private Long getUserId(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getPrincipal())) {
+            return null;
+        }
+        String username = ((UserDetails) authentication.getPrincipal()).getUsername();
+        User user = userRepository.findByUsername(username).orElse(null);
+        return user != null ? user.getId() : null;
+    }
+
+    /**
+     * View cart
+     */
+    @GetMapping
+    public String viewCart(HttpSession session, Authentication authentication, Model model) {
+        Long userId = getUserId(authentication);
+        String sessionId = session.getId();
+        
+        CartDto cartDto = cartService.getCart(sessionId, userId);
+        
+        if (cartDto.isEmpty()) {
+            model.addAttribute("empty", true);
+            return "cart";
+        }
+        
+        model.addAttribute("cartItems", cartDto.getItems());
+        model.addAttribute("subtotal", cartDto.getSubtotal());
+        model.addAttribute("total", cartDto.getTotal());
+        return "cart";
+    }
+    
+    /**
+     * Add item to cart
+     */
+    @PostMapping("/add/{wineId}")
+    public String addToCart(@PathVariable Long wineId, 
+                            @RequestParam(defaultValue = "1") Integer quantity,
+                            @RequestParam(required = false, defaultValue = "/cart") String redirectTo,
+                            HttpSession session,
+                            Authentication authentication,
+                            RedirectAttributes redirectAttributes) {
+        if (quantity == null || quantity <= 0) {
+            redirectAttributes.addFlashAttribute("error", "Số lượng không hợp lệ.");
+            return "redirect:" + redirectTo;
+        }
+
+        try {
+            cartService.addToCart(session.getId(), getUserId(authentication), wineId, quantity);
+            redirectAttributes.addFlashAttribute("success", "Sản phẩm đã được thêm vào giỏ hàng.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+
+        return "redirect:" + redirectTo;
+    }
+    
+    /**
+     * Update cart item quantity
+     */
+    @PostMapping("/update/{wineId}")
+    public String updateCart(@PathVariable Long wineId,
+                            @RequestParam Integer quantity,
+                            HttpSession session,
+                            Authentication authentication,
+                            RedirectAttributes redirectAttributes) {
+        try {
+            if (quantity <= 0) {
+                cartService.removeFromCart(session.getId(), getUserId(authentication), wineId);
+                redirectAttributes.addFlashAttribute("success", "Đã xóa sản phẩm khỏi giỏ hàng.");
+            } else {
+                cartService.updateCartItem(session.getId(), getUserId(authentication), wineId, quantity);
+                redirectAttributes.addFlashAttribute("success", "Cập nhật giỏ hàng thành công.");
+            }
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Lỗi: " + e.getMessage());
+        }
+        
+        return "redirect:/cart";
+    }
+    
+    /**
+     * Remove item from cart
+     */
+    @PostMapping("/remove/{wineId}")
+    public String removeFromCart(@PathVariable Long wineId, HttpSession session, Authentication authentication) {
+        cartService.removeFromCart(session.getId(), getUserId(authentication), wineId);
+        return "redirect:/cart";
+    }
+    
+    /**
+     * Redirect to checkout page
+     */
+    @PostMapping("/checkout")
+    public String redirectToCheckout(HttpSession session, Authentication authentication, RedirectAttributes redirectAttributes) {
+        Long userId = getUserId(authentication);
+        CartDto cartDto = cartService.getCart(session.getId(), userId);
+        
+        if (cartDto.isEmpty()) {
+            redirectAttributes.addFlashAttribute("error", "Giỏ hàng trống");
+            return "redirect:/cart";
+        }
+        
+        if (userId == null) {
+            redirectAttributes.addFlashAttribute("error", "Vui lòng đăng nhập để thanh toán");
+            return "redirect:/login";
+        }
+
+        
+        return "redirect:/cart/checkout";
+    }
+    
+    /**
+     * Show checkout form
+     */
+    @GetMapping("/checkout")
+    public String showCheckout(HttpSession session, Authentication authentication, Model model, RedirectAttributes redirectAttributes) {
+        Long userId = getUserId(authentication);
+        if (userId == null) {
+            redirectAttributes.addFlashAttribute("error", "Vui lòng đăng nhập để thanh toán");
+            return "redirect:/login";
+        }
+        
+        CartDto cartDto = cartService.getCart(session.getId(), userId);
+        
+        if (cartDto.isEmpty()) {
+            redirectAttributes.addFlashAttribute("error", "Giỏ hàng trống");
+            return "redirect:/cart";
+        }
+        
+        model.addAttribute("cartItems", cartDto.getItems());
+        model.addAttribute("total", cartDto.getTotal());
+        model.addAttribute("checkoutForm", new CheckoutForm());
+        model.addAttribute("paymentMethods", java.util.Arrays.asList("STRIPE", "PAYPAL", "VNPAY", "MOMO", "COD"));
+        
+        return "checkout";
+    }
+    
+    /**
+     * Process checkout and create order
+     */
+    @PostMapping("/checkout/process")
+    public String processCheckout(
+            @ModelAttribute CheckoutForm checkoutForm,
+            HttpSession session,
+            Authentication authentication,
+            HttpServletRequest request,
+            RedirectAttributes redirectAttributes) {
+            
+        Long userId = getUserId(authentication);
+        if (userId == null) {
+            redirectAttributes.addFlashAttribute("error", "Vui lòng đăng nhập để thanh toán");
+            return "redirect:/login";
+        }
+        
+        CartDto cartDto = cartService.getCart(session.getId(), userId);
+        if (cartDto.isEmpty()) {
+            redirectAttributes.addFlashAttribute("error", "Giỏ hàng trống");
+            return "redirect:/cart";
+        }
+        
+        // Validate form fields
+        if (checkoutForm.getFullName() == null || checkoutForm.getFullName().trim().isEmpty()) {
+            redirectAttributes.addFlashAttribute("error", "Vui lòng nhập họ tên");
+            return "redirect:/cart/checkout";
+        }
+        
+        if (checkoutForm.getPhone() == null || checkoutForm.getPhone().trim().isEmpty()) {
+            redirectAttributes.addFlashAttribute("error", "Vui lòng nhập số điện thoại");
+            return "redirect:/cart/checkout";
+        }
+
+        if (!checkoutForm.getPhone().matches("^(0|\\+84)[0-9]{9,10}$")) {
+            redirectAttributes.addFlashAttribute("error", "Số điện thoại không hợp lệ");
+            return "redirect:/cart/checkout";
+        }
+        
+        if (checkoutForm.getAddress() == null || checkoutForm.getAddress().trim().isEmpty()) {
+            redirectAttributes.addFlashAttribute("error", "Vui lòng nhập địa chỉ");
+            return "redirect:/cart/checkout";
+        }
+
+        if (checkoutForm.getPaymentMethod() == null || checkoutForm.getPaymentMethod().trim().isEmpty()) {
+            redirectAttributes.addFlashAttribute("error", "Vui lòng chọn phương thức thanh toán");
+            return "redirect:/cart/checkout";
+        }
+        
+        // Validate cart quantities
+        for (com.strongwine.strongwine.dto.CartItemDto item : cartDto.getItems()) {
+            if (item.getQuantity() == null || item.getQuantity() <= 0) {
+                redirectAttributes.addFlashAttribute("error", "Số lượng sản phẩm không hợp lệ");
+                return "redirect:/cart/checkout";
+            }
+        }
+        
+        String username = ((UserDetails) authentication.getPrincipal()).getUsername();
+        Optional<User> userOpt = userRepository.findByUsername(username);
+        if (userOpt.isEmpty()) {
+            redirectAttributes.addFlashAttribute("error", "Không tìm thấy người dùng");
+            return "redirect:/login";
+        }
+        
+        try {
+            Map<Long, Integer> itemsMap = new java.util.HashMap<>();
+            for (com.strongwine.strongwine.dto.CartItemDto item : cartDto.getItems()) {
+                itemsMap.put(item.getWine().getId(), item.getQuantity());
+            }
+
+            Order order = orderService.createPendingOrder(
+                    userId,
+                    itemsMap,
+                    checkoutForm.getFullName(),
+                    checkoutForm.getPhone(),
+                    checkoutForm.getAddress(),
+                    checkoutForm.getNote(),
+                    checkoutForm.getPaymentMethod());
+
+            String baseUrl = request.getScheme() + "://" + request.getServerName() + (request.getServerPort() == 80 || request.getServerPort() == 443 ? "" : ":" + request.getServerPort());
+            String paymentRedirectUrl = paymentService.createPaymentSession(order, checkoutForm.getPaymentMethod(), baseUrl);
+
+            cartDto.getItems().forEach(item -> cartService.removeFromCart(session.getId(), userId, item.getWine().getId()));
+            
+            return "redirect:" + paymentRedirectUrl;
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Thanh toán thất bại: " + e.getMessage());
+            return "redirect:/cart/checkout";
+        }
+    }
+    
+}
+

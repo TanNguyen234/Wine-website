@@ -1,0 +1,14 @@
+﻿package com.strongwine.strongwine.repository;
+
+import com.strongwine.strongwine.entity.Inventory;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.List;
+import java.util.Optional;
+
+public interface InventoryRepository extends JpaRepository<Inventory, Long> {
+    Optional<Inventory> findByWineId(Long wineId);
+    Optional<Inventory> findByWineIdAndWarehouseId(Long wineId, Long warehouseId);
+    List<Inventory> findByCurrentQuantityLessThanEqual(Integer quantity);
+    List<Inventory> findByCurrentQuantityGreaterThan(Integer quantity);
+}

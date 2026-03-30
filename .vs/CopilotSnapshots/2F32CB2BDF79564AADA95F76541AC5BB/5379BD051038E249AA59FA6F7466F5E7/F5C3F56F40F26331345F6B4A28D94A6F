@@ -1,0 +1,10 @@
+﻿# Stripe Configuration
+# Copy file này thành .env và điền keys thực tế của bạn
+
+# Stripe Test Keys (get from: https://dashboard.stripe.com/test/apikeys)
+STRIPE_SECRET_KEY=sk_test_51TEXgOH9vWoAs7j9qBrtuKLUovD3GnAXXKdeNwHJlhUS4CyJgYDT4AbYmmb5A7FxNDPW1q4IYGWwshO8gVgJdcU500arkIcmou
+STRIPE_PUBLIC_KEY=pk_test_51TEXgOH9vWoAs7j9B3zkj9Cluef9p9OifA9demKqIhAQAETGxG83Vx11LOHJDlUcZzrADaFCP3ZQXsrXTdrMmw5O004Mo7fTyz
+
+# Stripe Webhook Secret (optional for development, required for production)
+# Get from: https://dashboard.stripe.com/test/webhooks
+STRIPE_WEBHOOK_SECRET=

@@ -1,0 +1,314 @@
+﻿<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bảng điều khiển Admin - StrongWine</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/home">
+                <i class="bi bi-cup-hot"></i> StrongWine
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/home">Trang chủ</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/wines">Danh sách rượu</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/cart">
+                            <i class="bi bi-cart"></i> Giỏ hàng
+                        </a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/admin">Bảng điều khiển Admin</a>
+                    </li>
+                    <li class="nav-item">
+                        <form th:action="@{/logout}" method="post" class="d-inline">
+                            <button type="submit" class="btn btn-link nav-link">Đăng xuất</button>
+                        </form>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-4">
+        <h2 class="mb-4 fw-bold"><i class="bi bi-speedometer2"></i> Bảng điều khiển Admin</h2>
+
+        <!-- Statistics Cards -->
+        <div class="row g-4 mb-4">
+            <div class="col-md-3 col-sm-6">
+                <div class="card text-white bg-primary shadow-sm border-0">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="card-title mb-2">Tổng số rượu</h6>
+                                <h2 class="mb-0" th:text="${totalWines}">0</h2>
+                            </div>
+                            <i class="bi bi-cup-straw fs-1 opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="card text-white bg-success shadow-sm border-0">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="card-title mb-2">Tổng số người dùng</h6>
+                                <h2 class="mb-0" th:text="${totalUsers}">0</h2>
+                            </div>
+                            <i class="bi bi-people fs-1 opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="card text-white bg-info shadow-sm border-0">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="card-title mb-2">Tổng số đơn hàng</h6>
+                                <h2 class="mb-0" th:text="${totalOrders}">0</h2>
+                            </div>
+                            <i class="bi bi-cart-check fs-1 opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="card text-white bg-warning shadow-sm border-0">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="card-title mb-2">Tổng doanh thu</h6>
+                                <h2 class="mb-0" th:text="${#numbers.formatDecimal(totalRevenue, 0, 'COMMA', 0, 'POINT') + ' đ'}">0 đ</h2>
+                            </div>
+                            <i class="bi bi-currency-dollar fs-1 opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs for different sections -->
+        <ul class="nav nav-tabs shadow-sm" id="adminTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="wines-tab" data-bs-toggle="tab" data-bs-target="#wines" type="button">
+                    <i class="bi bi-cup-straw"></i> Rượu
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="users-tab" data-bs-toggle="tab" data-bs-target="#users" type="button">
+                    <i class="bi bi-people"></i> Người dùng
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="orders-tab" data-bs-toggle="tab" data-bs-target="#orders" type="button">
+                    <i class="bi bi-cart-check"></i> Đơn hàng
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="reviews-tab" data-bs-toggle="tab" data-bs-target="#reviews" type="button">
+                    <i class="bi bi-star"></i> Đánh giá
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="adminTabContent">
+            <!-- Wines Tab -->
+            <div class="tab-pane fade show active" id="wines" role="tabpanel">
+                <div class="card mt-3 shadow-sm border-0">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="card-title mb-0 fw-bold">Tất cả rượu</h5>
+                            <a href="/wines/admin/create" class="btn btn-primary">
+                                <i class="bi bi-plus-circle"></i> Thêm rượu mới
+                            </a>
+                        </div>
+                        <div class="row g-4">
+                            <div th:each="wine : ${wines}" class="col-md-4 col-sm-6">
+                                <div class="card h-100 shadow-sm border">
+                                    <img th:if="${wine.imageUrl != null}" 
+                                         th:src="${wine.imageUrl}" 
+                                         class="card-img-top img-fluid" 
+                                         style="height: 200px; object-fit: cover;" 
+                                         alt="Hình ảnh rượu">
+                                    <div th:unless="${wine.imageUrl != null}" 
+                                         class="card-img-top bg-secondary d-flex align-items-center justify-content-center" 
+                                         style="height: 200px;">
+                                        <i class="bi bi-image text-white" style="font-size: 2rem;"></i>
+                                    </div>
+                                    <div class="card-body d-flex flex-column">
+                                        <h6 class="card-title fw-bold" th:text="${wine.name}">Tên rượu</h6>
+                                        <p class="card-text small">
+                                            <span class="badge bg-secondary me-1" th:text="${wine.type}">Loại</span>
+                                            <span class="badge bg-info" th:text="${wine.year}">Năm</span>
+                                        </p>
+                                        <p class="card-text fw-bold text-primary" 
+                                           th:text="${#numbers.formatDecimal(wine.price, 0, 'COMMA', 0, 'POINT') + ' đ'}">Giá</p>
+                                        <div class="d-flex gap-2 mt-auto">
+                                            <a th:href="@{/wines/admin/edit/{id}(id=${wine.id})}" class="btn btn-sm btn-warning flex-fill">
+                                                <i class="bi bi-pencil"></i> Sửa
+                                            </a>
+                                            <form th:action="@{/wines/admin/delete/{id}(id=${wine.id})}" method="post" class="d-inline flex-fill" onsubmit="return confirm('Bạn có chắc chắn muốn xóa rượu này?');">
+                                                <button type="submit" class="btn btn-sm btn-danger w-100">
+                                                    <i class="bi bi-trash"></i> Xóa
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Users Tab -->
+            <div class="tab-pane fade" id="users" role="tabpanel">
+                <div class="card mt-3 shadow-sm border-0">
+                    <div class="card-body">
+                        <h5 class="card-title fw-bold mb-3">Tất cả người dùng</h5>
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Tên đăng nhập</th>
+                                        <th>Vai trò</th>
+                                        <th>Thao tác</th>
+                       
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="user : ${users}">
+                                        <td th:text="${user.id}">1</td>
+                                        <td th:text="${user.username}">Tên đăng nhập</td>
+                                        <td>
+                                            <span class="badge" 
+                                                  th:classappend="${user.role == 'ADMIN'} ? 'bg-danger' : 'bg-secondary'"
+                                                  th:text="${user.role == 'ADMIN'} ? 'Admin' : 'Người dùng'">Vai trò</span>
+                                        </td>
+                                        <td>
+        <div class="d-flex gap-2">
+            <a th:href="@{/admin/users/edit/{id}(id=${user.id})}"
+               class="btn btn-sm btn-warning">
+                <i class="bi bi-pencil"></i> Sửa
+            </a>
+
+            <form th:action="@{/admin/users/delete/{id}(id=${user.id})}"
+                  method="post"
+                  th:if="${#authentication.name != user.username}"
+                  onsubmit="return confirm('Bạn có chắc chắn muốn xóa người dùng này?');">
+                <button type="submit" class="btn btn-sm btn-danger">
+                    <i class="bi bi-trash"></i> Xóa
+                </button>
+            </form>
+
+            <button class="btn btn-sm btn-secondary" disabled
+                    th:if="${#authentication.name == user.username}">
+                Không thể xóa
+            </button>
+        </div>
+    </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Orders Tab -->
+            <div class="tab-pane fade" id="orders" role="tabpanel">
+                <div class="card mt-3 shadow-sm border-0">
+                    <div class="card-body">
+                        <h5 class="card-title fw-bold mb-3">Tất cả đơn hàng</h5>
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Người dùng</th>
+                                        <th>Ngày đặt</th>
+                                        <th>Tổng tiền</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="order : ${orders}">
+                                        <td th:text="${order.id}">1</td>
+                                        <td th:text="${order.user.username}">Tên đăng nhập</td>
+                                        <td th:text="${#temporals.format(order.orderDate, 'dd/MM/yyyy HH:mm')}">Ngày</td>
+                                        <td class="fw-bold text-primary" 
+                                            th:text="${#numbers.formatDecimal(order.totalPrice, 0, 'COMMA', 0, 'POINT') + ' đ'}">Tổng</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reviews Tab -->
+            <div class="tab-pane fade" id="reviews" role="tabpanel">
+                <div class="card mt-3 shadow-sm border-0">
+                    <div class="card-body">
+                        <h5 class="card-title fw-bold mb-3">Tất cả đánh giá</h5>
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Rượu</th>
+                                        <th>Người dùng</th>
+                                        <th>Đánh giá</th>
+                                        <th>Bình luận</th>
+                                        <th>Ngày</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="review : ${reviews}">
+                                        <td th:text="${review.id}">1</td>
+                                        <td th:text="${review.wine.name}">Tên rượu</td>
+                                        <td th:text="${review.user.username}">Tên đăng nhập</td>
+                                        <td>
+                                            <span class="badge bg-warning text-dark" th:text="${review.rating + '/5'}">Đánh giá</span>
+                                        </td>
+                                        <td>
+                                            <span th:text="${review.comment != null && review.comment.length() > 50 ? review.comment.substring(0, 50) + '...' : review.comment}">Bình luận</span>
+                                        </td>
+                                        <td th:text="${#temporals.format(review.createdAt, 'dd/MM/yyyy')}">Ngày</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-light text-center py-4 mt-5">
+        <div class="container">
+            <p class="mb-0">&copy; 2025 StrongWine. Tất cả quyền được bảo lưu.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

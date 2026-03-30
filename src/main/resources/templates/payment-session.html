@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phiên thanh toán - StrongWine</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark navbar-modern py-3">
+    <div class="container">
+        <a class="navbar-brand d-flex align-items-center gap-2" href="/home">
+            <span class="brand-logo"><i class="fa-solid fa-wine-glass"></i></span>
+            <span class="fw-semibold">StrongWine</span>
+        </a>
+    </div>
+</nav>
+<main class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-7">
+            <div class="panel p-4 p-lg-5">
+                <h1 class="h4 mb-3">Phiên thanh toán an toàn</h1>
+                <p class="text-muted mb-4">Đơn hàng <strong th:text="${order.id}">0</strong> đã được tạo ở trạng thái <strong>PENDING</strong>. Vui lòng tiếp tục xác thực thanh toán.</p>
+                <div class="border rounded p-3 mb-4 bg-light">
+                    <div class="d-flex justify-content-between mb-2"><span>Mã giao dịch</span><strong th:text="${payment.paymentReference}"></strong></div>
+                    <div class="d-flex justify-content-between mb-2"><span>Phương thức</span><strong th:text="${payment.method}"></strong></div>
+                    <div class="d-flex justify-content-between"><span>Số tiền</span><strong th:text="${#numbers.formatDecimal(payment.amount, 0, 'COMMA', 0, 'POINT') + ' đ'}"></strong></div>
+                </div>
+                <div class="alert alert-warning" th:if="${error != null and !error.isEmpty()}" th:text="${error}"></div>
+                <div class="d-flex flex-wrap gap-2">
+                    <a class="btn btn-success" th:href="${successUrl}"><i class="fa-solid fa-check me-1"></i> Mô phỏng thanh toán thành công</a>
+                    <a class="btn btn-outline-danger" th:href="${failedUrl}"><i class="fa-solid fa-xmark me-1"></i> Mô phỏng thanh toán thất bại</a>
+                    <a class="btn btn-outline-secondary" th:href="${cancelUrl}"><i class="fa-solid fa-ban me-1"></i> Hủy thanh toán</a>
+                </div>
+                <p class="small text-muted mt-3 mb-0">Khi cấu hình khóa Stripe, phương thức <strong>STRIPE</strong> sẽ tự động chuyển đến trang Stripe Checkout.</p>
+            </div>
+        </div>
+    </div>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

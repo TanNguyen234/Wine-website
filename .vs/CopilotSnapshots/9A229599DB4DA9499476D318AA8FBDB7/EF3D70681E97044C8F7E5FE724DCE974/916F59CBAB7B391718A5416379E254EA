@@ -1,0 +1,195 @@
+﻿package com.strongwine.strongwine.service;
+
+import com.strongwine.strongwine.dto.PaymentCallbackResult;
+import com.strongwine.strongwine.entity.*;
+import com.stripe.model.Event;
+import com.stripe.model.StripeObject;
+import com.stripe.model.checkout.Session;
+import com.stripe.net.Webhook;
+import com.strongwine.strongwine.repository.PaymentRepository;
+import com.strongwine.strongwine.repository.PaymentTransactionRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
+
+@Service
+@Transactional
+public class PaymentService {
+
+    @Autowired
+    private PaymentRepository paymentRepository;
+
+    @Autowired
+    private PaymentTransactionRepository paymentTransactionRepository;
+
+    @Autowired
+    private OrderService orderService;
+
+    @Autowired
+    private StripeService stripeService;
+
+    @Value("${stripe.webhookSecret:}")
+    private String stripeWebhookSecret;
+
+    public String createPaymentSession(Order order, String method, String baseUrl) {
+        PaymentMethod paymentMethod = parseMethod(method);
+        if (paymentMethod != PaymentMethod.STRIPE) {
+            throw new IllegalArgumentException("Hiện tại chỉ hỗ trợ thanh toán STRIPE");
+        }
+
+        Payment payment = new Payment();
+        payment.setOrder(order);
+        payment.setMethod(paymentMethod);
+        payment.setStatus(PaymentStatus.PENDING);
+        payment.setAmount(order.getTotalPrice());
+        payment.setCurrency("VND");
+        payment.setPaymentReference("PAY-" + UUID.randomUUID().toString().replace("-", "").substring(0, 16));
+        payment.setGatewaySessionId(UUID.randomUUID().toString());
+        payment.setGatewayResponse("SESSION_CREATED");
+        payment.setCreatedAt(LocalDateTime.now());
+        payment.setUpdatedAt(LocalDateTime.now());
+
+        Payment saved = paymentRepository.save(payment);
+        saveTransaction(saved, "SESSION_CREATED", "PENDING", "Order " + order.getId());
+
+        try {
+            Session session = stripeService.createCheckoutSession(saved, baseUrl);
+            saved.setGatewaySessionId(session.getId());
+            saved.setGatewayResponse("STRIPE_SESSION_CREATED");
+            saved.setUpdatedAt(LocalDateTime.now());
+            paymentRepository.save(saved);
+            saveTransaction(saved, "STRIPE_SESSION", "REDIRECT", "Redirect to Stripe checkout session");
+            return session.getUrl();
+        } catch (Exception ex) {
+            saved.setStatus(PaymentStatus.FAILED);
+            saved.setGatewayResponse("STRIPE_SESSION_FAILED: " + ex.getMessage());
+            saved.setUpdatedAt(LocalDateTime.now());
+            paymentRepository.save(saved);
+            saveTransaction(saved, "STRIPE_SESSION", "FAILED", ex.getMessage());
+            throw new RuntimeException("Không thể tạo phiên Stripe Checkout", ex);
+        }
+    }
+
+    public Payment getPaymentByReference(String paymentReference) {
+        return paymentRepository.findByPaymentReference(paymentReference)
+                .orElseThrow(() -> new RuntimeException("Payment session not found"));
+    }
+
+    public PaymentCallbackResult handleStripeSuccess(String stripeSessionId, Long expectedOrderId) {
+        try {
+            Session session = stripeService.retrieveSession(stripeSessionId);
+            if (!"paid".equalsIgnoreCase(session.getPaymentStatus())) {
+                return new PaymentCallbackResult(false, "Thanh toán Stripe chưa hoàn tất", expectedOrderId);
+            }
+
+            Payment payment = paymentRepository.findByGatewaySessionId(session.getId())
+                    .orElseGet(() -> paymentRepository.findByPaymentReference(session.getClientReferenceId())
+                            .orElse(null));
+
+            if (payment == null) {
+                return new PaymentCallbackResult(false, "Không tìm thấy thanh toán hợp lệ", expectedOrderId);
+            }
+
+            if (expectedOrderId != null && !expectedOrderId.equals(payment.getOrder().getId())) {
+                return new PaymentCallbackResult(false, "Phiên thanh toán không khớp đơn hàng", expectedOrderId);
+            }
+
+            if (payment.getStatus() == PaymentStatus.SUCCESS) {
+                return new PaymentCallbackResult(true, "Thanh toán đã được xác nhận", payment.getOrder().getId());
+            }
+
+            payment.setStatus(PaymentStatus.SUCCESS);
+            payment.setGatewayResponse("STRIPE_PAYMENT_SUCCESS");
+            payment.setUpdatedAt(LocalDateTime.now());
+            paymentRepository.save(payment);
+            saveTransaction(payment, "STRIPE_CALLBACK", "SUCCESS", "Stripe session paid: " + session.getId());
+            orderService.markOrderPaid(payment.getOrder().getId(), payment.getPaymentReference());
+            return new PaymentCallbackResult(true, "Thanh toán thành công", payment.getOrder().getId());
+        } catch (Exception ex) {
+            return new PaymentCallbackResult(false, "Xác thực Stripe thất bại: " + ex.getMessage(), expectedOrderId);
+        }
+    }
+
+    public PaymentCallbackResult handleStripeCancel(Long orderId, String paymentReference) {
+        Payment payment = null;
+        if (paymentReference != null && !paymentReference.isBlank()) {
+            payment = paymentRepository.findByPaymentReference(paymentReference).orElse(null);
+        }
+        if (payment == null && orderId != null) {
+            payment = paymentRepository.findTopByOrderIdOrderByCreatedAtDesc(orderId).orElse(null);
+        }
+        if (payment == null) {
+            return new PaymentCallbackResult(false, "Không tìm thấy phiên thanh toán", orderId);
+        }
+
+        if (payment.getStatus() == PaymentStatus.SUCCESS) {
+            return new PaymentCallbackResult(true, "Đơn hàng đã thanh toán thành công", payment.getOrder().getId());
+        }
+
+        payment.setStatus(PaymentStatus.CANCELLED);
+        payment.setGatewayResponse("STRIPE_PAYMENT_CANCELLED");
+        payment.setUpdatedAt(LocalDateTime.now());
+        paymentRepository.save(payment);
+        saveTransaction(payment, "STRIPE_CALLBACK", "CANCELLED", "Stripe checkout cancelled by customer");
+        orderService.cancelPendingOrder(payment.getOrder().getId());
+        return new PaymentCallbackResult(false, "Thanh toán đã bị hủy", payment.getOrder().getId());
+    }
+
+    public void handleStripeWebhook(String payload, String signature) {
+        if (stripeWebhookSecret == null || stripeWebhookSecret.isBlank()) {
+            return;
+        }
+        if (signature == null || signature.isBlank()) {
+            throw new IllegalArgumentException("Thiếu Stripe-Signature");
+        }
+
+        try {
+            Event event = Webhook.constructEvent(payload, signature, stripeWebhookSecret);
+            if (!"checkout.session.completed".equals(event.getType())) {
+                return;
+            }
+
+            StripeObject stripeObject = event.getDataObjectDeserializer().getObject().orElse(null);
+            if (!(stripeObject instanceof Session session)) {
+                return;
+            }
+
+            Long orderId = null;
+            if (session.getMetadata() != null && session.getMetadata().get("orderId") != null) {
+                orderId = Long.parseLong(session.getMetadata().get("orderId"));
+            }
+            handleStripeSuccess(session.getId(), orderId);
+        } catch (Exception ex) {
+            throw new RuntimeException("Webhook Stripe không hợp lệ", ex);
+        }
+    }
+
+    public List<Payment> getRecentPayments() {
+        return paymentRepository.findTop100ByOrderByCreatedAtDesc();
+    }
+
+    public List<PaymentTransaction> getRecentTransactions() {
+        return paymentTransactionRepository.findTop200ByOrderByCreatedAtDesc();
+    }
+
+    private PaymentMethod parseMethod(String method) {
+        try {
+            return PaymentMethod.valueOf(method == null ? "STRIPE" : method.toUpperCase());
+        } catch (Exception e) {
+            return PaymentMethod.STRIPE;
+        }
+    }
+
+    private void saveTransaction(Payment payment, String type, String status, String payload) {
+        PaymentTransaction tx = new PaymentTransaction();
+        tx.setPayment(payment);
+        tx.setTransactionType(type);
+        tx.setStatus(status);
+        tx.setPayload(payload);
+        paymentTransactionRepository.save(tx);
+    }
+}

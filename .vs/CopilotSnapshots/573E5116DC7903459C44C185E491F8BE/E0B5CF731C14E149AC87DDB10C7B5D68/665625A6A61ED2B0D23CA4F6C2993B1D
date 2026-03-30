@@ -1,0 +1,54 @@
+﻿-- Sample Data for StrongWine Application
+-- This script inserts sample data for testing
+
+-- Insert sample users (password is 'password' encrypted with BCrypt)
+-- Default BCrypt hash for 'password' is: $2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy
+-- For SQL Server, we'll use a simple hash. In production, use BCrypt.
+
+-- Admin user (username: admin, password: admin123)
+-- Note: In production, passwords should be hashed using BCrypt
+-- This will be created automatically by DataInitializer, but included here for reference
+IF NOT EXISTS (SELECT 1 FROM users WHERE username = 'admin')
+BEGIN
+    INSERT INTO users (username, password, role) 
+    VALUES ('admin', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'ADMIN');
+END
+GO
+
+-- Regular user (username: user1, password: password)
+IF NOT EXISTS (SELECT 1 FROM users WHERE username = 'user1')
+BEGIN
+    INSERT INTO users (username, password, role) 
+    VALUES ('user1', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'USER');
+END
+GO
+
+-- Insert sample wines
+IF NOT EXISTS (SELECT 1 FROM wines WHERE name = 'Château Margaux')
+BEGIN
+    INSERT INTO wines (name, type, country, year, price, description) VALUES
+    ('Château Margaux', 'Red', 'France', 2018, 899.99, 'A prestigious Bordeaux wine with rich flavors of blackcurrant, cedar, and tobacco.'),
+    ('Dom Pérignon', 'Sparkling', 'France', 2012, 199.99, 'Luxury champagne with notes of citrus, white flowers, and brioche.'),
+    ('Sancerre Blanc', 'White', 'France', 2020, 29.99, 'Crisp and refreshing French white wine with citrus and mineral notes.'),
+    ('Pinot Noir Reserve', 'Red', 'USA', 2019, 45.99, 'Elegant red wine with cherry, raspberry, and earthy undertones.'),
+    ('Prosecco DOCG', 'Sparkling', 'Italy', 2021, 18.99, 'Light and bubbly Italian sparkling wine, perfect for celebrations.'),
+    ('Chardonnay Barrel Aged', 'White', 'Australia', 2020, 35.99, 'Rich and buttery white wine with vanilla and oak flavors.'),
+    ('Rosé de Provence', 'Rose', 'France', 2021, 24.99, 'Delicate pink wine with strawberry and floral notes.'),
+    ('Cabernet Sauvignon', 'Red', 'Chile', 2018, 55.99, 'Full-bodied red wine with dark fruit and spice flavors.'),
+    ('Sauvignon Blanc', 'White', 'New Zealand', 2021, 22.99, 'Fresh and zesty white wine with tropical fruit notes.'),
+    ('Champagne Brut', 'Sparkling', 'France', 2019, 79.99, 'Classic French champagne with fine bubbles and elegant taste.');
+END
+GO
+
+-- Insert sample reviews
+-- Note: These will reference wines and users by ID, so adjust IDs based on your data
+IF NOT EXISTS (SELECT 1 FROM reviews WHERE wine_id = 1 AND user_id = 2)
+BEGIN
+    INSERT INTO reviews (wine_id, user_id, rating, comment, created_at) VALUES
+    (1, 2, 5, 'Absolutely amazing wine! Worth every penny.', GETDATE()),
+    (2, 2, 5, 'Perfect for special occasions. Excellent quality.', GETDATE()),
+    (3, 2, 4, 'Very refreshing and crisp. Great value for money.', GETDATE()),
+    (4, 2, 4, 'Smooth and elegant. Highly recommend.', GETDATE());
+END
+GO
+

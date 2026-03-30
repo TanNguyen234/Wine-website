@@ -1,0 +1,181 @@
+﻿# StrongWine - Wine Selling Website
+
+A complete Java Spring Boot web application for selling wines online with full CRUD operations, authentication, and admin dashboard.
+
+## Features
+
+- **Database**: SQL Server with 5 main tables (Wine, User, Order, OrderItem, Review)
+- **CRUD Operations**: Full CRUD for all entities
+- **Search & Filter**: Search wines by name, type, year, and price range
+- **Admin Dashboard**: View all data and statistics
+- **Authentication & Authorization**: Spring Security with role-based access
+- **Frontend**: Bootstrap-based responsive HTML pages
+- **REST API**: RESTful endpoints for all operations
+
+## Technology Stack
+
+- **Backend**: Spring Boot 4.0.0, Spring Data JPA, Spring Security
+- **Database**: SQL Server
+- **Frontend**: HTML, CSS, Bootstrap 5, Thymeleaf
+- **Build Tool**: Maven
+
+## Database Schema
+
+### Tables
+
+1. **users** - User accounts (id, username, password, role)
+2. **wines** - Wine products (id, name, type, year, price, description)
+3. **orders** - Customer orders (id, user_id, order_date, total_price)
+4. **order_items** - Items in orders (id, order_id, wine_id, quantity, price)
+5. **reviews** - Wine reviews (id, wine_id, user_id, rating, comment, created_at)
+
+## Setup Instructions
+
+### Prerequisites
+
+- Java 21 or higher
+- Maven 3.6+
+- SQL Server (local or remote)
+- SQL Server JDBC Driver (included in pom.xml)
+
+### Database Configuration
+
+1. Create a database named `winestore` in SQL Server
+2. Update `src/main/resources/application.properties` with your database credentials:
+   ```properties
+   spring.datasource.url=jdbc:sqlserver://localhost:1433;databaseName=winestore;encrypt=true;trustServerCertificate=true
+   spring.datasource.username=sa
+   spring.datasource.password=123456
+   ```
+
+### Running the Application
+
+1. **Clone or navigate to the project directory**
+
+2. **Build the project**:
+   ```bash
+   mvn clean install
+   ```
+
+3. **Run the application**:
+   ```bash
+   mvn spring-boot:run
+   ```
+
+4. **Access the application**:
+   - Open browser: `http://localhost:8080`
+   - Home page: `http://localhost:8080/home`
+   - Admin dashboard: `http://localhost:8080/admin` (requires admin login)
+
+### Default Users
+
+The application automatically creates default users on startup:
+
+- **Admin**: 
+  - Username: `admin`
+  - Password: `admin123`
+  - Role: ADMIN
+
+- **Test User**:
+  - Username: `user1`
+  - Password: `password`
+  - Role: USER
+
+## Application Structure
+
+```
+src/main/java/com/strongwine/strongwine/
+├── entity/          # JPA Entity classes
+├── repository/      # Spring Data JPA repositories
+├── service/         # Business logic services
+├── controller/      # MVC and REST controllers
+│   └── api/        # REST API controllers
+├── security/        # Spring Security configuration
+└── config/          # Configuration classes
+
+src/main/resources/
+├── templates/       # Thymeleaf HTML templates
+├── sql/            # SQL scripts
+└── application.properties
+```
+
+## Pages
+
+1. **Home** (`/home`) - Featured wines and welcome page
+2. **Wine List** (`/wines`) - Browse all wines with search and filter
+3. **Wine Details** (`/wines/{id}`) - View wine details and reviews
+4. **Shopping Cart** (`/cart`) - View and manage cart items
+5. **Login** (`/login`) - User authentication
+6. **Register** (`/register`) - New user registration
+7. **Admin Dashboard** (`/admin`) - Admin panel with statistics
+
+## REST API Endpoints
+
+### Wines
+- `GET /api/wines` - Get all wines
+- `GET /api/wines/{id}` - Get wine by ID
+- `GET /api/wines/search` - Search wines (query params: name, type, year, minPrice, maxPrice)
+- `POST /api/wines` - Create wine (Admin only)
+- `PUT /api/wines/{id}` - Update wine (Admin only)
+- `DELETE /api/wines/{id}` - Delete wine (Admin only)
+
+### Users
+- `GET /api/users` - Get all users (Admin only)
+- `GET /api/users/{id}` - Get user by ID (Admin only)
+- `POST /api/users` - Create user (Admin only)
+- `PUT /api/users/{id}` - Update user (Admin only)
+- `DELETE /api/users/{id}` - Delete user (Admin only)
+
+### Orders
+- `GET /api/orders` - Get all orders (Admin only)
+- `GET /api/orders/{id}` - Get order by ID
+- `GET /api/orders/user/{userId}` - Get orders by user ID
+- `POST /api/orders` - Create order (authenticated users)
+
+### Reviews
+- `GET /api/reviews` - Get all reviews
+- `GET /api/reviews/{id}` - Get review by ID
+- `GET /api/reviews/wine/{wineId}` - Get reviews by wine ID
+- `POST /api/reviews/wine/{wineId}/user/{userId}` - Create review
+
+## Security
+
+- **Public Access**: Home, Wine List, Wine Details, Login, Register
+- **Authenticated Users**: Cart, Orders, Create Reviews
+- **Admin Only**: Admin Dashboard, User Management, Wine Management (CRUD)
+
+## SQL Scripts
+
+SQL scripts are available in `src/main/resources/sql/`:
+
+- `schema.sql` - Database schema creation
+- `sample-data.sql` - Sample data insertion
+
+You can run these scripts manually in SQL Server Management Studio if needed, though the application will create tables automatically using JPA.
+
+## Development Notes
+
+- The application uses JPA with `spring.jpa.hibernate.ddl-auto=update`, so tables are created automatically
+- Passwords are encrypted using BCrypt
+- Session-based cart management
+- CSRF is disabled for simplicity (enable in production)
+
+## Future Enhancements
+
+- Payment integration
+- Email notifications
+- Order tracking
+- Wine inventory management
+- Advanced search with filters
+- User profile management
+- Wishlist functionality
+
+## License
+
+This project is for educational purposes.
+
+
+
+
+
+

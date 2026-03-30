@@ -1,0 +1,242 @@
+﻿package com.strongwine.strongwine.controller;
+
+import com.strongwine.strongwine.entity.Wine;
+import com.strongwine.strongwine.service.FileStorageService;
+import com.strongwine.strongwine.service.InventoryService;
+import com.strongwine.strongwine.service.ReviewService;
+import com.strongwine.strongwine.service.WineService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.math.BigDecimal;
+import java.util.List;
+
+/**
+ * Controller for wine-related pages
+ */
+@Controller
+@RequestMapping("/wines")
+public class WineController {
+    
+    @Autowired
+    private WineService wineService;
+    
+    @Autowired
+    private ReviewService reviewService;
+    
+    @Autowired
+    private FileStorageService fileStorageService;
+
+    @Autowired
+    private InventoryService inventoryService;
+    
+    /**
+     * Wine list page with search and filter
+     */
+    @GetMapping
+    public String wineList(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String type,
+            @RequestParam(required = false) Integer year,
+            @RequestParam(required = false) BigDecimal minPrice,
+            @RequestParam(required = false) BigDecimal maxPrice,
+            Model model) {
+        
+        List<Wine> wines;
+        if (name != null || type != null || year != null || minPrice != null || maxPrice != null) {
+            wines = wineService.searchWines(name, type, year, minPrice, maxPrice);
+        } else {
+            wines = wineService.getAllWines();
+        }
+        
+        model.addAttribute("wines", wines);
+        model.addAttribute("name", name);
+        model.addAttribute("type", type);
+        model.addAttribute("year", year);
+        model.addAttribute("minPrice", minPrice);
+        model.addAttribute("maxPrice", maxPrice);
+        model.addAttribute("availableStockByWineId", inventoryService.getAvailableStockByWineIds(wines.stream().map(Wine::getId).toList()));
+        
+        return "wine-list";
+    }
+    
+    /**
+     * Wine details page
+     */
+    @GetMapping("/{id}")
+    public String wineDetails(@PathVariable Long id, Model model) {
+        Wine wine = wineService.getWineById(id)
+            .orElseThrow(() -> new RuntimeException("Wine not found"));
+        
+        model.addAttribute("wine", wine);
+        model.addAttribute("reviews", reviewService.getReviewsByWineId(id));
+        model.addAttribute("availableStock", inventoryService.getAvailableStockByWineIds(List.of(id)).getOrDefault(id, 0));
+        return "wine-details";
+    }
+    
+    /**
+     * Show create wine form (Admin only)
+     */
+    @GetMapping("/admin/create")
+    public String showCreateForm(Model model) {
+        model.addAttribute("wine", new Wine());
+        return "wine-form";
+    }
+    
+    /**
+     * Show edit wine form (Admin only)
+     */
+    @GetMapping("/admin/edit/{id}")
+    public String showEditForm(@PathVariable Long id, Model model) {
+        Wine wine = wineService.getWineById(id)
+            .orElseThrow(() -> new RuntimeException("Wine not found"));
+        model.addAttribute("wine", wine);
+        return "wine-form";
+    }
+    
+    /**
+     * Create a new wine (Admin only)
+     */
+    @PostMapping("/admin/create")
+    public String createWine(
+            @RequestParam String name,
+            @RequestParam String type,
+            @RequestParam Integer year,
+            @RequestParam BigDecimal price,
+            @RequestParam(required = false) String description,
+            @RequestParam(required = false) String imageUrl,
+            @RequestParam(required = false) MultipartFile imageFile,
+            RedirectAttributes redirectAttributes) {
+        
+        try {
+            Wine wine = new Wine();
+            wine.setName(name);
+            wine.setType(type);
+            wine.setYear(year);
+            wine.setPrice(price);
+            wine.setDescription(description);
+            
+            // Handle image: either upload file or use URL
+            String finalImageUrl = null;
+            if (imageFile != null && !imageFile.isEmpty()) {
+                // Validate file
+                if (!fileStorageService.isValidImageFile(imageFile)) {
+                    redirectAttributes.addFlashAttribute("error", "Invalid file type. Only JPG and PNG are allowed.");
+                    return "redirect:/wines/admin/create";
+                }
+                if (!fileStorageService.isValidFileSize(imageFile)) {
+                    redirectAttributes.addFlashAttribute("error", "File size too large. Maximum 5MB allowed.");
+                    return "redirect:/wines/admin/create";
+                }
+                // Save uploaded file
+                finalImageUrl = fileStorageService.saveFile(imageFile);
+            } else if (imageUrl != null && !imageUrl.trim().isEmpty()) {
+                // Use provided URL
+                finalImageUrl = imageUrl.trim();
+            }
+            
+            // Validate that at least image URL or file is provided
+            if (finalImageUrl == null || finalImageUrl.isEmpty()) {
+                redirectAttributes.addFlashAttribute("error", "Please provide either an image file or image URL.");
+                return "redirect:/wines/admin/create";
+            }
+            
+            wine.setImageUrl(finalImageUrl);
+            wineService.createWine(wine);
+            redirectAttributes.addFlashAttribute("success", "Wine created successfully!");
+            return "redirect:/admin";
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Error creating wine: " + e.getMessage());
+            return "redirect:/wines/admin/create";
+        }
+    }
+    
+    /**
+     * Update an existing wine (Admin only)
+     */
+    @PostMapping("/admin/edit/{id}")
+    public String updateWine(
+            @PathVariable Long id,
+            @RequestParam String name,
+            @RequestParam String type,
+            @RequestParam Integer year,
+            @RequestParam BigDecimal price,
+            @RequestParam(required = false) String description,
+            @RequestParam(required = false) String imageUrl,
+            @RequestParam(required = false) MultipartFile imageFile,
+            RedirectAttributes redirectAttributes) {
+        
+        try {
+            Wine wine = wineService.getWineByIdOrThrow(id);
+            String oldImageUrl = wine.getImageUrl();
+            
+            wine.setName(name);
+            wine.setType(type);
+            wine.setYear(year);
+            wine.setPrice(price);
+            wine.setDescription(description);
+            
+            // Handle image: either upload file or use URL
+            String finalImageUrl = oldImageUrl; // Keep existing if no new image provided
+            if (imageFile != null && !imageFile.isEmpty()) {
+                // Validate file
+                if (!fileStorageService.isValidImageFile(imageFile)) {
+                    redirectAttributes.addFlashAttribute("error", "Invalid file type. Only JPG and PNG are allowed.");
+                    return "redirect:/wines/admin/edit/" + id;
+                }
+                if (!fileStorageService.isValidFileSize(imageFile)) {
+                    redirectAttributes.addFlashAttribute("error", "File size too large. Maximum 5MB allowed.");
+                    return "redirect:/wines/admin/edit/" + id;
+                }
+                // Save new uploaded file
+                finalImageUrl = fileStorageService.saveFile(imageFile);
+                // Delete old file if it was an uploaded file
+                if (oldImageUrl != null && oldImageUrl.startsWith("/uploads/")) {
+                    fileStorageService.deleteFile(oldImageUrl);
+                }
+            } else if (imageUrl != null && !imageUrl.trim().isEmpty()) {
+                // Use provided URL
+                finalImageUrl = imageUrl.trim();
+                // Delete old file if it was an uploaded file
+                if (oldImageUrl != null && oldImageUrl.startsWith("/uploads/")) {
+                    fileStorageService.deleteFile(oldImageUrl);
+                }
+            }
+            
+            wine.setImageUrl(finalImageUrl);
+            wineService.updateWine(id, wine);
+            redirectAttributes.addFlashAttribute("success", "Wine updated successfully!");
+            return "redirect:/admin";
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Error updating wine: " + e.getMessage());
+            return "redirect:/wines/admin/edit/" + id;
+        }
+    }
+    
+    /**
+     * Delete a wine (Admin only)
+     */
+    @PostMapping("/admin/delete/{id}")
+    public String deleteWine(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        try {
+            Wine wine = wineService.getWineByIdOrThrow(id);
+            String imageUrl = wine.getImageUrl();
+            
+            // Delete image file if it was uploaded
+            if (imageUrl != null && imageUrl.startsWith("/uploads/")) {
+                fileStorageService.deleteFile(imageUrl);
+            }
+            
+            wineService.deleteWine(id);
+            redirectAttributes.addFlashAttribute("success", "Wine deleted successfully!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Error deleting wine: " + e.getMessage());
+        }
+        return "redirect:/admin";
+    }
+}
+

@@ -1,0 +1,281 @@
+﻿package com.strongwine.strongwine.service;
+
+import com.strongwine.strongwine.dto.CartDto;
+import com.strongwine.strongwine.dto.CartItemDto;
+import com.strongwine.strongwine.entity.Cart;
+import com.strongwine.strongwine.entity.CartItem;
+import com.strongwine.strongwine.entity.User;
+import com.strongwine.strongwine.entity.Wine;
+import com.strongwine.strongwine.repository.CartItemRepository;
+import com.strongwine.strongwine.repository.CartRepository;
+import com.strongwine.strongwine.repository.UserRepository;
+import com.strongwine.strongwine.repository.WineRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+
+@Service
+public class CartService {
+
+    @Autowired
+    private CartRepository cartRepository;
+
+    @Autowired
+    private CartItemRepository cartItemRepository;
+
+    @Autowired
+    private WineRepository wineRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private InventoryService inventoryService;
+
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
+
+    private static final String REDIS_CART_PREFIX = "cart:guest:";
+    private static final long CART_TTL_DAYS = 7;
+
+    // --- Redis Logic ---
+    private String getGuestCartKey(String sessionId) {
+        return REDIS_CART_PREFIX + sessionId;
+    }
+
+    private Map<Long, Integer> getGuestCartItems(String sessionId) {
+        String key = getGuestCartKey(sessionId);
+        Map<Object, Object> rawMap = redisTemplate.opsForHash().entries(key);
+        Map<Long, Integer> result = new HashMap<>();
+        for (Map.Entry<Object, Object> entry : rawMap.entrySet()) {
+            result.put(Long.parseLong(entry.getKey().toString()), Integer.parseInt(entry.getValue().toString()));
+        }
+        return result;
+    }
+
+    private void saveGuestCart(String sessionId, Map<Long, Integer> items) {
+        String key = getGuestCartKey(sessionId);
+        redisTemplate.delete(key);
+        if (!items.isEmpty()) {
+            Map<String, String> stringProps = items.entrySet().stream()
+                    .collect(Collectors.toMap(e -> e.getKey().toString(), e -> e.getValue().toString()));
+            redisTemplate.opsForHash().putAll(key, stringProps);
+            redisTemplate.expire(key, CART_TTL_DAYS, TimeUnit.DAYS);
+        }
+    }
+
+    // --- Cart Actions ---
+    
+    @Transactional
+    public void addToCart(String sessionId, Long userId, Long wineId, int quantity) {
+        if (quantity <= 0) {
+            throw new IllegalArgumentException("So luong phai lon hon 0");
+        }
+
+        if (userId == null && (sessionId == null || sessionId.isBlank())) {
+            throw new IllegalArgumentException("Session khong hop le");
+        }
+
+        Wine wine = wineRepository.findById(wineId)
+                .orElseThrow(() -> new IllegalArgumentException("Khong tim thay san pham"));
+        
+        int available = inventoryService.getAvailableStockByWineIds(List.of(wineId)).getOrDefault(wineId, 0);
+        if (available <= 0) {
+            throw new IllegalStateException("San pham. het hang");
+        }
+
+        if (userId != null) {
+            addToUserCart(userId, wine, quantity, available);
+        } else {
+            addToGuestCart(sessionId, wine, quantity, available);
+        }
+    }
+
+    private void addToUserCart(Long userId, Wine wine, int quantity, int available) {
+        User user = userRepository.findById(userId).orElseThrow();
+        Cart cart = cartRepository.findByUser(user).orElseGet(() -> {
+            Cart newCart = new Cart();
+            newCart.setUser(user);
+            return cartRepository.save(newCart);
+        });
+
+        CartItem item = cartItemRepository.findByCartIdAndWineId(cart.getId(), wine.getId()).orElse(null);
+        if (item == null) {
+            int newQty = Math.min(quantity, available);
+            item = new CartItem();
+            item.setCart(cart);
+            item.setWine(wine);
+            item.setQuantity(newQty);
+            cart.addItem(item);
+        } else {
+            int newQty = item.getQuantity() + quantity;
+            item.setQuantity(Math.min(newQty, available));
+        }
+        cartRepository.save(cart);
+    }
+
+    private void addToGuestCart(String sessionId, Wine wine, int quantity, int available) {
+        Map<Long, Integer> cartItems = getGuestCartItems(sessionId);
+        int currentQty = cartItems.getOrDefault(wine.getId(), 0);
+        int newQty = currentQty + quantity;
+        cartItems.put(wine.getId(), Math.min(newQty, available));
+        saveGuestCart(sessionId, cartItems);
+    }
+
+    @Transactional
+    public void updateCartItem(String sessionId, Long userId, Long wineId, int quantity) {
+        if (quantity <= 0) {
+            removeFromCart(sessionId, userId, wineId);
+            return;
+        }
+
+        int available = inventoryService.getAvailableStockByWineIds(List.of(wineId)).getOrDefault(wineId, 0);
+        if (available <= 0) {
+            removeFromCart(sessionId, userId, wineId);
+            throw new IllegalStateException("San pham hien tai da het hang");
+        }
+
+        int validQty = Math.min(quantity, available);
+
+        if (userId != null) {
+            Cart cart = cartRepository.findByUserId(userId).orElse(null);
+            if (cart != null) {
+                cartItemRepository.findByCartIdAndWineId(cart.getId(), wineId).ifPresent(item -> {
+                    item.setQuantity(validQty);
+                    cartItemRepository.save(item);
+                });
+            }
+        } else {
+            Map<Long, Integer> cartItems = getGuestCartItems(sessionId);
+            if (cartItems.containsKey(wineId)) {
+                cartItems.put(wineId, validQty);
+                saveGuestCart(sessionId, cartItems);
+            }
+        }
+    }
+
+    @Transactional
+    public void removeFromCart(String sessionId, Long userId, Long wineId) {
+        if (userId != null) {
+            Cart cart = cartRepository.findByUserId(userId).orElse(null);
+            if (cart != null) {
+                cartItemRepository.findByCartIdAndWineId(cart.getId(), wineId).ifPresent(item -> {
+                    cart.removeItem(item);
+                    cartItemRepository.delete(item);
+                });
+            }
+        } else {
+            String key = getGuestCartKey(sessionId);
+            redisTemplate.opsForHash().delete(key, wineId.toString());
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public CartDto getCart(String sessionId, Long userId) {
+        CartDto dto = new CartDto();
+        Map<Long, Integer> rawItems = new HashMap<>();
+
+        if (userId != null) {
+            Cart cart = cartRepository.findByUserId(userId).orElse(null);
+            if (cart != null) {
+                for (CartItem ci : cart.getItems()) {
+                    rawItems.merge(ci.getWine().getId(), ci.getQuantity(), Integer::sum);
+                }
+            }
+        } else {
+           rawItems = getGuestCartItems(sessionId);
+        }
+
+        if (rawItems.isEmpty()) {
+            dto.setEmpty(true);
+            return dto;
+        }
+
+        List<CartItemDto> itemDtos = new ArrayList<>();
+        BigDecimal total = BigDecimal.ZERO;
+        List<Long> wineIds = new ArrayList<>(rawItems.keySet());
+        List<Wine> wines = wineRepository.findAllById(wineIds);
+        Map<Long, Integer> availabilities = inventoryService.getAvailableStockByWineIds(wineIds);
+
+        for (Wine wine : wines) {
+            int currentQty = rawItems.getOrDefault(wine.getId(), 0);
+            int avStock = availabilities.getOrDefault(wine.getId(), 0);
+            
+            CartItemDto itemDto = new CartItemDto();
+            itemDto.setWine(wine);
+            itemDto.setAvailableStock(avStock);
+            
+            int finalQty = Math.min(currentQty, Math.max(0, avStock));
+            if (finalQty == 0) continue; // skip if out of stock? or let them know it's 0. 
+            // Better behavior: return what is currently saved but capped at available
+            itemDto.setQuantity(finalQty);
+            
+            BigDecimal lineTotal = wine.getPrice().multiply(BigDecimal.valueOf(finalQty));
+            itemDto.setLineTotal(lineTotal);
+            total = total.add(lineTotal);
+            
+            itemDtos.add(itemDto);
+        }
+
+        dto.setItems(itemDtos);
+        dto.setSubtotal(total);
+        dto.setTotal(total);
+        dto.setEmpty(itemDtos.isEmpty());
+        return dto;
+    }
+
+    @Transactional
+    public void mergeCart(String sessionId, Long userId) {
+        Map<Long, Integer> guestItems = getGuestCartItems(sessionId);
+        if (guestItems.isEmpty()) return;
+
+        User user = userRepository.findById(userId).orElseThrow();
+        Cart cart = cartRepository.findByUser(user).orElseGet(() -> {
+            Cart newCart = new Cart();
+            newCart.setUser(user);
+            return cartRepository.save(newCart);
+        });
+
+        Map<Long, Integer> availabilities = inventoryService.getAvailableStockByWineIds(new ArrayList<>(guestItems.keySet()));
+        List<Wine> guestWines = wineRepository.findAllById(guestItems.keySet());
+
+        for (Wine rw : guestWines) {
+            int guestQty = guestItems.get(rw.getId());
+            int avStock = availabilities.getOrDefault(rw.getId(), 0);
+
+            CartItem existingItem = cartItemRepository.findByCartIdAndWineId(cart.getId(), rw.getId()).orElse(null);
+            if (existingItem != null) {
+                existingItem.setQuantity(Math.min(existingItem.getQuantity() + guestQty, avStock));
+            } else {
+                CartItem newItem = new CartItem();
+                newItem.setCart(cart);
+                newItem.setWine(rw);
+                newItem.setQuantity(Math.min(guestQty, avStock));
+                cart.addItem(newItem);
+            }
+        }
+        
+        cartRepository.save(cart);
+        // Clear guest cart
+        redisTemplate.delete(getGuestCartKey(sessionId));
+    }
+
+    @Transactional
+    public void clearUserCart(Long userId) {
+        Cart cart = cartRepository.findByUserId(userId).orElse(null);
+        if (cart == null) {
+            return;
+        }
+
+        if (!cart.getItems().isEmpty()) {
+            cart.getItems().clear();
+            cartRepository.save(cart);
+        }
+    }
+}

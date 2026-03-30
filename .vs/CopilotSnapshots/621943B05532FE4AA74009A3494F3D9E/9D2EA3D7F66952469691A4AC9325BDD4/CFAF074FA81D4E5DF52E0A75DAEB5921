@@ -1,0 +1,79 @@
+﻿package com.strongwine.strongwine.controller;
+
+import com.strongwine.strongwine.service.OrderService;
+import com.strongwine.strongwine.service.InventoryService;
+import com.strongwine.strongwine.service.PaymentService;
+import com.strongwine.strongwine.service.ReviewService;
+import com.strongwine.strongwine.service.UserService;
+import com.strongwine.strongwine.service.WineService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+/**
+ * Controller for admin dashboard
+ */
+@Controller
+@RequestMapping("/admin")
+public class AdminController {
+    
+    @Autowired
+    private WineService wineService;
+    
+    @Autowired
+    private UserService userService;
+    
+    @Autowired
+    private OrderService orderService;
+    
+    @Autowired
+    private ReviewService reviewService;
+
+    @Autowired
+    private InventoryService inventoryService;
+
+    @Autowired
+    private PaymentService paymentService;
+    
+    /**
+     * Admin dashboard
+     */
+    @GetMapping
+    public String dashboard(Model model) {
+        // Statistics
+        long totalWines = wineService.getAllWines().size();
+        long totalUsers = userService.getAllUsers().size();
+        long totalOrders = orderService.getAllOrders().size();
+        Double totalRevenue = orderService.getTotalRevenue();
+        long lowStockCount = inventoryService.getLowStockInventories().size();
+        long pendingPayments = paymentService.getRecentPayments().stream().filter(p -> p.getStatus().name().equals("PENDING")).count();
+        
+        model.addAttribute("totalWines", totalWines);
+        model.addAttribute("totalUsers", totalUsers);
+        model.addAttribute("totalOrders", totalOrders);
+        model.addAttribute("totalRevenue", totalRevenue != null ? totalRevenue : 0.0);
+        model.addAttribute("lowStockCount", lowStockCount);
+        model.addAttribute("pendingPayments", pendingPayments);
+        
+        // Lists
+        model.addAttribute("wines", wineService.getAllWines());
+        model.addAttribute("users", userService.getAllUsers());
+        model.addAttribute("orders", orderService.getAllOrders());
+        model.addAttribute("reviews", reviewService.getAllReviews());
+        model.addAttribute("inventories", inventoryService.getInventoryOverview());
+        model.addAttribute("inventoryTransactions", inventoryService.getRecentTransactions());
+        model.addAttribute("payments", paymentService.getRecentPayments());
+        model.addAttribute("paymentTransactions", paymentService.getRecentTransactions());
+        model.addAttribute("lowStockItems", inventoryService.getLowStockInventories());
+        
+        return "admin-dashboard";
+    }
+}
+
+
+
+
+
+

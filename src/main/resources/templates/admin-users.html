@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý người dùng - StrongWine</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+<nav class="navbar navbar-dark navbar-modern py-3">
+    <div class="container d-flex justify-content-between">
+        <a class="navbar-brand" href="/admin">StrongWine Quản trị</a>
+        <div class="d-flex gap-2">
+            <a class="btn btn-sm btn-outline-light" href="/admin/shippers">Shipper</a>
+            <a class="btn btn-sm btn-outline-light" href="/admin/shipments">Shipment</a>
+            <a class="btn btn-sm btn-light" href="/admin/users/create">Thêm user</a>
+        </div>
+    </div>
+</nav>
+
+<main class="container my-4">
+    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+    <div class="panel p-3">
+        <h1 class="h5 mb-3">CRUD người dùng</h1>
+        <div class="table-responsive">
+            <table class="table table-modern table-sm align-middle">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Username</th>
+                    <th>Role</th>
+                    <th>Thao tác</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="u : ${users}">
+                    <td th:text="${u.id}"></td>
+                    <td th:text="${u.username}"></td>
+                    <td><span class="badge text-bg-secondary" th:text="${u.role}"></span></td>
+                    <td>
+                        <div class="d-flex gap-2">
+                            <a class="btn btn-sm btn-outline-dark" th:href="@{/admin/users/edit/{id}(id=${u.id})}">Sửa</a>
+                            <form th:action="@{/admin/users/delete/{id}(id=${u.id})}" method="post" onsubmit="return confirm('Bạn có chắc muốn xóa user này?');">
+                                <button class="btn btn-sm btn-outline-danger" type="submit">Xóa</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+</body>
+</html>

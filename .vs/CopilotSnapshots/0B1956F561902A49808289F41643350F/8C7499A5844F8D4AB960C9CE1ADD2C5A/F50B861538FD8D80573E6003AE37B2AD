@@ -1,0 +1,13 @@
+﻿package com.strongwine.strongwine.dto;
+
+import lombok.Data;
+import java.math.BigDecimal;
+import com.strongwine.strongwine.entity.Wine;
+
+@Data
+public class CartItemDto {
+    private Wine wine;
+    private Integer quantity;
+    private Integer availableStock;
+    private BigDecimal lineTotal;
+}

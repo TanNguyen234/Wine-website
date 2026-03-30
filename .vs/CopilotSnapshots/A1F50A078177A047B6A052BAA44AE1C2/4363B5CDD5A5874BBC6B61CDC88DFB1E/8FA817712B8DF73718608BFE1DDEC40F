@@ -1,0 +1,36 @@
+﻿package com.strongwine.strongwine.controller;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+
+/**
+ * Controller for order-related pages
+ */
+@Controller
+public class OrderController {
+    
+    /**
+     * Order confirmation page
+     */
+    @GetMapping("/order-confirmation")
+    public String orderConfirmation(@ModelAttribute("orderId") Long orderId,
+                                   @ModelAttribute("fullName") String fullName,
+                                   @ModelAttribute("phone") String phone,
+                                   @ModelAttribute("address") String address,
+                                   Model model) {
+        if (orderId == null) {
+            return "redirect:/home";
+        }
+        
+        model.addAttribute("orderId", orderId);
+        model.addAttribute("fullName", fullName);
+        model.addAttribute("phone", phone);
+        model.addAttribute("address", address);
+        
+        return "order-confirmation";
+    }
+}
+
+

@@ -1,0 +1,207 @@
+package com.strongwine.strongwine.service;
+
+import com.strongwine.strongwine.entity.Order;
+import com.strongwine.strongwine.entity.OrderItem;
+import com.strongwine.strongwine.entity.OrderStatus;
+import com.strongwine.strongwine.entity.PaymentMethod;
+import com.strongwine.strongwine.entity.PaymentStatus;
+import com.strongwine.strongwine.entity.User;
+import com.strongwine.strongwine.entity.Wine;
+import com.strongwine.strongwine.repository.OrderRepository;
+import com.strongwine.strongwine.repository.UserRepository;
+import com.strongwine.strongwine.repository.WineRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+/**
+ * Service class for Order business logic
+ */
+@Service
+@Transactional
+public class OrderService {
+
+    private static final Logger log = LoggerFactory.getLogger(OrderService.class);
+    
+    @Autowired
+    private OrderRepository orderRepository;
+    
+    @Autowired
+    private UserRepository userRepository;
+    
+    @Autowired
+    private WineRepository wineRepository;
+
+    @Autowired
+    private InventoryService inventoryService;
+
+    @Autowired
+    private ShipmentService shipmentService;
+
+    /**
+     * Get all orders
+     */
+    public List<Order> getAllOrders() {
+        return orderRepository.findAll();
+    }
+    
+    /**
+     * Get order by ID
+     */
+    public Optional<Order> getOrderById(Long id) {
+        return orderRepository.findById(id);
+    }
+    
+    /**
+     * Get all orders for a user
+     */
+    public List<Order> getOrdersByUserId(Long userId) {
+        return orderRepository.findByUserIdOrderByOrderDateDesc(userId);
+    }
+
+    /**
+     * Get one order owned by a specific user.
+     */
+    public Optional<Order> getOrderByIdForUser(Long orderId, Long userId) {
+        return orderRepository.findByIdAndUserId(orderId, userId);
+    }
+    
+    /**
+     * Create a new order from cart items
+     * @param userId The user placing the order
+     * @param cartItems Map of wineId -> quantity
+     */
+    public Order createOrder(Long userId, Map<Long, Integer> cartItems) {
+        return createPendingOrder(userId, cartItems, null, null, null, null, PaymentMethod.STRIPE.name());
+    }
+
+    public Order createPendingOrder(Long userId,
+                                    Map<Long, Integer> cartItems,
+                                    String fullName,
+                                    String phone,
+                                    String address,
+                                    String note,
+                                    String paymentMethod) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+        
+        Order order = new Order();
+        order.setUser(user);
+        order.setStatus(OrderStatus.PENDING);
+        order.setPaymentStatus(PaymentStatus.PENDING);
+        order.setPaymentMethod(parsePaymentMethod(paymentMethod));
+        order.setShippingFullName(fullName);
+        order.setShippingPhone(phone);
+        order.setShippingAddress(address);
+        order.setNote(note);
+        order.setUpdatedAt(LocalDateTime.now());
+        
+        BigDecimal totalPrice = BigDecimal.ZERO;
+        
+        // Create order items and calculate total
+        for (Map.Entry<Long, Integer> entry : cartItems.entrySet()) {
+            Long wineId = entry.getKey();
+            Integer quantity = entry.getValue();
+            
+            Wine wine = wineRepository.findById(wineId)
+                .orElseThrow(() -> new RuntimeException("Wine not found with id: " + wineId));
+            
+            OrderItem orderItem = new OrderItem();
+            orderItem.setOrder(order);
+            orderItem.setWine(wine);
+            orderItem.setQuantity(quantity);
+            orderItem.setPrice(wine.getPrice());
+            
+            order.getOrderItems().add(orderItem);
+            totalPrice = totalPrice.add(wine.getPrice().multiply(BigDecimal.valueOf(quantity)));
+        }
+        
+        order.setTotalPrice(totalPrice);
+        Order savedOrder = orderRepository.save(order);
+        inventoryService.reserveForOrder(savedOrder);
+        return savedOrder;
+    }
+    
+    /**
+     * Update an existing order
+     */
+    public Order updateOrder(Long id, Order orderDetails) {
+        Order order = orderRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Order not found with id: " + id));
+        
+        order.setTotalPrice(orderDetails.getTotalPrice());
+        order.setUpdatedAt(LocalDateTime.now());
+        // Note: Order items are typically not updated after order creation
+        
+        return orderRepository.save(order);
+    }
+    
+    /**
+     * Delete an order
+     */
+    public void deleteOrder(Long id) {
+        if (!orderRepository.existsById(id)) {
+            throw new RuntimeException("Order not found with id: " + id);
+        }
+        orderRepository.deleteById(id);
+    }
+    
+    /**
+     * Get total revenue
+     */
+    public Double getTotalRevenue() {
+        return orderRepository.getTotalRevenue();
+    }
+
+    public void markOrderPaid(Long orderId, String paymentReference) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found with id: " + orderId));
+        order.setStatus(OrderStatus.PAID);
+        order.setPaymentStatus(PaymentStatus.SUCCESS);
+        order.setPaymentReference(paymentReference);
+        order.setPaidAt(LocalDateTime.now());
+        order.setUpdatedAt(LocalDateTime.now());
+        orderRepository.save(order);
+        inventoryService.confirmOrderPayment(order);
+
+        try {
+            shipmentService.createAutoShipmentForPaidOrder(order);
+        } catch (Exception ex) {
+            log.warn("Automatic shipment creation failed for order {}: {}", orderId, ex.getMessage());
+        }
+    }
+
+    public void cancelPendingOrder(Long orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found with id: " + orderId));
+        if (order.getStatus() == OrderStatus.PAID) {
+            return;
+        }
+        order.setStatus(OrderStatus.CANCELLED);
+        order.setPaymentStatus(PaymentStatus.CANCELLED);
+        order.setUpdatedAt(LocalDateTime.now());
+        orderRepository.save(order);
+        inventoryService.releaseOrderReservation(order);
+    }
+
+    private PaymentMethod parsePaymentMethod(String paymentMethod) {
+        try {
+            return PaymentMethod.valueOf(paymentMethod == null ? "STRIPE" : paymentMethod.toUpperCase());
+        } catch (Exception ex) {
+            return PaymentMethod.STRIPE;
+        }
+    }
+}
+
+
+
+
+
