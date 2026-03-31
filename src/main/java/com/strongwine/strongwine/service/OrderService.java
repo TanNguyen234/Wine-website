@@ -174,6 +174,7 @@ public class OrderService {
 
         try {
             shipmentService.createAutoShipmentForPaidOrder(order);
+            shipmentService.dispatchAutoShipmentQueue();
         } catch (Exception ex) {
             log.warn("Automatic shipment creation failed for order {}: {}", orderId, ex.getMessage());
         }

@@ -13,6 +13,7 @@ import com.strongwine.strongwine.repository.ShipperRepository;
 import com.strongwine.strongwine.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +30,12 @@ public class ShipmentService {
 
     private static final Logger log = LoggerFactory.getLogger(ShipmentService.class);
     private static final SecureRandom OTP_RANDOM = new SecureRandom();
+    private static final int AUTO_DISPATCH_BATCH_LIMIT = 200;
+    private static final List<ShipmentStatus> IN_PROGRESS_STATUSES = List.of(
+            ShipmentStatus.ASSIGNED,
+            ShipmentStatus.PICKED_UP,
+            ShipmentStatus.DELIVERING
+    );
 
     private final ShipmentRepository shipmentRepository;
     private final ShipperRepository shipperRepository;
@@ -59,32 +66,54 @@ public class ShipmentService {
             return existingShipment.get();
         }
 
-        Shipment shipment = new Shipment();
-        shipment.setOrder(order);
-        shipment.setShippingName(requireTextOrFallback(null, order.getShippingFullName(), "Recipient name is required"));
-        shipment.setShippingPhone(requireTextOrFallback(null, order.getShippingPhone(), "Recipient phone is required"));
-        shipment.setShippingAddress(requireTextOrFallback(null, order.getShippingAddress(), "Recipient address is required"));
-        shipment.setOtpCode(generateOtp());
-        shipment.setOtpVerified(false);
-
         Optional<Shipper> availableShipper = shipperRepository.findFirstByStatusAndIsAvailableTrueOrderByIdAsc(ShipperStatus.ACTIVE);
         if (availableShipper.isEmpty()) {
-            availableShipper = shipperRepository.findFirstByStatusOrderByIdAsc(ShipperStatus.ACTIVE);
-        }
-        if (availableShipper.isPresent()) {
-            shipment.setShipper(availableShipper.get());
-            shipment.setStatus(ShipmentStatus.ASSIGNED);
-        } else {
-            shipment.setStatus(ShipmentStatus.PENDING_ASSIGNMENT);
+            // Keep order in paid state without shipment and let dispatcher create it when a shipper is free.
+            return null;
         }
 
-        Shipment savedShipment = shipmentRepository.save(shipment);
+        Shipment savedShipment = createShipmentForOrderWithAssignedShipper(order, availableShipper.get(), true);
         try {
             shipmentOtpEmailService.sendShipmentOtp(savedShipment);
         } catch (Exception ex) {
             log.warn("Auto shipment OTP email failed for shipment {}: {}", savedShipment.getId(), ex.getMessage());
         }
         return savedShipment;
+    }
+
+    public void dispatchAutoShipmentQueue() {
+        int processed = 0;
+        while (processed < AUTO_DISPATCH_BATCH_LIMIT) {
+            Optional<Shipper> availableShipper = shipperRepository.findFirstByStatusAndIsAvailableTrueOrderByIdAsc(ShipperStatus.ACTIVE);
+            if (availableShipper.isEmpty()) {
+                break;
+            }
+
+            Optional<Shipment> pendingShipment = shipmentRepository.findFirstByStatusOrderByCreatedAtAsc(ShipmentStatus.PENDING_ASSIGNMENT);
+            if (pendingShipment.isPresent()) {
+                assignShipmentToShipperInternal(pendingShipment.get(), availableShipper.get(), false);
+                processed += 1;
+                continue;
+            }
+
+            Optional<Order> oldestPaidOrder = findOldestPaidOrderWithoutShipment();
+            if (oldestPaidOrder.isEmpty()) {
+                break;
+            }
+
+            Shipment createdShipment = createShipmentForOrderWithAssignedShipper(oldestPaidOrder.get(), availableShipper.get(), false);
+            try {
+                shipmentOtpEmailService.sendShipmentOtp(createdShipment);
+            } catch (Exception ex) {
+                log.warn("Auto shipment OTP email failed for shipment {}: {}", createdShipment.getId(), ex.getMessage());
+            }
+            processed += 1;
+        }
+    }
+
+    public void onShipperProfileUpdated(Long shipperId) {
+        refreshShipperAvailability(shipperId);
+        dispatchAutoShipmentQueue();
     }
 
     @Transactional(readOnly = true)
@@ -173,7 +202,13 @@ public class ShipmentService {
             shipment.setStatus(ShipmentStatus.PENDING_ASSIGNMENT);
         }
 
-        return shipmentRepository.save(shipment);
+        Shipment savedShipment = shipmentRepository.save(shipment);
+        if (savedShipment.getShipper() != null) {
+            markShipperBusy(savedShipment.getShipper());
+        } else {
+            dispatchAutoShipmentQueue();
+        }
+        return savedShipment;
     }
 
     public Shipment updateShipmentForAdmin(Long shipmentId,
@@ -185,6 +220,8 @@ public class ShipmentService {
                                            String failureNote) {
         Shipment shipment = shipmentRepository.findByIdForUpdate(shipmentId)
                 .orElseThrow(() -> new IllegalArgumentException("Shipment not found: " + shipmentId));
+        Long previousShipperId = shipment.getShipper() == null ? null : shipment.getShipper().getId();
+        ShipmentStatus previousStatus = shipment.getStatus();
 
         shipment.setShippingName(requireText(shippingName, "Recipient name is required"));
         shipment.setShippingPhone(requireText(shippingPhone, "Recipient phone is required"));
@@ -204,7 +241,9 @@ public class ShipmentService {
         }
 
         shipment.setUpdatedAt(LocalDateTime.now());
-        return shipmentRepository.save(shipment);
+        Shipment savedShipment = shipmentRepository.save(shipment);
+        reconcileShipperAvailabilityAfterMutation(savedShipment, previousStatus, previousShipperId, true);
+        return savedShipment;
     }
 
     public Shipment assignShipperByAdmin(Long shipmentId, Long shipperId) {
@@ -214,10 +253,14 @@ public class ShipmentService {
             throw new IllegalStateException("Only pending/assigned shipments can be assigned or reassigned");
         }
 
+        Long previousShipperId = shipment.getShipper() == null ? null : shipment.getShipper().getId();
+        ShipmentStatus previousStatus = shipment.getStatus();
         shipment.setShipper(getActiveShipper(shipperId));
         shipment.setStatus(ShipmentStatus.ASSIGNED);
         shipment.setUpdatedAt(LocalDateTime.now());
-        return shipmentRepository.save(shipment);
+        Shipment savedShipment = shipmentRepository.save(shipment);
+        reconcileShipperAvailabilityAfterMutation(savedShipment, previousStatus, previousShipperId, true);
+        return savedShipment;
     }
 
     public Shipment transitionShipmentStatusByAdmin(Long shipmentId, ShipmentStatus targetStatus, String failureNote) {
@@ -231,9 +274,13 @@ public class ShipmentService {
             return shipment;
         }
 
+        Long previousShipperId = shipment.getShipper() == null ? null : shipment.getShipper().getId();
+        ShipmentStatus previousStatus = shipment.getStatus();
         applyStrictTransition(shipment, targetStatus, failureNote);
         shipment.setUpdatedAt(LocalDateTime.now());
-        return shipmentRepository.save(shipment);
+        Shipment savedShipment = shipmentRepository.save(shipment);
+        reconcileShipperAvailabilityAfterMutation(savedShipment, previousStatus, previousShipperId, true);
+        return savedShipment;
     }
 
     public Shipment regenerateOtpForShipment(Long shipmentId) {
@@ -265,22 +312,25 @@ public class ShipmentService {
         Shipper shipper = shipperRepository.findFirstByStatusAndIsAvailableTrueOrderByIdAsc(ShipperStatus.ACTIVE)
                 .orElseThrow(() -> new IllegalStateException("No active available shipper"));
 
-        shipment.setShipper(shipper);
-        shipment.setStatus(ShipmentStatus.ASSIGNED);
-        shipment.setUpdatedAt(LocalDateTime.now());
-        shipmentRepository.save(shipment);
+        assignShipmentToShipperInternal(shipment, shipper, true);
     }
 
     public void markPickedUp(Long shipmentId, String username) {
         Shipment shipment = getShipmentForShipper(shipmentId, username);
+        Long previousShipperId = shipment.getShipper() == null ? null : shipment.getShipper().getId();
+        ShipmentStatus previousStatus = shipment.getStatus();
         applyStrictTransition(shipment, ShipmentStatus.PICKED_UP, null);
-        shipmentRepository.save(shipment);
+        Shipment savedShipment = shipmentRepository.save(shipment);
+        reconcileShipperAvailabilityAfterMutation(savedShipment, previousStatus, previousShipperId, true);
     }
 
     public void startDelivering(Long shipmentId, String username) {
         Shipment shipment = getShipmentForShipper(shipmentId, username);
+        Long previousShipperId = shipment.getShipper() == null ? null : shipment.getShipper().getId();
+        ShipmentStatus previousStatus = shipment.getStatus();
         applyStrictTransition(shipment, ShipmentStatus.DELIVERING, null);
-        shipmentRepository.save(shipment);
+        Shipment savedShipment = shipmentRepository.save(shipment);
+        reconcileShipperAvailabilityAfterMutation(savedShipment, previousStatus, previousShipperId, true);
     }
 
     public void completeDelivery(Long shipmentId, String username, String otp) {
@@ -292,14 +342,20 @@ public class ShipmentService {
             throw new IllegalArgumentException("Invalid OTP");
         }
 
+        Long previousShipperId = shipment.getShipper() == null ? null : shipment.getShipper().getId();
+        ShipmentStatus previousStatus = shipment.getStatus();
         applyStrictTransition(shipment, ShipmentStatus.COMPLETED, null);
-        shipmentRepository.save(shipment);
+        Shipment savedShipment = shipmentRepository.save(shipment);
+        reconcileShipperAvailabilityAfterMutation(savedShipment, previousStatus, previousShipperId, true);
     }
 
     public void markFailed(Long shipmentId, String username, String note) {
         Shipment shipment = getShipmentForShipper(shipmentId, username);
+        Long previousShipperId = shipment.getShipper() == null ? null : shipment.getShipper().getId();
+        ShipmentStatus previousStatus = shipment.getStatus();
         applyStrictTransition(shipment, ShipmentStatus.FAILED, note);
-        shipmentRepository.save(shipment);
+        Shipment savedShipment = shipmentRepository.save(shipment);
+        reconcileShipperAvailabilityAfterMutation(savedShipment, previousStatus, previousShipperId, true);
     }
 
     private Shipment getShipmentForShipper(Long shipmentId, String username) {
@@ -365,6 +421,141 @@ public class ShipmentService {
         if (order.getStatus() != OrderStatus.PAID) {
             throw new IllegalStateException("Only PAID orders can be shipped");
         }
+    }
+
+    private Optional<Order> findOldestPaidOrderWithoutShipment() {
+        return orderRepository.findOldestOrdersWithoutShipmentByStatus(OrderStatus.PAID, PageRequest.of(0, 1))
+                .stream()
+                .findFirst();
+    }
+
+    private Shipment createShipmentForOrderWithAssignedShipper(Order order,
+                                                               Shipper shipper,
+                                                               boolean triggerDispatch) {
+        if (order == null || order.getId() == null) {
+            throw new IllegalArgumentException("Order is required");
+        }
+        if (shipper == null || shipper.getId() == null) {
+            throw new IllegalArgumentException("Shipper is required");
+        }
+        ensureOrderReadyForShipment(order);
+
+        Optional<Shipment> existingShipment = shipmentRepository.findByOrderId(order.getId());
+        if (existingShipment.isPresent()) {
+            Shipment current = existingShipment.get();
+            if (current.getStatus() == ShipmentStatus.PENDING_ASSIGNMENT) {
+                assignShipmentToShipperInternal(current, shipper, triggerDispatch);
+            }
+            return current;
+        }
+
+        Shipment shipment = new Shipment();
+        shipment.setOrder(order);
+        shipment.setShipper(shipper);
+        shipment.setStatus(ShipmentStatus.ASSIGNED);
+        shipment.setShippingName(requireTextOrFallback(null, order.getShippingFullName(), "Recipient name is required"));
+        shipment.setShippingPhone(requireTextOrFallback(null, order.getShippingPhone(), "Recipient phone is required"));
+        shipment.setShippingAddress(requireTextOrFallback(null, order.getShippingAddress(), "Recipient address is required"));
+        shipment.setOtpCode(generateOtp());
+        shipment.setOtpVerified(false);
+
+        Shipment savedShipment = shipmentRepository.save(shipment);
+        markShipperBusy(shipper);
+        return savedShipment;
+    }
+
+    private Shipment assignShipmentToShipperInternal(Shipment shipment,
+                                                     Shipper shipper,
+                                                     boolean triggerDispatch) {
+        if (shipment == null || shipment.getId() == null) {
+            throw new IllegalArgumentException("Shipment is required");
+        }
+        if (shipper == null || shipper.getId() == null) {
+            throw new IllegalArgumentException("Shipper is required");
+        }
+        if (shipment.getStatus() != ShipmentStatus.PENDING_ASSIGNMENT && shipment.getStatus() != ShipmentStatus.ASSIGNED) {
+            throw new IllegalStateException("Only pending/assigned shipments can be assigned");
+        }
+
+        Long previousShipperId = shipment.getShipper() == null ? null : shipment.getShipper().getId();
+        ShipmentStatus previousStatus = shipment.getStatus();
+        shipment.setShipper(shipper);
+        shipment.setStatus(ShipmentStatus.ASSIGNED);
+        shipment.setUpdatedAt(LocalDateTime.now());
+        Shipment savedShipment = shipmentRepository.save(shipment);
+        reconcileShipperAvailabilityAfterMutation(savedShipment, previousStatus, previousShipperId, triggerDispatch);
+        return savedShipment;
+    }
+
+    private void reconcileShipperAvailabilityAfterMutation(Shipment shipment,
+                                                           ShipmentStatus previousStatus,
+                                                           Long previousShipperId,
+                                                           boolean triggerDispatch) {
+        if (shipment != null && shipment.getShipper() != null && IN_PROGRESS_STATUSES.contains(shipment.getStatus())) {
+            markShipperBusy(shipment.getShipper());
+        }
+
+        boolean shipperChanged = previousShipperId != null
+                && (shipment == null || shipment.getShipper() == null || !previousShipperId.equals(shipment.getShipper().getId()));
+
+        if (previousShipperId != null
+                && (shipment == null || shipment.getShipper() == null || !previousShipperId.equals(shipment.getShipper().getId()))) {
+            refreshShipperAvailability(previousShipperId);
+        }
+
+        if (shipment != null && shipment.getShipper() != null
+                && isTerminalStatus(shipment.getStatus())) {
+            refreshShipperAvailability(shipment.getShipper().getId());
+        }
+
+        if (triggerDispatch && ((shipment != null && isTerminalStatus(shipment.getStatus())) || shipperChanged)) {
+            dispatchAutoShipmentQueue();
+        }
+    }
+
+    private boolean isTerminalStatus(ShipmentStatus status) {
+        return status == ShipmentStatus.COMPLETED || status == ShipmentStatus.FAILED;
+    }
+
+    private void markShipperBusy(Shipper shipper) {
+        if (shipper == null || shipper.getId() == null) {
+            return;
+        }
+        Shipper lockedShipper = shipperRepository.findByIdForUpdate(shipper.getId())
+                .orElse(null);
+        if (lockedShipper == null) {
+            return;
+        }
+        if (lockedShipper.getStatus() != ShipperStatus.ACTIVE) {
+            return;
+        }
+        if (Boolean.FALSE.equals(lockedShipper.getIsAvailable())) {
+            return;
+        }
+        lockedShipper.setIsAvailable(false);
+        lockedShipper.setUpdatedAt(LocalDateTime.now());
+        shipperRepository.save(lockedShipper);
+    }
+
+    private void refreshShipperAvailability(Long shipperId) {
+        if (shipperId == null) {
+            return;
+        }
+        Shipper shipper = shipperRepository.findByIdForUpdate(shipperId)
+                .orElse(null);
+        if (shipper == null) {
+            return;
+        }
+
+        boolean hasInProgressShipment = shipmentRepository.existsByShipperIdAndStatusIn(shipperId, IN_PROGRESS_STATUSES);
+        boolean shouldBeAvailable = shipper.getStatus() == ShipperStatus.ACTIVE && !hasInProgressShipment;
+        if (Boolean.valueOf(shouldBeAvailable).equals(shipper.getIsAvailable())) {
+            return;
+        }
+
+        shipper.setIsAvailable(shouldBeAvailable);
+        shipper.setUpdatedAt(LocalDateTime.now());
+        shipperRepository.save(shipper);
     }
 
     private Shipper getActiveShipper(Long shipperId) {

@@ -19,10 +19,14 @@ public class ShipperService {
 
     private final ShipperRepository shipperRepository;
     private final UserRepository userRepository;
+    private final ShipmentService shipmentService;
 
-    public ShipperService(ShipperRepository shipperRepository, UserRepository userRepository) {
+    public ShipperService(ShipperRepository shipperRepository,
+                          UserRepository userRepository,
+                          ShipmentService shipmentService) {
         this.shipperRepository = shipperRepository;
         this.userRepository = userRepository;
+        this.shipmentService = shipmentService;
     }
 
     @Transactional(readOnly = true)
@@ -96,7 +100,9 @@ public class ShipperService {
         shipper.setCreatedAt(LocalDateTime.now());
         shipper.setUpdatedAt(LocalDateTime.now());
 
-        return shipperRepository.save(shipper);
+        Shipper saved = shipperRepository.save(shipper);
+        shipmentService.onShipperProfileUpdated(saved.getId());
+        return saved;
     }
 
     public Shipper updateShipper(Long id,
@@ -121,7 +127,9 @@ public class ShipperService {
         shipper.setIsAvailable(isAvailable != null && isAvailable);
         shipper.setUpdatedAt(LocalDateTime.now());
 
-        return shipperRepository.save(shipper);
+        Shipper saved = shipperRepository.save(shipper);
+        shipmentService.onShipperProfileUpdated(saved.getId());
+        return saved;
     }
 
     public void deleteShipper(Long id) {

@@ -49,4 +49,6 @@ public interface ShipmentRepository extends JpaRepository<Shipment, Long> {
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     Optional<Shipment> findFirstByStatusOrderByCreatedAtAsc(ShipmentStatus status);
+
+    boolean existsByShipperIdAndStatusIn(Long shipperId, List<ShipmentStatus> statuses);
 }

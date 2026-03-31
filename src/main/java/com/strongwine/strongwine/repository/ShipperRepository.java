@@ -5,6 +5,8 @@ import com.strongwine.strongwine.entity.ShipperStatus;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -24,6 +26,10 @@ public interface ShipperRepository extends JpaRepository<Shipper, Long> {
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     Optional<Shipper> findFirstByStatusAndIsAvailableTrueOrderByIdAsc(ShipperStatus status);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT s FROM Shipper s WHERE s.id = :shipperId")
+    Optional<Shipper> findByIdForUpdate(@Param("shipperId") Long shipperId);
 
     Optional<Shipper> findFirstByStatusOrderByIdAsc(ShipperStatus status);
 }

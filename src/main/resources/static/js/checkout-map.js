@@ -1,4 +1,8 @@
 (function () {
+    const VIETNAM_BORDER_GEOJSON_URL = "https://raw.githubusercontent.com/johan/world.geo.json/master/countries/VNM.geo.json";
+    const NOMINATIM_SEARCH_URL = "https://nominatim.openstreetmap.org/search";
+    const NOMINATIM_REVERSE_URL = "https://nominatim.openstreetmap.org/reverse";
+
     const MAINLAND_VIETNAM_POLYGON = [
         [23.23, 102.14],
         [22.50, 104.70],
@@ -54,6 +58,9 @@
         const locationLabel = document.getElementById("selectedMapLocation");
         const useCurrentBtn = document.getElementById("btnUseCurrentLocation");
         const addressInput = document.getElementById("address");
+        const searchInput = document.getElementById("mapSearchInput");
+        const searchBtn = document.getElementById("btnMapSearch");
+        const searchResult = document.getElementById("mapSearchResult");
 
         if (!mapEl || !latInput || !lngInput) {
             return;
@@ -80,20 +87,124 @@
             fillOpacity: 0.08
         }).addTo(map);
 
+        fetch(VIETNAM_BORDER_GEOJSON_URL)
+            .then(function (response) {
+                if (!response.ok) {
+                    throw new Error("Cannot load Vietnam border");
+                }
+                return response.json();
+            })
+            .then(function (geojson) {
+                L.geoJSON(geojson, {
+                    style: {
+                        color: "#166534",
+                        weight: 2,
+                        fillColor: "#86efac",
+                        fillOpacity: 0.05
+                    }
+                }).addTo(map);
+            })
+            .catch(function () {
+                // Keep fallback polygon when external border source is unavailable.
+            });
+
         map.fitBounds(mainlandPolygon.getBounds(), { padding: [16, 16] });
 
         let marker = null;
+        let isBusy = false;
 
-        function updateCoordinateFields(lat, lng) {
+        function setLocationLabel(text) {
+            if (locationLabel) {
+                locationLabel.textContent = text;
+            }
+        }
+
+        function setSearchResultText(text, isError) {
+            if (!searchResult) {
+                return;
+            }
+            searchResult.textContent = text;
+            searchResult.classList.remove("text-danger", "text-muted");
+            searchResult.classList.add(isError ? "text-danger" : "text-muted");
+        }
+
+        function buildDisplayLabel(placeName, lat, lng) {
+            const coordText = lat.toFixed(6) + ", " + lng.toFixed(6);
+            if (placeName) {
+                return "Đã chọn: " + placeName + " (" + coordText + ")";
+            }
+            return "Đã chọn: " + coordText;
+        }
+
+        function updateCoordinateFields(lat, lng, placeName) {
             latInput.value = String(lat.toFixed(6));
             lngInput.value = String(lng.toFixed(6));
-            if (locationLabel) {
-                locationLabel.textContent = "Đã chọn: " + lat.toFixed(6) + ", " + lng.toFixed(6);
-            }
+            setLocationLabel(buildDisplayLabel(placeName, lat, lng));
 
             if (addressInput && !addressInput.value.trim()) {
-                addressInput.value = "Vị trí được chọn trên bản đồ";
+                addressInput.value = placeName || "Vị trí được chọn trên bản đồ";
             }
+        }
+
+        function reverseGeocode(lat, lng) {
+            const url = NOMINATIM_REVERSE_URL
+                + "?format=jsonv2"
+                + "&lat=" + encodeURIComponent(String(lat))
+                + "&lon=" + encodeURIComponent(String(lng))
+                + "&accept-language=vi"
+                + "&zoom=18";
+
+            return fetch(url)
+                .then(function (response) {
+                    if (!response.ok) {
+                        throw new Error("Reverse geocode failed");
+                    }
+                    return response.json();
+                })
+                .then(function (payload) {
+                    if (!payload || !payload.display_name) {
+                        return null;
+                    }
+                    return payload.display_name;
+                })
+                .catch(function () {
+                    return null;
+                });
+        }
+
+        function searchLocationByName(keyword) {
+            const trimmed = (keyword || "").trim();
+            if (!trimmed) {
+                return Promise.resolve([]);
+            }
+
+            const url = NOMINATIM_SEARCH_URL
+                + "?format=jsonv2"
+                + "&q=" + encodeURIComponent(trimmed + ", Vietnam")
+                + "&countrycodes=vn"
+                + "&limit=5"
+                + "&addressdetails=1"
+                + "&accept-language=vi";
+
+            return fetch(url)
+                .then(function (response) {
+                    if (!response.ok) {
+                        throw new Error("Search geocode failed");
+                    }
+                    return response.json();
+                })
+                .then(function (payload) {
+                    return Array.isArray(payload) ? payload : [];
+                })
+                .catch(function () {
+                    return [];
+                });
+        }
+
+        function updateMarkerLabelFromCoordinates(lat, lng) {
+            return reverseGeocode(lat, lng).then(function (placeName) {
+                updateCoordinateFields(lat, lng, placeName);
+            });
         }
 
         function setMarkerAt(lat, lng) {
@@ -108,16 +219,20 @@
                     const next = marker.getLatLng();
                     if (!pointInsidePolygon(next.lat, next.lng, MAINLAND_VIETNAM_POLYGON)) {
                         alert("Vị trí phải nằm trong phạm vi đất liền Việt Nam.");
-                        marker.setLatLng([latInput.value || lat, lngInput.value || lng]);
+                        marker.setLatLng([
+                            Number(latInput.value || lat),
+                            Number(lngInput.value || lng)
+                        ]);
                         return;
                     }
-                    updateCoordinateFields(next.lat, next.lng);
+                    updateMarkerLabelFromCoordinates(next.lat, next.lng);
                 });
             } else {
                 marker.setLatLng([lat, lng]);
             }
 
-            updateCoordinateFields(lat, lng);
+            updateCoordinateFields(lat, lng, null);
+            updateMarkerLabelFromCoordinates(lat, lng);
             return true;
         }
 
@@ -140,6 +255,57 @@
                 }, function () {
                     alert("Không thể lấy vị trí hiện tại. Hãy chọn trực tiếp trên bản đồ.");
                 });
+            });
+        }
+
+        function onSearch() {
+            if (isBusy || !searchInput) {
+                return;
+            }
+            const keyword = searchInput.value || "";
+            if (!keyword.trim()) {
+                setSearchResultText("Nhập tên địa điểm để tìm", false);
+                return;
+            }
+
+            isBusy = true;
+            setSearchResultText("Đang tìm địa điểm...", false);
+            searchLocationByName(keyword).then(function (items) {
+                if (!items.length) {
+                    setSearchResultText("Không tìm thấy địa điểm phù hợp ở Việt Nam", true);
+                    return;
+                }
+
+                const first = items[0];
+                const lat = Number(first.lat);
+                const lng = Number(first.lon);
+                if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+                    setSearchResultText("Kết quả tìm kiếm không có tọa độ hợp lệ", true);
+                    return;
+                }
+
+                if (!setMarkerAt(lat, lng)) {
+                    setSearchResultText("Địa điểm nằm ngoài phạm vi giao hàng đất liền Việt Nam", true);
+                    return;
+                }
+
+                map.setView([lat, lng], 14);
+                updateCoordinateFields(lat, lng, first.display_name || null);
+                setSearchResultText("Đã chọn: " + (first.display_name || "địa điểm tìm được"), false);
+            }).finally(function () {
+                isBusy = false;
+            });
+        }
+
+        if (searchBtn) {
+            searchBtn.addEventListener("click", onSearch);
+        }
+        if (searchInput) {
+            searchInput.addEventListener("keydown", function (event) {
+                if (event.key === "Enter") {
+                    event.preventDefault();
+                    onSearch();
+                }
             });
         }
     }

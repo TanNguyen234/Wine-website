@@ -3,6 +3,7 @@ package com.strongwine.strongwine.repository;
 import com.strongwine.strongwine.entity.Order;
 import com.strongwine.strongwine.entity.OrderStatus;
 import com.strongwine.strongwine.entity.User;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -56,6 +57,19 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
                         ORDER BY o.orderDate DESC
                         """)
         List<Order> findOrdersWithoutShipmentByStatus(OrderStatus status);
+
+                @Query("""
+                        SELECT o
+                        FROM Order o
+                        WHERE o.status = :status
+                            AND NOT EXISTS (
+                                SELECT 1
+                                FROM Shipment s
+                                WHERE s.order.id = o.id
+                            )
+                        ORDER BY o.orderDate ASC
+                        """)
+                List<Order> findOldestOrdersWithoutShipmentByStatus(OrderStatus status, Pageable pageable);
 }
 
 
