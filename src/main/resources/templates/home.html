@@ -62,7 +62,7 @@
                     <div th:unless="${wine.imageUrl != null}" class="d-flex align-items-center justify-content-center bg-light" style="height: 260px;"><i class="fa-regular fa-image fs-1 text-muted"></i></div>
                     <div class="p-3 d-flex flex-column h-100">
                         <div class="d-flex justify-content-between mb-2">
-                            <span class="badge text-bg-dark" th:text="${wine.type}">Loại</span>
+                            <span class="badge text-bg-dark" th:text="${@enumDisplayService.wineType(wine.type)}">Loại</span>
                             <span class="badge text-bg-secondary" th:text="${wine.year}">Năm</span>
                         </div>
                         <h3 class="h6" th:text="${wine.name}">Tên rượu</h3>

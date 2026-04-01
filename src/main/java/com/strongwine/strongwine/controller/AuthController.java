@@ -44,6 +44,7 @@ public class AuthController {
     @PostMapping("/register")
     public String handleRegister(
             @RequestParam String username,
+            @RequestParam String email,
             @RequestParam String password,
             @RequestParam String confirmPassword,
             RedirectAttributes redirectAttributes) {
@@ -59,6 +60,7 @@ public class AuthController {
         }
 
         User user = new User(username, password, "USER");
+        user.setEmail(email);
         try {
             userService.createUser(user);
             redirectAttributes.addFlashAttribute("success", "Dang ky thanh cong. Vui long dang nhap.");

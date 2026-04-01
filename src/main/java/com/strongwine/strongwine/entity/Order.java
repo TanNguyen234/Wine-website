@@ -1,6 +1,7 @@
 package com.strongwine.strongwine.entity;
 
 import jakarta.persistence.*;
+import com.strongwine.strongwine.util.AddressTextUtils;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -47,6 +48,12 @@ public class Order {
 
     @Column(name = "shipping_address", length = 1000)
     private String shippingAddress;
+
+    @Column(name = "shipping_latitude")
+    private Double shippingLatitude;
+
+    @Column(name = "shipping_longitude")
+    private Double shippingLongitude;
 
     @Column(name = "order_note", length = 1000)
     private String note;
@@ -145,11 +152,31 @@ public class Order {
     }
 
     public String getShippingAddress() {
+        return AddressTextUtils.stripLegacyGpsSuffix(shippingAddress);
+    }
+
+    public String getShippingAddressRaw() {
         return shippingAddress;
     }
 
     public void setShippingAddress(String shippingAddress) {
         this.shippingAddress = shippingAddress;
+    }
+
+    public Double getShippingLatitude() {
+        return shippingLatitude;
+    }
+
+    public void setShippingLatitude(Double shippingLatitude) {
+        this.shippingLatitude = shippingLatitude;
+    }
+
+    public Double getShippingLongitude() {
+        return shippingLongitude;
+    }
+
+    public void setShippingLongitude(Double shippingLongitude) {
+        this.shippingLongitude = shippingLongitude;
     }
 
     public String getNote() {

@@ -39,12 +39,14 @@ public class AdminUserController {
 
     @PostMapping("/create")
     public String createUser(@RequestParam String username,
+                             @RequestParam(required = false) String email,
                              @RequestParam String password,
                              @RequestParam String role,
                              RedirectAttributes redirectAttributes) {
         try {
             User user = new User();
             user.setUsername(username);
+            user.setEmail(email);
             user.setPassword(password);
             user.setRole(normalizeRole(role));
             userService.createUser(user);
@@ -74,12 +76,14 @@ public class AdminUserController {
     @PostMapping("/edit/{id}")
     public String updateUser(@PathVariable Long id,
                              @RequestParam String username,
+                             @RequestParam(required = false) String email,
                              @RequestParam(required = false) String password,
                              @RequestParam String role,
                              RedirectAttributes redirectAttributes) {
         try {
             User userDetails = new User();
             userDetails.setUsername(username);
+            userDetails.setEmail(email);
             userDetails.setPassword(password);
             userDetails.setRole(normalizeRole(role));
 

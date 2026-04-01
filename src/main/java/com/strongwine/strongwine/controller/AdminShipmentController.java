@@ -3,9 +3,9 @@ package com.strongwine.strongwine.controller;
 import com.strongwine.strongwine.entity.Order;
 import com.strongwine.strongwine.entity.Shipment;
 import com.strongwine.strongwine.entity.ShipmentStatus;
-import com.strongwine.strongwine.service.ShipmentOtpEmailService;
 import com.strongwine.strongwine.service.ShipmentService;
 import com.strongwine.strongwine.service.ShipperService;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,14 +24,11 @@ public class AdminShipmentController {
 
     private final ShipmentService shipmentService;
     private final ShipperService shipperService;
-    private final ShipmentOtpEmailService shipmentOtpEmailService;
 
     public AdminShipmentController(ShipmentService shipmentService,
-                                   ShipperService shipperService,
-                                   ShipmentOtpEmailService shipmentOtpEmailService) {
+                                   ShipperService shipperService) {
         this.shipmentService = shipmentService;
         this.shipperService = shipperService;
-        this.shipmentOtpEmailService = shipmentOtpEmailService;
     }
 
     @GetMapping
@@ -69,12 +66,13 @@ public class AdminShipmentController {
                                  @RequestParam(required = false) String shippingName,
                                  @RequestParam(required = false) String shippingPhone,
                                  @RequestParam(required = false) String shippingAddress,
+                                 Authentication authentication,
                                  RedirectAttributes redirectAttributes) {
         try {
             Shipment shipment = shipmentService.createShipmentForAdmin(orderId, shipperId, shippingName, shippingPhone, shippingAddress);
-            String message = "Tạo shipment thành công";
+            String message = "Tạo đơn giao hàng thành công";
             try {
-                shipmentOtpEmailService.sendShipmentOtp(shipment);
+                shipmentService.sendOtpForShipment(shipment.getId(), authentication == null ? null : authentication.getName(), "ADMIN_CREATE");
                 message += " và đã gửi OTP qua email";
             } catch (Exception mailEx) {
                 message += ". Cảnh báo email: " + mailEx.getMessage();
@@ -82,7 +80,7 @@ public class AdminShipmentController {
             redirectAttributes.addFlashAttribute("success", message);
             return "redirect:/admin/shipments";
         } catch (Exception ex) {
-            redirectAttributes.addFlashAttribute("error", "Tạo shipment thất bại: " + ex.getMessage());
+            redirectAttributes.addFlashAttribute("error", "Tạo đơn giao hàng thất bại: " + ex.getMessage());
             return "redirect:/admin/shipments/create";
         }
     }
@@ -97,7 +95,7 @@ public class AdminShipmentController {
             model.addAttribute("canDelete", shipment.getStatus() == ShipmentStatus.PENDING_ASSIGNMENT);
             return "admin-shipment-form";
         } catch (Exception ex) {
-            redirectAttributes.addFlashAttribute("error", "Không tìm thấy shipment: " + ex.getMessage());
+            redirectAttributes.addFlashAttribute("error", "Không tìm thấy đơn giao hàng: " + ex.getMessage());
             return "redirect:/admin/shipments";
         }
     }
@@ -110,13 +108,15 @@ public class AdminShipmentController {
                                  @RequestParam String shippingAddress,
                                  @RequestParam ShipmentStatus status,
                                  @RequestParam(required = false) String failureNote,
+                                 Authentication authentication,
                                  RedirectAttributes redirectAttributes) {
         try {
-            shipmentService.updateShipmentForAdmin(id, shipperId, shippingName, shippingPhone, shippingAddress, status, failureNote);
-            redirectAttributes.addFlashAttribute("success", "Cập nhật shipment thành công");
+            shipmentService.updateShipmentForAdmin(id, shipperId, shippingName, shippingPhone, shippingAddress, status, failureNote,
+                    authentication == null ? null : authentication.getName());
+            redirectAttributes.addFlashAttribute("success", "Cập nhật đơn giao hàng thành công");
             return "redirect:/admin/shipments";
         } catch (Exception ex) {
-            redirectAttributes.addFlashAttribute("error", "Cập nhật shipment thất bại: " + ex.getMessage());
+            redirectAttributes.addFlashAttribute("error", "Cập nhật đơn giao hàng thất bại: " + ex.getMessage());
             return "redirect:/admin/shipments/edit/" + id;
         }
     }
@@ -127,7 +127,7 @@ public class AdminShipmentController {
                                 RedirectAttributes redirectAttributes) {
         try {
             shipmentService.assignShipperByAdmin(id, shipperId);
-            redirectAttributes.addFlashAttribute("success", "Đã gán shipper cho shipment");
+            redirectAttributes.addFlashAttribute("success", "Đã gán shipper cho đơn giao hàng");
         } catch (Exception ex) {
             redirectAttributes.addFlashAttribute("error", "Gán shipper thất bại: " + ex.getMessage());
         }
@@ -138,10 +138,18 @@ public class AdminShipmentController {
     public String changeStatus(@PathVariable Long id,
                                @RequestParam ShipmentStatus targetStatus,
                                @RequestParam(required = false) String failureNote,
+                               @RequestParam(required = false) String overrideReason,
+                               Authentication authentication,
                                RedirectAttributes redirectAttributes) {
         try {
-            shipmentService.transitionShipmentStatusByAdmin(id, targetStatus, failureNote);
-            redirectAttributes.addFlashAttribute("success", "Đã cập nhật trạng thái shipment");
+            shipmentService.transitionShipmentStatusByAdmin(
+                    id,
+                    targetStatus,
+                    failureNote,
+                    authentication == null ? null : authentication.getName(),
+                    overrideReason
+            );
+            redirectAttributes.addFlashAttribute("success", "Đã cập nhật trạng thái đơn giao hàng");
         } catch (Exception ex) {
             redirectAttributes.addFlashAttribute("error", "Cập nhật trạng thái thất bại: " + ex.getMessage());
         }
@@ -149,10 +157,13 @@ public class AdminShipmentController {
     }
 
     @PostMapping("/{id}/resend-otp")
-    public String resendOtp(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+    public String resendOtp(@PathVariable Long id,
+                            Authentication authentication,
+                            RedirectAttributes redirectAttributes) {
         try {
-            Shipment shipment = shipmentService.regenerateOtpForShipment(id);
-            shipmentOtpEmailService.sendShipmentOtp(shipment);
+            shipmentService.resendOtpForShipmentByAdmin(id,
+                    authentication == null ? null : authentication.getName(),
+                    "ADMIN_RESEND");
             redirectAttributes.addFlashAttribute("success", "Đã tạo lại OTP và gửi email thành công");
         } catch (Exception ex) {
             redirectAttributes.addFlashAttribute("error", "Gửi lại OTP thất bại: " + ex.getMessage());
@@ -164,9 +175,9 @@ public class AdminShipmentController {
     public String deleteShipment(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         try {
             shipmentService.deletePendingShipment(id);
-            redirectAttributes.addFlashAttribute("success", "Đã xóa shipment trạng thái chờ phân công");
+            redirectAttributes.addFlashAttribute("success", "Đã xóa đơn giao hàng ở trạng thái chờ phân công");
         } catch (Exception ex) {
-            redirectAttributes.addFlashAttribute("error", "Xóa shipment thất bại: " + ex.getMessage());
+            redirectAttributes.addFlashAttribute("error", "Xóa đơn giao hàng thất bại: " + ex.getMessage());
         }
         return "redirect:/admin/shipments";
     }

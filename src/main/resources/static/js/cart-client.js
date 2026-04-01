@@ -276,7 +276,7 @@
                 </div>
                 <div class="text-end">
                     <div class="fw-bold">${formatCurrency(lineTotal)}</div>
-                    <small class="text-muted">${formatCurrency(item.price)}/SP</small>
+                    <small class="text-muted">${formatCurrency(item.price)}/san pham</small>
                 </div>
             `;
             summary.appendChild(row);

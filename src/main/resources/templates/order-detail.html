@@ -48,11 +48,11 @@
             </div>
             <div class="col-md-4">
                 <div class="small text-muted">Thanh toán</div>
-                <span class="badge text-bg-info" th:text="${order.paymentStatus}"></span>
+                <span class="badge text-bg-info" th:text="${@enumDisplayService.paymentStatus(order.paymentStatus)}"></span>
             </div>
             <div class="col-md-4">
                 <div class="small text-muted">Trạng thái đơn</div>
-                <span class="badge text-bg-secondary" th:text="${order.status}"></span>
+                <span class="badge text-bg-secondary" th:text="${@enumDisplayService.orderStatus(order.status)}"></span>
             </div>
             <div class="col-md-4">
                 <div class="small text-muted">Người nhận</div>
@@ -64,7 +64,7 @@
             </div>
             <div class="col-md-4">
                 <div class="small text-muted">Mã tham chiếu thanh toán</div>
-                <div th:text="${order.paymentReference != null ? order.paymentReference : 'N/A'}"></div>
+                <div th:text="${order.paymentReference != null ? order.paymentReference : 'Khong co'}"></div>
             </div>
             <div class="col-12">
                 <div class="small text-muted">Địa chỉ giao hàng</div>

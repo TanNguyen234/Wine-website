@@ -55,8 +55,8 @@
                     <td th:text="${'#' + order.id}"></td>
                     <td th:text="${#temporals.format(order.orderDate, 'dd/MM/yyyy HH:mm')}"></td>
                     <td th:text="${#numbers.formatDecimal(order.totalPrice, 0, 'COMMA', 0, 'POINT') + ' đ'}"></td>
-                    <td><span class="badge text-bg-info" th:text="${order.paymentStatus}"></span></td>
-                    <td><span class="badge text-bg-secondary" th:text="${order.status}"></span></td>
+                    <td><span class="badge text-bg-info" th:text="${@enumDisplayService.paymentStatus(order.paymentStatus)}"></span></td>
+                    <td><span class="badge text-bg-secondary" th:text="${@enumDisplayService.orderStatus(order.status)}"></span></td>
                     <td>
                         <a class="btn btn-sm btn-outline-dark" th:href="@{/orders/{id}(id=${order.id})}">Xem chi tiết</a>
                     </td>

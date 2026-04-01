@@ -55,19 +55,19 @@
         </div>
         <div class="col-lg-2 col-md-4 col-6">
             <div class="panel p-3 h-100">
-                <div class="small text-muted">Shipment</div>
+                <div class="small text-muted">Đơn giao hàng</div>
                 <div class="h4 mb-0" th:text="${totalShipments}">0</div>
             </div>
         </div>
         <div class="col-lg-2 col-md-4 col-6">
             <div class="panel p-3 h-100">
-                <div class="small text-muted">Shipper đang hoạt động</div>
+                <div class="small text-muted">Người giao hàng đang hoạt động</div>
                 <div class="h4 mb-0" th:text="${shipperStats['active']}">0</div>
             </div>
         </div>
         <div class="col-lg-2 col-md-4 col-6">
             <div class="panel p-3 h-100">
-                <div class="small text-muted">Doanh thu (PAID)</div>
+                <div class="small text-muted">Doanh thu (đã thanh toán)</div>
                 <div class="h6 mb-0" th:text="${#numbers.formatDecimal(totalRevenue, 0, 'COMMA', 0, 'POINT') + ' đ'}">0</div>
             </div>
         </div>
@@ -77,10 +77,10 @@
         <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between">
             <div class="d-flex flex-wrap gap-2 align-items-center">
                 <span class="small text-muted me-1">Quản trị nhanh:</span>
-                <a href="/admin/users" class="btn btn-sm btn-outline-dark">CRUD người dùng</a>
-                <a href="/admin/shippers" class="btn btn-sm btn-outline-dark">CRUD shipper</a>
-                <a href="/admin/shipments" class="btn btn-sm btn-outline-dark">CRUD shipment</a>
-                <a href="/shipper/dashboard" class="btn btn-sm btn-outline-primary">Màn hình shipper</a>
+                <a href="/admin/users" class="btn btn-sm btn-outline-dark">Quản lý người dùng</a>
+                <a href="/admin/shippers" class="btn btn-sm btn-outline-dark">Quản lý người giao hàng</a>
+                <a href="/admin/shipments" class="btn btn-sm btn-outline-dark">Quản lý đơn giao hàng</a>
+                <a href="/shipper/dashboard" class="btn btn-sm btn-outline-primary">Màn hình giao hàng</a>
             </div>
             <div>
                 <span class="badge text-bg-warning me-1" th:text="${lowStockCount} + ' sản phẩm sắp hết hàng'"></span>
@@ -111,7 +111,7 @@
                             <div th:unless="${wine.imageUrl != null}" class="product-thumb bg-light d-flex align-items-center justify-content-center"><i class="fa-regular fa-image text-muted"></i></div>
                             <div class="p-2">
                                 <div class="fw-semibold" th:text="${wine.name}"></div>
-                                <div class="small text-muted" th:text="${wine.type + ' - ' + wine.year}"></div>
+                                <div class="small text-muted" th:text="${@enumDisplayService.wineType(wine.type) + ' - ' + wine.year}"></div>
                                 <div class="price-tag small" th:text="${#numbers.formatDecimal(wine.price, 0, 'COMMA', 0, 'POINT') + ' đ'}"></div>
                                 <div class="d-flex gap-1 mt-2">
                                     <a class="btn btn-sm btn-outline-dark flex-fill" th:href="@{/wines/admin/edit/{id}(id=${wine.id})}">Sửa</a>
@@ -139,8 +139,8 @@
                             <td th:text="${order.id}"></td>
                             <td th:text="${order.user.username}"></td>
                             <td th:text="${#temporals.format(order.orderDate, 'dd/MM/yyyy HH:mm')}"></td>
-                            <td><span class="badge text-bg-secondary" th:text="${order.status}"></span></td>
-                            <td><span class="badge text-bg-info" th:text="${order.paymentStatus}"></span></td>
+                            <td><span class="badge text-bg-secondary" th:text="${@enumDisplayService.orderStatus(order.status)}"></span></td>
+                            <td><span class="badge text-bg-info" th:text="${@enumDisplayService.paymentStatus(order.paymentStatus)}"></span></td>
                             <td th:text="${#numbers.formatDecimal(order.totalPrice, 0, 'COMMA', 0, 'POINT') + ' đ'}"></td>
                         </tr>
                         </tbody>
@@ -201,10 +201,10 @@
                         <tr th:each="tx : ${inventoryTransactions}">
                             <td th:text="${#temporals.format(tx.createdAt, 'dd/MM/yyyy HH:mm')}"></td>
                             <td th:text="${tx.wine.name}"></td>
-                            <td th:text="${tx.operationType}"></td>
+                            <td th:text="${@enumDisplayService.inventoryOperation(tx.operationType)}"></td>
                             <td th:text="${tx.quantity}"></td>
                             <td th:text="${tx.userId}"></td>
-                            <td th:text="${tx.referenceType + (tx.referenceId != null ? (' #' + tx.referenceId) : '')}"></td>
+                            <td th:text="${@enumDisplayService.inventoryReferenceType(tx.referenceType) + (tx.referenceId != null ? (' #' + tx.referenceId) : '')}"></td>
                         </tr>
                         </tbody>
                     </table>
@@ -225,8 +225,8 @@
                             <td th:text="${#temporals.format(pay.createdAt, 'dd/MM/yyyy HH:mm')}"></td>
                             <td th:text="${pay.order.id}"></td>
                             <td th:text="${pay.paymentReference}"></td>
-                            <td th:text="${pay.method}"></td>
-                            <td><span class="badge text-bg-secondary" th:text="${pay.status}"></span></td>
+                            <td th:text="${@enumDisplayService.paymentMethod(pay.method)}"></td>
+                            <td><span class="badge text-bg-secondary" th:text="${@enumDisplayService.paymentStatus(pay.status)}"></span></td>
                             <td th:text="${#numbers.formatDecimal(pay.amount, 0, 'COMMA', 0, 'POINT') + ' đ'}"></td>
                         </tr>
                         </tbody>
@@ -242,8 +242,8 @@
                         <tbody>
                         <tr th:each="ptx : ${paymentTransactions}">
                             <td th:text="${#temporals.format(ptx.createdAt, 'dd/MM/yyyy HH:mm')}"></td>
-                            <td th:text="${ptx.transactionType}"></td>
-                            <td th:text="${ptx.status}"></td>
+                            <td th:text="${@enumDisplayService.paymentTransactionType(ptx.transactionType)}"></td>
+                            <td th:text="${@enumDisplayService.paymentTransactionStatus(ptx.status)}"></td>
                             <td class="small text-muted" th:text="${ptx.payload}"></td>
                         </tr>
                         </tbody>

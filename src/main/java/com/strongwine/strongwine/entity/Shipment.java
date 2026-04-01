@@ -1,6 +1,7 @@
 package com.strongwine.strongwine.entity;
 
 import jakarta.persistence.*;
+import com.strongwine.strongwine.util.AddressTextUtils;
 
 import java.time.LocalDateTime;
 
@@ -33,11 +34,48 @@ public class Shipment {
     @Column(name = "shipping_address", length = 1000)
     private String shippingAddress;
 
+    @Column(name = "shipping_latitude")
+    private Double shippingLatitude;
+
+    @Column(name = "shipping_longitude")
+    private Double shippingLongitude;
+
     @Column(name = "otp_code", length = 6)
     private String otpCode;
 
+    @Column(name = "otp_created_at")
+    private LocalDateTime otpCreatedAt;
+
+    @Column(name = "otp_expires_at")
+    private LocalDateTime otpExpiresAt;
+
+    @Column(name = "otp_attempt_count", nullable = false)
+    private Integer otpAttemptCount = 0;
+
+    @Column(name = "otp_locked_until")
+    private LocalDateTime otpLockedUntil;
+
+    @Column(name = "otp_last_sent_at")
+    private LocalDateTime otpLastSentAt;
+
+    @Column(name = "otp_sent_at")
+    private LocalDateTime otpSentAt;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "otp_delivery_status", nullable = false, length = 20)
+    private OtpDeliveryStatus otpDeliveryStatus = OtpDeliveryStatus.PENDING;
+
+    @Column(name = "otp_user_id")
+    private Long otpUserId;
+
     @Column(name = "otp_verified", nullable = false)
     private Boolean otpVerified = false;
+
+    @Column(name = "admin_override", nullable = false)
+    private Boolean adminOverride = false;
+
+    @Column(name = "admin_override_reason", length = 500)
+    private String adminOverrideReason;
 
     @Column(name = "failure_note", length = 500)
     private String failureNote;
@@ -118,11 +156,31 @@ public class Shipment {
     }
 
     public String getShippingAddress() {
+        return AddressTextUtils.stripLegacyGpsSuffix(shippingAddress);
+    }
+
+    public String getShippingAddressRaw() {
         return shippingAddress;
     }
 
     public void setShippingAddress(String shippingAddress) {
         this.shippingAddress = shippingAddress;
+    }
+
+    public Double getShippingLatitude() {
+        return shippingLatitude;
+    }
+
+    public void setShippingLatitude(Double shippingLatitude) {
+        this.shippingLatitude = shippingLatitude;
+    }
+
+    public Double getShippingLongitude() {
+        return shippingLongitude;
+    }
+
+    public void setShippingLongitude(Double shippingLongitude) {
+        this.shippingLongitude = shippingLongitude;
     }
 
     public String getOtpCode() {
@@ -133,12 +191,92 @@ public class Shipment {
         this.otpCode = otpCode;
     }
 
+    public LocalDateTime getOtpCreatedAt() {
+        return otpCreatedAt;
+    }
+
+    public void setOtpCreatedAt(LocalDateTime otpCreatedAt) {
+        this.otpCreatedAt = otpCreatedAt;
+    }
+
+    public LocalDateTime getOtpExpiresAt() {
+        return otpExpiresAt;
+    }
+
+    public void setOtpExpiresAt(LocalDateTime otpExpiresAt) {
+        this.otpExpiresAt = otpExpiresAt;
+    }
+
+    public Integer getOtpAttemptCount() {
+        return otpAttemptCount;
+    }
+
+    public void setOtpAttemptCount(Integer otpAttemptCount) {
+        this.otpAttemptCount = otpAttemptCount;
+    }
+
+    public LocalDateTime getOtpLockedUntil() {
+        return otpLockedUntil;
+    }
+
+    public void setOtpLockedUntil(LocalDateTime otpLockedUntil) {
+        this.otpLockedUntil = otpLockedUntil;
+    }
+
+    public LocalDateTime getOtpLastSentAt() {
+        return otpLastSentAt;
+    }
+
+    public void setOtpLastSentAt(LocalDateTime otpLastSentAt) {
+        this.otpLastSentAt = otpLastSentAt;
+    }
+
+    public LocalDateTime getOtpSentAt() {
+        return otpSentAt;
+    }
+
+    public void setOtpSentAt(LocalDateTime otpSentAt) {
+        this.otpSentAt = otpSentAt;
+    }
+
+    public OtpDeliveryStatus getOtpDeliveryStatus() {
+        return otpDeliveryStatus;
+    }
+
+    public void setOtpDeliveryStatus(OtpDeliveryStatus otpDeliveryStatus) {
+        this.otpDeliveryStatus = otpDeliveryStatus;
+    }
+
+    public Long getOtpUserId() {
+        return otpUserId;
+    }
+
+    public void setOtpUserId(Long otpUserId) {
+        this.otpUserId = otpUserId;
+    }
+
     public Boolean getOtpVerified() {
         return otpVerified;
     }
 
     public void setOtpVerified(Boolean otpVerified) {
         this.otpVerified = otpVerified;
+    }
+
+    public Boolean getAdminOverride() {
+        return adminOverride;
+    }
+
+    public void setAdminOverride(Boolean adminOverride) {
+        this.adminOverride = adminOverride;
+    }
+
+    public String getAdminOverrideReason() {
+        return adminOverrideReason;
+    }
+
+    public void setAdminOverrideReason(String adminOverrideReason) {
+        this.adminOverrideReason = adminOverrideReason;
     }
 
     public String getFailureNote() {

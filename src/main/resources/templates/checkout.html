@@ -85,7 +85,7 @@
                                 <label for="paymentMethod" class="form-label">Phương thức thanh toán <span class="text-danger">*</span></label>
                                 <select class="form-select" id="paymentMethod" name="paymentMethod" th:field="*{paymentMethod}" required>
                                     <option value="">Chọn cổng thanh toán</option>
-                                    <option th:each="method : ${paymentMethods}" th:value="${method}" th:text="${method}"></option>
+                                    <option th:each="method : ${paymentMethods}" th:value="${method}" th:text="${@enumDisplayService.paymentMethod(T(com.strongwine.strongwine.entity.PaymentMethod).valueOf(method))}"></option>
                                 </select>
                             </div>
                             <div class="d-flex gap-2">

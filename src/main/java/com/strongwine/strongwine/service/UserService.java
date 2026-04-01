@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 /**
  * Service class for User business logic
@@ -17,6 +18,8 @@ import java.util.Optional;
 @Service
 @Transactional
 public class UserService {
+
+    private static final Pattern EMAIL_PATTERN = Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$");
     
     @Autowired
     private UserRepository userRepository;
@@ -56,12 +59,17 @@ public class UserService {
         String username = normalizeRequired(user.getUsername(), "Username is required");
         String role = normalizeRequired(user.getRole(), "Role is required");
         String password = normalizeRequired(user.getPassword(), "Password is required");
+        String email = normalizeOptionalEmail(user.getEmail());
 
         if (userRepository.existsByUsername(username)) {
             throw new RuntimeException("Username already exists");
         }
+        if (email != null && userRepository.existsByEmail(email)) {
+            throw new RuntimeException("Email already exists");
+        }
 
         user.setUsername(username);
+        user.setEmail(email);
         user.setRole(role);
         // Encode password before saving
         user.setPassword(passwordEncoder.encode(password));
@@ -81,12 +89,17 @@ public class UserService {
 
         String username = normalizeRequired(userDetails.getUsername(), "Username is required");
         String role = normalizeRequired(userDetails.getRole(), "Role is required");
+        String email = normalizeOptionalEmail(userDetails.getEmail());
 
         if (userRepository.existsByUsernameAndIdNot(username, id)) {
             throw new RuntimeException("Username already exists");
         }
+        if (email != null && userRepository.existsByEmailAndIdNot(email, id)) {
+            throw new RuntimeException("Email already exists");
+        }
         
         user.setUsername(username);
+        user.setEmail(email);
         if (userDetails.getPassword() != null && !userDetails.getPassword().isEmpty()) {
             user.setPassword(passwordEncoder.encode(userDetails.getPassword().trim()));
         }
@@ -123,6 +136,17 @@ public class UserService {
             throw new RuntimeException(message);
         }
         return value.trim();
+    }
+
+    private String normalizeOptionalEmail(String value) {
+        if (value == null || value.trim().isEmpty()) {
+            return null;
+        }
+        String normalized = value.trim().toLowerCase();
+        if (!EMAIL_PATTERN.matcher(normalized).matches()) {
+            throw new RuntimeException("Email format is invalid");
+        }
+        return normalized;
     }
 }
 

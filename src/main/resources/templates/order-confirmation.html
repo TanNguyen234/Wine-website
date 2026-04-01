@@ -66,8 +66,8 @@
                             <h5 class="alert-heading">Thông tin đơn hàng</h5>
                             <hr>
                             <p class="mb-2"><strong>Mã đơn hàng:</strong> <span th:text="${orderId}"></span></p>
-                            <p class="mb-2"><strong>Trạng thái đơn:</strong> <span class="badge text-bg-secondary" th:text="${orderStatus}"></span></p>
-                            <p class="mb-2"><strong>Thanh toán:</strong> <span class="badge text-bg-info" th:text="${paymentStatus}"></span></p>
+                            <p class="mb-2"><strong>Trạng thái đơn:</strong> <span class="badge text-bg-secondary" th:text="${@enumDisplayService.orderStatus(orderStatus)}"></span></p>
+                            <p class="mb-2"><strong>Thanh toán:</strong> <span class="badge text-bg-info" th:text="${@enumDisplayService.paymentStatus(paymentStatus)}"></span></p>
                             <p class="mb-2"><strong>Họ và tên:</strong> <span th:text="${fullName}"></span></p>
                             <p class="mb-2"><strong>Số điện thoại:</strong> <span th:text="${phone}"></span></p>
                             <p class="mb-0"><strong>Địa chỉ giao hàng:</strong> <span th:text="${address}"></span></p>

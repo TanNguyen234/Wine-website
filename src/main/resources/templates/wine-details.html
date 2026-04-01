@@ -29,7 +29,7 @@
         <div class="col-lg-6">
             <div class="panel p-4 h-100">
                 <div class="d-flex gap-2 mb-2">
-                    <span class="badge text-bg-dark" th:text="${wine.type}"></span>
+                    <span class="badge text-bg-dark" th:text="${@enumDisplayService.wineType(wine.type)}"></span>
                     <span class="badge text-bg-secondary" th:text="${wine.year}"></span>
                     <span class="badge text-bg-light" th:if="${wine.country != null and !wine.country.isBlank()}" th:text="${wine.country}"></span>
                     <span th:class="${availableStock > 20 ? 'stock-badge stock-ok' : (availableStock > 0 ? 'stock-badge stock-low' : 'stock-badge stock-out')}"

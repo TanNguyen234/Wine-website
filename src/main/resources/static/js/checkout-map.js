@@ -90,7 +90,7 @@
         fetch(VIETNAM_BORDER_GEOJSON_URL)
             .then(function (response) {
                 if (!response.ok) {
-                    throw new Error("Cannot load Vietnam border");
+                    throw new Error("Khong the tai duong bien gioi Viet Nam");
                 }
                 return response.json();
             })
@@ -157,7 +157,7 @@
             return fetch(url)
                 .then(function (response) {
                     if (!response.ok) {
-                        throw new Error("Reverse geocode failed");
+                        throw new Error("Khong the lay dia chi tu toa do");
                     }
                     return response.json();
                 })
@@ -189,7 +189,7 @@
             return fetch(url)
                 .then(function (response) {
                     if (!response.ok) {
-                        throw new Error("Search geocode failed");
+                        throw new Error("Khong the tim kiem dia diem");
                     }
                     return response.json();
                 })

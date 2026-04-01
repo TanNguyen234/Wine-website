@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${editingUser != null ? 'Cập nhật người dùng' : 'Tạo người dùng'} + ' - StrongWine'">User form</title>
+    <title th:text="${editingUser != null ? 'Cập nhật người dùng' : 'Tạo người dùng'} + ' - StrongWine'">Biểu mẫu người dùng</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/css/app.css">
 </head>
@@ -12,8 +12,8 @@
     <div class="container d-flex justify-content-between">
         <a class="navbar-brand" href="/admin">StrongWine Quản trị</a>
         <div class="d-flex gap-2">
-            <a class="btn btn-sm btn-outline-light" href="/admin/users">Danh sách user</a>
-            <a class="btn btn-sm btn-light" href="/admin/shippers">Quản lý shipper</a>
+            <a class="btn btn-sm btn-outline-light" href="/admin/users">Danh sách người dùng</a>
+            <a class="btn btn-sm btn-light" href="/admin/shippers">Quản lý người giao hàng</a>
         </div>
     </div>
 </nav>
@@ -39,6 +39,12 @@
             </div>
 
             <div class="mb-3">
+                <label class="form-label">Email</label>
+                <input class="form-control" type="email" name="email" required
+                       th:value="${editingUser != null ? editingUser.email : ''}">
+            </div>
+
+            <div class="mb-3">
                 <label class="form-label" th:text="${editingUser != null ? 'Mật khẩu mới (để trống nếu không đổi)' : 'Mật khẩu'}"></label>
                 <input class="form-control" type="password" name="password" th:required="${editingUser == null}">
             </div>
@@ -47,13 +53,13 @@
                 <label class="form-label">Vai trò</label>
                 <select class="form-select" name="role" required>
                     <option value="" disabled th:selected="${editingUser == null}">-- Chọn vai trò --</option>
-                    <option th:each="role : ${roles}" th:value="${role}" th:text="${role}"
+                    <option th:each="role : ${roles}" th:value="${role}" th:text="${@enumDisplayService.userRole(role)}"
                             th:selected="${editingUser != null and editingUser.role == role}"></option>
                 </select>
             </div>
 
             <div class="d-flex gap-2">
-                <button class="btn btn-dark" type="submit">Lưu user</button>
+                <button class="btn btn-dark" type="submit">Lưu người dùng</button>
                 <a class="btn btn-outline-secondary" href="/admin/users">Quay lại</a>
             </div>
         </form>

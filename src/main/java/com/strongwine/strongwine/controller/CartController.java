@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import com.strongwine.strongwine.util.AddressTextUtils;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -164,6 +165,11 @@ public class CartController {
                 return badRequest("Giỏ hàng trống");
             }
 
+            String normalizedAddress = normalizeAddressText(checkoutRequest.getAddress());
+            if (normalizedAddress.isBlank()) {
+                return badRequest("Vui lòng nhập địa chỉ giao hàng hợp lệ");
+            }
+
             for (CartItemDto item : cartDto.getItems()) {
                 if (item.getQuantity() == null || item.getQuantity() <= 0) {
                     return badRequest("Số lượng sản phẩm không hợp lệ");
@@ -177,7 +183,9 @@ public class CartController {
                     itemsMap,
                     checkoutRequest.getFullName(),
                     checkoutRequest.getPhone(),
-                    buildAddressWithGeo(checkoutRequest.getAddress(), checkoutRequest.getDeliveryLat(), checkoutRequest.getDeliveryLng()),
+                    normalizedAddress,
+                    checkoutRequest.getDeliveryLat(),
+                    checkoutRequest.getDeliveryLng(),
                     checkoutRequest.getNote(),
                     normalizedPaymentMethod);
 
@@ -216,13 +224,12 @@ public class CartController {
         return lat != null && lng != null;
     }
 
-    private String buildAddressWithGeo(String address, Double lat, Double lng) {
-        String normalizedAddress = address == null ? "" : address.trim();
-        String enriched = normalizedAddress + String.format(" [GPS: %.6f, %.6f]", lat, lng);
-        if (enriched.length() <= 1000) {
-            return enriched;
+    private String normalizeAddressText(String address) {
+        String normalizedAddress = AddressTextUtils.stripLegacyGpsSuffix(address == null ? "" : address.trim());
+        if (normalizedAddress.length() <= 1000) {
+            return normalizedAddress;
         }
-        return enriched.substring(0, 1000);
+        return normalizedAddress.substring(0, 1000);
     }
     
 }

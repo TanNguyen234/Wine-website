@@ -12,9 +12,9 @@
     <div class="container d-flex justify-content-between">
         <a class="navbar-brand" href="/admin">StrongWine Quản trị</a>
         <div class="d-flex gap-2">
-            <a class="btn btn-sm btn-outline-light" href="/admin/shippers">Shipper</a>
-            <a class="btn btn-sm btn-outline-light" href="/admin/shipments">Shipment</a>
-            <a class="btn btn-sm btn-light" href="/admin/users/create">Thêm user</a>
+            <a class="btn btn-sm btn-outline-light" href="/admin/shippers">Người giao hàng</a>
+            <a class="btn btn-sm btn-outline-light" href="/admin/shipments">Đơn giao hàng</a>
+            <a class="btn btn-sm btn-light" href="/admin/users/create">Thêm người dùng</a>
         </div>
     </div>
 </nav>
@@ -24,14 +24,15 @@
     <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
 
     <div class="panel p-3">
-        <h1 class="h5 mb-3">CRUD người dùng</h1>
+        <h1 class="h5 mb-3">Quản lý người dùng</h1>
         <div class="table-responsive">
             <table class="table table-modern table-sm align-middle">
                 <thead>
                 <tr>
                     <th>ID</th>
-                    <th>Username</th>
-                    <th>Role</th>
+                    <th>Tài khoản</th>
+                    <th>Email</th>
+                    <th>Vai trò</th>
                     <th>Thao tác</th>
                 </tr>
                 </thead>
@@ -39,11 +40,12 @@
                 <tr th:each="u : ${users}">
                     <td th:text="${u.id}"></td>
                     <td th:text="${u.username}"></td>
-                    <td><span class="badge text-bg-secondary" th:text="${u.role}"></span></td>
+                    <td th:text="${u.email}"></td>
+                    <td><span class="badge text-bg-secondary" th:text="${@enumDisplayService.userRole(u.role)}"></span></td>
                     <td>
                         <div class="d-flex gap-2">
                             <a class="btn btn-sm btn-outline-dark" th:href="@{/admin/users/edit/{id}(id=${u.id})}">Sửa</a>
-                            <form th:action="@{/admin/users/delete/{id}(id=${u.id})}" method="post" onsubmit="return confirm('Bạn có chắc muốn xóa user này?');">
+                            <form th:action="@{/admin/users/delete/{id}(id=${u.id})}" method="post" onsubmit="return confirm('Bạn có chắc muốn xóa người dùng này?');">
                                 <button class="btn btn-sm btn-outline-danger" type="submit">Xóa</button>
                             </form>
                         </div>

@@ -32,7 +32,7 @@ public class ShipperController {
                          RedirectAttributes redirectAttributes) {
         try {
             shipmentService.markPickedUp(id, authentication.getName());
-            redirectAttributes.addFlashAttribute("success", "Đã cập nhật trạng thái: PICKED_UP");
+            redirectAttributes.addFlashAttribute("success", "Đã cập nhật trạng thái: Đã lấy hàng");
         } catch (Exception ex) {
             redirectAttributes.addFlashAttribute("error", "Không thể xác nhận lấy hàng: " + ex.getMessage());
         }
@@ -45,7 +45,7 @@ public class ShipperController {
                         RedirectAttributes redirectAttributes) {
         try {
             shipmentService.startDelivering(id, authentication.getName());
-            redirectAttributes.addFlashAttribute("success", "Đã cập nhật trạng thái: DELIVERING");
+            redirectAttributes.addFlashAttribute("success", "Đã cập nhật trạng thái: Đang giao");
         } catch (Exception ex) {
             redirectAttributes.addFlashAttribute("error", "Không thể bắt đầu giao: " + ex.getMessage());
         }
@@ -66,6 +66,19 @@ public class ShipperController {
         return "redirect:/shipper/dashboard";
     }
 
+    @PostMapping("/shipments/{id}/resend-otp")
+    public String resendOtp(@PathVariable Long id,
+                            Authentication authentication,
+                            RedirectAttributes redirectAttributes) {
+        try {
+            shipmentService.resendOtpForShipmentByShipper(id, authentication.getName(), "SHIPPER_RESEND");
+            redirectAttributes.addFlashAttribute("success", "Đã tạo lại OTP và gửi lại email cho khách hàng");
+        } catch (Exception ex) {
+            redirectAttributes.addFlashAttribute("error", "Không thể gửi lại OTP: " + ex.getMessage());
+        }
+        return "redirect:/shipper/dashboard";
+    }
+
     @PostMapping("/shipments/{id}/fail")
     public String fail(@PathVariable Long id,
                        @RequestParam(required = false) String note,
@@ -73,7 +86,7 @@ public class ShipperController {
                        RedirectAttributes redirectAttributes) {
         try {
             shipmentService.markFailed(id, authentication.getName(), note);
-            redirectAttributes.addFlashAttribute("success", "Đã cập nhật trạng thái: FAILED");
+            redirectAttributes.addFlashAttribute("success", "Đã cập nhật trạng thái: Thất bại");
         } catch (Exception ex) {
             redirectAttributes.addFlashAttribute("error", "Không thể đánh dấu thất bại: " + ex.getMessage());
         }

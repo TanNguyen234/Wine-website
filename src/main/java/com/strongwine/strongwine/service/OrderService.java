@@ -7,12 +7,14 @@ import com.strongwine.strongwine.entity.PaymentMethod;
 import com.strongwine.strongwine.entity.PaymentStatus;
 import com.strongwine.strongwine.entity.User;
 import com.strongwine.strongwine.entity.Wine;
+import com.strongwine.strongwine.event.OrderPaidEvent;
 import com.strongwine.strongwine.repository.OrderRepository;
 import com.strongwine.strongwine.repository.UserRepository;
 import com.strongwine.strongwine.repository.WineRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -44,7 +46,7 @@ public class OrderService {
     private InventoryService inventoryService;
 
     @Autowired
-    private ShipmentService shipmentService;
+    private ApplicationEventPublisher applicationEventPublisher;
 
     /**
      * Get all orders
@@ -80,7 +82,7 @@ public class OrderService {
      * @param cartItems Map of wineId -> quantity
      */
     public Order createOrder(Long userId, Map<Long, Integer> cartItems) {
-        return createPendingOrder(userId, cartItems, null, null, null, null, PaymentMethod.STRIPE.name());
+        return createPendingOrder(userId, cartItems, null, null, null, null, null, null, PaymentMethod.STRIPE.name());
     }
 
     public Order createPendingOrder(Long userId,
@@ -88,6 +90,8 @@ public class OrderService {
                                     String fullName,
                                     String phone,
                                     String address,
+                                    Double deliveryLat,
+                                    Double deliveryLng,
                                     String note,
                                     String paymentMethod) {
         User user = userRepository.findById(userId)
@@ -101,6 +105,8 @@ public class OrderService {
         order.setShippingFullName(fullName);
         order.setShippingPhone(phone);
         order.setShippingAddress(address);
+        order.setShippingLatitude(deliveryLat);
+        order.setShippingLongitude(deliveryLng);
         order.setNote(note);
         order.setUpdatedAt(LocalDateTime.now());
         
@@ -164,6 +170,11 @@ public class OrderService {
     public void markOrderPaid(Long orderId, String paymentReference) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found with id: " + orderId));
+
+        if (order.getStatus() == OrderStatus.PAID && order.getPaymentStatus() == PaymentStatus.SUCCESS) {
+            return;
+        }
+
         order.setStatus(OrderStatus.PAID);
         order.setPaymentStatus(PaymentStatus.SUCCESS);
         order.setPaymentReference(paymentReference);
@@ -171,13 +182,7 @@ public class OrderService {
         order.setUpdatedAt(LocalDateTime.now());
         orderRepository.save(order);
         inventoryService.confirmOrderPayment(order);
-
-        try {
-            shipmentService.createAutoShipmentForPaidOrder(order);
-            shipmentService.dispatchAutoShipmentQueue();
-        } catch (Exception ex) {
-            log.warn("Automatic shipment creation failed for order {}: {}", orderId, ex.getMessage());
-        }
+        applicationEventPublisher.publishEvent(new OrderPaidEvent(order.getId(), paymentReference));
     }
 
     public void cancelPendingOrder(Long orderId) {
