@@ -32,7 +32,7 @@ public class AdminInventoryController {
                               Authentication authentication,
                               RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
-            String message = bindingResult.getFieldError() != null ? bindingResult.getFieldError().getDefaultMessage() : "Du lieu khong hop le";
+            String message = bindingResult.getFieldError() != null ? bindingResult.getFieldError().getDefaultMessage() : "Dữ liệu không hợp lệ";
             redirectAttributes.addFlashAttribute("error", message);
             return "redirect:/admin";
         }
@@ -41,9 +41,9 @@ public class AdminInventoryController {
             inventoryService.importStock(wineId, request.getWarehouseId(), request.getQuantity(),
                     resolveUsername(userId),
                     request.getNote());
-            redirectAttributes.addFlashAttribute("success", "Nhap kho thanh cong");
+            redirectAttributes.addFlashAttribute("success", "Nhập kho thành công");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Nhap kho that bai: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("error", "Nhập kho thất bại: " + e.getMessage());
         }
         return "redirect:/admin";
     }
@@ -55,7 +55,7 @@ public class AdminInventoryController {
                               Authentication authentication,
                               RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
-            String message = bindingResult.getFieldError() != null ? bindingResult.getFieldError().getDefaultMessage() : "Du lieu khong hop le";
+            String message = bindingResult.getFieldError() != null ? bindingResult.getFieldError().getDefaultMessage() : "Dữ liệu không hợp lệ";
             redirectAttributes.addFlashAttribute("error", message);
             return "redirect:/admin";
         }
@@ -64,9 +64,9 @@ public class AdminInventoryController {
             inventoryService.exportStock(wineId, request.getWarehouseId(), request.getQuantity(),
                     resolveUsername(userId),
                     request.getNote());
-            redirectAttributes.addFlashAttribute("success", "Xuat kho thanh cong");
+            redirectAttributes.addFlashAttribute("success", "Xuất kho thành công");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Xuat kho that bai: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("error", "Xuất kho thất bại: " + e.getMessage());
         }
         return "redirect:/admin";
     }

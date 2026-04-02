@@ -25,7 +25,7 @@ public class AuthController {
     @GetMapping("/login")
     public String login(@RequestParam(required = false) String error, Model model) {
         if (error != null) {
-            model.addAttribute("error", "Sai ten dang nhap hoac mat khau");
+            model.addAttribute("error", "Sai tên đăng nhập hoặc mật khẩu");
         }
         return "login";
     }
@@ -50,12 +50,12 @@ public class AuthController {
             RedirectAttributes redirectAttributes) {
 
         if (!password.equals(confirmPassword)) {
-            redirectAttributes.addFlashAttribute("error", "Mat khau xac nhan khong khop");
+            redirectAttributes.addFlashAttribute("error", "Mật khẩu xác nhận không khớp");
             return "redirect:/register";
         }
 
         if (userService.usernameExists(username)) {
-            redirectAttributes.addFlashAttribute("error", "Ten dang nhap da ton tai");
+            redirectAttributes.addFlashAttribute("error", "Tên đăng nhập đã tồn tại");
             return "redirect:/register";
         }
 
@@ -63,10 +63,10 @@ public class AuthController {
         user.setEmail(email);
         try {
             userService.createUser(user);
-            redirectAttributes.addFlashAttribute("success", "Dang ky thanh cong. Vui long dang nhap.");
+            redirectAttributes.addFlashAttribute("success", "Đăng ký thành công. Vui lòng đăng nhập.");
             return "redirect:/login";
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Dang ky that bai: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("error", "Đăng ký thất bại: " + e.getMessage());
             return "redirect:/register";
         }
     }

@@ -4,16 +4,16 @@
 IF OBJECT_ID(N'[dbo].[categories]', N'U') IS NOT NULL
 BEGIN
     INSERT INTO [dbo].[categories] ([name], [description], [created_at], [updated_at], [created_by], [updated_by], [deleted])
-    SELECT N'Red Wine', N'Danh mục rượu vang đỏ', GETDATE(), GETDATE(), N'system', N'system', 0
-    WHERE NOT EXISTS (SELECT 1 FROM [dbo].[categories] WHERE [name] = N'Red Wine');
+    SELECT N'Vang đỏ', N'Danh mục rượu vang đỏ', GETDATE(), GETDATE(), N'system', N'system', 0
+    WHERE NOT EXISTS (SELECT 1 FROM [dbo].[categories] WHERE [name] = N'Vang đỏ');
 
     INSERT INTO [dbo].[categories] ([name], [description], [created_at], [updated_at], [created_by], [updated_by], [deleted])
-    SELECT N'White Wine', N'Danh mục rượu vang trắng', GETDATE(), GETDATE(), N'system', N'system', 0
-    WHERE NOT EXISTS (SELECT 1 FROM [dbo].[categories] WHERE [name] = N'White Wine');
+    SELECT N'Vang trắng', N'Danh mục rượu vang trắng', GETDATE(), GETDATE(), N'system', N'system', 0
+    WHERE NOT EXISTS (SELECT 1 FROM [dbo].[categories] WHERE [name] = N'Vang trắng');
 
     INSERT INTO [dbo].[categories] ([name], [description], [created_at], [updated_at], [created_by], [updated_by], [deleted])
-    SELECT N'Sparkling', N'Danh mục vang sủi', GETDATE(), GETDATE(), N'system', N'system', 0
-    WHERE NOT EXISTS (SELECT 1 FROM [dbo].[categories] WHERE [name] = N'Sparkling');
+    SELECT N'Vang sủi', N'Danh mục vang sủi', GETDATE(), GETDATE(), N'system', N'system', 0
+    WHERE NOT EXISTS (SELECT 1 FROM [dbo].[categories] WHERE [name] = N'Vang sủi');
 END;
 
 IF OBJECT_ID(N'[dbo].[users]', N'U') IS NOT NULL
@@ -34,8 +34,8 @@ BEGIN
     DECLARE @CategoryRedId BIGINT;
     DECLARE @CategoryWhiteId BIGINT;
 
-    SET @CategoryRedId = (SELECT TOP 1 [id] FROM [dbo].[categories] WHERE [name] = N'Red Wine');
-    SET @CategoryWhiteId = (SELECT TOP 1 [id] FROM [dbo].[categories] WHERE [name] = N'White Wine');
+    SET @CategoryRedId = (SELECT TOP 1 [id] FROM [dbo].[categories] WHERE [name] = N'Vang đỏ');
+    SET @CategoryWhiteId = (SELECT TOP 1 [id] FROM [dbo].[categories] WHERE [name] = N'Vang trắng');
 
     INSERT INTO [dbo].[wines] ([name], [type], [year], [price], [description], [country], [image_url], [category_id], [created_at], [updated_at], [created_by], [updated_by], [deleted])
     SELECT N'Seed Cabernet Reserve', N'Red', 2020, 980000, N'Bản mẫu phục vụ kiểm thử quản trị', N'Chile',
@@ -53,7 +53,7 @@ END;
 IF OBJECT_ID(N'[dbo].[warehouse]', N'U') IS NOT NULL
 BEGIN
     INSERT INTO [dbo].[warehouse] ([name], [location], [active], [created_at])
-    SELECT N'Main Warehouse', N'Ho Chi Minh City', 1, GETDATE()
+    SELECT N'Main Warehouse', N'Thành phố Hồ Chí Minh', 1, GETDATE()
     WHERE NOT EXISTS (SELECT 1 FROM [dbo].[warehouse] WHERE [name] = N'Main Warehouse');
 END;
 
@@ -80,19 +80,19 @@ IF OBJECT_ID(N'[dbo].[shippers]', N'U') IS NOT NULL
    AND OBJECT_ID(N'[dbo].[users]', N'U') IS NOT NULL
 BEGIN
     INSERT INTO [dbo].[shippers] ([user_id], [name], [phone], [vehicle_type], [status], [is_available], [created_at], [updated_at])
-    SELECT u.[id], N'Seed Shipper 1', N'0901000001', N'Xe may', N'ACTIVE', 1, GETDATE(), GETDATE()
+        SELECT u.[id], N'Shipper mẫu 1', N'0901000001', N'Xe máy', N'ACTIVE', 1, GETDATE(), GETDATE()
     FROM [dbo].[users] u
     WHERE u.[username] = N'shipper1'
       AND NOT EXISTS (SELECT 1 FROM [dbo].[shippers] s WHERE s.[user_id] = u.[id]);
 
     INSERT INTO [dbo].[shippers] ([user_id], [name], [phone], [vehicle_type], [status], [is_available], [created_at], [updated_at])
-    SELECT u.[id], N'Seed Shipper 2', N'0901000002', N'Xe may', N'ACTIVE', 1, GETDATE(), GETDATE()
+        SELECT u.[id], N'Shipper mẫu 2', N'0901000002', N'Xe máy', N'ACTIVE', 1, GETDATE(), GETDATE()
     FROM [dbo].[users] u
     WHERE u.[username] = N'shipper2'
       AND NOT EXISTS (SELECT 1 FROM [dbo].[shippers] s WHERE s.[user_id] = u.[id]);
 
     INSERT INTO [dbo].[shippers] ([user_id], [name], [phone], [vehicle_type], [status], [is_available], [created_at], [updated_at])
-    SELECT TOP 1 u.[id], N'Seed Fallback Shipper', N'0901000009', N'Xe may', N'ACTIVE', 1, GETDATE(), GETDATE()
+        SELECT TOP 1 u.[id], N'Shipper dự phòng', N'0901000009', N'Xe máy', N'ACTIVE', 1, GETDATE(), GETDATE()
     FROM [dbo].[users] u
     WHERE NOT EXISTS (SELECT 1 FROM [dbo].[shippers] s WHERE s.[user_id] = u.[id])
     ORDER BY u.[id];
@@ -130,8 +130,8 @@ BEGIN
             ([user_id], [order_date], [total_price], [status], [payment_status], [payment_method],
              [shipping_full_name], [shipping_phone], [shipping_address], [order_note], [payment_reference], [paid_at], [updated_at])
          SELECT @CustomerId, DATEADD(DAY, -2, GETDATE()), ISNULL(@WinePaidNoShipmentPrice, 980000), N'PAID', N'SUCCESS', N'COD',
-               N'Khach Demo', N'0909990001', N'1 Nguyen Hue, Quan 1, TP.HCM',
-             N'Don PAID chua tao shipment de test admin create', N'PAY-SEED-0001', DATEADD(DAY, -2, GETDATE()), DATEADD(DAY, -2, GETDATE())
+                             N'Khách Demo', N'0909990001', N'1 Nguyễn Huệ, Quận 1, TP.HCM',
+                         N'Đơn PAID chưa tạo shipment để kiểm thử tạo từ trang quản trị', N'PAY-SEED-0001', DATEADD(DAY, -2, GETDATE()), DATEADD(DAY, -2, GETDATE())
          WHERE NOT EXISTS (SELECT 1 FROM [dbo].[orders] WHERE [payment_reference] = N'PAY-SEED-0001');
     END;
 
@@ -141,8 +141,8 @@ BEGIN
             ([user_id], [order_date], [total_price], [status], [payment_status], [payment_method],
              [shipping_full_name], [shipping_phone], [shipping_address], [order_note], [payment_reference], [paid_at], [updated_at])
          SELECT @CustomerId, DATEADD(DAY, -1, GETDATE()), ISNULL(@WineAssignedShipmentPrice, 760000), N'PAID', N'SUCCESS', N'COD',
-               N'Khach Demo 2', N'0909990002', N'2 Le Loi, Quan 1, TP.HCM',
-             N'Don PAID da co shipment de test shipper dashboard', N'PAY-SEED-0002', DATEADD(DAY, -1, GETDATE()), DATEADD(DAY, -1, GETDATE())
+                             N'Khách Demo 2', N'0909990002', N'2 Lê Lợi, Quận 1, TP.HCM',
+                         N'Đơn PAID đã có shipment để kiểm thử bảng điều khiển shipper', N'PAY-SEED-0002', DATEADD(DAY, -1, GETDATE()), DATEADD(DAY, -1, GETDATE())
          WHERE NOT EXISTS (SELECT 1 FROM [dbo].[orders] WHERE [payment_reference] = N'PAY-SEED-0002');
     END;
 END;
@@ -251,7 +251,7 @@ BEGIN
     BEGIN
         INSERT INTO [dbo].[shipments]
             ([order_id], [shipper_id], [status], [shipping_name], [shipping_phone], [shipping_address], [otp_code], [otp_verified], [failure_note], [created_at], [updated_at], [picked_up_at], [delivering_at], [completed_at])
-        SELECT @ShipmentOrderId, @SeedShipperId, N'ASSIGNED', N'Khach Demo 2', N'0909990002', N'2 Le Loi, Quan 1, TP.HCM',
+        SELECT @ShipmentOrderId, @SeedShipperId, N'ASSIGNED', N'Khách Demo 2', N'0909990002', N'2 Lê Lợi, Quận 1, TP.HCM',
                N'123456', 0, NULL, DATEADD(HOUR, -20, GETDATE()), DATEADD(HOUR, -20, GETDATE()), NULL, NULL, NULL
         WHERE NOT EXISTS (SELECT 1 FROM [dbo].[shipments] WHERE [order_id] = @ShipmentOrderId);
     END;

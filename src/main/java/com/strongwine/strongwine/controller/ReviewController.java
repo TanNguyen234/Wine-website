@@ -39,14 +39,14 @@ public class ReviewController {
             RedirectAttributes redirectAttributes) {
         
         if (authentication == null || !authentication.isAuthenticated()) {
-            redirectAttributes.addFlashAttribute("error", "Vui long dang nhap de gui danh gia");
+            redirectAttributes.addFlashAttribute("error", "Vui lòng đăng nhập để gửi đánh giá");
             return "redirect:/login";
         }
         
         String username = ((UserDetails) authentication.getPrincipal()).getUsername();
         Optional<User> userOpt = userRepository.findByUsername(username);
         if (userOpt.isEmpty()) {
-            redirectAttributes.addFlashAttribute("error", "Khong tim thay nguoi dung");
+            redirectAttributes.addFlashAttribute("error", "Không tìm thấy người dùng");
             return "redirect:/wines/" + wineId;
         }
         
@@ -56,9 +56,9 @@ public class ReviewController {
         
         try {
             reviewService.createReview(wineId, userOpt.get().getId(), review);
-            redirectAttributes.addFlashAttribute("success", "Gui danh gia thanh cong!");
+            redirectAttributes.addFlashAttribute("success", "Gửi đánh giá thành công!");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Khong the gui danh gia: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("error", "Không thể gửi đánh giá: " + e.getMessage());
         }
         
         return "redirect:/wines/" + wineId;

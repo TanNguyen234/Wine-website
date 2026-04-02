@@ -25,7 +25,7 @@ SELECT TOP 1 @warehouseId = id FROM warehouse WHERE name = 'Main Warehouse';
 IF @warehouseId IS NULL
 BEGIN
     INSERT INTO warehouse (name, location, active, created_at)
-    VALUES ('Main Warehouse', N'Ho Chi Minh City', 1, GETDATE());
+    VALUES ('Main Warehouse', N'Thành phố Hồ Chí Minh', 1, GETDATE());
     SET @warehouseId = SCOPE_IDENTITY();
 END
 GO
@@ -72,7 +72,7 @@ SELECT i.id,
        'MIGRATION',
        NULL,
        NULL,
-       'Initial migration stock',
+    N'Tồn kho khởi tạo từ migration',
        GETDATE()
 FROM inventory i
 WHERE NOT EXISTS (

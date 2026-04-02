@@ -45,29 +45,29 @@ public class ShipmentOtpEmailService {
 
     public OtpDeliveryResult sendShipmentOtp(Shipment shipment) {
         if (shipment == null || shipment.getId() == null) {
-            throw new OtpDeliveryException("Shipment is required");
+            throw new OtpDeliveryException("Thiếu thông tin đơn giao hàng");
         }
         if (shipment.getOtpCode() == null || shipment.getOtpCode().isBlank()) {
-            throw new OtpDeliveryException("Shipment OTP is missing");
+            throw new OtpDeliveryException("Thiếu mã OTP giao hàng");
         }
         if (!mailEnabled) {
-            throw new OtpDeliveryException("Email sending is disabled. Set app.mail.enabled=true to send OTP");
+            throw new OtpDeliveryException("Chức năng gửi email đang tắt. Hãy đặt app.mail.enabled=true để gửi OTP");
         }
         if (mailSender == null) {
-            throw new OtpDeliveryException("JavaMailSender is not available in current runtime");
+            throw new OtpDeliveryException("JavaMailSender chưa sẵn sàng trong môi trường hiện tại");
         }
 
         String recipient = resolveRecipient(shipment);
         validateEmail(recipient);
 
-        String customerName = shipment.getShippingName() == null ? "quy khach" : shipment.getShippingName();
+        String customerName = shipment.getShippingName() == null ? "quý khách" : shipment.getShippingName();
         String orderInfo = shipment.getOrder() != null ? String.valueOf(shipment.getOrder().getId()) : "N/A";
-        String expiresAtText = shipment.getOtpExpiresAt() == null ? "10 phut" : shipment.getOtpExpiresAt().toString();
+        String expiresAtText = shipment.getOtpExpiresAt() == null ? "10 phút" : shipment.getOtpExpiresAt().toString();
 
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom(fromAddress);
         message.setTo(recipient);
-        message.setSubject("[StrongWine] Ma OTP giao hang #" + shipment.getId());
+        message.setSubject("[StrongWine] Mã OTP giao hàng #" + shipment.getId());
         message.setText(buildEmailBody(customerName, orderInfo, shipment.getOtpCode(), expiresAtText));
 
         long backoff = retryInitialBackoffMs;
@@ -84,13 +84,13 @@ public class ShipmentOtpEmailService {
             }
         }
 
-        return OtpDeliveryResult.failed(retryMaxAttempts, recipient, "Unknown error");
+        return OtpDeliveryResult.failed(retryMaxAttempts, recipient, "Lỗi không xác định");
     }
 
     private String resolveRecipient(Shipment shipment) {
         Order order = shipment.getOrder();
         if (order == null) {
-            throw new InvalidOtpRecipientException("Shipment has no order linked");
+            throw new InvalidOtpRecipientException("Đơn giao hàng chưa liên kết với đơn hàng");
         }
 
         User user = order.getUser();
@@ -103,12 +103,12 @@ public class ShipmentOtpEmailService {
             return fallbackRecipient;
         }
 
-        throw new InvalidOtpRecipientException("Order recipient email is invalid and no fallback recipient configured");
+        throw new InvalidOtpRecipientException("Email người nhận không hợp lệ và chưa cấu hình email dự phòng");
     }
 
     private void validateEmail(String email) {
         if (!EMAIL_PATTERN.matcher(email).matches()) {
-            throw new InvalidOtpRecipientException("Recipient email is invalid: " + email);
+            throw new InvalidOtpRecipientException("Email người nhận không hợp lệ: " + email);
         }
     }
 
@@ -120,17 +120,17 @@ public class ShipmentOtpEmailService {
             Thread.sleep(backoffMs);
         } catch (InterruptedException ex) {
             Thread.currentThread().interrupt();
-            throw new OtpDeliveryException("Interrupted while retrying OTP email", ex);
+            throw new OtpDeliveryException("Tiến trình bị gián đoạn khi thử gửi lại OTP qua email", ex);
         }
     }
 
     private String buildEmailBody(String customerName, String orderInfo, String otpCode, String expiresAtText) {
-        return "Xin chao " + customerName + ",\n\n"
-                + "Don hang #" + orderInfo + " da duoc tao shipment.\n"
-                + "Ma OTP xac nhan giao hang cua ban la: " + otpCode + "\n\n"
-                + "Ma OTP co hieu luc den: " + expiresAtText + "\n"
-                + "Vui long cung cap ma nay khi shipper giao hang.\n"
-                + "Neu ban khong thuc hien yeu cau nay, vui long lien he StrongWine ngay.\n\n"
+        return "Xin chào " + customerName + ",\n\n"
+                + "Đơn hàng #" + orderInfo + " đã được tạo đơn giao hàng.\n"
+                + "Mã OTP xác nhận giao hàng của bạn là: " + otpCode + "\n\n"
+                + "Mã OTP có hiệu lực đến: " + expiresAtText + "\n"
+                + "Vui lòng cung cấp mã này khi shipper giao hàng.\n"
+                + "Nếu bạn không thực hiện yêu cầu này, vui lòng liên hệ StrongWine ngay.\n\n"
                 + "StrongWine";
     }
 }

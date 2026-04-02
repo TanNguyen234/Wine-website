@@ -93,16 +93,16 @@ public class DataInitializer implements CommandLineRunner {
         }
 
         List<Wine> wines = new ArrayList<>();
-        wines.add(buildWine("Chateau Margaux", "Red", "France", 2018, "8990000", "Vang do cao cap den tu Bordeaux."));
-        wines.add(buildWine("Dom Perignon", "Sparkling", "France", 2012, "4990000", "Champagne cao cap cho dip dac biet."));
-        wines.add(buildWine("Sancerre Blanc", "White", "France", 2020, "790000", "Vang trang thanh mat voi huong citrus."));
-        wines.add(buildWine("Pinot Noir Reserve", "Red", "USA", 2019, "1150000", "Huong cherry va vi mem mai."));
-        wines.add(buildWine("Prosecco DOCG", "Sparkling", "Italy", 2021, "650000", "Vang sui nhe, de uong."));
-        wines.add(buildWine("Chardonnay Barrel Aged", "White", "Australia", 2020, "880000", "Vi bo va huong go soi."));
-        wines.add(buildWine("Rose de Provence", "Rose", "France", 2021, "720000", "Vang hong thanh lich, huong trai do."));
-        wines.add(buildWine("Cabernet Sauvignon", "Red", "Chile", 2018, "980000", "Dam vi, hau vi dai."));
-        wines.add(buildWine("Sauvignon Blanc", "White", "New Zealand", 2021, "760000", "Thom mui nhiet doi, vi chua nhe."));
-        wines.add(buildWine("Champagne Brut", "Sparkling", "France", 2019, "1590000", "Bot min va can bang vi tot."));
+        wines.add(buildWine("Chateau Margaux", "Red", "France", 2018, "8990000", "Vang đỏ cao cấp đến từ Bordeaux."));
+        wines.add(buildWine("Dom Perignon", "Sparkling", "France", 2012, "4990000", "Champagne cao cấp cho dịp đặc biệt."));
+        wines.add(buildWine("Sancerre Blanc", "White", "France", 2020, "790000", "Vang trắng thanh mát với hương citrus."));
+        wines.add(buildWine("Pinot Noir Reserve", "Red", "USA", 2019, "1150000", "Hương cherry và vị mềm mại."));
+        wines.add(buildWine("Prosecco DOCG", "Sparkling", "Italy", 2021, "650000", "Vang sủi nhẹ, dễ uống."));
+        wines.add(buildWine("Chardonnay Barrel Aged", "White", "Australia", 2020, "880000", "Vị bơ và hương gỗ sồi."));
+        wines.add(buildWine("Rose de Provence", "Rose", "France", 2021, "720000", "Vang hồng thanh lịch, hương trái đỏ."));
+        wines.add(buildWine("Cabernet Sauvignon", "Red", "Chile", 2018, "980000", "Đậm vị, hậu vị dài."));
+        wines.add(buildWine("Sauvignon Blanc", "White", "New Zealand", 2021, "760000", "Thơm mùi nhiệt đới, vị chua nhẹ."));
+        wines.add(buildWine("Champagne Brut", "Sparkling", "France", 2019, "1590000", "Bọt mịn và cân bằng vị tốt."));
 
         wineRepository.saveAll(wines);
     }
@@ -112,10 +112,15 @@ public class DataInitializer implements CommandLineRunner {
                 .orElseGet(() -> {
                     Warehouse w = new Warehouse();
                     w.setName("Main Warehouse");
-                    w.setLocation("Ho Chi Minh City");
+                    w.setLocation("Thành phố Hồ Chí Minh");
                     w.setActive(true);
                     return warehouseRepository.save(w);
                 });
+
+        if ("Ho Chi Minh City".equalsIgnoreCase(warehouse.getLocation())) {
+            warehouse.setLocation("Thành phố Hồ Chí Minh");
+            warehouseRepository.save(warehouse);
+        }
 
         List<Wine> wines = wineRepository.findByDeletedFalse();
         for (Wine wine : wines) {
@@ -152,8 +157,8 @@ public class DataInitializer implements CommandLineRunner {
     }
 
     private void ensureDefaultShippers() {
-        ensureShipperProfile("shipper1", "Shipper One", "0900000001", "Xe may");
-        ensureShipperProfile("shipper2", "Shipper Two", "0900000002", "Xe may");
+        ensureShipperProfile("shipper1", "Shipper mẫu 1", "0900000001", "Xe máy");
+        ensureShipperProfile("shipper2", "Shipper mẫu 2", "0900000002", "Xe máy");
     }
 
     private void ensureShipperProfile(String username, String name, String phone, String vehicleType) {

@@ -90,7 +90,7 @@
         fetch(VIETNAM_BORDER_GEOJSON_URL)
             .then(function (response) {
                 if (!response.ok) {
-                    throw new Error("Khong the tai duong bien gioi Viet Nam");
+                    throw new Error("Không thể tải đường biên giới Việt Nam");
                 }
                 return response.json();
             })
@@ -157,7 +157,7 @@
             return fetch(url)
                 .then(function (response) {
                     if (!response.ok) {
-                        throw new Error("Khong the lay dia chi tu toa do");
+                        throw new Error("Không thể lấy địa chỉ từ tọa độ");
                     }
                     return response.json();
                 })
@@ -189,7 +189,7 @@
             return fetch(url)
                 .then(function (response) {
                     if (!response.ok) {
-                        throw new Error("Khong the tim kiem dia diem");
+                        throw new Error("Không thể tìm kiếm địa điểm");
                     }
                     return response.json();
                 })

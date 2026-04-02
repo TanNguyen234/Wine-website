@@ -188,11 +188,11 @@ public class WineController {
             if (imageFile != null && !imageFile.isEmpty()) {
                 // Validate file
                 if (!fileStorageService.isValidImageFile(imageFile)) {
-                    redirectAttributes.addFlashAttribute("error", "Tep khong hop le. Chi ho tro JPG va PNG.");
+                    redirectAttributes.addFlashAttribute("error", "Tệp không hợp lệ. Chỉ hỗ trợ JPG và PNG.");
                     return "redirect:/wines/admin/create";
                 }
                 if (!fileStorageService.isValidFileSize(imageFile)) {
-                    redirectAttributes.addFlashAttribute("error", "Kich thuoc tep qua lon. Toi da 5MB.");
+                    redirectAttributes.addFlashAttribute("error", "Kích thước tệp quá lớn. Tối đa 5MB.");
                     return "redirect:/wines/admin/create";
                 }
                 // Save uploaded file
@@ -204,16 +204,16 @@ public class WineController {
             
             // Validate that at least image URL or file is provided
             if (finalImageUrl == null || finalImageUrl.isEmpty()) {
-                redirectAttributes.addFlashAttribute("error", "Vui long tai anh len hoac nhap URL anh.");
+                redirectAttributes.addFlashAttribute("error", "Vui lòng tải ảnh lên hoặc nhập URL ảnh.");
                 return "redirect:/wines/admin/create";
             }
             
             wine.setImageUrl(finalImageUrl);
             wineService.createWine(wine);
-            redirectAttributes.addFlashAttribute("success", "Tao san pham ruou thanh cong!");
+            redirectAttributes.addFlashAttribute("success", "Tạo sản phẩm rượu thành công!");
             return "redirect:/admin";
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Khong the tao san pham: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("error", "Không thể tạo sản phẩm: " + e.getMessage());
             return "redirect:/wines/admin/create";
         }
     }
@@ -250,11 +250,11 @@ public class WineController {
             if (imageFile != null && !imageFile.isEmpty()) {
                 // Validate file
                 if (!fileStorageService.isValidImageFile(imageFile)) {
-                    redirectAttributes.addFlashAttribute("error", "Tep khong hop le. Chi ho tro JPG va PNG.");
+                    redirectAttributes.addFlashAttribute("error", "Tệp không hợp lệ. Chỉ hỗ trợ JPG và PNG.");
                     return "redirect:/wines/admin/edit/" + id;
                 }
                 if (!fileStorageService.isValidFileSize(imageFile)) {
-                    redirectAttributes.addFlashAttribute("error", "Kich thuoc tep qua lon. Toi da 5MB.");
+                    redirectAttributes.addFlashAttribute("error", "Kích thước tệp quá lớn. Tối đa 5MB.");
                     return "redirect:/wines/admin/edit/" + id;
                 }
                 // Save new uploaded file
@@ -274,10 +274,10 @@ public class WineController {
             
             wine.setImageUrl(finalImageUrl);
             wineService.updateWine(id, wine);
-            redirectAttributes.addFlashAttribute("success", "Cap nhat san pham ruou thanh cong!");
+            redirectAttributes.addFlashAttribute("success", "Cập nhật sản phẩm rượu thành công!");
             return "redirect:/admin";
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Khong the cap nhat san pham: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("error", "Không thể cập nhật sản phẩm: " + e.getMessage());
             return "redirect:/wines/admin/edit/" + id;
         }
     }
@@ -297,9 +297,9 @@ public class WineController {
             }
             
             wineService.deleteWine(id);
-            redirectAttributes.addFlashAttribute("success", "Xoa san pham ruou thanh cong!");
+            redirectAttributes.addFlashAttribute("success", "Xóa sản phẩm rượu thành công!");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Khong the xoa san pham: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("error", "Không thể xóa sản phẩm: " + e.getMessage());
         }
         return "redirect:/admin";
     }

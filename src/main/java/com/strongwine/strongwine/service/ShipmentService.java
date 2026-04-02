@@ -70,7 +70,7 @@ public class ShipmentService {
         }
 
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new IllegalArgumentException("Khong tim thay don hang: " + orderId));
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đơn hàng: " + orderId));
 
         if (order.getStatus() != OrderStatus.PAID) {
             return;
@@ -88,7 +88,7 @@ public class ShipmentService {
 
     public Shipment createAutoShipmentForPaidOrder(Order order) {
         if (order == null || order.getId() == null) {
-            throw new IllegalArgumentException("Don hang khong hop le de tao don giao hang tu dong");
+            throw new IllegalArgumentException("Đơn hàng không hợp lệ để tạo đơn giao hàng tự động");
         }
         ensureOrderReadyForShipment(order);
 
@@ -133,14 +133,14 @@ public class ShipmentService {
     @Transactional(readOnly = true)
     public List<Shipment> getMyShipments(String username) {
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new IllegalArgumentException("Khong tim thay nguoi dung: " + username));
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy người dùng: " + username));
 
         if ("ADMIN".equalsIgnoreCase(user.getRole())) {
             return shipmentRepository.findAllForAdminOrderByCreatedAtDesc();
         }
 
         Shipper shipper = shipperRepository.findByUserId(user.getId())
-                .orElseThrow(() -> new IllegalArgumentException("Khong tim thay ho so shipper cho tai khoan: " + username));
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hồ sơ shipper cho tài khoản: " + username));
         return shipmentRepository.findByShipperIdOrderByCreatedAtDesc(shipper.getId());
     }
 
@@ -161,10 +161,10 @@ public class ShipmentService {
     @Transactional(readOnly = true)
     public Shipment getShipmentByIdForAdmin(Long shipmentId) {
         if (shipmentId == null) {
-            throw new IllegalArgumentException("Thieu ma don giao hang");
+            throw new IllegalArgumentException("Thiếu mã đơn giao hàng");
         }
         return shipmentRepository.findByIdForAdmin(shipmentId)
-                .orElseThrow(() -> new IllegalArgumentException("Khong tim thay don giao hang: " + shipmentId));
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đơn giao hàng: " + shipmentId));
     }
 
     @Transactional(readOnly = true)
@@ -191,21 +191,21 @@ public class ShipmentService {
                                            String shippingPhone,
                                            String shippingAddress) {
         if (orderId == null) {
-            throw new IllegalArgumentException("Thieu ma don hang");
+            throw new IllegalArgumentException("Thiếu mã đơn hàng");
         }
         if (shipmentRepository.existsByOrderId(orderId)) {
-            throw new IllegalArgumentException("Don hang da ton tai don giao hang: " + orderId);
+            throw new IllegalArgumentException("Đơn hàng đã tồn tại đơn giao hàng: " + orderId);
         }
 
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new IllegalArgumentException("Khong tim thay don hang: " + orderId));
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đơn hàng: " + orderId));
         ensureOrderReadyForShipment(order);
 
         Shipment shipment = new Shipment();
         shipment.setOrder(order);
-        shipment.setShippingName(requireTextOrFallback(shippingName, order.getShippingFullName(), "Vui long nhap ten nguoi nhan"));
-        shipment.setShippingPhone(requireTextOrFallback(shippingPhone, order.getShippingPhone(), "Vui long nhap so dien thoai nguoi nhan"));
-        shipment.setShippingAddress(requireTextOrFallback(shippingAddress, order.getShippingAddress(), "Vui long nhap dia chi nguoi nhan"));
+        shipment.setShippingName(requireTextOrFallback(shippingName, order.getShippingFullName(), "Vui lòng nhập tên người nhận"));
+        shipment.setShippingPhone(requireTextOrFallback(shippingPhone, order.getShippingPhone(), "Vui lòng nhập số điện thoại người nhận"));
+        shipment.setShippingAddress(requireTextOrFallback(shippingAddress, order.getShippingAddress(), "Vui lòng nhập địa chỉ người nhận"));
         copyCoordinatesFromOrder(order, shipment);
         generateNewOtp(shipment, LocalDateTime.now());
 
@@ -246,13 +246,13 @@ public class ShipmentService {
                                            String failureNote,
                                            String actorUsername) {
         Shipment shipment = shipmentRepository.findByIdForUpdate(shipmentId)
-                .orElseThrow(() -> new IllegalArgumentException("Khong tim thay don giao hang: " + shipmentId));
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đơn giao hàng: " + shipmentId));
         Long previousShipperId = shipment.getShipper() == null ? null : shipment.getShipper().getId();
         ShipmentStatus previousStatus = shipment.getStatus();
 
-        shipment.setShippingName(requireText(shippingName, "Vui long nhap ten nguoi nhan"));
-        shipment.setShippingPhone(requireText(shippingPhone, "Vui long nhap so dien thoai nguoi nhan"));
-        shipment.setShippingAddress(requireText(shippingAddress, "Vui long nhap dia chi nguoi nhan"));
+        shipment.setShippingName(requireText(shippingName, "Vui lòng nhập tên người nhận"));
+        shipment.setShippingPhone(requireText(shippingPhone, "Vui lòng nhập số điện thoại người nhận"));
+        shipment.setShippingAddress(requireText(shippingAddress, "Vui lòng nhập địa chỉ người nhận"));
 
         if (shipperId != null) {
             shipment.setShipper(getActiveShipper(shipperId));
@@ -288,9 +288,9 @@ public class ShipmentService {
 
     public Shipment assignShipperByAdmin(Long shipmentId, Long shipperId) {
         Shipment shipment = shipmentRepository.findByIdForUpdate(shipmentId)
-                .orElseThrow(() -> new IllegalArgumentException("Khong tim thay don giao hang: " + shipmentId));
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đơn giao hàng: " + shipmentId));
         if (shipment.getStatus() != ShipmentStatus.PENDING_ASSIGNMENT && shipment.getStatus() != ShipmentStatus.ASSIGNED) {
-            throw new IllegalStateException("Chi don o trang thai cho phan cong hoac da phan cong moi duoc gan shipper");
+            throw new IllegalStateException("Chỉ đơn ở trạng thái chờ phân công hoặc đã phân công mới được gán shipper");
         }
 
         Long previousShipperId = shipment.getShipper() == null ? null : shipment.getShipper().getId();
@@ -313,7 +313,7 @@ public class ShipmentService {
                                                     String actorUsername,
                                                     String overrideReason) {
         if (targetStatus == null) {
-            throw new IllegalArgumentException("Thieu trang thai can cap nhat");
+            throw new IllegalArgumentException("Thiếu trạng thái cần cập nhật");
         }
 
         if (targetStatus == ShipmentStatus.COMPLETED) {
@@ -321,7 +321,7 @@ public class ShipmentService {
         }
 
         Shipment shipment = shipmentRepository.findByIdForUpdate(shipmentId)
-                .orElseThrow(() -> new IllegalArgumentException("Khong tim thay don giao hang: " + shipmentId));
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đơn giao hàng: " + shipmentId));
         if (shipment.getStatus() == targetStatus) {
             return shipment;
         }
@@ -342,10 +342,10 @@ public class ShipmentService {
 
     public Shipment completeDeliveryByAdminOverride(Long shipmentId, String actorUsername, String overrideReason) {
         Shipment shipment = shipmentRepository.findByIdForUpdate(shipmentId)
-                .orElseThrow(() -> new IllegalArgumentException("Khong tim thay don giao hang: " + shipmentId));
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đơn giao hàng: " + shipmentId));
 
         if (shipment.getStatus() != ShipmentStatus.DELIVERING) {
-            throw new IllegalStateException("Chi don dang giao moi duoc hoan tat boi admin override");
+            throw new IllegalStateException("Chỉ đơn đang giao mới được hoàn tất bởi quản trị viên override");
         }
 
         Long previousShipperId = shipment.getShipper() == null ? null : shipment.getShipper().getId();
@@ -365,10 +365,10 @@ public class ShipmentService {
 
     public Shipment sendOtpForShipment(Long shipmentId, String actorUsername, String reason) {
         Shipment shipment = shipmentRepository.findByIdForUpdate(shipmentId)
-                .orElseThrow(() -> new IllegalArgumentException("Khong tim thay don giao hang: " + shipmentId));
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đơn giao hàng: " + shipmentId));
 
         if (isTerminalStatus(shipment.getStatus())) {
-            throw new IllegalStateException("Shipment da ket thuc, khong the gui OTP");
+            throw new IllegalStateException("Đơn giao hàng đã kết thúc, không thể gửi OTP");
         }
 
         if (shipment.getOtpCode() == null || shipment.getOtpCode().isBlank()) {
@@ -386,7 +386,7 @@ public class ShipmentService {
 
     public Shipment resendOtpForShipmentByAdmin(Long shipmentId, String actorUsername, String reason) {
         Shipment shipment = shipmentRepository.findByIdForUpdate(shipmentId)
-                .orElseThrow(() -> new IllegalArgumentException("Khong tim thay don giao hang: " + shipmentId));
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đơn giao hàng: " + shipmentId));
         return resendOtpInternal(shipment, actorUsername, reason, false);
     }
 
@@ -400,13 +400,13 @@ public class ShipmentService {
                                        String reason,
                                        boolean validateOwnership) {
         if (shipment == null || shipment.getId() == null) {
-            throw new IllegalArgumentException("Thieu ma don giao hang");
+            throw new IllegalArgumentException("Thiếu mã đơn giao hàng");
         }
         if (validateOwnership && (shipment.getShipper() == null || shipment.getShipper().getUser() == null)) {
-            throw new IllegalStateException("Don giao hang chua duoc gan shipper");
+            throw new IllegalStateException("Đơn giao hàng chưa được gán shipper");
         }
         if (isTerminalStatus(shipment.getStatus())) {
-            throw new IllegalStateException("Shipment da ket thuc, khong the tao lai OTP");
+            throw new IllegalStateException("Đơn giao hàng đã kết thúc, không thể tạo lại OTP");
         }
 
         LocalDateTime now = LocalDateTime.now();
@@ -451,7 +451,7 @@ public class ShipmentService {
                 reason,
                 "recipient=" + result.recipient() + ",attempts=" + result.attempts() + ",error=" + result.errorMessage(),
                 actorUsername);
-        throw new OtpDeliveryException("Khong the gui OTP qua email: " + result.errorMessage());
+        throw new OtpDeliveryException("Không thể gửi OTP qua email: " + result.errorMessage());
     }
 
     private void assertResendCooldown(Shipment shipment, LocalDateTime now) {
@@ -459,15 +459,15 @@ public class ShipmentService {
             return;
         }
         if (shipment.getOtpSentAt().plusSeconds(OTP_RESEND_COOLDOWN_SECONDS).isAfter(now)) {
-            throw new IllegalStateException("Vui long cho it nhat 60 giay truoc khi gui lai OTP");
+            throw new IllegalStateException("Vui lòng chờ ít nhất 60 giây trước khi gửi lại OTP");
         }
     }
 
     public void deletePendingShipment(Long shipmentId) {
         Shipment shipment = shipmentRepository.findByIdForUpdate(shipmentId)
-                .orElseThrow(() -> new IllegalArgumentException("Khong tim thay don giao hang: " + shipmentId));
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đơn giao hàng: " + shipmentId));
         if (shipment.getStatus() != ShipmentStatus.PENDING_ASSIGNMENT) {
-            throw new IllegalStateException("Chi xoa duoc don giao hang o trang thai cho phan cong");
+            throw new IllegalStateException("Chỉ xóa được đơn giao hàng ở trạng thái chờ phân công");
         }
         shipmentOtpAuditService.log(shipment, "SHIPMENT_DELETED", "SUCCESS", "PENDING_ASSIGNMENT_DELETE", null, null);
         shipmentRepository.delete(shipment);
@@ -475,10 +475,10 @@ public class ShipmentService {
 
     public void assignShipperRandom() {
         Shipment shipment = shipmentRepository.findFirstByStatusOrderByCreatedAtAsc(ShipmentStatus.PENDING_ASSIGNMENT)
-                .orElseThrow(() -> new IllegalStateException("Khong co don giao hang cho phan cong"));
+                .orElseThrow(() -> new IllegalStateException("Không có đơn giao hàng chờ phân công"));
 
         Shipper shipper = shipperRepository.findFirstByStatusAndIsAvailableTrueOrderByIdAsc(ShipperStatus.ACTIVE)
-                .orElseThrow(() -> new IllegalStateException("Khong co shipper dang hoat dong va san sang"));
+                .orElseThrow(() -> new IllegalStateException("Không có shipper đang hoạt động và sẵn sàng"));
 
         assignShipmentToShipperInternal(shipment, shipper, true);
     }
@@ -504,7 +504,7 @@ public class ShipmentService {
     public void completeDelivery(Long shipmentId, String username, String otp) {
         Shipment shipment = getShipmentForShipper(shipmentId, username);
         if (shipment.getStatus() != ShipmentStatus.DELIVERING) {
-            throw new IllegalStateException("Don giao hang khong o trang thai dang giao");
+            throw new IllegalStateException("Đơn giao hàng không ở trạng thái đang giao");
         }
 
         LocalDateTime now = LocalDateTime.now();
@@ -536,16 +536,16 @@ public class ShipmentService {
 
     private Shipment getShipmentForShipper(Long shipmentId, String username) {
         if (shipmentId == null) {
-            throw new IllegalArgumentException("Thieu ma don giao hang");
+            throw new IllegalArgumentException("Thiếu mã đơn giao hàng");
         }
         Shipment shipment = shipmentRepository.findByIdForUpdate(shipmentId)
-                .orElseThrow(() -> new IllegalArgumentException("Khong tim thay don giao hang: " + shipmentId));
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đơn giao hàng: " + shipmentId));
         if (shipment.getShipper() == null || shipment.getShipper().getUser() == null) {
-            throw new IllegalStateException("Don giao hang chua duoc gan shipper");
+            throw new IllegalStateException("Đơn giao hàng chưa được gán shipper");
         }
         String ownerUsername = shipment.getShipper().getUser().getUsername();
         if (!ownerUsername.equals(username)) {
-            throw new IllegalStateException("Don giao hang khong thuoc shipper hien tai");
+            throw new IllegalStateException("Đơn giao hàng không thuộc shipper hiện tại");
         }
         return shipment;
     }
@@ -566,11 +566,11 @@ public class ShipmentService {
         }
 
         if (!validTransition) {
-            throw new IllegalStateException("Khong the chuyen trang thai tu " + currentStatus + " sang " + targetStatus);
+            throw new IllegalStateException("Không thể chuyển trạng thái từ " + currentStatus + " sang " + targetStatus);
         }
 
         if (targetStatus == ShipmentStatus.ASSIGNED && shipment.getShipper() == null) {
-            throw new IllegalStateException("Don da phan cong phai co shipper");
+            throw new IllegalStateException("Đơn đã phân công phải có shipper");
         }
 
         LocalDateTime now = LocalDateTime.now();
@@ -594,7 +594,7 @@ public class ShipmentService {
 
     private void ensureOrderReadyForShipment(Order order) {
         if (order.getStatus() != OrderStatus.PAID) {
-            throw new IllegalStateException("Chi don da thanh toan moi duoc tao don giao hang");
+            throw new IllegalStateException("Chỉ đơn đã thanh toán mới được tạo đơn giao hàng");
         }
     }
 
@@ -602,10 +602,10 @@ public class ShipmentService {
                                                                Shipper shipper,
                                                                boolean triggerDispatch) {
         if (order == null || order.getId() == null) {
-            throw new IllegalArgumentException("Don hang khong hop le");
+            throw new IllegalArgumentException("Đơn hàng không hợp lệ");
         }
         if (shipper == null || shipper.getId() == null) {
-            throw new IllegalArgumentException("Thieu thong tin shipper");
+            throw new IllegalArgumentException("Thiếu thông tin shipper");
         }
         ensureOrderReadyForShipment(order);
 
@@ -622,9 +622,9 @@ public class ShipmentService {
         shipment.setOrder(order);
         shipment.setShipper(shipper);
         shipment.setStatus(ShipmentStatus.ASSIGNED);
-        shipment.setShippingName(requireTextOrFallback(null, order.getShippingFullName(), "Vui long nhap ten nguoi nhan"));
-        shipment.setShippingPhone(requireTextOrFallback(null, order.getShippingPhone(), "Vui long nhap so dien thoai nguoi nhan"));
-        shipment.setShippingAddress(requireTextOrFallback(null, order.getShippingAddress(), "Vui long nhap dia chi nguoi nhan"));
+        shipment.setShippingName(requireTextOrFallback(null, order.getShippingFullName(), "Vui lòng nhập tên người nhận"));
+        shipment.setShippingPhone(requireTextOrFallback(null, order.getShippingPhone(), "Vui lòng nhập số điện thoại người nhận"));
+        shipment.setShippingAddress(requireTextOrFallback(null, order.getShippingAddress(), "Vui lòng nhập địa chỉ người nhận"));
         copyCoordinatesFromOrder(order, shipment);
         generateNewOtp(shipment, LocalDateTime.now());
 
@@ -636,7 +636,7 @@ public class ShipmentService {
 
     private Shipment createShipmentForOrderWithoutShipper(Order order, boolean triggerDispatch) {
         if (order == null || order.getId() == null) {
-            throw new IllegalArgumentException("Don hang khong hop le");
+            throw new IllegalArgumentException("Đơn hàng không hợp lệ");
         }
         ensureOrderReadyForShipment(order);
 
@@ -648,9 +648,9 @@ public class ShipmentService {
         Shipment shipment = new Shipment();
         shipment.setOrder(order);
         shipment.setStatus(ShipmentStatus.PENDING_ASSIGNMENT);
-        shipment.setShippingName(requireTextOrFallback(null, order.getShippingFullName(), "Vui long nhap ten nguoi nhan"));
-        shipment.setShippingPhone(requireTextOrFallback(null, order.getShippingPhone(), "Vui long nhap so dien thoai nguoi nhan"));
-        shipment.setShippingAddress(requireTextOrFallback(null, order.getShippingAddress(), "Vui long nhap dia chi nguoi nhan"));
+        shipment.setShippingName(requireTextOrFallback(null, order.getShippingFullName(), "Vui lòng nhập tên người nhận"));
+        shipment.setShippingPhone(requireTextOrFallback(null, order.getShippingPhone(), "Vui lòng nhập số điện thoại người nhận"));
+        shipment.setShippingAddress(requireTextOrFallback(null, order.getShippingAddress(), "Vui lòng nhập địa chỉ người nhận"));
         copyCoordinatesFromOrder(order, shipment);
         generateNewOtp(shipment, LocalDateTime.now());
 
@@ -666,13 +666,13 @@ public class ShipmentService {
                                                      Shipper shipper,
                                                      boolean triggerDispatch) {
         if (shipment == null || shipment.getId() == null) {
-            throw new IllegalArgumentException("Don giao hang khong hop le");
+            throw new IllegalArgumentException("Đơn giao hàng không hợp lệ");
         }
         if (shipper == null || shipper.getId() == null) {
-            throw new IllegalArgumentException("Thieu thong tin shipper");
+            throw new IllegalArgumentException("Thiếu thông tin shipper");
         }
         if (shipment.getStatus() != ShipmentStatus.PENDING_ASSIGNMENT && shipment.getStatus() != ShipmentStatus.ASSIGNED) {
-            throw new IllegalStateException("Chi don o trang thai cho phan cong hoac da phan cong moi duoc gan shipper");
+            throw new IllegalStateException("Chỉ đơn ở trạng thái chờ phân công hoặc đã phân công mới được gán shipper");
         }
 
         Long previousShipperId = shipment.getShipper() == null ? null : shipment.getShipper().getId();
@@ -758,13 +758,13 @@ public class ShipmentService {
 
     private Shipper getActiveShipper(Long shipperId) {
         if (shipperId == null) {
-            throw new IllegalArgumentException("Thieu ma shipper");
+            throw new IllegalArgumentException("Thiếu mã shipper");
         }
 
         Shipper shipper = shipperRepository.findById(shipperId)
-                .orElseThrow(() -> new IllegalArgumentException("Khong tim thay shipper: " + shipperId));
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy shipper: " + shipperId));
         if (shipper.getStatus() != ShipperStatus.ACTIVE) {
-            throw new IllegalStateException("Chi shipper dang hoat dong moi duoc nhan don");
+            throw new IllegalStateException("Chỉ shipper đang hoạt động mới được nhận đơn");
         }
         return shipper;
     }
@@ -806,20 +806,20 @@ public class ShipmentService {
     private void validateOtpBeforeCompletion(Shipment shipment, String otp, LocalDateTime now) {
         String normalizedOtp = otp == null ? "" : otp.trim();
         if (!normalizedOtp.matches("^\\d{6}$")) {
-            throw new IllegalArgumentException("OTP phai gom dung 6 chu so");
+            throw new IllegalArgumentException("OTP phải gồm đúng 6 chữ số");
         }
 
         if (shipment.getOtpLockedUntil() != null && shipment.getOtpLockedUntil().isAfter(now)) {
-            throw new IllegalStateException("OTP dang bi khoa tam thoi den " + shipment.getOtpLockedUntil());
+            throw new IllegalStateException("OTP đang bị khóa tạm thời đến " + shipment.getOtpLockedUntil());
         }
 
         if (shipment.getOtpExpiresAt() == null || shipment.getOtpExpiresAt().isBefore(now)) {
-            throw new IllegalStateException("OTP da het han, vui long yeu cau gui lai ma moi");
+            throw new IllegalStateException("OTP đã hết hạn, vui lòng yêu cầu gửi lại mã mới");
         }
 
         Long expectedOtpUserId = resolveOtpUserId(shipment);
         if (shipment.getOtpUserId() != null && expectedOtpUserId != null && !shipment.getOtpUserId().equals(expectedOtpUserId)) {
-            throw new IllegalStateException("OTP user binding khong hop le");
+            throw new IllegalStateException("OTP user binding không hợp lệ");
         }
 
         if (shipment.getOtpCode() == null || !shipment.getOtpCode().equals(normalizedOtp)) {
@@ -827,9 +827,9 @@ public class ShipmentService {
             shipmentRepository.save(shipment);
             shipmentOtpAuditService.log(shipment, "OTP_VERIFY", "FAILED", "OTP_MISMATCH", null, null);
             if (shipment.getOtpLockedUntil() != null && shipment.getOtpLockedUntil().isAfter(now)) {
-                throw new IllegalStateException("Nhap sai OTP qua so lan cho phep. Ma OTP da bi khoa 15 phut");
+                throw new IllegalStateException("Nhập sai OTP quá số lần cho phép. Mã OTP đã bị khóa 15 phút");
             }
-            throw new IllegalArgumentException("OTP khong dung");
+            throw new IllegalArgumentException("OTP không đúng");
         }
 
         shipment.setOtpAttemptCount(0);
@@ -881,7 +881,7 @@ public class ShipmentService {
         if (trimmed != null) {
             return trimmed;
         }
-        return "Manual completion by admin without OTP";
+        return "Hoàn tất thủ công bởi quản trị viên không cần OTP";
     }
 
     private Long resolveOtpUserId(Shipment shipment) {
@@ -945,3 +945,4 @@ public class ShipmentService {
         return String.format("%06d", OTP_RANDOM.nextInt(1_000_000));
     }
 }
+

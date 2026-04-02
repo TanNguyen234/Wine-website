@@ -24,11 +24,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!question) return;
             const user = document.createElement('div');
             user.className = 'small mb-2';
-            user.innerHTML = `<strong>B?n:</strong> ${question}`;
+            user.innerHTML = `<strong>Bạn:</strong> ${question}`;
 
             const bot = document.createElement('div');
             bot.className = 'small text-muted mb-2';
-            bot.innerHTML = `<strong>AI:</strong> ?� t?o g?i � cho "${question}". B?n c� th? m? r?ng ph?n n�y b?ng endpoint AI backend.`;
+            bot.innerHTML = `<strong>AI:</strong> Đã tạo gợi ý cho "${question}". Bạn có thể mở rộng phần này bằng endpoint AI ở backend.`;
 
             feed.prepend(bot);
             feed.prepend(user);

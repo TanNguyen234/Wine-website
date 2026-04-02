@@ -61,17 +61,38 @@ GO
 /* 4) categories */
 IF OBJECT_ID(N'[dbo].[categories]', N'U') IS NOT NULL
 BEGIN
-    IF NOT EXISTS (SELECT 1 FROM [dbo].[categories] WHERE [name] = 'Red Wine')
+    IF NOT EXISTS (SELECT 1 FROM [dbo].[categories] WHERE [name] = N'Vang đỏ')
         INSERT INTO [dbo].[categories]([name], [description], [created_by], [updated_by])
-        VALUES ('Red Wine', 'Full-bodied and medium-bodied red wines', 'system', 'system');
+        VALUES (N'Vang đỏ', N'Các dòng vang đỏ đậm vị và trung bình', 'system', 'system');
 
-    IF NOT EXISTS (SELECT 1 FROM [dbo].[categories] WHERE [name] = 'White Wine')
+    IF NOT EXISTS (SELECT 1 FROM [dbo].[categories] WHERE [name] = N'Vang trắng')
         INSERT INTO [dbo].[categories]([name], [description], [created_by], [updated_by])
-        VALUES ('White Wine', 'Crisp and aromatic white wines', 'system', 'system');
+        VALUES (N'Vang trắng', N'Các dòng vang trắng thanh mát và thơm hương', 'system', 'system');
 
-    IF NOT EXISTS (SELECT 1 FROM [dbo].[categories] WHERE [name] = 'Sparkling Wine')
+    IF NOT EXISTS (SELECT 1 FROM [dbo].[categories] WHERE [name] = N'Vang sủi')
         INSERT INTO [dbo].[categories]([name], [description], [created_by], [updated_by])
-        VALUES ('Sparkling Wine', 'Champagne and sparkling selections', 'system', 'system');
+        VALUES (N'Vang sủi', N'Champagne và các lựa chọn vang sủi', 'system', 'system');
+
+    IF EXISTS (SELECT 1 FROM [dbo].[categories] WHERE [name] = 'Red Wine')
+       AND NOT EXISTS (SELECT 1 FROM [dbo].[categories] WHERE [name] = N'Vang đỏ')
+        UPDATE [dbo].[categories]
+        SET [name] = N'Vang đỏ',
+            [description] = N'Các dòng vang đỏ đậm vị và trung bình'
+        WHERE [name] = 'Red Wine';
+
+    IF EXISTS (SELECT 1 FROM [dbo].[categories] WHERE [name] = 'White Wine')
+       AND NOT EXISTS (SELECT 1 FROM [dbo].[categories] WHERE [name] = N'Vang trắng')
+        UPDATE [dbo].[categories]
+        SET [name] = N'Vang trắng',
+            [description] = N'Các dòng vang trắng thanh mát và thơm hương'
+        WHERE [name] = 'White Wine';
+
+    IF EXISTS (SELECT 1 FROM [dbo].[categories] WHERE [name] = 'Sparkling Wine')
+       AND NOT EXISTS (SELECT 1 FROM [dbo].[categories] WHERE [name] = N'Vang sủi')
+        UPDATE [dbo].[categories]
+        SET [name] = N'Vang sủi',
+            [description] = N'Champagne và các lựa chọn vang sủi'
+        WHERE [name] = 'Sparkling Wine';
 END
 GO
 
@@ -80,19 +101,19 @@ IF OBJECT_ID(N'[dbo].[wines]', N'U') IS NOT NULL
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM [dbo].[wines] WHERE [name] = N'Château Margaux')
         INSERT INTO [dbo].[wines]([name], [type], [country], [year], [price], [description], [image_url], [created_by], [updated_by])
-        VALUES (N'Château Margaux', 'Red', 'France', 2018, 899.99, N'A prestigious Bordeaux wine with rich blackcurrant and cedar notes.', '/images/wines/chateau-margaux.jpg', 'system', 'system');
+        VALUES (N'Château Margaux', 'Red', 'France', 2018, 899.99, N'Rượu Bordeaux danh tiếng với hương nho đen và gỗ tuyết tùng đậm đà.', '/images/wines/chateau-margaux.jpg', 'system', 'system');
 
     IF NOT EXISTS (SELECT 1 FROM [dbo].[wines] WHERE [name] = N'Dom Pérignon')
         INSERT INTO [dbo].[wines]([name], [type], [country], [year], [price], [description], [image_url], [created_by], [updated_by])
-        VALUES (N'Dom Pérignon', 'Sparkling', 'France', 2012, 199.99, N'Luxury champagne with citrus, white flowers, and brioche.', '/images/wines/dom-perignon.jpg', 'system', 'system');
+        VALUES (N'Dom Pérignon', 'Sparkling', 'France', 2012, 199.99, N'Champagne cao cấp với hương cam chanh, hoa trắng và bánh brioche.', '/images/wines/dom-perignon.jpg', 'system', 'system');
 
     IF NOT EXISTS (SELECT 1 FROM [dbo].[wines] WHERE [name] = N'Sancerre Blanc')
         INSERT INTO [dbo].[wines]([name], [type], [country], [year], [price], [description], [image_url], [created_by], [updated_by])
-        VALUES (N'Sancerre Blanc', 'White', 'France', 2020, 29.99, N'Crisp white wine with citrus and mineral notes.', '/images/wines/sancerre-blanc.jpg', 'system', 'system');
+        VALUES (N'Sancerre Blanc', 'White', 'France', 2020, 29.99, N'Vang trắng thanh mát với hương cam chanh và khoáng chất.', '/images/wines/sancerre-blanc.jpg', 'system', 'system');
 
     IF NOT EXISTS (SELECT 1 FROM [dbo].[wines] WHERE [name] = N'Cabernet Sauvignon Chile')
         INSERT INTO [dbo].[wines]([name], [type], [country], [year], [price], [description], [image_url], [created_by], [updated_by])
-        VALUES (N'Cabernet Sauvignon Chile', 'Red', 'Chile', 2019, 55.99, N'Full-bodied red wine with dark fruit and spice.', '/images/wines/cabernet-chile.jpg', 'system', 'system');
+        VALUES (N'Cabernet Sauvignon Chile', 'Red', 'Chile', 2019, 55.99, N'Vang đỏ đậm vị với hương trái cây chín sẫm và gia vị.', '/images/wines/cabernet-chile.jpg', 'system', 'system');
 END
 GO
 
@@ -104,21 +125,21 @@ BEGIN
     UPDATE w
     SET w.[category_id] = c.[id]
     FROM [dbo].[wines] w
-    JOIN [dbo].[categories] c ON c.[name] = 'Red Wine'
+        JOIN [dbo].[categories] c ON c.[name] = N'Vang đỏ'
     WHERE w.[name] IN (N'Château Margaux', N'Cabernet Sauvignon Chile')
       AND (w.[category_id] IS NULL OR w.[category_id] <> c.[id]);
 
     UPDATE w
     SET w.[category_id] = c.[id]
     FROM [dbo].[wines] w
-    JOIN [dbo].[categories] c ON c.[name] = 'White Wine'
+        JOIN [dbo].[categories] c ON c.[name] = N'Vang trắng'
     WHERE w.[name] = N'Sancerre Blanc'
       AND (w.[category_id] IS NULL OR w.[category_id] <> c.[id]);
 
     UPDATE w
     SET w.[category_id] = c.[id]
     FROM [dbo].[wines] w
-    JOIN [dbo].[categories] c ON c.[name] = 'Sparkling Wine'
+        JOIN [dbo].[categories] c ON c.[name] = N'Vang sủi'
     WHERE w.[name] = N'Dom Pérignon'
       AND (w.[category_id] IS NULL OR w.[category_id] <> c.[id]);
 END
@@ -129,7 +150,11 @@ IF OBJECT_ID(N'[dbo].[warehouse]', N'U') IS NOT NULL
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM [dbo].[warehouse] WHERE [name] = 'Main Warehouse')
         INSERT INTO [dbo].[warehouse]([name], [location], [active], [created_at])
-        VALUES ('Main Warehouse', N'Ho Chi Minh City', 1, GETDATE());
+    VALUES ('Main Warehouse', N'Thành phố Hồ Chí Minh', 1, GETDATE());
+
+    UPDATE [dbo].[warehouse]
+    SET [location] = N'Thành phố Hồ Chí Minh'
+    WHERE [name] = 'Main Warehouse' AND [location] = N'Ho Chi Minh City';
 END
 GO
 
@@ -137,7 +162,11 @@ IF OBJECT_ID(N'[dbo].[warehouses]', N'U') IS NOT NULL
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM [dbo].[warehouses] WHERE [name] = 'Main Warehouse')
         INSERT INTO [dbo].[warehouses]([name], [location], [active])
-        VALUES ('Main Warehouse', N'Ho Chi Minh City', 1);
+    VALUES ('Main Warehouse', N'Thành phố Hồ Chí Minh', 1);
+
+    UPDATE [dbo].[warehouses]
+    SET [location] = N'Thành phố Hồ Chí Minh'
+    WHERE [name] = 'Main Warehouse' AND [location] = N'Ho Chi Minh City';
 END
 GO
 
@@ -214,8 +243,8 @@ BEGIN
         )
         VALUES (
             @orderUserId, GETDATE(), 929.98, 'CONFIRMED', 'PAID', 'STRIPE',
-            N'Nguyen Van A', '0900000001', N'123 Le Loi, District 1, Ho Chi Minh City',
-            N'Demo order for testing', 'ORD-DEMO-1001', GETDATE(), GETDATE()
+            N'Nguyễn Văn A', '0900000001', N'123 Lê Lợi, Quận 1, Thành phố Hồ Chí Minh',
+            N'Đơn hàng mẫu để kiểm thử', 'ORD-DEMO-1001', GETDATE(), GETDATE()
         );
     END
 END
@@ -248,12 +277,12 @@ BEGIN
     IF @reviewUserId IS NOT NULL AND @reviewWine1 IS NOT NULL
        AND NOT EXISTS (SELECT 1 FROM [dbo].[reviews] WHERE [wine_id] = @reviewWine1 AND [user_id] = @reviewUserId)
         INSERT INTO [dbo].[reviews]([wine_id], [user_id], [rating], [comment], [created_at])
-        VALUES (@reviewWine1, @reviewUserId, 5, N'Excellent wine, rich taste and long finish.', GETDATE());
+        VALUES (@reviewWine1, @reviewUserId, 5, N'Rượu rất xuất sắc, vị đậm và hậu vị kéo dài.', GETDATE());
 
     IF @reviewUserId IS NOT NULL AND @reviewWine2 IS NOT NULL
        AND NOT EXISTS (SELECT 1 FROM [dbo].[reviews] WHERE [wine_id] = @reviewWine2 AND [user_id] = @reviewUserId)
         INSERT INTO [dbo].[reviews]([wine_id], [user_id], [rating], [comment], [created_at])
-        VALUES (@reviewWine2, @reviewUserId, 5, N'Perfect for celebrations. Highly recommended.', GETDATE());
+        VALUES (@reviewWine2, @reviewUserId, 5, N'Rất phù hợp cho dịp lễ kỷ niệm. Rất đáng thử.', GETDATE());
 END
 GO
 
@@ -269,7 +298,7 @@ BEGIN
             [order_id], [amount], [currency], [method], [status], [payment_reference], [gateway_session_id], [gateway_response], [created_at], [updated_at]
         )
         VALUES (
-            @payOrderId, 929.98, 'VND', 'STRIPE', 'SUCCESS', 'PAY-DEMO-1001', 'sess_demo_1001', 'Payment captured successfully', GETDATE(), GETDATE()
+            @payOrderId, 929.98, 'VND', 'STRIPE', 'SUCCESS', 'PAY-DEMO-1001', 'sess_demo_1001', N'Thanh toán đã được ghi nhận thành công', GETDATE(), GETDATE()
         );
     END
 END
@@ -303,7 +332,7 @@ BEGIN
             [inventory_id], [product_id], [warehouse_id], [quantity], [operation_type], [reference_type], [reference_id], [user_id], [note], [created_at]
         )
         VALUES (
-            @invId, @invWineId, @invWhId, 100, 'IMPORT', 'SEED', NULL, NULL, N'Initial stock seeded by sample-data.sql', GETDATE()
+            @invId, @invWineId, @invWhId, 100, 'IMPORT', 'SEED', NULL, NULL, N'Dữ liệu tồn kho ban đầu từ sample-data.sql', GETDATE()
         );
     END
 END
@@ -316,10 +345,10 @@ BEGIN
     DECLARE @stockQty INT = (SELECT TOP 1 [current_quantity] - [reserved_quantity] FROM [dbo].[inventory] WHERE [id] = @stockInvId);
 
     IF @stockInvId IS NOT NULL
-       AND NOT EXISTS (SELECT 1 FROM [dbo].[stock_logs] WHERE [inventory_id] = @stockInvId AND [message] = 'Initial sample stock log')
+         AND NOT EXISTS (SELECT 1 FROM [dbo].[stock_logs] WHERE [inventory_id] = @stockInvId AND [message] = N'Nhật ký tồn kho mẫu ban đầu')
     BEGIN
         INSERT INTO [dbo].[stock_logs]([inventory_id], [available_quantity], [message], [created_at])
-        VALUES (@stockInvId, ISNULL(@stockQty, 0), 'Initial sample stock log', GETDATE());
+        VALUES (@stockInvId, ISNULL(@stockQty, 0), N'Nhật ký tồn kho mẫu ban đầu', GETDATE());
     END
 END
 GO
