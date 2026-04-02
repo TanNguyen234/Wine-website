@@ -12,18 +12,21 @@
 <nav class="navbar navbar-expand-lg navbar-dark navbar-modern py-3">
     <div class="container">
         <a class="navbar-brand d-flex align-items-center gap-2" href="/home"><span class="brand-logo"><i class="fa-solid fa-wine-glass"></i></span><span class="fw-semibold">StrongWine</span></a>
-        <div class="ms-auto"><a class="nav-link text-white" href="/cart"><i class="fa-solid fa-cart-shopping"></i> <span class="badge text-bg-light text-dark js-cart-count" th:text="${cartCount}">0</span></a></div>
+        <div class="ms-auto d-flex gap-3 align-items-center">
+            <a class="nav-link text-white" href="/wines">Sản phẩm</a>
+            <a class="nav-link text-white" href="/cart"><i class="fa-solid fa-cart-shopping"></i> <span class="badge text-bg-light text-dark js-cart-count" th:text="${cartCount}">0</span></a>
+        </div>
     </div>
 </nav>
 
-<main class="container my-4">
+<main class="container site-main my-4">
     <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
     <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
     <section class="row g-4 mb-4">
         <div class="col-lg-6">
             <div class="panel p-2">
-                <img th:if="${wine.imageUrl != null}" th:src="${wine.imageUrl}" class="w-100 rounded" style="height:520px;object-fit:cover;" alt="Hình ảnh rượu">
-                <div th:unless="${wine.imageUrl != null}" class="d-flex align-items-center justify-content-center bg-light rounded" style="height:520px;"><i class="fa-regular fa-image fs-1 text-muted"></i></div>
+                <img th:if="${wine.imageUrl != null}" th:src="${wine.imageUrl}" class="media-cover-xl rounded" alt="Hình ảnh rượu">
+                <div th:unless="${wine.imageUrl != null}" class="media-placeholder-xl rounded"><i class="fa-regular fa-image fs-1"></i></div>
             </div>
         </div>
         <div class="col-lg-6">
@@ -42,7 +45,7 @@
                     <p class="mb-0" th:text="${wine.description}"></p>
                 </div>
                 <div class="d-flex gap-2 align-items-center mb-2">
-                    <input type="number" class="form-control" style="max-width:120px;" id="detailQuantity" value="1" min="1" th:attr="max=${availableStock}">
+                    <input type="number" class="form-control qty-input" id="detailQuantity" value="1" min="1" th:attr="max=${availableStock}">
                     <button type="button" class="btn btn-dark btn-lg" data-cart-add="true" data-cart-quantity-selector="#detailQuantity" th:disabled="${availableStock <= 0}" th:attr="data-cart-product-id=${wine.id},data-cart-name=${wine.name},data-cart-price=${wine.price},data-cart-image=${wine.imageUrl},data-cart-stock=${availableStock}"><i class="fa-solid fa-cart-plus me-1"></i>Thêm vào giỏ hàng</button>
                 </div>
                 <div class="d-flex gap-2 align-items-center">
@@ -84,10 +87,12 @@
 <button id="aiToggle" class="ai-fab" title="AI gợi ý kết hợp"><i class="fa-solid fa-robot"></i></button>
 <section id="aiPanel" class="ai-panel p-3">
     <h6><i class="fa-solid fa-sparkles me-1"></i> AI gợi ý kết hợp</h6>
-    <div id="aiFeed" class="border rounded p-2 mb-2" style="max-height:160px;overflow-y:auto;"></div>
+    <div id="aiFeed" class="ai-feed border rounded p-2 mb-2"></div>
     <div class="d-flex gap-2 mb-2"><button class="btn btn-sm btn-light border" data-ai-question="Gợi ý món ăn phù hợp với chai rượu này">Món ăn phù hợp</button></div>
     <form id="aiForm" class="d-flex gap-2"><input id="aiPrompt" class="form-control form-control-sm" placeholder="Hỏi về món ăn kết hợp"><button class="btn btn-sm btn-dark">Hỏi</button></form>
 </section>
+
+<footer class="site-footer text-center py-4 text-muted small">© 2026 StrongWine. Tất cả quyền được bảo lưu.</footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="/js/cart-client.js"></script>

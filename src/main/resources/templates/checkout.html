@@ -37,7 +37,7 @@
             </div>
         </div>
     </nav>
-    <div class="container my-4" data-checkout-page="true">
+    <main class="container site-main my-4" data-checkout-page="true">
         <h2 class="mb-4 fw-bold">Thanh toán an toàn</h2>
         <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
             <span th:text="${error}"></span>
@@ -45,9 +45,9 @@
         </div>
         <div class="row">
             <div class="col-lg-8">
-                <div class="card shadow-sm border-0 mb-4">
-                    <div class="card-header bg-dark text-white"><h5 class="mb-0">Thông tin giao hàng</h5></div>
-                    <div class="card-body">
+                <div class="panel mb-4">
+                    <div class="p-3 border-bottom"><h5 class="mb-0">Thông tin giao hàng</h5></div>
+                    <div class="p-3 p-lg-4">
                         <form id="checkoutForm" th:action="@{/cart/checkout/process}" method="post" th:object="${checkoutForm}">
                             <input type="hidden" name="checkoutToken" th:value="${checkoutToken}">
                             <div class="mb-3">
@@ -97,9 +97,9 @@
                 </div>
             </div>
             <div class="col-lg-4">
-                <div class="card shadow-sm border-0 sticky-top" style="top: 20px;">
-                    <div class="card-header bg-light"><h5 class="mb-0">Tóm tắt đơn hàng</h5></div>
-                    <div class="card-body">
+                <div class="panel checkout-summary-sticky">
+                    <div class="p-3 border-bottom panel-muted"><h5 class="mb-0">Tóm tắt đơn hàng</h5></div>
+                    <div class="p-3 p-lg-4">
                         <div class="mb-3" id="checkoutSummary"></div>
                         <hr>
                         <div class="d-flex justify-content-between align-items-center">
@@ -110,9 +110,9 @@
                 </div>
             </div>
         </div>
-    </div>
-    <footer class="bg-dark text-light text-center py-4 mt-5">
-        <div class="container"><p class="mb-0">&copy; 2025 StrongWine. Tất cả quyền được bảo lưu.</p></div>
+    </main>
+    <footer class="site-footer text-center py-4 mt-5">
+        <div class="container text-muted"><p class="mb-0">&copy; 2025 StrongWine. Tất cả quyền được bảo lưu.</p></div>
     </footer>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>

@@ -8,23 +8,37 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="/css/app.css">
 </head>
-<body>
-<nav class="navbar navbar-expand-lg navbar-dark navbar-modern py-3">
-    <div class="container">
-        <a class="navbar-brand d-flex align-items-center gap-2" href="/home">
+<body class="admin-page">
+<div class="admin-layout">
+    <aside class="admin-sidebar">
+        <a class="admin-sidebar-brand" href="/admin">
             <span class="brand-logo"><i class="fa-solid fa-wine-glass"></i></span>
-            <span class="fw-semibold">StrongWine Quản trị</span>
+            <span>StrongWine Admin</span>
         </a>
-        <div class="d-flex align-items-center gap-3">
-            <a href="/wines" class="text-white text-decoration-none">Cửa hàng</a>
-            <form th:action="@{/logout}" method="post" class="d-inline">
-                <button type="submit" class="btn btn-sm btn-outline-light">Đăng xuất</button>
-            </form>
-        </div>
-    </div>
-</nav>
+        <nav>
+            <a class="admin-nav-link active" href="/admin"><i class="fa-solid fa-chart-line"></i>Bảng điều khiển</a>
+            <a class="admin-nav-link" href="/admin/users"><i class="fa-solid fa-users"></i>Người dùng</a>
+            <a class="admin-nav-link" href="/admin/shippers"><i class="fa-solid fa-truck"></i>Người giao hàng</a>
+            <a class="admin-nav-link" href="/admin/shipments"><i class="fa-solid fa-box-open"></i>Đơn giao hàng</a>
+            <a class="admin-nav-link" href="/shipper/dashboard"><i class="fa-solid fa-map-location-dot"></i>Màn hình giao hàng</a>
+        </nav>
+    </aside>
 
-<main class="container my-4">
+    <div class="admin-main">
+        <header class="admin-topbar">
+            <div>
+                <h1 class="h5 mb-0">Bảng điều khiển quản trị</h1>
+                <small class="text-muted">Theo dõi vận hành, kho và thanh toán</small>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <a href="/wines" class="btn btn-sm btn-outline-secondary">Cửa hàng</a>
+                <form th:action="@{/logout}" method="post" class="d-inline">
+                    <button type="submit" class="btn btn-sm btn-dark">Đăng xuất</button>
+                </form>
+            </div>
+        </header>
+
+        <main class="admin-content">
     <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
         <span th:text="${success}"></span>
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
@@ -34,46 +48,46 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 
-    <div class="row g-3 mb-4">
+    <div class="row g-3 mb-4 fade-up">
         <div class="col-lg-2 col-md-4 col-6">
-            <div class="panel p-3 h-100">
-                <div class="small text-muted">Sản phẩm</div>
-                <div class="h4 mb-0" th:text="${totalWines}">0</div>
+            <div class="stat-card h-100">
+                <div class="stat-label">Sản phẩm</div>
+                <p class="stat-value" th:text="${totalWines}">0</p>
             </div>
         </div>
         <div class="col-lg-2 col-md-4 col-6">
-            <div class="panel p-3 h-100">
-                <div class="small text-muted">Người dùng</div>
-                <div class="h4 mb-0" th:text="${totalUsers}">0</div>
+            <div class="stat-card h-100">
+                <div class="stat-label">Người dùng</div>
+                <p class="stat-value" th:text="${totalUsers}">0</p>
             </div>
         </div>
         <div class="col-lg-2 col-md-4 col-6">
-            <div class="panel p-3 h-100">
-                <div class="small text-muted">Đơn hàng</div>
-                <div class="h4 mb-0" th:text="${totalOrders}">0</div>
+            <div class="stat-card h-100">
+                <div class="stat-label">Đơn hàng</div>
+                <p class="stat-value" th:text="${totalOrders}">0</p>
             </div>
         </div>
         <div class="col-lg-2 col-md-4 col-6">
-            <div class="panel p-3 h-100">
-                <div class="small text-muted">Đơn giao hàng</div>
-                <div class="h4 mb-0" th:text="${totalShipments}">0</div>
+            <div class="stat-card h-100">
+                <div class="stat-label">Đơn giao hàng</div>
+                <p class="stat-value" th:text="${totalShipments}">0</p>
             </div>
         </div>
         <div class="col-lg-2 col-md-4 col-6">
-            <div class="panel p-3 h-100">
-                <div class="small text-muted">Người giao hàng đang hoạt động</div>
-                <div class="h4 mb-0" th:text="${shipperStats['active']}">0</div>
+            <div class="stat-card h-100">
+                <div class="stat-label">Người giao hàng đang hoạt động</div>
+                <p class="stat-value" th:text="${shipperStats['active']}">0</p>
             </div>
         </div>
         <div class="col-lg-2 col-md-4 col-6">
-            <div class="panel p-3 h-100">
-                <div class="small text-muted">Doanh thu (đã thanh toán)</div>
-                <div class="h6 mb-0" th:text="${#numbers.formatDecimal(totalRevenue, 0, 'COMMA', 0, 'POINT') + ' đ'}">0</div>
+            <div class="stat-card h-100">
+                <div class="stat-label">Doanh thu (đã thanh toán)</div>
+                <p class="h6 mb-0" th:text="${#numbers.formatDecimal(totalRevenue, 0, 'COMMA', 0, 'POINT') + ' đ'}">0</p>
             </div>
         </div>
     </div>
 
-    <div class="panel p-3 mb-3">
+    <div class="panel panel-muted p-3 mb-3 fade-up">
         <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between">
             <div class="d-flex flex-wrap gap-2 align-items-center">
                 <span class="small text-muted me-1">Quản trị nhanh:</span>
@@ -89,7 +103,7 @@
         </div>
     </div>
 
-    <ul class="nav nav-tabs" id="adminTabs" role="tablist">
+    <ul class="nav nav-tabs admin-menu-tabs" id="adminTabs" role="tablist">
         <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#products" type="button">Sản phẩm</button></li>
         <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#orders" type="button">Đơn hàng</button></li>
         <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#inventory" type="button">Kho hàng</button></li>
@@ -99,7 +113,7 @@
 
     <div class="tab-content">
         <section class="tab-pane fade show active" id="products">
-            <div class="panel p-3 mt-3">
+            <div class="panel p-3 p-lg-4 mt-3 fade-up">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h2 class="h6 mb-0">Danh mục sản phẩm</h2>
                     <a href="/wines/admin/create" class="btn btn-sm btn-dark">Thêm rượu</a>
@@ -127,10 +141,10 @@
         </section>
 
         <section class="tab-pane fade" id="orders">
-            <div class="panel p-3 mt-3">
+            <div class="panel p-3 p-lg-4 mt-3 fade-up">
                 <h2 class="h6">Quản lý đơn hàng</h2>
                 <div class="table-responsive">
-                    <table class="table table-modern table-sm align-middle">
+                    <table class="table table-modern align-middle">
                         <thead>
                         <tr><th>Mã</th><th>Người đặt</th><th>Ngày đặt</th><th>Trạng thái</th><th>Thanh toán</th><th>Tổng tiền</th></tr>
                         </thead>
@@ -150,10 +164,10 @@
         </section>
 
         <section class="tab-pane fade" id="inventory">
-            <div class="panel p-3 mt-3">
+            <div class="panel p-3 p-lg-4 mt-3 fade-up">
                 <h2 class="h6">Quản lý kho</h2>
                 <div class="table-responsive mb-4">
-                    <table class="table table-modern table-sm align-middle">
+                    <table class="table table-modern align-middle">
                         <thead>
                         <tr><th>Rượu</th><th>Kho</th><th>Tồn hiện tại</th><th>Đã giữ</th><th>Khả dụng</th><th>Mức đặt lại</th><th>Nhập/Xuất</th></tr>
                         </thead>
@@ -193,7 +207,7 @@
 
                 <h3 class="h6">Lịch sử giao dịch kho</h3>
                 <div class="table-responsive">
-                    <table class="table table-modern table-sm align-middle">
+                    <table class="table table-modern align-middle">
                         <thead>
                         <tr><th>Thời gian</th><th>Rượu</th><th>Thao tác</th><th>Số lượng</th><th>Mã người dùng</th><th>Tham chiếu</th></tr>
                         </thead>
@@ -213,10 +227,10 @@
         </section>
 
         <section class="tab-pane fade" id="payments">
-            <div class="panel p-3 mt-3">
+            <div class="panel p-3 p-lg-4 mt-3 fade-up">
                 <h2 class="h6">Giao dịch thanh toán</h2>
                 <div class="table-responsive mb-4">
-                    <table class="table table-modern table-sm align-middle">
+                    <table class="table table-modern align-middle">
                         <thead>
                         <tr><th>Ngày tạo</th><th>Đơn hàng</th><th>Mã tham chiếu</th><th>Phương thức</th><th>Trạng thái</th><th>Số tiền</th></tr>
                         </thead>
@@ -235,7 +249,7 @@
 
                 <h3 class="h6">Nhật ký sự kiện thanh toán</h3>
                 <div class="table-responsive">
-                    <table class="table table-modern table-sm align-middle">
+                    <table class="table table-modern align-middle">
                         <thead>
                         <tr><th>Thời gian</th><th>Loại giao dịch</th><th>Trạng thái</th><th>Dữ liệu</th></tr>
                         </thead>
@@ -253,7 +267,7 @@
         </section>
 
         <section class="tab-pane fade" id="alerts">
-            <div class="panel p-3 mt-3">
+            <div class="panel p-3 p-lg-4 mt-3 fade-up">
                 <h2 class="h6">Cảnh báo tồn kho thấp</h2>
                 <div th:if="${lowStockItems.isEmpty()}" class="alert alert-success mb-0">Không có sản phẩm sắp hết hàng.</div>
                 <div th:unless="${lowStockItems.isEmpty()}" class="list-group">
@@ -270,7 +284,9 @@
             </div>
         </section>
     </div>
-</main>
+        </main>
+    </div>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>

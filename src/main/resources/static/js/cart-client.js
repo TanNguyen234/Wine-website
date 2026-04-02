@@ -202,12 +202,12 @@
             const tr = document.createElement("tr");
             tr.innerHTML = `
                 <td>
-                    ${item.image ? `<img src="${item.image}" class="img-fluid rounded" style="width: 80px; height: 80px; object-fit: cover;" alt="Hình ảnh">` : `<div class="bg-secondary rounded d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;"><i class="fa-regular fa-image text-white"></i></div>`}
+                    ${item.image ? `<img src="${item.image}" class="img-fluid cart-thumb" alt="Hình ảnh">` : `<div class="cart-thumb-placeholder"><i class="fa-regular fa-image"></i></div>`}
                 </td>
                 <td><a href="/wines/${item.productId}" class="text-decoration-none fw-semibold">${item.name}</a></td>
                 <td>${formatCurrency(item.price)}</td>
                 <td>
-                    <input type="number" min="1" max="${Math.max(1, item.stock)}" value="${item.quantity}" class="form-control" style="width: 90px;" data-cart-qty-id="${item.productId}">
+                    <input type="number" min="1" max="${Math.max(1, item.stock)}" value="${item.quantity}" class="form-control qty-input" data-cart-qty-id="${item.productId}">
                     <small class="text-muted d-block">Tồn: ${item.stock}</small>
                 </td>
                 <td class="fw-bold text-primary">${formatCurrency(lineTotal)}</td>

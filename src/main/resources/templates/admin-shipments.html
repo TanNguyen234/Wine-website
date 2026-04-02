@@ -5,20 +5,40 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quản lý đơn giao hàng - StrongWine</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="/css/app.css">
 </head>
-<body>
-<nav class="navbar navbar-dark navbar-modern py-3">
-    <div class="container d-flex justify-content-between">
-        <a class="navbar-brand" href="/admin">StrongWine Quản trị</a>
-        <div class="d-flex gap-2">
-            <a class="btn btn-sm btn-outline-light" href="/admin/shippers">Người giao hàng</a>
-            <a class="btn btn-sm btn-light" href="/admin/shipments/create">Tạo đơn giao hàng</a>
-        </div>
-    </div>
-</nav>
+<body class="admin-page">
+<div class="admin-layout">
+    <aside class="admin-sidebar">
+        <a class="admin-sidebar-brand" href="/admin">
+            <span class="brand-logo"><i class="fa-solid fa-wine-glass"></i></span>
+            <span>StrongWine Admin</span>
+        </a>
+        <nav>
+            <a class="admin-nav-link" href="/admin"><i class="fa-solid fa-chart-line"></i>Bảng điều khiển</a>
+            <a class="admin-nav-link" href="/admin/users"><i class="fa-solid fa-users"></i>Người dùng</a>
+            <a class="admin-nav-link" href="/admin/shippers"><i class="fa-solid fa-truck"></i>Người giao hàng</a>
+            <a class="admin-nav-link active" href="/admin/shipments"><i class="fa-solid fa-box-open"></i>Đơn giao hàng</a>
+        </nav>
+    </aside>
 
-<main class="container my-4">
+    <div class="admin-main">
+        <header class="admin-topbar">
+            <div>
+                <h1 class="h5 mb-0">Quản lý đơn giao hàng</h1>
+                <small class="text-muted">Theo dõi vòng đời giao nhận và xác thực OTP</small>
+            </div>
+            <div class="d-flex gap-2">
+                <a class="btn btn-sm btn-outline-secondary" href="/admin/shippers">Người giao hàng</a>
+                <a class="btn btn-sm btn-dark" href="/admin/shipments/create">Tạo đơn giao hàng</a>
+                <form th:action="@{/logout}" method="post" class="d-inline">
+                    <button type="submit" class="btn btn-sm btn-outline-secondary">Đăng xuất</button>
+                </form>
+            </div>
+        </header>
+
+        <main class="admin-content">
     <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
         <span th:text="${success}"></span>
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
@@ -28,46 +48,46 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 
-    <div class="row g-3 mb-3">
+    <div class="row g-3 mb-3 fade-up">
         <div class="col-md-2 col-6">
-            <div class="panel p-3 h-100">
-                <div class="small text-muted">Chờ phân công</div>
-                <div class="h4 mb-0" th:text="${shipmentStats[T(com.strongwine.strongwine.entity.ShipmentStatus).PENDING_ASSIGNMENT]}">0</div>
+            <div class="stat-card h-100">
+                <div class="stat-label">Chờ phân công</div>
+                <p class="stat-value" th:text="${shipmentStats[T(com.strongwine.strongwine.entity.ShipmentStatus).PENDING_ASSIGNMENT]}">0</p>
             </div>
         </div>
         <div class="col-md-2 col-6">
-            <div class="panel p-3 h-100">
-                <div class="small text-muted">Đã phân công</div>
-                <div class="h4 mb-0" th:text="${shipmentStats[T(com.strongwine.strongwine.entity.ShipmentStatus).ASSIGNED]}">0</div>
+            <div class="stat-card h-100">
+                <div class="stat-label">Đã phân công</div>
+                <p class="stat-value" th:text="${shipmentStats[T(com.strongwine.strongwine.entity.ShipmentStatus).ASSIGNED]}">0</p>
             </div>
         </div>
         <div class="col-md-2 col-6">
-            <div class="panel p-3 h-100">
-                <div class="small text-muted">Đã lấy hàng</div>
-                <div class="h4 mb-0" th:text="${shipmentStats[T(com.strongwine.strongwine.entity.ShipmentStatus).PICKED_UP]}">0</div>
+            <div class="stat-card h-100">
+                <div class="stat-label">Đã lấy hàng</div>
+                <p class="stat-value" th:text="${shipmentStats[T(com.strongwine.strongwine.entity.ShipmentStatus).PICKED_UP]}">0</p>
             </div>
         </div>
         <div class="col-md-2 col-6">
-            <div class="panel p-3 h-100">
-                <div class="small text-muted">Đang giao</div>
-                <div class="h4 mb-0" th:text="${shipmentStats[T(com.strongwine.strongwine.entity.ShipmentStatus).DELIVERING]}">0</div>
+            <div class="stat-card h-100">
+                <div class="stat-label">Đang giao</div>
+                <p class="stat-value" th:text="${shipmentStats[T(com.strongwine.strongwine.entity.ShipmentStatus).DELIVERING]}">0</p>
             </div>
         </div>
         <div class="col-md-2 col-6">
-            <div class="panel p-3 h-100">
-                <div class="small text-muted">Hoàn tất</div>
-                <div class="h4 mb-0" th:text="${shipmentStats[T(com.strongwine.strongwine.entity.ShipmentStatus).COMPLETED]}">0</div>
+            <div class="stat-card h-100">
+                <div class="stat-label">Hoàn tất</div>
+                <p class="stat-value" th:text="${shipmentStats[T(com.strongwine.strongwine.entity.ShipmentStatus).COMPLETED]}">0</p>
             </div>
         </div>
         <div class="col-md-2 col-6">
-            <div class="panel p-3 h-100">
-                <div class="small text-muted">Thất bại</div>
-                <div class="h4 mb-0" th:text="${shipmentStats[T(com.strongwine.strongwine.entity.ShipmentStatus).FAILED]}">0</div>
+            <div class="stat-card h-100">
+                <div class="stat-label">Thất bại</div>
+                <p class="stat-value" th:text="${shipmentStats[T(com.strongwine.strongwine.entity.ShipmentStatus).FAILED]}">0</p>
             </div>
         </div>
     </div>
 
-    <div class="panel p-3 mb-3">
+    <div class="panel panel-muted p-3 mb-3 fade-up">
         <form class="row g-2" method="get" action="/admin/shipments">
             <div class="col-md-2">
                 <label class="form-label small text-muted">Mã đơn hàng</label>
@@ -100,19 +120,19 @@
         </form>
     </div>
 
-    <div class="panel p-3">
+    <div class="panel p-3 p-lg-4 fade-up">
         <div class="table-responsive">
-            <table class="table table-modern table-sm align-middle">
+            <table class="table table-modern align-middle">
                 <thead>
                 <tr>
-                    <th>ID</th>
-                    <th>Đơn hàng</th>
-                    <th>Người nhận</th>
-                    <th>SĐT</th>
-                    <th>Người giao hàng</th>
-                    <th>Trạng thái</th>
+                    <th><span class="th-sort">ID <i class="fa-solid fa-sort"></i></span></th>
+                    <th><span class="th-sort">Đơn hàng <i class="fa-solid fa-sort"></i></span></th>
+                    <th><span class="th-sort">Người nhận <i class="fa-solid fa-sort"></i></span></th>
+                    <th><span class="th-sort">SĐT <i class="fa-solid fa-sort"></i></span></th>
+                    <th><span class="th-sort">Người giao hàng <i class="fa-solid fa-sort"></i></span></th>
+                    <th><span class="th-sort">Trạng thái <i class="fa-solid fa-sort"></i></span></th>
                     <th>OTP</th>
-                    <th>Cập nhật</th>
+                    <th><span class="th-sort">Cập nhật <i class="fa-solid fa-sort"></i></span></th>
                     <th>Hành động</th>
                 </tr>
                 </thead>
@@ -143,7 +163,7 @@
                     </td>
                     <td th:text="${#temporals.format(s.updatedAt, 'dd/MM/yyyy HH:mm')}"></td>
                     <td>
-                        <div class="d-flex flex-column gap-1">
+                        <div class="d-flex flex-column gap-1 action-stack">
                             <a class="btn btn-sm btn-outline-dark" th:href="@{/admin/shipments/edit/{id}(id=${s.id})}">Sửa</a>
 
                             <form th:if="${s.status.name() == 'PENDING_ASSIGNMENT' or s.status.name() == 'ASSIGNED'}"
@@ -195,8 +215,17 @@
                 </tbody>
             </table>
         </div>
+        <nav class="mt-3" aria-label="Điều hướng bảng đơn giao hàng">
+            <ul class="pagination pagination-modern pagination-sm mb-0">
+                <li class="page-item disabled"><span class="page-link">Trước</span></li>
+                <li class="page-item active"><span class="page-link">1</span></li>
+                <li class="page-item disabled"><span class="page-link">Sau</span></li>
+            </ul>
+        </nav>
     </div>
-</main>
+        </main>
+    </div>
+</div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
