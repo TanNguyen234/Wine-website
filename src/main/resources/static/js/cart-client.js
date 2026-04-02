@@ -293,6 +293,7 @@
                 const requestBody = {
                     fullName: form.querySelector("#fullName")?.value || "",
                     phone: form.querySelector("#phone")?.value || "",
+                    email: form.querySelector("#email")?.value || "",
                     address: form.querySelector("#address")?.value || "",
                     note: form.querySelector("#note")?.value || "",
                     paymentMethod: form.querySelector("#paymentMethod")?.value || "",

@@ -1,6 +1,5 @@
 package com.strongwine.strongwine.controller;
 
-import com.strongwine.strongwine.entity.Order;
 import com.strongwine.strongwine.entity.Shipment;
 import com.strongwine.strongwine.entity.ShipmentStatus;
 import com.strongwine.strongwine.service.ShipmentService;
@@ -49,40 +48,6 @@ public class AdminShipmentController {
         model.addAttribute("filterStatus", status);
         model.addAttribute("filterKeyword", keyword);
         return "admin-shipments";
-    }
-
-    @GetMapping("/create")
-    public String showCreateForm(Model model) {
-        List<Order> eligibleOrders = shipmentService.getEligibleOrdersForShipment();
-        model.addAttribute("eligibleOrders", eligibleOrders);
-        model.addAttribute("shippers", shipperService.getActiveShippers());
-        model.addAttribute("statuses", ShipmentStatus.values());
-        return "admin-shipment-form";
-    }
-
-    @PostMapping("/create")
-    public String createShipment(@RequestParam Long orderId,
-                                 @RequestParam(required = false) Long shipperId,
-                                 @RequestParam(required = false) String shippingName,
-                                 @RequestParam(required = false) String shippingPhone,
-                                 @RequestParam(required = false) String shippingAddress,
-                                 Authentication authentication,
-                                 RedirectAttributes redirectAttributes) {
-        try {
-            Shipment shipment = shipmentService.createShipmentForAdmin(orderId, shipperId, shippingName, shippingPhone, shippingAddress);
-            String message = "Tạo đơn giao hàng thành công";
-            try {
-                shipmentService.sendOtpForShipment(shipment.getId(), authentication == null ? null : authentication.getName(), "ADMIN_CREATE");
-                message += " và đã gửi OTP qua email";
-            } catch (Exception mailEx) {
-                message += ". Cảnh báo email: " + mailEx.getMessage();
-            }
-            redirectAttributes.addFlashAttribute("success", message);
-            return "redirect:/admin/shipments";
-        } catch (Exception ex) {
-            redirectAttributes.addFlashAttribute("error", "Tạo đơn giao hàng thất bại: " + ex.getMessage());
-            return "redirect:/admin/shipments/create";
-        }
     }
 
     @GetMapping("/edit/{id}")

@@ -46,6 +46,9 @@ public class Order {
     @Column(name = "shipping_phone", length = 50)
     private String shippingPhone;
 
+    @Column(name = "shipping_email", length = 255)
+    private String shippingEmail;
+
     @Column(name = "shipping_address", length = 1000)
     private String shippingAddress;
 
@@ -149,6 +152,14 @@ public class Order {
 
     public void setShippingPhone(String shippingPhone) {
         this.shippingPhone = shippingPhone;
+    }
+
+    public String getShippingEmail() {
+        return shippingEmail;
+    }
+
+    public void setShippingEmail(String shippingEmail) {
+        this.shippingEmail = shippingEmail;
     }
 
     public String getShippingAddress() {

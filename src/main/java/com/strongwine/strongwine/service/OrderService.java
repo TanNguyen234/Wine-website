@@ -48,6 +48,9 @@ public class OrderService {
     @Autowired
     private ApplicationEventPublisher applicationEventPublisher;
 
+    @Autowired
+    private ShipmentService shipmentService;
+
     /**
      * Get all orders
      */
@@ -82,13 +85,14 @@ public class OrderService {
      * @param cartItems Map of wineId -> quantity
      */
     public Order createOrder(Long userId, Map<Long, Integer> cartItems) {
-        return createPendingOrder(userId, cartItems, null, null, null, null, null, null, PaymentMethod.STRIPE.name());
+        return createPendingOrder(userId, cartItems, null, null, null, null, null, null, null, PaymentMethod.STRIPE.name());
     }
 
     public Order createPendingOrder(Long userId,
                                     Map<Long, Integer> cartItems,
                                     String fullName,
                                     String phone,
+                                    String email,
                                     String address,
                                     Double deliveryLat,
                                     Double deliveryLng,
@@ -104,6 +108,7 @@ public class OrderService {
         order.setPaymentMethod(parsePaymentMethod(paymentMethod));
         order.setShippingFullName(fullName);
         order.setShippingPhone(phone);
+        order.setShippingEmail(email);
         order.setShippingAddress(address);
         order.setShippingLatitude(deliveryLat);
         order.setShippingLongitude(deliveryLng);
@@ -182,6 +187,10 @@ public class OrderService {
         order.setUpdatedAt(LocalDateTime.now());
         orderRepository.save(order);
         inventoryService.confirmOrderPayment(order);
+
+        // Ensure shipment exists in the same paid-order transaction.
+        shipmentService.ensureShipmentForPaidOrder(order);
+
         applicationEventPublisher.publishEvent(new OrderPaidEvent(order.getId(), paymentReference));
     }
 

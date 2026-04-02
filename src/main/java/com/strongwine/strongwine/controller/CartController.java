@@ -27,6 +27,7 @@ import com.strongwine.strongwine.util.AddressTextUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import java.util.*;
+import java.util.regex.Pattern;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 
@@ -42,6 +43,7 @@ public class CartController {
     private static final String CHECKOUT_TOKEN_SESSION_KEY = "checkout:token";
     private static final List<String> SUPPORTED_PAYMENT_METHODS = List.of("STRIPE");
     private static final Set<String> ALLOWED_PAYMENT_METHODS = Set.copyOf(SUPPORTED_PAYMENT_METHODS);
+    private static final Pattern EMAIL_PATTERN = Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$");
     
     @Autowired
     private CartService cartService;
@@ -89,7 +91,9 @@ public class CartController {
             return "redirect:/login";
         }
         
-        model.addAttribute("checkoutForm", new CheckoutForm());
+        CheckoutForm checkoutForm = new CheckoutForm();
+        userRepository.findById(userId).ifPresent(user -> checkoutForm.setEmail(user.getEmail()));
+        model.addAttribute("checkoutForm", checkoutForm);
         model.addAttribute("paymentMethods", SUPPORTED_PAYMENT_METHODS);
 
         String checkoutToken = UUID.randomUUID().toString();
@@ -135,6 +139,17 @@ public class CartController {
 
         if (!checkoutRequest.getPhone().matches("^(0|\\+84)[0-9]{9,10}$")) {
             return badRequest("Số điện thoại không hợp lệ");
+        }
+
+        if (checkoutRequest.getEmail() == null || checkoutRequest.getEmail().trim().isEmpty()) {
+            return badRequest("Vui lòng nhập email nhận OTP giao hàng");
+        }
+
+        String normalizedEmail;
+        try {
+            normalizedEmail = normalizeEmail(checkoutRequest.getEmail());
+        } catch (IllegalArgumentException ex) {
+            return badRequest(ex.getMessage());
         }
         
         if (checkoutRequest.getAddress() == null || checkoutRequest.getAddress().trim().isEmpty()) {
@@ -183,6 +198,7 @@ public class CartController {
                     itemsMap,
                     checkoutRequest.getFullName(),
                     checkoutRequest.getPhone(),
+                    normalizedEmail,
                     normalizedAddress,
                     checkoutRequest.getDeliveryLat(),
                     checkoutRequest.getDeliveryLng(),
@@ -230,6 +246,17 @@ public class CartController {
             return normalizedAddress;
         }
         return normalizedAddress.substring(0, 1000);
+    }
+
+    private String normalizeEmail(String email) {
+        String normalizedEmail = email == null ? "" : email.trim().toLowerCase();
+        if (normalizedEmail.isBlank()) {
+            throw new IllegalArgumentException("Vui lòng nhập email nhận OTP giao hàng");
+        }
+        if (!EMAIL_PATTERN.matcher(normalizedEmail).matches()) {
+            throw new IllegalArgumentException("Email không hợp lệ");
+        }
+        return normalizedEmail;
     }
     
 }

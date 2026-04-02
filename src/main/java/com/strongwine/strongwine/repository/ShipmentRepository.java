@@ -21,6 +21,14 @@ public interface ShipmentRepository extends JpaRepository<Shipment, Long> {
     @Query("""
         SELECT s
         FROM Shipment s
+        JOIN FETCH s.order o
+        WHERE o.id IN :orderIds
+        """)
+    List<Shipment> findByOrderIdIn(@Param("orderIds") List<Long> orderIds);
+
+    @Query("""
+        SELECT s
+        FROM Shipment s
         LEFT JOIN FETCH s.shipper sh
         LEFT JOIN FETCH sh.user
         JOIN FETCH s.order o
@@ -51,4 +59,6 @@ public interface ShipmentRepository extends JpaRepository<Shipment, Long> {
     Optional<Shipment> findFirstByStatusOrderByCreatedAtAsc(ShipmentStatus status);
 
     boolean existsByShipperIdAndStatusIn(Long shipperId, List<ShipmentStatus> statuses);
+
+    long countByShipperIdAndStatusIn(Long shipperId, List<ShipmentStatus> statuses);
 }

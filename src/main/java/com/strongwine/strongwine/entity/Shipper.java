@@ -30,6 +30,24 @@ public class Shipper {
     @Column(name = "is_available", nullable = false)
     private Boolean isAvailable = false;
 
+    @Column(name = "current_latitude")
+    private Double currentLatitude;
+
+    @Column(name = "current_longitude")
+    private Double currentLongitude;
+
+    @Column(name = "location_updated_at")
+    private LocalDateTime locationUpdatedAt;
+
+    @Column(name = "max_concurrent_shipments", nullable = false)
+    private Integer maxConcurrentShipments = 1;
+
+    @Column(name = "active_shipment_count", nullable = false)
+    private Integer activeShipmentCount = 0;
+
+    @Column(name = "last_assignment_at")
+    private LocalDateTime lastAssignmentAt;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
@@ -50,6 +68,18 @@ public class Shipper {
     public void setStatus(ShipperStatus status) { this.status = status; }
     public Boolean getIsAvailable() { return isAvailable; }
     public void setIsAvailable(Boolean available) { isAvailable = available; }
+    public Double getCurrentLatitude() { return currentLatitude; }
+    public void setCurrentLatitude(Double currentLatitude) { this.currentLatitude = currentLatitude; }
+    public Double getCurrentLongitude() { return currentLongitude; }
+    public void setCurrentLongitude(Double currentLongitude) { this.currentLongitude = currentLongitude; }
+    public LocalDateTime getLocationUpdatedAt() { return locationUpdatedAt; }
+    public void setLocationUpdatedAt(LocalDateTime locationUpdatedAt) { this.locationUpdatedAt = locationUpdatedAt; }
+    public Integer getMaxConcurrentShipments() { return maxConcurrentShipments; }
+    public void setMaxConcurrentShipments(Integer maxConcurrentShipments) { this.maxConcurrentShipments = maxConcurrentShipments; }
+    public Integer getActiveShipmentCount() { return activeShipmentCount; }
+    public void setActiveShipmentCount(Integer activeShipmentCount) { this.activeShipmentCount = activeShipmentCount; }
+    public LocalDateTime getLastAssignmentAt() { return lastAssignmentAt; }
+    public void setLastAssignmentAt(LocalDateTime lastAssignmentAt) { this.lastAssignmentAt = lastAssignmentAt; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }

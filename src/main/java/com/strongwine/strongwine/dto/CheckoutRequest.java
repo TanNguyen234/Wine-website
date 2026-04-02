@@ -5,6 +5,7 @@ import java.util.List;
 public class CheckoutRequest {
     private String fullName;
     private String phone;
+    private String email;
     private String address;
     private String note;
     private String paymentMethod;
@@ -27,6 +28,14 @@ public class CheckoutRequest {
 
     public void setPhone(String phone) {
         this.phone = phone;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     public String getAddress() {

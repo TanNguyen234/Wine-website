@@ -23,7 +23,7 @@ public class OrderPaidShipmentListener {
         try {
             shipmentService.handleOrderPaidEvent(event.orderId(), event.paymentReference());
         } catch (Exception ex) {
-            log.warn("OrderPaid event failed for order {}: {}", event.orderId(), ex.getMessage());
+            log.error("OrderPaid event failed for order {}", event.orderId(), ex);
         }
     }
 }

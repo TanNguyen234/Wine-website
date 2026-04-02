@@ -111,21 +111,22 @@ public class PaymentService {
         saveTransaction(payment, "STRIPE_SESSION", "FAILED", errorMessage);
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public PaymentCallbackResult validateStripeSuccessRedirect(String stripeSessionId, Long userId) {
         try {
             Session session = stripeService.retrieveSession(stripeSessionId);
-            Payment payment = resolveAndValidatePayment(session, false, false, false);
+            Payment payment = resolveAndValidatePayment(session, true, true, true);
 
             if (payment.getOrder().getUser() == null || !Objects.equals(payment.getOrder().getUser().getId(), userId)) {
                 return new PaymentCallbackResult(false, "Không thể truy cập đơn hàng thanh toán", null);
             }
 
-            if (payment.getStatus() == PaymentStatus.SUCCESS) {
-                return new PaymentCallbackResult(true, "Thanh toán đã được xác nhận", payment.getOrder().getId());
+            boolean finalizedNow = finalizeSuccessfulPayment(payment, "STRIPE_SUCCESS_REDIRECT", session.getId());
+            if (finalizedNow) {
+                return new PaymentCallbackResult(true, "Thanh toán thành công", payment.getOrder().getId());
             }
 
-            return new PaymentCallbackResult(true, "Đã ghi nhận thanh toán, đang chờ xác nhận webhook", payment.getOrder().getId());
+            return new PaymentCallbackResult(true, "Thanh toán đã được xác nhận", payment.getOrder().getId());
         } catch (Exception ex) {
             return new PaymentCallbackResult(false, "Xác thực Stripe thất bại: " + ex.getMessage(), null);
         }
@@ -214,21 +215,27 @@ public class PaymentService {
     }
 
     private void processCompletedWebhook(Payment payment, Session session, String eventId) {
-        if (payment.getStatus() == PaymentStatus.SUCCESS) {
-            saveTransaction(payment, "STRIPE_WEBHOOK_PROCESS", "SKIPPED", "ALREADY_SUCCESS:" + eventId);
-            return;
-        }
-
         if (!"paid".equalsIgnoreCase(session.getPaymentStatus())) {
             throw new IllegalStateException("Stripe session chưa ở trạng thái paid");
+        }
+
+        finalizeSuccessfulPayment(payment, "STRIPE_WEBHOOK_PROCESS", eventId);
+    }
+
+    private boolean finalizeSuccessfulPayment(Payment payment, String transactionType, String payload) {
+        if (payment.getStatus() == PaymentStatus.SUCCESS) {
+            saveTransaction(payment, transactionType, "SKIPPED", "ALREADY_SUCCESS:" + payload);
+            orderService.markOrderPaid(payment.getOrder().getId(), payment.getPaymentReference());
+            return false;
         }
 
         payment.setStatus(PaymentStatus.SUCCESS);
         payment.setGatewayResponse("STRIPE_PAYMENT_SUCCESS");
         payment.setUpdatedAt(LocalDateTime.now());
         paymentRepository.save(payment);
-        saveTransaction(payment, "STRIPE_WEBHOOK_PROCESS", "SUCCESS", eventId);
+        saveTransaction(payment, transactionType, "SUCCESS", payload);
         orderService.markOrderPaid(payment.getOrder().getId(), payment.getPaymentReference());
+        return true;
     }
 
     private void processFailedWebhook(Payment payment, String eventType, String eventId) {

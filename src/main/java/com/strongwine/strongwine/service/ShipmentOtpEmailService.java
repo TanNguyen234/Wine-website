@@ -93,6 +93,11 @@ public class ShipmentOtpEmailService {
             throw new InvalidOtpRecipientException("Đơn giao hàng chưa liên kết với đơn hàng");
         }
 
+        String shippingEmail = shipment.getShippingEmail();
+        if (shippingEmail != null && !shippingEmail.isBlank() && EMAIL_PATTERN.matcher(shippingEmail.trim()).matches()) {
+            return shippingEmail.trim();
+        }
+
         User user = order.getUser();
         String userEmail = user == null ? null : user.getEmail();
         if (userEmail != null && !userEmail.isBlank() && EMAIL_PATTERN.matcher(userEmail.trim()).matches()) {

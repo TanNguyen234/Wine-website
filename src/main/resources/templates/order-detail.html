@@ -35,10 +35,19 @@
 </nav>
 
 <main class="container site-main my-4" th:if="${order != null}">
+    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
     <div class="panel p-4 mb-3 fade-up">
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
             <h1 class="h5 mb-0" th:text="${'Đơn hàng #' + order.id}"></h1>
-            <a class="btn btn-sm btn-outline-secondary" href="/orders">Quay lại danh sách</a>
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <form th:if="${order.paymentStatus != T(com.strongwine.strongwine.entity.PaymentStatus).SUCCESS and order.status != T(com.strongwine.strongwine.entity.OrderStatus).CANCELLED}"
+                      th:action="@{/orders/{id}/pay(id=${order.id})}" method="post" class="d-inline">
+                    <button type="submit" class="btn btn-sm btn-dark">Thanh toán ngay</button>
+                </form>
+                <a class="btn btn-sm btn-outline-secondary" href="/orders">Quay lại danh sách</a>
+            </div>
         </div>
         <hr>
         <div class="row g-3">
@@ -53,6 +62,13 @@
             <div class="col-md-4">
                 <div class="small text-muted">Trạng thái đơn</div>
                 <span class="badge text-bg-secondary" th:text="${@enumDisplayService.orderStatus(order.status)}"></span>
+            </div>
+            <div class="col-md-4">
+                <div class="small text-muted">Trạng thái giao hàng</div>
+                <span class="badge text-bg-primary" th:if="${shipment != null}"
+                      th:text="${@enumDisplayService.shipmentStatus(shipment.status)}"></span>
+                <span class="text-muted" th:if="${shipment == null}"
+                      th:text="${order.paymentStatus == T(com.strongwine.strongwine.entity.PaymentStatus).SUCCESS ? 'Đang tạo đơn giao hàng' : 'Chưa tạo đơn giao hàng'}"></span>
             </div>
             <div class="col-md-4">
                 <div class="small text-muted">Người nhận</div>

@@ -27,6 +27,8 @@ public interface ShipperRepository extends JpaRepository<Shipper, Long> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     Optional<Shipper> findFirstByStatusAndIsAvailableTrueOrderByIdAsc(ShipperStatus status);
 
+    List<Shipper> findByStatusOrderByIdAsc(ShipperStatus status);
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT s FROM Shipper s WHERE s.id = :shipperId")
     Optional<Shipper> findByIdForUpdate(@Param("shipperId") Long shipperId);

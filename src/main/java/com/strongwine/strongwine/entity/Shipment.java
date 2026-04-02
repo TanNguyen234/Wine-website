@@ -31,6 +31,9 @@ public class Shipment {
     @Column(name = "shipping_phone", length = 50)
     private String shippingPhone;
 
+    @Column(name = "shipping_email", length = 255)
+    private String shippingEmail;
+
     @Column(name = "shipping_address", length = 1000)
     private String shippingAddress;
 
@@ -79,6 +82,39 @@ public class Shipment {
 
     @Column(name = "failure_note", length = 500)
     private String failureNote;
+
+    @Column(name = "failure_code", length = 50)
+    private String failureCode;
+
+    @Column(name = "status_reason", length = 500)
+    private String statusReason;
+
+    @Column(name = "estimated_delivery_at")
+    private LocalDateTime estimatedDeliveryAt;
+
+    @Column(name = "promised_window_start")
+    private LocalDateTime promisedWindowStart;
+
+    @Column(name = "promised_window_end")
+    private LocalDateTime promisedWindowEnd;
+
+    @Column(name = "delivery_attempt_count", nullable = false)
+    private Integer deliveryAttemptCount = 0;
+
+    @Column(name = "last_delivery_attempt_at")
+    private LocalDateTime lastDeliveryAttemptAt;
+
+    @Column(name = "next_attempt_at")
+    private LocalDateTime nextAttemptAt;
+
+    @Column(name = "assigned_at")
+    private LocalDateTime assignedAt;
+
+    @Column(name = "failed_at")
+    private LocalDateTime failedAt;
+
+    @Column(name = "returned_at")
+    private LocalDateTime returnedAt;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
@@ -153,6 +189,14 @@ public class Shipment {
 
     public void setShippingPhone(String shippingPhone) {
         this.shippingPhone = shippingPhone;
+    }
+
+    public String getShippingEmail() {
+        return shippingEmail;
+    }
+
+    public void setShippingEmail(String shippingEmail) {
+        this.shippingEmail = shippingEmail;
     }
 
     public String getShippingAddress() {
@@ -285,6 +329,94 @@ public class Shipment {
 
     public void setFailureNote(String failureNote) {
         this.failureNote = failureNote;
+    }
+
+    public String getFailureCode() {
+        return failureCode;
+    }
+
+    public void setFailureCode(String failureCode) {
+        this.failureCode = failureCode;
+    }
+
+    public String getStatusReason() {
+        return statusReason;
+    }
+
+    public void setStatusReason(String statusReason) {
+        this.statusReason = statusReason;
+    }
+
+    public LocalDateTime getEstimatedDeliveryAt() {
+        return estimatedDeliveryAt;
+    }
+
+    public void setEstimatedDeliveryAt(LocalDateTime estimatedDeliveryAt) {
+        this.estimatedDeliveryAt = estimatedDeliveryAt;
+    }
+
+    public LocalDateTime getPromisedWindowStart() {
+        return promisedWindowStart;
+    }
+
+    public void setPromisedWindowStart(LocalDateTime promisedWindowStart) {
+        this.promisedWindowStart = promisedWindowStart;
+    }
+
+    public LocalDateTime getPromisedWindowEnd() {
+        return promisedWindowEnd;
+    }
+
+    public void setPromisedWindowEnd(LocalDateTime promisedWindowEnd) {
+        this.promisedWindowEnd = promisedWindowEnd;
+    }
+
+    public Integer getDeliveryAttemptCount() {
+        return deliveryAttemptCount;
+    }
+
+    public void setDeliveryAttemptCount(Integer deliveryAttemptCount) {
+        this.deliveryAttemptCount = deliveryAttemptCount;
+    }
+
+    public LocalDateTime getLastDeliveryAttemptAt() {
+        return lastDeliveryAttemptAt;
+    }
+
+    public void setLastDeliveryAttemptAt(LocalDateTime lastDeliveryAttemptAt) {
+        this.lastDeliveryAttemptAt = lastDeliveryAttemptAt;
+    }
+
+    public LocalDateTime getNextAttemptAt() {
+        return nextAttemptAt;
+    }
+
+    public void setNextAttemptAt(LocalDateTime nextAttemptAt) {
+        this.nextAttemptAt = nextAttemptAt;
+    }
+
+    public LocalDateTime getAssignedAt() {
+        return assignedAt;
+    }
+
+    public void setAssignedAt(LocalDateTime assignedAt) {
+        this.assignedAt = assignedAt;
+    }
+
+    public LocalDateTime getFailedAt() {
+        return failedAt;
+    }
+
+    public void setFailedAt(LocalDateTime failedAt) {
+        this.failedAt = failedAt;
+    }
+
+    public LocalDateTime getReturnedAt() {
+        return returnedAt;
+    }
+
+    public void setReturnedAt(LocalDateTime returnedAt) {
+        this.returnedAt = returnedAt;
     }
 
     public LocalDateTime getCreatedAt() {

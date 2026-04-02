@@ -59,6 +59,11 @@
                                 <input type="tel" class="form-control" id="phone" name="phone" th:field="*{phone}" required>
                             </div>
                             <div class="mb-3">
+                                <label for="email" class="form-label">Email nhận OTP giao hàng <span class="text-danger">*</span></label>
+                                <input type="email" class="form-control" id="email" name="email" th:field="*{email}" required>
+                                <div class="form-text">Mã OTP giao hàng sẽ được gửi tới email này.</div>
+                            </div>
+                            <div class="mb-3">
                                 <label for="address" class="form-label">Địa chỉ <span class="text-danger">*</span></label>
                                 <textarea class="form-control" id="address" name="address" th:field="*{address}" rows="3" required></textarea>
                             </div>
