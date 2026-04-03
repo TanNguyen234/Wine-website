@@ -21,10 +21,19 @@ public interface ShipmentRepository extends JpaRepository<Shipment, Long> {
     @Query("""
         SELECT s
         FROM Shipment s
+        LEFT JOIN FETCH s.shipper
+        WHERE s.order.id = :orderId
+        """)
+    Optional<Shipment> findByOrderIdWithShipper(@Param("orderId") Long orderId);
+
+    @Query("""
+        SELECT s
+        FROM Shipment s
+        LEFT JOIN FETCH s.shipper
         JOIN FETCH s.order o
         WHERE o.id IN :orderIds
         """)
-    List<Shipment> findByOrderIdIn(@Param("orderIds") List<Long> orderIds);
+    List<Shipment> findByOrderIdInWithShipper(@Param("orderIds") List<Long> orderIds);
 
     @Query("""
         SELECT s

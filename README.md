@@ -83,19 +83,29 @@ A complete Java Spring Boot web application for selling wines online with full C
    - Home page: `http://localhost:8080/home`
    - Admin dashboard: `http://localhost:8080/admin` (requires admin login)
 
-### Default Users
+### Default Accounts (By Role)
 
 The application automatically creates default users on startup:
 
-- **Admin**: 
-  - Username: `admin`
-  - Password: `admin123`
-  - Role: ADMIN
+- **ADMIN**
+   - Username: `admin`
+   - Password: `admin123`
 
-- **Test User**:
-  - Username: `user1`
-  - Password: `password`
-  - Role: USER
+- **USER**
+   - Username: `demo`
+   - Password: `demo123`
+
+- **SHIPPER**
+   - Username: `shipper1`
+   - Password: `shipper123`
+
+> Note: Another shipper account may also be available (`shipper2` / `shipper123`) for delivery testing.
+
+### Shipper Screen Access Rule
+
+- Route prefix `/shipper/**` is restricted to role `SHIPPER` only.
+- `ADMIN` cannot access shipper screens.
+- Shipper users are redirected to `/shipper/dashboard` after login to view and process their assigned shipments.
 
 ## Payment Testing
 

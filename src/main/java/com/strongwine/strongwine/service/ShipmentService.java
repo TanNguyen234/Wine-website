@@ -226,7 +226,7 @@ public class ShipmentService {
         if (orderId == null) {
             return Optional.empty();
         }
-        return shipmentRepository.findByOrderId(orderId);
+        return shipmentRepository.findByOrderIdWithShipper(orderId);
     }
 
     @Transactional(readOnly = true)
@@ -236,7 +236,7 @@ public class ShipmentService {
         }
 
         Map<Long, Shipment> shipmentByOrderId = new LinkedHashMap<>();
-        for (Shipment shipment : shipmentRepository.findByOrderIdIn(orderIds)) {
+        for (Shipment shipment : shipmentRepository.findByOrderIdInWithShipper(orderIds)) {
             if (shipment.getOrder() != null && shipment.getOrder().getId() != null) {
                 shipmentByOrderId.put(shipment.getOrder().getId(), shipment);
             }
@@ -1023,8 +1023,8 @@ public class ShipmentService {
     }
 
     private void validateOtpBeforeCompletion(Shipment shipment, String otp, LocalDateTime now) {
-        String normalizedOtp = otp == null ? "" : otp.trim();
-        if (!normalizedOtp.matches("^\\d{6}$")) {
+        String normalizedOtp = normalizeOtp(otp);
+        if (normalizedOtp.length() != 6) {
             throw new IllegalArgumentException("OTP phải gồm đúng 6 chữ số");
         }
 
@@ -1041,7 +1041,8 @@ public class ShipmentService {
             throw new IllegalStateException("OTP user binding không hợp lệ");
         }
 
-        if (shipment.getOtpCode() == null || !shipment.getOtpCode().equals(normalizedOtp)) {
+        String storedOtp = normalizeOtp(shipment.getOtpCode());
+        if (storedOtp.length() != 6 || !storedOtp.equals(normalizedOtp)) {
             registerFailedOtpAttempt(shipment, now);
             shipmentRepository.save(shipment);
             shipmentOtpAuditService.log(shipment, "OTP_VERIFY", "FAILED", "OTP_MISMATCH", null, null);
@@ -1176,6 +1177,13 @@ public class ShipmentService {
 
     private String generateOtp() {
         return String.format("%06d", OTP_RANDOM.nextInt(1_000_000));
+    }
+
+    private String normalizeOtp(String otp) {
+        if (otp == null) {
+            return "";
+        }
+        return otp.replaceAll("\\D", "");
     }
 }
 

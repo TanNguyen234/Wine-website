@@ -60,14 +60,20 @@
                     <td th:text="${#numbers.formatDecimal(order.totalPrice, 0, 'COMMA', 0, 'POINT') + ' đ'}"></td>
                     <td><span class="badge text-bg-info" th:text="${@enumDisplayService.paymentStatus(order.paymentStatus)}"></span></td>
                     <td><span class="badge text-bg-secondary" th:text="${@enumDisplayService.orderStatus(order.status)}"></span></td>
-                    <td>
+                      <td th:with="shipment=${shipmentByOrderId != null ? shipmentByOrderId[order.id] : null}">
                         <span class="badge text-bg-primary"
-                              th:if="${shipmentByOrderId != null and shipmentByOrderId[order.id] != null}"
-                              th:text="${@enumDisplayService.shipmentStatus(shipmentByOrderId[order.id].status)}"></span>
+                            th:if="${shipment != null}"
+                            th:text="${@enumDisplayService.shipmentStatus(shipment.status)}"></span>
+                        <div class="small mt-1"
+                             th:if="${shipment != null and shipment.shipper != null}"
+                             th:text="${'Shipper: ' + shipment.shipper.name}"></div>
                         <span class="text-muted small"
-                              th:if="${shipmentByOrderId == null or shipmentByOrderId[order.id] == null}"
-                              th:text="${order.paymentStatus == T(com.strongwine.strongwine.entity.PaymentStatus).SUCCESS ? 'Đang tạo đơn giao hàng' : 'Chưa tạo đơn giao hàng'}"></span>
-                    </td>
+                            th:if="${shipment != null and shipment.shipper == null}"
+                            th:text="'Chưa phân công shipper'"></span>
+                        <span class="text-muted small"
+                            th:if="${shipment == null}"
+                            th:text="${order.paymentStatus == T(com.strongwine.strongwine.entity.PaymentStatus).SUCCESS ? 'Đang tạo đơn giao hàng' : 'Chưa tạo đơn giao hàng'}"></span>
+                      </td>
                     <td>
                         <div class="d-flex flex-wrap gap-2">
                             <a class="btn btn-sm btn-outline-dark" th:href="@{/orders/{id}(id=${order.id})}">Xem chi tiết</a>

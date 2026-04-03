@@ -14,6 +14,7 @@
         <a class="navbar-brand d-flex align-items-center gap-2" href="/home"><span class="brand-logo"><i class="fa-solid fa-wine-glass"></i></span><span class="fw-semibold">StrongWine</span></a>
         <div class="ms-auto d-flex gap-3 align-items-center">
             <a class="nav-link text-white" href="/wines">Sản phẩm</a>
+            <a class="nav-link text-white" sec:authorize="isAuthenticated()" href="/orders">Đơn hàng của tôi</a>
             <a class="nav-link text-white" href="/cart"><i class="fa-solid fa-cart-shopping"></i> <span class="badge text-bg-light text-dark js-cart-count" th:text="${cartCount}">0</span></a>
         </div>
     </div>

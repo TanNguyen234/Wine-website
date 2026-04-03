@@ -69,6 +69,9 @@
                       th:text="${@enumDisplayService.shipmentStatus(shipment.status)}"></span>
                 <span class="text-muted" th:if="${shipment == null}"
                       th:text="${order.paymentStatus == T(com.strongwine.strongwine.entity.PaymentStatus).SUCCESS ? 'Đang tạo đơn giao hàng' : 'Chưa tạo đơn giao hàng'}"></span>
+                <div class="small text-muted mt-2" th:if="${shipment != null}">Shipper</div>
+                <div th:if="${shipment != null and shipment.shipper != null}" th:text="${shipment.shipper.name}"></div>
+                <span class="text-muted small" th:if="${shipment != null and shipment.shipper == null}">Chưa phân công shipper</span>
             </div>
             <div class="col-md-4">
                 <div class="small text-muted">Người nhận</div>

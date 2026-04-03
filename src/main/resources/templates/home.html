@@ -20,6 +20,7 @@
             <ul class="navbar-nav me-auto ms-lg-4">
                 <li class="nav-item"><a class="nav-link active" href="/home">Trang chủ</a></li>
                 <li class="nav-item"><a class="nav-link" href="/wines">Sản phẩm</a></li>
+                <li class="nav-item" sec:authorize="isAuthenticated()"><a class="nav-link" href="/orders">Đơn hàng của tôi</a></li>
             </ul>
             <form class="d-flex me-3" action="/wines" method="get">
                 <input class="form-control form-control-sm" type="search" name="name" placeholder="Tìm kiếm rượu vang...">

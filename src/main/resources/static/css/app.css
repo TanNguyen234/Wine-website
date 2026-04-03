@@ -127,13 +127,17 @@ h6,
 .media-cover-lg {
     width: 100%;
     height: 280px;
-    object-fit: cover;
+    object-fit: contain;
+    object-position: center;
+    background: #f5f1ea;
 }
 
 .media-cover-xl {
     width: 100%;
-    height: 520px;
-    object-fit: cover;
+    height: 460px;
+    object-fit: contain;
+    object-position: center;
+    background: #f5f1ea;
 }
 
 .media-placeholder-lg,
@@ -560,7 +564,7 @@ h6,
 
     .media-cover-xl,
     .media-placeholder-xl {
-        height: 340px;
+        height: 300px;
     }
 
     .site-main {
