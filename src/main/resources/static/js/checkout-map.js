@@ -1,5 +1,4 @@
 (function () {
-    const VIETNAM_BORDER_GEOJSON_URL = "https://raw.githubusercontent.com/johan/world.geo.json/master/countries/VNM.geo.json";
     const NOMINATIM_SEARCH_URL = "https://nominatim.openstreetmap.org/search";
     const NOMINATIM_REVERSE_URL = "https://nominatim.openstreetmap.org/reverse";
 
@@ -67,48 +66,16 @@
         }
 
         const vietnamCenter = [16.2, 106.1];
-        const maxBounds = [[8.1, 101.9], [23.8, 109.9]];
 
         const map = L.map(mapEl, {
             minZoom: 5,
-            maxZoom: 18,
-            maxBounds,
-            maxBoundsViscosity: 1.0
+            maxZoom: 18
         }).setView(vietnamCenter, 6);
 
         L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
             maxZoom: 18,
             attribution: "&copy; OpenStreetMap contributors"
         }).addTo(map);
-
-        const mainlandPolygon = L.polygon(MAINLAND_VIETNAM_POLYGON, {
-            color: "#14532d",
-            weight: 2,
-            fillOpacity: 0.08
-        }).addTo(map);
-
-        fetch(VIETNAM_BORDER_GEOJSON_URL)
-            .then(function (response) {
-                if (!response.ok) {
-                    throw new Error("Không thể tải đường biên giới Việt Nam");
-                }
-                return response.json();
-            })
-            .then(function (geojson) {
-                L.geoJSON(geojson, {
-                    style: {
-                        color: "#166534",
-                        weight: 2,
-                        fillColor: "#86efac",
-                        fillOpacity: 0.05
-                    }
-                }).addTo(map);
-            })
-            .catch(function () {
-                // Keep fallback polygon when external border source is unavailable.
-            });
-
-        map.fitBounds(mainlandPolygon.getBounds(), { padding: [16, 16] });
 
         let marker = null;
         let isBusy = false;
@@ -180,8 +147,7 @@
 
             const url = NOMINATIM_SEARCH_URL
                 + "?format=jsonv2"
-                + "&q=" + encodeURIComponent(trimmed + ", Vietnam")
-                + "&countrycodes=vn"
+                + "&q=" + encodeURIComponent(trimmed)
                 + "&limit=5"
                 + "&addressdetails=1"
                 + "&accept-language=vi";
@@ -272,7 +238,7 @@
             setSearchResultText("Đang tìm địa điểm...", false);
             searchLocationByName(keyword).then(function (items) {
                 if (!items.length) {
-                    setSearchResultText("Không tìm thấy địa điểm phù hợp ở Việt Nam", true);
+                    setSearchResultText("Không tìm thấy địa điểm phù hợp", true);
                     return;
                 }
 

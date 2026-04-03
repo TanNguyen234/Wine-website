@@ -55,7 +55,6 @@ public class AdminShipmentController {
         try {
             Shipment shipment = shipmentService.getShipmentByIdForAdmin(id);
             model.addAttribute("editingShipment", shipment);
-            model.addAttribute("shippers", shipperService.getAllShippersForSelection());
             model.addAttribute("statuses", ShipmentStatus.values());
             model.addAttribute("canDelete", shipment.getStatus() == ShipmentStatus.PENDING_ASSIGNMENT);
             return "admin-shipment-form";
@@ -67,7 +66,6 @@ public class AdminShipmentController {
 
     @PostMapping("/edit/{id}")
     public String updateShipment(@PathVariable Long id,
-                                 @RequestParam(required = false) Long shipperId,
                                  @RequestParam String shippingName,
                                  @RequestParam String shippingPhone,
                                  @RequestParam String shippingAddress,
@@ -76,7 +74,7 @@ public class AdminShipmentController {
                                  Authentication authentication,
                                  RedirectAttributes redirectAttributes) {
         try {
-            shipmentService.updateShipmentForAdmin(id, shipperId, shippingName, shippingPhone, shippingAddress, status, failureNote,
+            shipmentService.updateShipmentForAdmin(id, shippingName, shippingPhone, shippingAddress, status, failureNote,
                     authentication == null ? null : authentication.getName());
             redirectAttributes.addFlashAttribute("success", "Cập nhật đơn giao hàng thành công");
             return "redirect:/admin/shipments";
@@ -84,19 +82,6 @@ public class AdminShipmentController {
             redirectAttributes.addFlashAttribute("error", "Cập nhật đơn giao hàng thất bại: " + ex.getMessage());
             return "redirect:/admin/shipments/edit/" + id;
         }
-    }
-
-    @PostMapping("/{id}/assign")
-    public String assignShipper(@PathVariable Long id,
-                                @RequestParam Long shipperId,
-                                RedirectAttributes redirectAttributes) {
-        try {
-            shipmentService.assignShipperByAdmin(id, shipperId);
-            redirectAttributes.addFlashAttribute("success", "Đã gán shipper cho đơn giao hàng");
-        } catch (Exception ex) {
-            redirectAttributes.addFlashAttribute("error", "Gán shipper thất bại: " + ex.getMessage());
-        }
-        return "redirect:/admin/shipments";
     }
 
     @PostMapping("/{id}/status")

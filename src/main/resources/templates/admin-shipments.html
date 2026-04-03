@@ -165,15 +165,6 @@
                         <div class="d-flex flex-column gap-1 action-stack">
                             <a class="btn btn-sm btn-outline-dark" th:href="@{/admin/shipments/edit/{id}(id=${s.id})}">Sửa</a>
 
-                            <form th:if="${s.status.name() == 'PENDING_ASSIGNMENT' or s.status.name() == 'ASSIGNED'}"
-                                  th:action="@{/admin/shipments/{id}/assign(id=${s.id})}" method="post" class="d-flex gap-1">
-                                <select class="form-select form-select-sm" name="shipperId" required>
-                                    <option value="" disabled selected>Gán người giao hàng</option>
-                                    <option th:each="sp : ${shippers}" th:value="${sp.id}" th:text="${sp.name}"></option>
-                                </select>
-                                <button class="btn btn-sm btn-outline-primary" type="submit">Gán</button>
-                            </form>
-
                             <form th:if="${s.status.name() == 'ASSIGNED'}" th:action="@{/admin/shipments/{id}/status(id=${s.id})}" method="post">
                                 <input type="hidden" name="targetStatus" value="PICKED_UP">
                                 <button class="btn btn-sm btn-outline-warning w-100" type="submit">Đánh dấu đã lấy hàng</button>

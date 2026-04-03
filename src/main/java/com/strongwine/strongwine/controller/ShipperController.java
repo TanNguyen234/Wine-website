@@ -10,7 +10,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 @RequestMapping("/shipper")
-@PreAuthorize("hasAnyRole('SHIPPER','ADMIN')")
+@PreAuthorize("hasRole('SHIPPER')")
 public class ShipperController {
 
     private final ShipmentService shipmentService;

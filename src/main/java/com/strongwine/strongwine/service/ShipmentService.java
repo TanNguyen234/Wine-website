@@ -183,7 +183,7 @@ public class ShipmentService {
         try {
             return availableShipper
                     .map(shipper -> createShipmentForOrderWithAssignedShipper(order, shipper, false))
-                    .orElseGet(() -> createShipmentForOrderWithoutShipper(order, false));
+                    .orElseGet(() -> createShipmentForOrderWithoutShipper(order, true));
         } catch (DataIntegrityViolationException ex) {
             return shipmentRepository.findByOrderId(order.getId())
                     .orElseThrow(() -> ex);
@@ -215,10 +215,6 @@ public class ShipmentService {
     public List<Shipment> getMyShipments(String username) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy người dùng: " + username));
-
-        if ("ADMIN".equalsIgnoreCase(user.getRole())) {
-            return shipmentRepository.findAllForAdminOrderByCreatedAtDesc();
-        }
 
         Shipper shipper = shipperRepository.findByUserId(user.getId())
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hồ sơ shipper cho tài khoản: " + username));
@@ -337,17 +333,15 @@ public class ShipmentService {
     }
 
     public Shipment updateShipmentForAdmin(Long shipmentId,
-                                           Long shipperId,
                                            String shippingName,
                                            String shippingPhone,
                                            String shippingAddress,
                                            ShipmentStatus targetStatus,
                                            String failureNote) {
-        return updateShipmentForAdmin(shipmentId, shipperId, shippingName, shippingPhone, shippingAddress, targetStatus, failureNote, null);
+        return updateShipmentForAdmin(shipmentId, shippingName, shippingPhone, shippingAddress, targetStatus, failureNote, null);
     }
 
     public Shipment updateShipmentForAdmin(Long shipmentId,
-                                           Long shipperId,
                                            String shippingName,
                                            String shippingPhone,
                                            String shippingAddress,
@@ -362,13 +356,6 @@ public class ShipmentService {
         shipment.setShippingName(requireText(shippingName, "Vui lòng nhập tên người nhận"));
         shipment.setShippingPhone(requireText(shippingPhone, "Vui lòng nhập số điện thoại người nhận"));
         shipment.setShippingAddress(requireText(shippingAddress, "Vui lòng nhập địa chỉ người nhận"));
-
-        if (shipperId != null) {
-            shipment.setShipper(getActiveShipper(shipperId));
-            if (shipment.getStatus() == ShipmentStatus.PENDING_ASSIGNMENT) {
-                shipment.setStatus(ShipmentStatus.ASSIGNED);
-            }
-        }
 
         if (targetStatus != null && targetStatus != shipment.getStatus()) {
             if (targetStatus == ShipmentStatus.COMPLETED) {
@@ -396,26 +383,6 @@ public class ShipmentService {
                 targetStatus == ShipmentStatus.FAILED ? trimToNull(failureNote) : savedShipment.getStatusReason(),
                 "source=admin-edit",
                 actorUsername);
-        reconcileShipperAvailabilityAfterMutation(savedShipment, previousStatus, previousShipperId, true);
-        return savedShipment;
-    }
-
-    public Shipment assignShipperByAdmin(Long shipmentId, Long shipperId) {
-        Shipment shipment = shipmentRepository.findByIdForUpdate(shipmentId)
-                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đơn giao hàng: " + shipmentId));
-        if (shipment.getStatus() != ShipmentStatus.PENDING_ASSIGNMENT && shipment.getStatus() != ShipmentStatus.ASSIGNED) {
-            throw new IllegalStateException("Chỉ đơn ở trạng thái chờ phân công hoặc đã phân công mới được gán shipper");
-        }
-
-        Long previousShipperId = shipment.getShipper() == null ? null : shipment.getShipper().getId();
-        ShipmentStatus previousStatus = shipment.getStatus();
-        shipment.setShipper(getActiveShipper(shipperId));
-        shipment.setStatus(ShipmentStatus.ASSIGNED);
-        shipment.setAssignedAt(LocalDateTime.now());
-        shipment.setStatusReason("ADMIN_ASSIGN");
-        shipment.setUpdatedAt(LocalDateTime.now());
-        Shipment savedShipment = shipmentRepository.save(shipment);
-        recordStatusTransition(savedShipment, previousStatus, "ADMIN_ASSIGN", "source=admin-assign", null);
         reconcileShipperAvailabilityAfterMutation(savedShipment, previousStatus, previousShipperId, true);
         return savedShipment;
     }

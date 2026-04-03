@@ -31,6 +31,9 @@ public class SecurityConfig {
     @Autowired
     private JwtAuthenticationFilter jwtAuthenticationFilter;
 
+    @Autowired
+    private LoginSuccessHandler loginSuccessHandler;
+
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
         return authConfig.getAuthenticationManager();
@@ -53,12 +56,13 @@ public class SecurityConfig {
             .authorizeHttpRequests(authz -> authz
                 // Admin only pages
                 .requestMatchers("/admin/**", "/api/admin/**", "/wines/admin/**").hasRole("ADMIN")
-                // Shipper pages for SHIPPER and ADMIN
-                .requestMatchers("/shipper/**").hasAnyRole("SHIPPER", "ADMIN")
+                // Shipper pages for SHIPPER only
+                .requestMatchers("/shipper/**").hasRole("SHIPPER")
                 // Public pages
-                .requestMatchers("/", "/home", "/wines", "/wines/**", "/cart/**", "/register", "/login", "/css/**", "/js/**", "/images/**", "/uploads/**", "/payment/webhook").permitAll()
+                .requestMatchers("/", "/home", "/wines", "/wines/**", "/cart/**", "/register", "/login", "/forgot-password", "/reset-password", "/css/**", "/js/**", "/images/**", "/uploads/**", "/payment/webhook").permitAll()
                 // API Auth endpoint
                 .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("/api/assistant/**").permitAll()
                 // User pages (authenticated users)
                 .requestMatchers("/order-confirmation", "/orders/**", "/reviews/create").authenticated()
                 // REST API endpoints
@@ -72,7 +76,7 @@ public class SecurityConfig {
             )
             .formLogin(form -> form
                 .loginPage("/login")
-                .defaultSuccessUrl("/home", true)
+                .successHandler(loginSuccessHandler)
                 .failureUrl("/login?error=true")
                 .permitAll()
             )

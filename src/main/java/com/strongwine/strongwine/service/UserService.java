@@ -131,6 +131,18 @@ public class UserService {
         return userRepository.existsByUsername(username);
     }
 
+    public boolean emailExists(String email) {
+        String normalized = normalizeOptionalEmail(email);
+        return normalized != null && userRepository.existsByEmail(normalized);
+    }
+
+    public boolean isValidEmailFormat(String email) {
+        if (email == null || email.trim().isEmpty()) {
+            return false;
+        }
+        return EMAIL_PATTERN.matcher(email.trim().toLowerCase()).matches();
+    }
+
     private String normalizeRequired(String value, String message) {
         if (value == null || value.trim().isEmpty()) {
             throw new RuntimeException(message);

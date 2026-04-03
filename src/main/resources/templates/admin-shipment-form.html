@@ -27,7 +27,7 @@
         <header class="admin-topbar">
             <div>
                 <h1 class="h5 mb-0" th:text="${'Cập nhật đơn giao hàng #' + editingShipment.id}"></h1>
-                <small class="text-muted">Quản lý thông tin giao nhận, shipper và trạng thái</small>
+                <small class="text-muted">Quản lý thông tin giao nhận và trạng thái</small>
             </div>
             <div class="d-flex gap-2">
                 <a class="btn btn-sm btn-outline-secondary" href="/admin/shipments">Danh sách</a>
@@ -77,17 +77,7 @@
             </div>
 
             <div class="row g-3 mt-1">
-                <div class="col-md-6">
-                    <label class="form-label">Người giao hàng phụ trách</label>
-                    <select class="form-select" name="shipperId">
-                        <option value="">-- Chưa gán người giao --</option>
-                        <option th:each="sp : ${shippers}"
-                                th:value="${sp.id}"
-                                th:text="${sp.name + ' (' + sp.user.username + ')'}"
-                                th:selected="${editingShipment != null and editingShipment.shipper != null and editingShipment.shipper.id == sp.id}"></option>
-                    </select>
-                </div>
-                <div class="col-md-6">
+                <div class="col-md-12">
                     <label class="form-label">Trạng thái</label>
                     <select class="form-select" name="status" required>
                         <option th:each="st : ${statuses}"

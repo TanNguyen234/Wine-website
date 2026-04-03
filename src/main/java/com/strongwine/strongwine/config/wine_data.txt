@@ -1,0 +1,12 @@
+Sản phẩm: Seed Cabernet Reserve. Loại: Vang đỏ. Năm: 2020. Xuất xứ: Chile. Giá: 980,000 đ. Tồn kho: 78. Mô tả: Dòng vang đậm đà, phục vụ kiểm thử quản trị.
+Sản phẩm: Seed Sauvignon Blanc. Loại: Vang trắng. Năm: 2021. Xuất xứ: New Zealand. Giá: 760,000 đ. Tồn kho: 79. Mô tả: Thanh mát, dùng cho kiểm thử đặt hàng và shipment.
+Sản phẩm: Chateau Margaux. Loại: Vang đỏ. Năm: 2018. Xuất xứ: France (Pháp). Giá: 8,990,000 đ. Tồn kho: 70. Mô tả: Vang đỏ cao cấp danh tiếng vùng Bordeaux.
+Sản phẩm: Dom Perignon. Loại: Vang sủi. Năm: 2012. Xuất xứ: France (Pháp). Giá: 4,990,000 đ. Tồn kho: 60. Mô tả: Champagne cao cấp cho các dịp sang trọng.
+Sản phẩm: Sancerre Blanc. Loại: Vang trắng. Năm: 2020. Xuất xứ: France (Pháp). Giá: 790,000 đ. Tồn kho: 60. Mô tả: Vang trắng thanh mát với hương citrus cam chanh.
+Sản phẩm: Pinot Noir Reserve. Loại: Vang đỏ. Năm: 2019. Xuất xứ: USA (Mỹ). Giá: 1,150,000 đ. Tồn kho: 59. Mô tả: Hương vị cherry anh đào và kết cấu mềm mại.
+Sản phẩm: Prosecco DOCG. Loại: Vang sủi. Năm: 2021. Xuất xứ: Italy (Ý). Giá: 650,000 đ. Tồn kho: 60. Mô tả: Vang sủi nhẹ nhàng, dễ uống, hợp khai vị.
+Sản phẩm: Chardonnay Barrel Aged. Loại: Vang trắng. Năm: 2020. Xuất xứ: Australia (Úc). Giá: 880,000 đ. Tồn kho: 60. Mô tả: Vị béo ngậy của bơ và hương thơm gỗ sồi.
+Sản phẩm: Rose de Provence. Loại: Vang hồng. Năm: 2021. Xuất xứ: France (Pháp). Giá: 720,000 đ. Tồn kho: 60. Mô tả: Vang hồng thanh lịch, hương trái cây đỏ.
+Sản phẩm: Cabernet Sauvignon. Loại: Vang đỏ. Năm: 2018. Xuất xứ: Chile. Giá: 980,000 đ. Tồn kho: 60. Mô tả: Vị đậm, hậu vị dài lâu.
+Sản phẩm: Sauvignon Blanc NZ. Loại: Vang trắng. Năm: 2021. Xuất xứ: New Zealand. Giá: 760,000 đ. Tồn kho: 60. Mô tả: Thơm mùi nhiệt đới, vị chua nhẹ.
+Sản phẩm: Champagne Brut. Loại: Vang sủi. Năm: 2019. Xuất xứ: France (Pháp). Giá: 1,590,000 đ. Tồn kho: 60. Mô tả: Bọt mịn, sự cân bằng vị giác hoàn hảo.

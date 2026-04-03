@@ -68,12 +68,12 @@
                                 <textarea class="form-control" id="address" name="address" th:field="*{address}" rows="3" required></textarea>
                             </div>
                             <div class="mb-3">
-                                <label class="form-label">Chọn vị trí giao hàng trên bản đồ (đất liền Việt Nam) <span class="text-danger">*</span></label>
+                                <label class="form-label">Chọn vị trí giao hàng trên bản đồ <span class="text-danger">*</span></label>
                                 <div class="input-group mb-2">
-                                    <input type="text" class="form-control" id="mapSearchInput" placeholder="Tìm địa điểm tại Việt Nam (ví dụ: 1 Tràng Tiền, Hà Nội)">
+                                    <input type="text" class="form-control" id="mapSearchInput" placeholder="Tìm địa điểm (ví dụ: 1 Tràng Tiền, Hà Nội)">
                                     <button class="btn btn-outline-dark" id="btnMapSearch" type="button">Tìm</button>
                                 </div>
-                                <div class="small text-muted mb-2" id="mapSearchResult">Nhập tên địa điểm để tìm nhanh trên bản đồ</div>
+                                <div class="small text-muted mb-2" id="mapSearchResult">Nhập tên địa điểm để tìm nhanh. Hệ thống chỉ chấp nhận điểm giao thuộc Việt Nam.</div>
                                 <div id="checkoutMap" class="checkout-map"></div>
                                 <div class="d-flex flex-wrap gap-2 mt-2">
                                     <button class="btn btn-outline-secondary btn-sm" id="btnUseCurrentLocation" type="button">Dùng vị trí hiện tại</button>

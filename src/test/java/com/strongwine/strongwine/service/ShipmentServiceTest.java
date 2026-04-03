@@ -270,6 +270,42 @@ class ShipmentServiceTest {
         verify(shipmentRepository).save(any(Shipment.class));
         }
 
+        @Test
+        void createAutoShipmentForPaidOrder_assignsImmediatelyWhenFreeShipperExists() {
+        Order order = new Order();
+        order.setId(9301L);
+        order.setStatus(OrderStatus.PAID);
+        order.setShippingFullName("Customer Auto");
+        order.setShippingPhone("0901234567");
+        order.setShippingAddress("123 Auto Street");
+
+        Shipper shipper = new Shipper();
+        shipper.setId(801L);
+        shipper.setStatus(ShipperStatus.ACTIVE);
+        shipper.setIsAvailable(false);
+        shipper.setMaxConcurrentShipments(1);
+
+        when(shipmentRepository.findByOrderId(9301L)).thenReturn(Optional.empty());
+        when(shipperRepository.findFirstByStatusAndIsAvailableTrueOrderByIdAsc(ShipperStatus.ACTIVE))
+            .thenReturn(Optional.empty());
+        when(shipperRepository.findByStatusOrderByIdAsc(ShipperStatus.ACTIVE))
+            .thenReturn(List.of(shipper));
+        when(shipperRepository.findByIdForUpdate(801L))
+            .thenReturn(Optional.of(shipper))
+            .thenReturn(Optional.of(shipper));
+        when(shipmentRepository.countByShipperIdAndStatusIn(eq(801L), anyList()))
+            .thenReturn(0L)
+            .thenReturn(1L);
+        when(shipperRepository.save(any(Shipper.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(shipmentRepository.save(any(Shipment.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Shipment created = shipmentService.createAutoShipmentForPaidOrder(order);
+
+        assertThat(created.getStatus()).isEqualTo(ShipmentStatus.ASSIGNED);
+        assertThat(created.getShipper()).isNotNull();
+        assertThat(created.getShipper().getId()).isEqualTo(801L);
+        }
+
     private Shipment createShipment(ShipmentStatus status, boolean withShipper) {
         User customer = new User();
         customer.setId(201L);
