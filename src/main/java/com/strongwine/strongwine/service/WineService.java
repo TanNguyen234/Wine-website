@@ -42,6 +42,10 @@ public class WineService {
         return wineRepository.findByDeletedFalse(pageable);
     }
     
+    public long countWines() {
+        return wineRepository.count();
+    }
+    
     /**
      * Get wine by ID
      */

@@ -184,6 +184,16 @@ public class PaymentService {
     public List<Payment> getRecentPayments() {
         return paymentRepository.findTop100ByOrderByCreatedAtDesc();
     }
+    
+    @Transactional(readOnly = true)
+    public org.springframework.data.domain.Page<Payment> getPaymentsPage(org.springframework.data.domain.Pageable pageable) {
+        return paymentRepository.findAll(pageable);
+    }
+    
+    @Transactional(readOnly = true)
+    public long countPendingPayments() {
+        return paymentRepository.countByStatus(PaymentStatus.PENDING);
+    }
 
     @Transactional(readOnly = true)
     public List<PaymentTransaction> getRecentTransactions() {

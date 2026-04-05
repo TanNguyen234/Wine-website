@@ -1,6 +1,11 @@
 {
   "version": 1,
   "skills": {
+    "bug-fix": {
+      "source": "bobmatnyc/claude-mpm-skills",
+      "sourceType": "github",
+      "computedHash": "d788ae978e008b3a51409b905d0b7ebf64e03240eba8c9fa070e1b94384f7820"
+    },
     "frontend-design": {
       "source": "anthropics/skills",
       "sourceType": "github",

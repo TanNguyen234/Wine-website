@@ -54,13 +54,13 @@ public class AdminController {
      */
     @GetMapping
     public String dashboard(Model model) {
-        // Statistics
-        long totalWines = wineService.getAllWines().size();
-        long totalUsers = userService.getAllUsers().size();
-        long totalOrders = orderService.getAllOrders().size();
+        // Efficient Statistics Loading
+        long totalWines = wineService.countWines();
+        long totalUsers = userService.countUsers();
+        long totalOrders = orderService.countOrders();
         Double totalRevenue = orderService.getTotalRevenue();
-        long lowStockCount = inventoryService.getLowStockInventories().size();
-        long pendingPayments = paymentService.getRecentPayments().stream().filter(p -> p.getStatus().name().equals("PENDING")).count();
+        long lowStockCount = inventoryService.countLowStockInventories();
+        long pendingPayments = paymentService.countPendingPayments();
         Map<String, Long> shipperStats = shipperService.getShipperOverviewStats();
         Map<?, Long> shipmentStats = shipmentService.getShipmentStatusStats();
         long totalShipments = shipmentStats.values().stream().mapToLong(Long::longValue).sum();
@@ -75,16 +75,8 @@ public class AdminController {
         model.addAttribute("shipmentStats", shipmentStats);
         model.addAttribute("totalShipments", totalShipments);
         
-        // Lists
-        model.addAttribute("wines", wineService.getAllWines());
-        model.addAttribute("users", userService.getAllUsers());
-        model.addAttribute("orders", orderService.getAllOrders());
-        model.addAttribute("reviews", reviewService.getAllReviews());
-        model.addAttribute("inventories", inventoryService.getInventoryOverview());
-        model.addAttribute("inventoryTransactions", inventoryService.getRecentTransactions());
-        model.addAttribute("payments", paymentService.getRecentPayments());
-        model.addAttribute("paymentTransactions", paymentService.getRecentTransactions());
-        model.addAttribute("lowStockItems", inventoryService.getLowStockInventories());
+        // Note: Full data lists (wines, users, orders, inventories, payments) have been removed 
+        // to prevent OOM errors. They are now accessed via dedicated paginated controllers.
         
         return "admin-dashboard";
     }

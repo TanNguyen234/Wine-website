@@ -10,7 +10,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 @RequestMapping("/shipper")
-@PreAuthorize("hasRole('SHIPPER')")
+@PreAuthorize("hasAnyRole('SHIPPER', 'ADMIN')")
 public class ShipperController {
 
     private final ShipmentService shipmentService;
@@ -21,8 +21,16 @@ public class ShipperController {
 
     @GetMapping({"", "/dashboard", "/shipments"})
     public String dashboard(Authentication authentication, Model model) {
-        String username = authentication.getName();
-        model.addAttribute("shipments", shipmentService.getMyShipments(username));
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        if (isAdmin) {
+            model.addAttribute("isAdminView", true);
+            model.addAttribute("shipments", shipmentService.getActiveShipmentsForAdminView());
+        } else {
+            String username = authentication.getName();
+            model.addAttribute("shipments", shipmentService.getMyShipments(username));
+        }
         return "shipper-dashboard";
     }
 

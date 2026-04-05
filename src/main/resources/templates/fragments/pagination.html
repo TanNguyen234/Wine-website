@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="pagination(baseUrl)" class="d-flex justify-content-between align-items-center mt-4">
+    <div class="text-muted small">
+        Hiển thị <span th:text="${totalEntries == 0 ? 0 : (currentPage * pageSize) + 1}"></span> - 
+        <span th:text="${(currentPage * pageSize) + pageSize > totalEntries ? totalEntries : (currentPage * pageSize) + pageSize}"></span>
+        trong <span th:text="${totalEntries}"></span> kết quả
+    </div>
+
+    <!-- Keep existing query parameters when paginating by adding them using th:href -->
+    <nav aria-label="Page navigation" th:if="${totalPages > 1}">
+        <ul class="pagination pagination-sm mb-0">
+            <li class="page-item" th:classappend="${!hasPrevious} ? 'disabled'">
+                <!-- using string appending for base url doesn't preserver other params easily but we can build relative query string -->
+                <a class="page-link" 
+                   th:href="@{${baseUrl}(page=${currentPage - 1},size=${pageSize},sortBy=${sortBy},sortDir=${sortDir})}" 
+                   aria-label="Previous">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            </li>
+            
+            <li class="page-item" 
+                th:each="i : ${#numbers.sequence(0, totalPages - 1)}" 
+                th:classappend="${currentPage == i} ? 'active'">
+                <a class="page-link" 
+                   th:href="@{${baseUrl}(page=${i},size=${pageSize},sortBy=${sortBy},sortDir=${sortDir})}" 
+                   th:text="${i + 1}">1</a>
+            </li>
+            
+            <li class="page-item" th:classappend="${!hasNext} ? 'disabled'">
+                <a class="page-link" 
+                   th:href="@{${baseUrl}(page=${currentPage + 1},size=${pageSize},sortBy=${sortBy},sortDir=${sortDir})}" 
+                   aria-label="Next">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</div>
+</body>
+</html>

@@ -77,6 +77,17 @@ public class InventoryService {
         ensureInventoryForAllWines();
         return inventoryRepository.findAll();
     }
+    
+    public org.springframework.data.domain.Page<Inventory> getInventoryOverviewPage(org.springframework.data.domain.Pageable pageable) {
+        ensureInventoryForAllWines();
+        return inventoryRepository.findAll(pageable);
+    }
+    
+    public long countLowStockInventories() {
+        return getInventoryOverview().stream()
+                .filter(inv -> inv.getAvailableQuantity() <= inv.getReorderLevel())
+                .count();
+    }
 
     public List<Inventory> getLowStockInventories() {
         return getInventoryOverview().stream()
@@ -86,6 +97,10 @@ public class InventoryService {
 
     public List<InventoryTransaction> getRecentTransactions() {
         return inventoryTransactionRepository.findTop100ByOrderByCreatedAtDesc();
+    }
+    
+    public org.springframework.data.domain.Page<InventoryTransaction> getTransactionsPage(org.springframework.data.domain.Pageable pageable) {
+        return inventoryTransactionRepository.findAll(pageable);
     }
 
     public Inventory importStock(Long wineId, Long warehouseId, Integer quantity, String createdBy, String note) {

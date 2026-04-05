@@ -34,6 +34,14 @@ public class UserService {
         return userRepository.findAll();
     }
     
+    public org.springframework.data.domain.Page<User> getAllUsersPage(org.springframework.data.domain.Pageable pageable) {
+        return userRepository.findAll(pageable);
+    }
+    
+    public long countUsers() {
+        return userRepository.count();
+    }
+    
     /**
      * Get user by ID
      */

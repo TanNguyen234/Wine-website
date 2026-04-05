@@ -33,6 +33,11 @@ public class ShipperService {
     public List<Shipper> getAllShippers() {
         return shipperRepository.findAllByOrderByCreatedAtDesc();
     }
+    
+    @Transactional(readOnly = true)
+    public org.springframework.data.domain.Page<Shipper> getShippersPage(org.springframework.data.domain.Pageable pageable) {
+        return shipperRepository.findAll(pageable);
+    }
 
     @Transactional(readOnly = true)
     public List<Shipper> getAllShippersForSelection() {

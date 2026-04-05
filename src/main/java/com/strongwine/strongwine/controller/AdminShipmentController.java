@@ -31,16 +31,34 @@ public class AdminShipmentController {
     }
 
     @GetMapping
-    public String listShipments(@RequestParam(required = false) Long orderId,
-                                @RequestParam(required = false) Long shipperId,
-                                @RequestParam(required = false) ShipmentStatus status,
-                                @RequestParam(required = false) String keyword,
-                                Model model) {
-        List<Shipment> shipments = shipmentService.getShipmentsForAdmin(orderId, shipperId, status, keyword);
+    public String listShipments(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir,
+            @RequestParam(required = false) Long orderId,
+            @RequestParam(required = false) Long shipperId,
+            @RequestParam(required = false) ShipmentStatus status,
+            @RequestParam(required = false) String keyword,
+            Model model) {
+            
+        org.springframework.data.domain.Sort.Direction direction = "asc".equalsIgnoreCase(sortDir) ? org.springframework.data.domain.Sort.Direction.ASC : org.springframework.data.domain.Sort.Direction.DESC;
+        org.springframework.data.domain.PageRequest pageable = org.springframework.data.domain.PageRequest.of(page, size, org.springframework.data.domain.Sort.by(direction, sortBy));
+        
+        org.springframework.data.domain.Page<Shipment> shipmentPage = shipmentService.getShipmentsForAdminPage(orderId, shipperId, status, keyword, pageable);
         Map<ShipmentStatus, Long> shipmentStats = shipmentService.getShipmentStatusStats();
 
-        model.addAttribute("shipments", shipments);
+        model.addAttribute("shipments", shipmentPage.getContent());
         model.addAttribute("shipmentStats", shipmentStats);
+        
+        model.addAttribute("currentPage", page);
+        model.addAttribute("pageSize", size);
+        model.addAttribute("sortBy", sortBy);
+        model.addAttribute("sortDir", sortDir.toLowerCase());
+        model.addAttribute("totalPages", shipmentPage.getTotalPages());
+        model.addAttribute("hasNext", shipmentPage.hasNext());
+        model.addAttribute("hasPrevious", shipmentPage.hasPrevious());
+        model.addAttribute("totalEntries", shipmentPage.getTotalElements());
         model.addAttribute("statuses", ShipmentStatus.values());
         model.addAttribute("shippers", shipperService.getAllShippersForSelection());
         model.addAttribute("filterOrderId", orderId);

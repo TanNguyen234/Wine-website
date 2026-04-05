@@ -11,6 +11,7 @@ import com.strongwine.strongwine.event.OrderPaidEvent;
 import com.strongwine.strongwine.repository.OrderRepository;
 import com.strongwine.strongwine.repository.UserRepository;
 import com.strongwine.strongwine.repository.WineRepository;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,14 +49,20 @@ public class OrderService {
     @Autowired
     private ApplicationEventPublisher applicationEventPublisher;
 
-    @Autowired
-    private ShipmentService shipmentService;
 
     /**
      * Get all orders
      */
     public List<Order> getAllOrders() {
         return orderRepository.findAll();
+    }
+
+    public org.springframework.data.domain.Page<Order> getAllOrdersPage(org.springframework.data.domain.Pageable pageable) {
+        return orderRepository.findAll(pageable);
+    }
+    
+    public long countOrders() {
+        return orderRepository.count();
     }
     
     /**
@@ -177,6 +184,7 @@ public class OrderService {
                 .orElseThrow(() -> new RuntimeException("Order not found with id: " + orderId));
 
         if (order.getStatus() == OrderStatus.PAID && order.getPaymentStatus() == PaymentStatus.SUCCESS) {
+            log.info("Order {} already marked as paid, skipping.", orderId);
             return;
         }
 
@@ -188,9 +196,9 @@ public class OrderService {
         orderRepository.save(order);
         inventoryService.confirmOrderPayment(order);
 
-        // Ensure shipment exists in the same paid-order transaction.
-        shipmentService.ensureShipmentForPaidOrder(order);
-
+        // Shipment creation and shipper assignment are handled by OrderPaidShipmentListener
+        // which runs @TransactionalEventListener(phase = AFTER_COMMIT) â€” this ensures
+        // a shipment failure never rolls back a successful payment transaction.
         applicationEventPublisher.publishEvent(new OrderPaidEvent(order.getId(), paymentReference));
     }
 
@@ -215,6 +223,7 @@ public class OrderService {
         }
     }
 }
+
 
 
 

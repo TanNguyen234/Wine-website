@@ -14,9 +14,22 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import com.strongwine.strongwine.entity.Wine;
+import com.strongwine.strongwine.repository.WineRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.net.URI;
+import java.net.URLEncoder;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Locale;
+import java.util.stream.Collectors;
 
 @Service
 public class GeminiAssistantService {
@@ -27,6 +40,9 @@ public class GeminiAssistantService {
 
     private final ObjectMapper objectMapper;
     private final HttpClient httpClient;
+
+    @Autowired
+    private WineRepository wineRepository;
 
     @Value("${app.gemini.api-key:}")
     private String geminiApiKey;
@@ -77,14 +93,15 @@ public class GeminiAssistantService {
             }
 
             if (!result.isSuccess()) {
-                logger.warn("Gemini API returned non-2xx status. status={}, model={}, baseUrl={}, responseBody={}",
-                        result.statusCode(), result.model(), resolveBaseUrl(), abbreviateForLog(result.body()));
+                logger.error("!!! GEMINI API ERROR !!! Status: {}, Model: {}, Body: {}", 
+                             result.statusCode(), result.model(), abbreviateForLog(result.body()));
                 return buildLocalAdvice(normalizedPrompt, normalizedContext);
             }
 
             return parseAssistantResponse(result.body());
         } catch (Exception ex) {
-            logger.error("Gemini API call failed. model={}, baseUrl={}", resolveModel(), resolveBaseUrl(), ex);
+            logger.error("!!! GEMINI API CONNECTION FAILED !!! model={}, baseUrl={}, error={}", 
+                         resolveModel(), resolveBaseUrl(), ex.getMessage());
             return buildLocalAdvice(normalizedPrompt, normalizedContext);
         }
     }
@@ -121,16 +138,42 @@ public class GeminiAssistantService {
 
     private String buildPrompt(String prompt, String context) {
         StringBuilder builder = new StringBuilder();
-        builder.append("Bạn là trợ lý tư vấn rượu vang của StrongWine. ")
-                .append("Trả lời ngắn gọn, rõ ràng, bằng tiếng Việt, ưu tiên tư vấn mua hàng thực tế.")
-                .append(" Không bịa thông tin tồn kho hoặc giá nếu không chắc chắn; hãy nói rõ là cần kiểm tra trên website.");
+        builder.append("Bạn là trợ lý chuyên gia gợi ý rượu vang (sommelier) chuyên trách của cửa hàng StrongWine. ")
+                .append("Nhiệm vụ của bạn là tư vấn khách hàng chọn rượu, kết hợp món ăn (wine pairing) và giải đáp thắc mắc về dịch vụ của website.\n\n")
+                .append("QUY TẮC QUAN TRỌNG:\n")
+                .append("1. Chỉ trả lời các câu hỏi liên quan đến rượu vang, đồ uống, kết hợp ẩm thực và quy trình mua hàng tại StrongWine.\n")
+                .append("2. Nếu câu hỏi KHÔNG LIÊN QUAN (như tin tức, chính trị, toán học, lập trình, hoặc các chủ đề chung chung không liên quan đến rượu), ")
+                .append("hãy trả lời chính xác như sau: 'Rất tiếc, tôi là trợ lý ảo chuyên trách về rượu vang của StrongWine nên không thể hỗ trợ các chủ đề ngoài phạm vi này. Quý khách có muốn tôi gợi ý một chai vang phù hợp không?'\n")
+                .append("3. Trả lời bằng tiếng Việt, phong cách lịch sự, chuyên nghiệp, sử dụng 'StrongWine' để xưng hô thay vì 'tôi'.\n")
+                .append("4. Sử dụng dữ liệu thực tế dưới đây để tư vấn cụ thể:\n")
+                .append(getStoreKnowledge())
+                .append("\n5. Không được tự bịa ra thông tin sản phẩm không có trong danh sách trên.");
 
         if (!context.isEmpty()) {
-            builder.append("\n\nNgữ cảnh trang hiện tại: ").append(context);
+            builder.append("\n\nNgữ cảnh trang hiện tại của khách hàng: ").append(context);
         }
 
-        builder.append("\n\nCâu hỏi khách hàng: ").append(prompt);
+        builder.append("\n\nCâu hỏi từ khách hàng: ").append(prompt);
         return builder.toString();
+    }
+
+    private String getStoreKnowledge() {
+        try {
+            List<Wine> wines = wineRepository.findByDeletedFalse();
+            if (wines == null || wines.isEmpty()) {
+                return "Hiện tại cửa hàng đang cập nhật danh mục sản phẩm mới.";
+            }
+
+            return "DANH MỤC SẢN PHẨM HIỆN CÓ TẠI STRONGWINE:\n" +
+                    wines.stream().limit(15).map(w ->
+                        String.format("- %s: Loại %s, Xuất xứ %s, Giá %,.0f đ. Mô tả: %s",
+                                w.getName(), w.getType(), w.getCountry(), w.getPrice(),
+                                w.getDescription() != null ? w.getDescription() : "N/A")
+                    ).collect(Collectors.joining("\n"));
+        } catch (Exception e) {
+            logger.error("Error creating store knowledge summary", e);
+            return "Thông tin sản phẩm đang được cập nhật.";
+        }
     }
 
     private String buildEndpoint(String model) {
@@ -199,25 +242,61 @@ public class GeminiAssistantService {
     }
 
     private String buildLocalAdvice(String prompt, String context) {
+        if (prompt == null || prompt.isBlank()) return "Tôi có thể giúp ích gì cho bạn trong việc chọn rượu hôm nay?";
+        
         String normalized = prompt.toLowerCase(Locale.ROOT);
-        StringBuilder advice = new StringBuilder("Mình gợi ý nhanh cho bạn như sau: ");
+        
+        try {
+            List<Wine> allWines = wineRepository.findByDeletedFalse();
+            
+            // 1. Expensive query
+            if (normalized.contains("mắc nhất") || normalized.contains("đắt nhất") || normalized.contains("cao nhất")) {
+                 return allWines.stream()
+                        .max(java.util.Comparator.comparing(Wine::getPrice))
+                        .map(w -> String.format("Hiện tại StrongWine có chai %s là đắt nhất với giá %,.0f đ. Đây là dòng %s thượng hạng từ %s.", 
+                                w.getName(), w.getPrice(), w.getType(), w.getCountry()))
+                        .orElse("Danh mục sản phẩm đang được cập nhật.");
+            }
+            
+            // 2. Cheapest query
+            if (normalized.contains("rẻ nhất") || normalized.contains("thấp nhất") || normalized.contains("bình dân")) {
+                return allWines.stream()
+                        .min(java.util.Comparator.comparing(Wine::getPrice))
+                        .map(w -> String.format("Chai rượu có giá bình dân nhất hiện nay là %s với giá chỉ %,.0f đ. Rất phù hợp để thưởng thức hàng ngày.", 
+                                w.getName(), w.getPrice()))
+                        .orElse("Danh mục sản phẩm đang được cập nhật.");
+            }
 
+            // 3. Keyword matching (Country or Type)
+            List<Wine> matches = allWines.stream()
+                .filter(w -> normalized.contains(w.getName().toLowerCase()) || 
+                             normalized.contains(w.getType().toLowerCase()) ||
+                             (w.getCountry() != null && normalized.contains(w.getCountry().toLowerCase())))
+                .limit(3)
+                .collect(Collectors.toList());
+            
+            if (!matches.isEmpty()) {
+                StringBuilder sb = new StringBuilder("StrongWine gợi ý một số chai phù hợp với yêu cầu của bạn:\n");
+                for (Wine w : matches) {
+                    sb.append("- ").append(w.getName()).append(" (")
+                      .append(w.getCountry()).append(", ").append(String.format("%,.0f", w.getPrice())).append(" đ)\n");
+                }
+                sb.append("Bạn có muốn tìm hiểu thêm về chai nào trong số này không?");
+                return sb.toString();
+            }
+        } catch (Exception e) {
+            logger.error("Error in local advice matching", e);
+        }
+
+        // Default fallback if no match
+        StringBuilder advice = new StringBuilder("Dịch vụ tư vấn AI của StrongWine hiện đang bảo trì nhẹ. ");
         if (normalized.contains("hải sản") || normalized.contains("ca") || normalized.contains("tôm")) {
-            advice.append("Bạn nên chọn vang trắng Sauvignon Blanc hoặc Chardonnay nhẹ, ướp lạnh khoảng 8-10°C.");
+            advice.append("Gợi ý nhanh: Bạn nên chọn vang trắng Sauvignon Blanc hoặc Chardonnay nhẹ, ướp lạnh khoảng 8-10°C.");
         } else if (normalized.contains("bò") || normalized.contains("thịt đỏ") || normalized.contains("nướng")) {
-            advice.append("Bạn nên chọn vang đỏ Cabernet Sauvignon hoặc Pinot Noir, phục vụ ở 16-18°C.");
-        } else if (normalized.contains("quà") || normalized.contains("tặng")) {
-            advice.append("Bạn có thể chọn một chai vang đỏ tầm trung, nhãn dễ uống và đóng gói hộp quà.");
-        } else if (normalized.contains("dưới") || normalized.contains("ngân sách") || normalized.contains("giá")) {
-            advice.append("Bạn lọc theo khoảng giá trên trang Sản phẩm, ưu tiên chai có đánh giá tốt và còn hàng.");
+            advice.append("Gợi ý nhanh: Bạn nên chọn vang đỏ Cabernet Sauvignon hoặc Pinot Noir, phục vụ ở 16-18°C.");
         } else {
-            advice.append("Bạn cho mình biết thêm món ăn đi kèm, ngân sách và khẩu vị (chát/êm) để mình gợi ý chính xác hơn.");
+            advice.append("Mời bạn cho biết thêm thông tin về món ăn đi kèm hoặc ngân sách để tôi tư vấn chính xác hơn bằng dữ liệu hiện có.");
         }
-
-        if (context != null && !context.isBlank()) {
-            advice.append(" Mình đang dựa trên ngữ cảnh trang hiện tại để tư vấn nhanh.");
-        }
-        advice.append(" Nếu cần, mình sẽ tiếp tục gợi ý theo 2-3 lựa chọn cụ thể.");
         return advice.toString();
     }
 

@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý kho - Tùy chọn quản trị - StrongWine</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="/css/app.css">
+</head>
+<body class="admin-page">
+<div class="admin-layout">
+
+    <aside class="admin-sidebar">
+        <a class="admin-sidebar-brand" href="/admin">
+            <span class="brand-logo"><i class="fa-solid fa-wine-glass"></i></span>
+            StrongWine Admin
+        </a>
+        <nav>
+            <div class="admin-sidebar-section">Điều hướng</div>
+            <a class="admin-nav-link" href="/admin"><i class="fa-solid fa-chart-line"></i>Bảng điều khiển</a>
+            <a class="admin-nav-link" href="/admin/users"><i class="fa-solid fa-users"></i>Người dùng</a>
+            <a class="admin-nav-link" href="/admin/orders"><i class="fa-solid fa-receipt"></i>Đơn hàng</a>
+            <a class="admin-nav-link active" href="/admin/inventory"><i class="fa-solid fa-warehouse"></i>Kho hàng</a>
+            <a class="admin-nav-link" href="/admin/payments"><i class="fa-solid fa-credit-card"></i>Thanh toán</a>
+            <a class="admin-nav-link" href="/admin/shippers"><i class="fa-solid fa-truck"></i>Người giao hàng</a>
+            <a class="admin-nav-link" href="/admin/shipments"><i class="fa-solid fa-box-open"></i>Đơn giao hàng</a>
+            <div class="admin-sidebar-section">Vận hành</div>
+            <a class="admin-nav-link" href="/shipper/dashboard"><i class="fa-solid fa-map-location-dot"></i>Màn hình giao hàng</a>
+            <a class="admin-nav-link" href="/wines"><i class="fa-solid fa-store"></i>Cửa hàng</a>
+        </nav>
+        <div style="padding:1rem;border-top:1px solid var(--border);margin-top:auto">
+            <form th:action="@{/logout}" method="post" class="mb-0">
+                <button class="btn btn-outline-secondary btn-sm w-100">
+                    <i class="fa-solid fa-right-from-bracket me-1"></i>Đăng xuất
+                </button>
+            </form>
+        </div>
+    </aside>
+
+    <div class="admin-main">
+        <header class="admin-topbar">
+            <div>
+                <h1>Kho hàng</h1>
+                <small>Danh sách tồn kho và lịch sử giao dịch</small>
+            </div>
+        </header>
+
+        <main class="admin-content">
+            <div th:if="${success}" class="alert alert-success alert-dismissible fade show mb-3" role="alert">
+                <span th:text="${success}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            <div th:if="${error}" class="alert alert-danger alert-dismissible fade show mb-3" role="alert">
+                <span th:text="${error}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+
+            <div class="panel p-3 p-lg-4 fade-up mb-4">
+                <h2 class="h6 mb-3" style="font-family:'Lato',sans-serif;text-transform:uppercase;letter-spacing:.06em;font-size:.8rem;color:var(--text-muted)">Quản lý kho</h2>
+                <div class="table-responsive mb-4">
+                    <table class="table table-modern align-middle">
+                        <thead>
+                            <tr><th>Rượu</th><th>Kho</th><th>Tồn hiện tại</th><th>Đã giữ</th><th>Khả dụng</th><th>Mức đặt lại</th><th>Nhập/Xuất</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="inv : ${inventories}">
+                                <td style="font-weight:600;color:var(--text)" th:text="${inv.wine.name}"></td>
+                                <td style="color:var(--text-muted)" th:text="${inv.warehouse.name}"></td>
+                                <td th:text="${inv.currentQuantity}"></td>
+                                <td th:text="${inv.reservedQuantity}"></td>
+                                <td>
+                                    <span th:class="${inv.availableQuantity <= inv.reorderLevel ? 'stock-badge stock-low' : 'stock-badge stock-ok'}"
+                                          th:text="${inv.availableQuantity}"></span>
+                                </td>
+                                <td th:text="${inv.reorderLevel}"></td>
+                                <td>
+                                    <div class="d-flex gap-2">
+                                        <button class="btn btn-sm btn-outline-success flex-fill" 
+                                                th:onclick="'openInventoryModal(\'import\', ' + ${inv.wine.id} + ', ' + ${inv.warehouse.id} + ', \'' + ${#strings.escapeJavaScript(inv.wine.name)} + '\')'">
+                                            <i class="fa-solid fa-arrow-down me-1"></i>Nhập
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger flex-fill"
+                                                th:onclick="'openInventoryModal(\'export\', ' + ${inv.wine.id} + ', ' + ${inv.warehouse.id} + ', \'' + ${#strings.escapeJavaScript(inv.wine.name)} + '\')'">
+                                            <i class="fa-solid fa-arrow-up me-1"></i>Xuất
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr th:if="${inventories == null || inventories.isEmpty()}">
+                                <td colspan="7" class="text-center text-muted py-4">Chưa có thông tin kho hàng</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div th:replace="~{fragments/pagination :: pagination('/admin/inventory')}"></div>
+            </div>
+
+            <!-- Transactions list block -->
+            <div class="panel p-3 p-lg-4 fade-up">
+                <h3 class="h6 mb-3" style="font-family:'Lato',sans-serif;text-transform:uppercase;letter-spacing:.06em;font-size:.75rem;color:var(--text-muted)">Lịch sử giao dịch kho gần đây (Top 100)</h3>
+                <div class="table-responsive">
+                    <table class="table table-modern align-middle">
+                        <thead>
+                            <tr><th>Thời gian</th><th>Rượu</th><th>Thao tác</th><th>Số lượng</th><th>Mã người dùng</th><th>Tham chiếu</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="tx : ${inventoryTransactions}">
+                                <td th:text="${#temporals.format(tx.createdAt, 'dd/MM/yyyy HH:mm')}"></td>
+                                <td th:text="${tx.wine.name}"></td>
+                                <td th:text="${@enumDisplayService.inventoryOperation(tx.operationType)}"></td>
+                                <td th:text="${tx.quantity}"></td>
+                                <td th:text="${tx.userId}"></td>
+                                <td th:text="${@enumDisplayService.inventoryReferenceType(tx.referenceType) + (tx.referenceId != null ? (' #' + tx.referenceId) : '')}"></td>
+                            </tr>
+                            <tr th:if="${inventoryTransactions == null || inventoryTransactions.isEmpty()}">
+                                <td colspan="6" class="text-center text-muted py-4">Chưa có giao dịch kho</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- Require Modal Template from admin dashboard equivalent -->
+<div class="modal fade" id="inventoryModal" tabindex="-1" aria-labelledby="inventoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header border-bottom border-light">
+                <h5 class="modal-title" id="inventoryModalLabel" style="font-family:'Playfair Display',serif;font-weight:700">Thao tác kho</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="d-flex align-items-center mb-4">
+                    <div class="rounded bg-light d-flex align-items-center justify-content-center me-3" style="width:48px;height:48px">
+                        <i id="inventoryModalIcon" class="fa-solid fa-box text-primary fs-4"></i>
+                    </div>
+                    <div>
+                        <h6 class="mb-0" id="inventoryModalWineName" style="font-weight:700">Tên Rượu</h6>
+                        <small class="text-muted" id="inventoryModalActionText">Đang thực hiện thao tác</small>
+                    </div>
+                </div>
+
+                <form id="inventoryForm" method="post" action="">
+                    <input type="hidden" id="modalWarehouseId" name="warehouseId" value="">
+                    
+                    <div class="mb-3">
+                        <label for="modalQuantity" class="form-label" style="font-size:0.85rem;font-weight:600;color:var(--text-muted)">SỐ LƯỢNG</label>
+                        <input type="number" class="form-control" id="modalQuantity" name="quantity" min="1" required placeholder="Nhập số lượng...">
+                        <div class="invalid-feedback">Vui lòng nhập số lượng hợp lệ lớn hơn 0.</div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="modalNote" class="form-label" style="font-size:0.85rem;font-weight:600;color:var(--text-muted)">GHI CHÚ (TÙY CHỌN)</label>
+                        <textarea class="form-control" id="modalNote" name="note" rows="2" placeholder="Ví dụ: Nhập hàng đợt 1 / Xuất hàng hỏng..."></textarea>
+                    </div>
+
+                    <div class="d-flex gap-2 justify-content-end">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-primary px-4" id="inventoryModalSubmitBtn">Xác nhận</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    const inventoryModal = new bootstrap.Modal(document.getElementById('inventoryModal'));
+    
+    function openInventoryModal(type, wineId, warehouseId, wineName) {
+        document.getElementById('modalWarehouseId').value = warehouseId;
+        document.getElementById('modalQuantity').value = '';
+        document.getElementById('modalNote').value = '';
+        document.getElementById('inventoryModalWineName').textContent = wineName;
+        
+        const form = document.getElementById('inventoryForm');
+        const title = document.getElementById('inventoryModalLabel');
+        const actionText = document.getElementById('inventoryModalActionText');
+        const icon = document.getElementById('inventoryModalIcon');
+        const submitBtn = document.getElementById('inventoryModalSubmitBtn');
+        
+        if (type === 'import') {
+            form.action = '/admin/inventory/import/' + wineId;
+            title.textContent = 'Nhập Kho';
+            actionText.textContent = 'Thêm số lượng vào kho khả dụng';
+            icon.className = 'fa-solid fa-arrow-down text-success fs-4';
+            submitBtn.className = 'btn btn-success px-4';
+            submitBtn.textContent = 'Xác nhận nhập';
+        } else {
+            form.action = '/admin/inventory/export/' + wineId;
+            title.textContent = 'Xuất Kho';
+            actionText.textContent = 'Trừ số lượng khỏi kho khả dụng';
+            icon.className = 'fa-solid fa-arrow-up text-danger fs-4';
+            submitBtn.className = 'btn btn-danger px-4';
+            submitBtn.textContent = 'Xác nhận xuất';
+        }
+        
+        inventoryModal.show();
+    }
+</script>
+</body>
+</html>

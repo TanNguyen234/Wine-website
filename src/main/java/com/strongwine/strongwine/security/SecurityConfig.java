@@ -56,8 +56,8 @@ public class SecurityConfig {
             .authorizeHttpRequests(authz -> authz
                 // Admin only pages
                 .requestMatchers("/admin/**", "/api/admin/**", "/wines/admin/**").hasRole("ADMIN")
-                // Shipper pages for SHIPPER only
-                .requestMatchers("/shipper/**").hasRole("SHIPPER")
+                // Shipper pages for SHIPPER and ADMIN
+                .requestMatchers("/shipper/**").hasAnyRole("SHIPPER", "ADMIN")
                 // Public pages
                 .requestMatchers("/", "/home", "/wines", "/wines/**", "/cart/**", "/register", "/login", "/forgot-password", "/reset-password", "/css/**", "/js/**", "/images/**", "/uploads/**", "/payment/webhook").permitAll()
                 // API Auth endpoint

@@ -25,6 +25,36 @@ public class AdminInventoryController {
     @Autowired
     private UserRepository userRepository;
 
+    @org.springframework.web.bind.annotation.GetMapping
+    public String listInventory(
+            @org.springframework.web.bind.annotation.RequestParam(defaultValue = "0") int page,
+            @org.springframework.web.bind.annotation.RequestParam(defaultValue = "10") int size,
+            @org.springframework.web.bind.annotation.RequestParam(defaultValue = "id") String sortBy,
+            @org.springframework.web.bind.annotation.RequestParam(defaultValue = "desc") String sortDir,
+            org.springframework.ui.Model model) {
+
+        // For inventory, typically we just want to paginate transactions OR the inventory overview.
+        // We will paginate the overview here.
+        org.springframework.data.domain.Sort.Direction direction = "asc".equalsIgnoreCase(sortDir) ? org.springframework.data.domain.Sort.Direction.ASC : org.springframework.data.domain.Sort.Direction.DESC;
+        org.springframework.data.domain.PageRequest pageable = org.springframework.data.domain.PageRequest.of(page, size, org.springframework.data.domain.Sort.by(direction, sortBy));
+        
+        org.springframework.data.domain.Page<com.strongwine.strongwine.entity.Inventory> inventoryPage = inventoryService.getInventoryOverviewPage(pageable);
+
+        model.addAttribute("inventories", inventoryPage.getContent());
+        model.addAttribute("inventoryTransactions", inventoryService.getRecentTransactions());
+        
+        model.addAttribute("currentPage", page);
+        model.addAttribute("pageSize", size);
+        model.addAttribute("sortBy", sortBy);
+        model.addAttribute("sortDir", sortDir.toLowerCase());
+        model.addAttribute("totalPages", inventoryPage.getTotalPages());
+        model.addAttribute("hasNext", inventoryPage.hasNext());
+        model.addAttribute("hasPrevious", inventoryPage.hasPrevious());
+        model.addAttribute("totalEntries", inventoryPage.getTotalElements());
+
+        return "admin-inventory";
+    }
+
     @PostMapping("/import/{wineId}")
     public String importStock(@PathVariable Long wineId,
                               @Valid StockOperationRequest request,

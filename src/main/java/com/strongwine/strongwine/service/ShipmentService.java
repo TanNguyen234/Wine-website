@@ -221,6 +221,17 @@ public class ShipmentService {
         return shipmentRepository.findByShipperIdOrderByCreatedAtDesc(shipper.getId());
     }
 
+    /**
+     * Get all active shipments (not COMPLETED or FAILED) for Administrative monitoring.
+     */
+    @Transactional(readOnly = true)
+    public List<Shipment> getActiveShipmentsForAdminView() {
+        return shipmentRepository.findAll().stream()
+                .filter(s -> s.getStatus() != ShipmentStatus.COMPLETED && s.getStatus() != ShipmentStatus.FAILED)
+                .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
+                .collect(java.util.stream.Collectors.toList());
+    }
+
     @Transactional(readOnly = true)
     public Optional<Shipment> getShipmentByOrderId(Long orderId) {
         if (orderId == null) {
@@ -256,6 +267,19 @@ public class ShipmentService {
                 .filter(s -> status == null || status == s.getStatus())
                 .filter(s -> matchesKeyword(s, normalizedKeyword))
                 .toList();
+    }
+    
+    @Transactional(readOnly = true)
+    public org.springframework.data.domain.Page<Shipment> getShipmentsForAdminPage(Long orderId,
+                                               Long shipperId,
+                                               ShipmentStatus status,
+                                               String keyword,
+                                               Pageable pageable) {
+        List<Shipment> allFiltered = getShipmentsForAdmin(orderId, shipperId, status, keyword);
+        int start = (int) pageable.getOffset();
+        int end = Math.min((start + pageable.getPageSize()), allFiltered.size());
+        List<Shipment> pageContent = start > allFiltered.size() ? List.of() : allFiltered.subList(start, end);
+        return new org.springframework.data.domain.PageImpl<>(pageContent, pageable, allFiltered.size());
     }
 
     @Transactional(readOnly = true)

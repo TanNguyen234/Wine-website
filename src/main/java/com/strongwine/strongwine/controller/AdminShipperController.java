@@ -21,10 +21,30 @@ public class AdminShipperController {
     }
 
     @GetMapping
-    public String listShippers(Model model) {
-        model.addAttribute("shippers", shipperService.getAllShippers());
+    public String listShippers(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir,
+            Model model) {
+            
+        org.springframework.data.domain.Sort.Direction direction = "asc".equalsIgnoreCase(sortDir) ? org.springframework.data.domain.Sort.Direction.ASC : org.springframework.data.domain.Sort.Direction.DESC;
+        org.springframework.data.domain.PageRequest pageable = org.springframework.data.domain.PageRequest.of(page, size, org.springframework.data.domain.Sort.by(direction, sortBy));
+        org.springframework.data.domain.Page<Shipper> shipperPage = shipperService.getShippersPage(pageable);
+        
+        model.addAttribute("shippers", shipperPage.getContent());
         Map<String, Long> stats = shipperService.getShipperOverviewStats();
         model.addAttribute("shipperStats", stats);
+        
+        model.addAttribute("currentPage", page);
+        model.addAttribute("pageSize", size);
+        model.addAttribute("sortBy", sortBy);
+        model.addAttribute("sortDir", sortDir.toLowerCase());
+        model.addAttribute("totalPages", shipperPage.getTotalPages());
+        model.addAttribute("hasNext", shipperPage.hasNext());
+        model.addAttribute("hasPrevious", shipperPage.hasPrevious());
+        model.addAttribute("totalEntries", shipperPage.getTotalElements());
+        
         return "admin-shippers";
     }
 

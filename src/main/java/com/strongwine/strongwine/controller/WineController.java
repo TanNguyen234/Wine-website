@@ -74,6 +74,7 @@ public class WineController {
         int totalPages;
         boolean hasNext;
         boolean hasPrevious;
+        int totalEntries; // total matching products (across all pages)
 
         if (Boolean.TRUE.equals(inStock)) {
             List<Wine> allFiltered = hasFilter
@@ -92,6 +93,7 @@ public class WineController {
             totalPages = Math.max(1, (int) Math.ceil((double) inStockWines.size() / safeSize));
             hasPrevious = safePage > 0;
             hasNext = safePage + 1 < totalPages;
+            totalEntries = inStockWines.size();
         } else {
             Page<Wine> winePage = hasFilter
                     ? wineService.searchWinesPage(name, type, country, year, minPrice, maxPrice, pageable)
@@ -100,10 +102,11 @@ public class WineController {
             totalPages = Math.max(1, winePage.getTotalPages());
             hasNext = winePage.hasNext();
             hasPrevious = winePage.hasPrevious();
+            totalEntries = (int) winePage.getTotalElements();
         }
 
         Map<Long, Integer> availableStockByWineId = inventoryService.getAvailableStockByWineIds(wines.stream().map(Wine::getId).toList());
-        
+
         model.addAttribute("wines", wines);
         model.addAttribute("name", name);
         model.addAttribute("type", type);
@@ -119,6 +122,7 @@ public class WineController {
         model.addAttribute("totalPages", totalPages);
         model.addAttribute("hasNext", hasNext);
         model.addAttribute("hasPrevious", hasPrevious);
+        model.addAttribute("totalEntries", totalEntries);
         model.addAttribute("countries", wineService.getAllWines().stream().map(Wine::getCountry).filter(c -> c != null && !c.isBlank()).distinct().sorted().toList());
         model.addAttribute("availableStockByWineId", availableStockByWineId);
         

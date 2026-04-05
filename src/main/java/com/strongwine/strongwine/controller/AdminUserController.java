@@ -26,8 +26,27 @@ public class AdminUserController {
     }
 
     @GetMapping
-    public String listUsers(Model model) {
-        model.addAttribute("users", userService.getAllUsers());
+    public String listUsers(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir,
+            Model model) {
+            
+        org.springframework.data.domain.Sort.Direction direction = "asc".equalsIgnoreCase(sortDir) ? org.springframework.data.domain.Sort.Direction.ASC : org.springframework.data.domain.Sort.Direction.DESC;
+        org.springframework.data.domain.PageRequest pageable = org.springframework.data.domain.PageRequest.of(page, size, org.springframework.data.domain.Sort.by(direction, sortBy));
+        org.springframework.data.domain.Page<User> userPage = userService.getAllUsersPage(pageable);
+        
+        model.addAttribute("users", userPage.getContent());
+        model.addAttribute("currentPage", page);
+        model.addAttribute("pageSize", size);
+        model.addAttribute("sortBy", sortBy);
+        model.addAttribute("sortDir", sortDir.toLowerCase());
+        model.addAttribute("totalPages", userPage.getTotalPages());
+        model.addAttribute("hasNext", userPage.hasNext());
+        model.addAttribute("hasPrevious", userPage.hasPrevious());
+        model.addAttribute("totalEntries", userPage.getTotalElements());
+        
         return "admin-users";
     }
 

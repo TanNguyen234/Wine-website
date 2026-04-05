@@ -7,6 +7,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     toggle.addEventListener('click', () => panel.classList.toggle('show'));
 
+    const closeBtn = document.getElementById('aiClose');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', () => panel.classList.remove('show'));
+    }
+
     panel.querySelectorAll('[data-ai-question]').forEach(btn => {
         btn.addEventListener('click', () => {
             if (quickPrompt) {
@@ -29,6 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
             title.textContent = roleLabel + ': ';
 
             const content = document.createElement('span');
+            content.style.whiteSpace = 'pre-wrap';
             content.textContent = text;
 
             row.appendChild(title);
