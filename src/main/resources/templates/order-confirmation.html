@@ -4,104 +4,101 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Xác nhận đơn hàng - StrongWine</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="/css/app.css">
+    <style>
+        @keyframes popIn {
+            from { transform: scale(0.5); opacity: 0; }
+            to   { transform: scale(1);   opacity: 1; }
+        }
+        .check-anim { animation: popIn 0.5s cubic-bezier(.22,.68,0,1.4) 0.3s both; display: inline-block; }
+    </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark navbar-modern py-3">
-        <div class="container">
-            <a class="navbar-brand fw-bold" href="/home">
-                <span class="brand-logo"><i class="fa-solid fa-wine-glass"></i></span> StrongWine
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="/home">Trang chủ</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/wines">Danh sách rượu</a>
-                    </li>
-                    <li class="nav-item" sec:authorize="isAuthenticated()">
-                        <a class="nav-link" href="/orders">Đơn hàng của tôi</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/cart">
-                            <i class="fa-solid fa-cart-shopping"></i> Giỏ hàng <span class="badge text-bg-light text-dark js-cart-count" th:text="${cartCount}">0</span>
-                        </a>
-                    </li>
-                </ul>
-                <ul class="navbar-nav">
-                    <li class="nav-item" sec:authorize="!isAuthenticated()">
-                        <a class="nav-link" href="/login">Đăng nhập</a>
-                    </li>
-                    <li class="nav-item" sec:authorize="!isAuthenticated()">
-                        <a class="nav-link" href="/register">Đăng ký</a>
-                    </li>
-                    <li class="nav-item" sec:authorize="hasRole('ADMIN')">
-                        <a class="nav-link" href="/admin">Bảng điều khiển quản trị</a>
-                    </li>
-                    <li class="nav-item" sec:authorize="isAuthenticated()">
-                        <form th:action="@{/logout}" method="post" class="d-inline">
-                            <button type="submit" class="btn btn-link nav-link">Đăng xuất</button>
-                        </form>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
 
-    <main class="container site-main my-5" data-order-confirmation="true">
-        <div class="row justify-content-center">
-            <div class="col-md-8">
-                <div class="panel p-2">
-                    <div class="text-center p-5">
-                        <div class="mb-4">
-                            <i class="fa-solid fa-circle-check text-success confirmation-icon"></i>
-                        </div>
-                        <h2 class="mb-3">Đặt hàng thành công!</h2>
-                        <p class="text-muted mb-4">Cảm ơn bạn đã đặt hàng tại StrongWine</p>
-                        
-                        <div class="alert alert-info text-start">
-                            <h5 class="alert-heading">Thông tin đơn hàng</h5>
-                            <hr>
-                            <p class="mb-2"><strong>Mã đơn hàng:</strong> <span th:text="${orderId}"></span></p>
-                            <p class="mb-2"><strong>Trạng thái đơn:</strong> <span class="badge text-bg-secondary" th:text="${@enumDisplayService.orderStatus(orderStatus)}"></span></p>
-                            <p class="mb-2"><strong>Thanh toán:</strong> <span class="badge text-bg-info" th:text="${@enumDisplayService.paymentStatus(paymentStatus)}"></span></p>
-                            <p class="mb-2"><strong>Họ và tên:</strong> <span th:text="${fullName}"></span></p>
-                            <p class="mb-2"><strong>Số điện thoại:</strong> <span th:text="${phone}"></span></p>
-                            <p class="mb-0"><strong>Địa chỉ giao hàng:</strong> <span th:text="${address}"></span></p>
-                        </div>
-                        
-                        <div class="mt-4">
-                            <a href="/home" class="btn btn-dark btn-lg me-2">
-                                <i class="fa-solid fa-house"></i> Về trang chủ
-                            </a>
-                            <a href="/orders" class="btn btn-outline-dark btn-lg me-2">
-                                <i class="fa-solid fa-box"></i> Xem đơn hàng của tôi
-                            </a>
-                            <a href="/wines" class="btn btn-outline-secondary btn-lg">
-                                <i class="fa-solid fa-wine-bottle"></i> Tiếp tục mua sắm
-                            </a>
-                        </div>
-                    </div>
+<nav class="navbar navbar-expand-lg navbar-dark navbar-modern py-2">
+    <div class="container">
+        <a class="navbar-brand d-flex align-items-center gap-2" href="/home">
+            <span class="brand-logo"><i class="fa-solid fa-wine-glass"></i></span>
+            StrongWine
+        </a>
+        <div class="ms-auto d-flex gap-2 align-items-center">
+            <a class="nav-link text-white" href="/home">Trang chủ</a>
+            <a class="nav-link text-white" href="/wines">Sản phẩm</a>
+            <a class="nav-link text-white" sec:authorize="isAuthenticated()" href="/orders">Đơn hàng của tôi</a>
+            <a class="nav-link text-white" href="/cart">
+                <i class="fa-solid fa-wine-bottle me-1"></i>
+                <span class="js-cart-count badge text-bg-light text-dark" th:text="${cartCount}">0</span>
+            </a>
+        </div>
+    </div>
+</nav>
+
+<main class="container site-main my-5 d-flex align-items-center justify-content-center" data-order-confirmation="true">
+    <div class="confirmation-card fade-up" style="max-width:540px;width:100%">
+        <div class="text-center mb-4">
+            <span class="check-anim" style="font-size:5rem;color:var(--ok-light)">
+                <i class="fa-solid fa-circle-check"></i>
+            </span>
+        </div>
+        <h2 class="text-center mb-1">Đặt hàng thành công!</h2>
+        <p class="text-center mb-4" style="color:var(--text-muted)">Cảm ơn bạn đã tin tưởng StrongWine</p>
+
+        <div style="background:var(--surface-mid);border:1px solid var(--border);border-radius:var(--r-md);padding:1.25rem">
+            <div class="section-label mb-2">Thông tin đơn hàng</div>
+            <div class="row g-2">
+                <div class="col-6">
+                    <div style="font-size:.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em">Mã đơn hàng</div>
+                    <div style="font-family:'Playfair Display',serif;font-size:1.2rem;color:var(--gold)" th:text="${'#' + orderId}"></div>
+                </div>
+                <div class="col-6">
+                    <div style="font-size:.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em">Trạng thái đơn</div>
+                    <span class="badge text-bg-secondary" th:text="${@enumDisplayService.orderStatus(orderStatus)}"></span>
+                </div>
+                <div class="col-6">
+                    <div style="font-size:.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em">Thanh toán</div>
+                    <span class="badge text-bg-info" th:text="${@enumDisplayService.paymentStatus(paymentStatus)}"></span>
+                </div>
+                <div class="col-6">
+                    <div style="font-size:.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em">Người nhận</div>
+                    <div style="color:var(--text-soft);font-size:.9rem" th:text="${fullName}"></div>
+                </div>
+                <div class="col-6">
+                    <div style="font-size:.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em">Số điện thoại</div>
+                    <div style="color:var(--text-soft);font-size:.9rem" th:text="${phone}"></div>
+                </div>
+                <div class="col-12">
+                    <div style="font-size:.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em">Địa chỉ giao hàng</div>
+                    <div style="color:var(--text-soft);font-size:.9rem" th:text="${address}"></div>
                 </div>
             </div>
         </div>
-    </main>
 
-    <footer class="site-footer text-center py-4 mt-5">
-        <div class="container text-muted">
-            <p class="mb-0">&copy; 2025 StrongWine. Tất cả quyền được bảo lưu.</p>
+        <div class="d-flex flex-wrap gap-2 mt-4 justify-content-center">
+            <a href="/home" class="btn btn-gold">
+                <i class="fa-solid fa-house me-1"></i>Trang chủ
+            </a>
+            <a href="/orders" class="btn btn-outline-secondary">
+                <i class="fa-solid fa-box me-1"></i>Đơn hàng của tôi
+            </a>
+            <a href="/wines" class="btn btn-outline-secondary">
+                <i class="fa-solid fa-wine-bottle me-1"></i>Tiếp tục mua sắm
+            </a>
         </div>
-    </footer>
+    </div>
+</main>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="/js/cart-client.js"></script>
+<footer class="site-footer text-center mt-5">
+    <div class="container">
+        <p class="mb-0">© 2026 StrongWine. Tất cả quyền được bảo lưu.</p>
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/js/cart-client.js"></script>
 </body>
 </html>
-
-

@@ -1,9 +1,12 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${wine.id != null ? 'Sửa rượu' : 'Thêm rượu mới'} + ' - StrongWine'">Biểu mẫu rượu - StrongWine</title>
+    <title th:text="${wine.id != null ? 'Chỉnh sửa rượu vang' : 'Thêm rượu vang mới'} + ' - StrongWine'">Wine Form</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="/css/app.css">
@@ -13,115 +16,138 @@
     <aside class="admin-sidebar">
         <a class="admin-sidebar-brand" href="/admin">
             <span class="brand-logo"><i class="fa-solid fa-wine-glass"></i></span>
-            <span>StrongWine Admin</span>
+            StrongWine Admin
         </a>
         <nav>
+            <div class="admin-sidebar-section">Điều hướng</div>
             <a class="admin-nav-link active" href="/admin"><i class="fa-solid fa-chart-line"></i>Bảng điều khiển</a>
             <a class="admin-nav-link" href="/admin/users"><i class="fa-solid fa-users"></i>Người dùng</a>
             <a class="admin-nav-link" href="/admin/shippers"><i class="fa-solid fa-truck"></i>Người giao hàng</a>
             <a class="admin-nav-link" href="/admin/shipments"><i class="fa-solid fa-box-open"></i>Đơn giao hàng</a>
+            <div class="admin-sidebar-section">Vận hành</div>
+            <a class="admin-nav-link" href="/wines"><i class="fa-solid fa-store"></i>Cửa hàng</a>
         </nav>
+        <div style="padding:1rem;border-top:1px solid var(--border);margin-top:auto">
+            <form th:action="@{/logout}" method="post" class="mb-0">
+                <button class="btn btn-outline-secondary btn-sm w-100"><i class="fa-solid fa-right-from-bracket me-1"></i>Đăng xuất</button>
+            </form>
+        </div>
     </aside>
 
     <div class="admin-main">
         <header class="admin-topbar">
             <div>
-                <h1 class="h5 mb-0" th:text="${wine.id != null ? 'Sửa thông tin rượu' : 'Thêm rượu mới'}">Biểu mẫu rượu</h1>
-                <small class="text-muted">Chuẩn hóa thông tin sản phẩm và hình ảnh hiển thị</small>
+                <h1 th:text="${wine.id != null ? 'Chỉnh sửa rượu vang #' + wine.id : 'Thêm rượu vang mới'}">Wine Form</h1>
+                <small>Quản lý thông tin và hình ảnh sản phẩm</small>
             </div>
-            <div class="d-flex gap-2">
-                <a class="btn btn-sm btn-outline-secondary" href="/admin">Bảng điều khiển</a>
-                <a class="btn btn-sm btn-outline-secondary" href="/wines">Cửa hàng</a>
-                <form th:action="@{/logout}" method="post" class="d-inline">
-                    <button type="submit" class="btn btn-sm btn-outline-secondary">Đăng xuất</button>
-                </form>
-            </div>
+            <a class="btn btn-sm btn-outline-secondary" href="/admin">Quay lại bảng điều khiển</a>
         </header>
 
         <main class="admin-content">
             <div class="admin-form-wrap">
-                <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+                <div th:if="${success}" class="alert alert-success alert-dismissible fade show mb-3">
                     <span th:text="${success}"></span>
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
-                <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                <div th:if="${error}" class="alert alert-danger alert-dismissible fade show mb-3">
                     <span th:text="${error}"></span>
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
 
                 <div class="panel p-4 p-lg-5 fade-up">
                     <form th:action="${wine.id != null ? '/wines/admin/edit/' + wine.id : '/wines/admin/create'}"
-                          method="post"
-                          enctype="multipart/form-data">
+                          method="post" enctype="multipart/form-data" th:object="${wine}">
 
-                        <div class="mb-3">
-                            <label for="name" class="form-label fw-semibold">Tên rượu <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="name" name="name" th:value="${wine.name}" placeholder="Nhập tên rượu" required>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="type" class="form-label fw-semibold">Loại rượu <span class="text-danger">*</span></label>
-                            <select class="form-select" id="type" name="type" required>
-                                <option value="">Chọn loại rượu</option>
-                                <option value="Red" th:selected="${wine.type == 'Red'}">Đỏ</option>
-                                <option value="White" th:selected="${wine.type == 'White'}">Trắng</option>
-                                <option value="Rose" th:selected="${wine.type == 'Rose'}">Hồng</option>
-                                <option value="Sparkling" th:selected="${wine.type == 'Sparkling'}">Có ga</option>
-                            </select>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="country" class="form-label fw-semibold">Quốc gia</label>
-                            <input type="text" class="form-control" id="country" name="country" th:value="${wine.country}" placeholder="Ví dụ: Pháp, Ý, Chile...">
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="year" class="form-label fw-semibold">Năm <span class="text-danger">*</span></label>
-                                <input type="number" class="form-control" id="year" name="year" th:value="${wine.year}" min="1900" max="2100" placeholder="Năm sản xuất" required>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-8">
+                                <label class="form-label">Tên rượu vang <span class="text-danger">*</span></label>
+                                <input class="form-control" th:field="*{name}" required placeholder="Ví dụ: Château Margaux 2018">
                             </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="price" class="form-label fw-semibold">Giá (đồng) <span class="text-danger">*</span></label>
-                                <input type="number" step="0.01" class="form-control" id="price" name="price" th:value="${wine.price}" min="0" placeholder="Nhập giá" required>
+                            <div class="col-md-4">
+                                <label class="form-label">Năm sản xuất</label>
+                                <input class="form-control" type="number" th:field="*{year}" min="1900" max="2100"
+                                       placeholder="Ví dụ: 2019">
                             </div>
                         </div>
 
-                        <div class="mb-3">
-                            <label for="description" class="form-label fw-semibold">Mô tả</label>
-                            <textarea class="form-control" id="description" name="description" rows="4" placeholder="Nhập mô tả về rượu..." th:text="${wine.description}"></textarea>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-4">
+                                <label class="form-label">Loại rượu <span class="text-danger">*</span></label>
+                                <select class="form-select" th:field="*{type}" required>
+                                    <option value="">-- Chọn loại --</option>
+                                    <option value="Red">Vang đỏ</option>
+                                    <option value="White">Vang trắng</option>
+                                    <option value="Rose">Vang hồng</option>
+                                    <option value="Sparkling">Vang sủi</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Giá (đ) <span class="text-danger">*</span></label>
+                                <input class="form-control" type="number" step="1000" min="0" th:field="*{price}" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Quốc gia</label>
+                                <input class="form-control" th:field="*{country}" placeholder="Ví dụ: Pháp, Ý, Mỹ">
+                            </div>
                         </div>
 
-                        <div class="mb-4">
-                            <label class="form-label fw-semibold">Hình ảnh rượu <span class="text-danger">*</span></label>
-                            <div class="panel panel-muted p-3">
-                                <p class="text-muted small mb-3">Bạn có thể tải file ảnh hoặc dùng URL. Ít nhất một nguồn hình ảnh là bắt buộc.</p>
+                        <div class="mb-3">
+                            <label class="form-label">Mô tả sản phẩm</label>
+                            <textarea class="form-control" th:field="*{description}" rows="4"
+                                      placeholder="Mô tả hương vị, phong cách và đặc điểm của rượu..."></textarea>
+                        </div>
 
-                                <div th:if="${wine.imageUrl != null && wine.id != null}" class="mb-3">
-                                    <label class="form-label fw-semibold">Hình ảnh hiện tại</label>
-                                    <div>
-                                        <img th:src="${wine.imageUrl}" class="img-fluid rounded shadow-sm" alt="Hình ảnh rượu hiện tại">
-                                    </div>
+                        <!-- Image upload -->
+                        <div class="mb-3">
+                            <label class="form-label">Hình ảnh sản phẩm</label>
+                            <div class="row g-3 align-items-start">
+                                <div class="col-md-6">
+                                    <label class="form-label" style="font-size:.8rem;color:var(--text-muted)">Tải ảnh lên</label>
+                                    <input class="form-control" type="file" name="imageFile" accept="image/*" id="imageFileInput">
+                                    <div class="form-text">Hỗ trợ JPG, PNG, WebP. Tối đa 5MB.</div>
                                 </div>
-
-                                <div class="mb-3">
-                                    <label for="imageFile" class="form-label">Tải file hình ảnh (JPG, PNG - tối đa 5MB)</label>
-                                    <input type="file" class="form-control" id="imageFile" name="imageFile" accept="image/jpeg,image/jpg,image/png">
-                                    <small class="text-muted">Nếu tải file, ảnh sẽ ưu tiên thay thế URL.</small>
+                                <div class="col-md-6">
+                                    <label class="form-label" style="font-size:.8rem;color:var(--text-muted)">Hoặc nhập URL ảnh</label>
+                                    <input class="form-control" type="text" name="imageUrl" th:value="*{imageUrl}"
+                                           placeholder="https://example.com/wine.jpg">
                                 </div>
+                            </div>
+                            <!-- Preview existing image -->
+                            <div th:if="${wine.imageUrl != null and !wine.imageUrl.isEmpty()}" class="mt-3">
+                                <p style="font-size:.8rem;color:var(--text-muted);margin-bottom:.5rem">Ảnh hiện tại:</p>
+                                <img th:src="${wine.imageUrl}" alt="Ảnh sản phẩm"
+                                     style="height:120px;object-fit:cover;border-radius:var(--r-md);border:1px solid var(--border)">
+                            </div>
+                        </div>
 
-                                <div class="mb-0">
-                                    <label for="imageUrl" class="form-label">Hoặc nhập URL hình ảnh</label>
-                                    <input type="url" class="form-control" id="imageUrl" name="imageUrl" th:value="${wine.imageUrl}" placeholder="https://example.com/image.jpg">
-                                    <small class="text-muted">Nhập URL đầy đủ cho ảnh lưu ở nơi khác.</small>
+                        <!-- Inventory section -->
+                        <div class="panel panel-muted p-3 mb-4">
+                            <div class="section-label mb-2">Thông tin kho hàng (khi thêm mới)</div>
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label class="form-label">Kho hàng</label>
+                                    <select class="form-select" name="warehouseId">
+                                        <option value="">-- Chọn kho --</option>
+                                        <option th:each="wh : ${warehouses}" th:value="${wh.id}" th:text="${wh.name}"></option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Số lượng khởi tạo</label>
+                                    <input class="form-control" type="number" name="initialQuantity" value="0" min="0">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Mức đặt lại (cảnh báo)</label>
+                                    <input class="form-control" type="number" name="reorderLevel" value="5" min="0">
                                 </div>
                             </div>
                         </div>
 
                         <div class="d-flex gap-2">
-                            <button type="submit" class="btn btn-dark">
-                                <span th:text="${wine.id != null ? 'Cập nhật rượu' : 'Tạo rượu mới'}">Lưu</span>
+                            <button class="btn btn-gold" type="submit">
+                                <i class="fa-solid fa-check me-1"></i>
+                                <span th:text="${wine.id != null ? 'Cập nhật sản phẩm' : 'Thêm sản phẩm'}"></span>
                             </button>
-                            <a href="/admin" class="btn btn-outline-secondary">Hủy</a>
+                            <a class="btn btn-outline-secondary" href="/admin">Hủy</a>
                         </div>
                     </form>
                 </div>

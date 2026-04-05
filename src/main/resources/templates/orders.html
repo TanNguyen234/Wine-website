@@ -4,30 +4,35 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Đơn hàng của tôi - StrongWine</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="/css/app.css">
 </head>
 <body>
-<nav class="navbar navbar-expand-lg navbar-dark navbar-modern py-3">
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-modern py-2">
     <div class="container">
-        <a class="navbar-brand fw-bold" href="/home">
-            <span class="brand-logo"><i class="fa-solid fa-wine-glass"></i></span> StrongWine
+        <a class="navbar-brand d-flex align-items-center gap-2" href="/home">
+            <span class="brand-logo"><i class="fa-solid fa-wine-glass"></i></span>
+            StrongWine
         </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav me-auto">
+            <ul class="navbar-nav me-auto ms-lg-4 gap-lg-1">
                 <li class="nav-item"><a class="nav-link" href="/home">Trang chủ</a></li>
-                <li class="nav-item"><a class="nav-link" href="/wines">Danh sách rượu</a></li>
-                <li class="nav-item"><a class="nav-link" href="/orders">Đơn hàng của tôi</a></li>
+                <li class="nav-item"><a class="nav-link" href="/wines">Sản phẩm</a></li>
+                <li class="nav-item"><a class="nav-link active" href="/orders">Đơn hàng của tôi</a></li>
             </ul>
-            <ul class="navbar-nav">
-                <li class="nav-item" sec:authorize="hasRole('ADMIN')"><a class="nav-link" href="/admin">Bảng điều khiển quản trị</a></li>
+            <ul class="navbar-nav align-items-lg-center">
+                <li class="nav-item" sec:authorize="hasRole('ADMIN')"><a class="nav-link" href="/admin">Quản trị</a></li>
                 <li class="nav-item" sec:authorize="isAuthenticated()">
-                    <form th:action="@{/logout}" method="post" class="d-inline">
-                        <button type="submit" class="btn btn-link nav-link">Đăng xuất</button>
+                    <form th:action="@{/logout}" method="post" class="d-inline mb-0">
+                        <button type="submit" class="btn btn-sm btn-outline-secondary ms-1">Đăng xuất</button>
                     </form>
                 </li>
             </ul>
@@ -36,64 +41,90 @@
 </nav>
 
 <main class="container site-main my-4">
-    <div class="panel p-3 p-lg-4 fade-up">
-        <h1 class="h5 mb-3">Đơn hàng của tôi</h1>
-        <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
-        <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+    <div class="mb-4">
+        <div class="section-label">Lịch sử mua hàng</div>
+        <h1 class="h3 mb-0">Đơn hàng của tôi</h1>
+    </div>
+
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+        <i class="fa-solid fa-circle-check me-2"></i><span th:text="${success}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+        <i class="fa-solid fa-triangle-exclamation me-2"></i><span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <div class="panel fade-up">
         <div class="table-responsive">
-            <table class="table table-modern table-sm align-middle">
+            <table class="table table-modern align-middle">
                 <thead>
-                <tr>
-                    <th>Mã đơn</th>
-                    <th>Ngày đặt</th>
-                    <th>Tổng tiền</th>
-                    <th>Thanh toán</th>
-                    <th>Trạng thái</th>
-                    <th>Giao hàng</th>
-                    <th>Hành động</th>
-                </tr>
+                    <tr>
+                        <th>Mã đơn</th>
+                        <th>Ngày đặt</th>
+                        <th>Tổng tiền</th>
+                        <th>Thanh toán</th>
+                        <th>Trạng thái</th>
+                        <th>Giao hàng</th>
+                        <th>Hành động</th>
+                    </tr>
                 </thead>
                 <tbody>
-                <tr th:each="order : ${orders}">
-                    <td th:text="${'#' + order.id}"></td>
-                    <td th:text="${#temporals.format(order.orderDate, 'dd/MM/yyyy HH:mm')}"></td>
-                    <td th:text="${#numbers.formatDecimal(order.totalPrice, 0, 'COMMA', 0, 'POINT') + ' đ'}"></td>
-                    <td><span class="badge text-bg-info" th:text="${@enumDisplayService.paymentStatus(order.paymentStatus)}"></span></td>
-                    <td><span class="badge text-bg-secondary" th:text="${@enumDisplayService.orderStatus(order.status)}"></span></td>
-                      <td th:with="shipment=${shipmentByOrderId != null ? shipmentByOrderId[order.id] : null}">
-                        <span class="badge text-bg-primary"
-                            th:if="${shipment != null}"
-                            th:text="${@enumDisplayService.shipmentStatus(shipment.status)}"></span>
-                        <div class="small mt-1"
-                             th:if="${shipment != null and shipment.shipper != null}"
-                             th:text="${'Shipper: ' + shipment.shipper.name}"></div>
-                        <span class="text-muted small"
-                            th:if="${shipment != null and shipment.shipper == null}"
-                            th:text="'Chưa phân công shipper'"></span>
-                        <span class="text-muted small"
-                            th:if="${shipment == null}"
-                            th:text="${order.paymentStatus == T(com.strongwine.strongwine.entity.PaymentStatus).SUCCESS ? 'Đang tạo đơn giao hàng' : 'Chưa tạo đơn giao hàng'}"></span>
-                      </td>
-                    <td>
-                        <div class="d-flex flex-wrap gap-2">
-                            <a class="btn btn-sm btn-outline-dark" th:href="@{/orders/{id}(id=${order.id})}">Xem chi tiết</a>
-                            <form th:if="${order.paymentStatus != T(com.strongwine.strongwine.entity.PaymentStatus).SUCCESS and order.status != T(com.strongwine.strongwine.entity.OrderStatus).CANCELLED}"
-                                  th:action="@{/orders/{id}/pay(id=${order.id})}" method="post" class="d-inline">
-                                <button type="submit" class="btn btn-sm btn-dark">Thanh toán ngay</button>
-                            </form>
-                        </div>
-                    </td>
-                </tr>
-                <tr th:if="${orders == null || orders.isEmpty()}">
-                    <td colspan="7" class="text-center text-muted">Bạn chưa có đơn hàng nào.</td>
-                </tr>
+                    <tr th:if="${orders == null || orders.isEmpty()}">
+                        <td colspan="7" class="text-center py-5">
+                            <i class="fa-solid fa-box-open fa-2x mb-2 d-block" style="color:var(--text-faint)"></i>
+                            <span style="color:var(--text-muted)">Bạn chưa có đơn hàng nào.</span>
+                        </td>
+                    </tr>
+                    <tr th:each="order : ${orders}">
+                        <td>
+                            <span style="font-family:'Playfair Display',serif;font-weight:700;color:var(--gold)"
+                                  th:text="${'#' + order.id}"></span>
+                        </td>
+                        <td th:text="${#temporals.format(order.orderDate, 'dd/MM/yyyy HH:mm')}"></td>
+                        <td>
+                            <span style="color:var(--gold);font-weight:700"
+                                  th:text="${#numbers.formatDecimal(order.totalPrice, 0, 'COMMA', 0, 'POINT') + ' đ'}"></span>
+                        </td>
+                        <td><span class="badge text-bg-info" th:text="${@enumDisplayService.paymentStatus(order.paymentStatus)}"></span></td>
+                        <td><span class="badge text-bg-secondary" th:text="${@enumDisplayService.orderStatus(order.status)}"></span></td>
+                        <td th:with="shipment=${shipmentByOrderId != null ? shipmentByOrderId[order.id] : null}">
+                            <span class="badge text-bg-primary" th:if="${shipment != null}"
+                                  th:text="${@enumDisplayService.shipmentStatus(shipment.status)}"></span>
+                            <div class="small mt-1" style="color:var(--text-muted)"
+                                 th:if="${shipment != null and shipment.shipper != null}"
+                                 th:text="${'↳ ' + shipment.shipper.name}"></div>
+                            <span style="color:var(--text-faint);font-size:.8rem"
+                                  th:if="${shipment != null and shipment.shipper == null}">Chưa phân công</span>
+                            <span style="color:var(--text-faint);font-size:.8rem"
+                                  th:if="${shipment == null}"
+                                  th:text="${order.paymentStatus == T(com.strongwine.strongwine.entity.PaymentStatus).SUCCESS ? 'Đang tạo đơn giao hàng' : 'Chưa tạo đơn'}"></span>
+                        </td>
+                        <td>
+                            <div class="d-flex flex-wrap gap-2">
+                                <a class="btn btn-sm btn-outline-secondary" th:href="@{/orders/{id}(id=${order.id})}">
+                                    <i class="fa-solid fa-eye me-1"></i>Chi tiết
+                                </a>
+                                <form th:if="${order.paymentStatus != T(com.strongwine.strongwine.entity.PaymentStatus).SUCCESS and order.status != T(com.strongwine.strongwine.entity.OrderStatus).CANCELLED}"
+                                      th:action="@{/orders/{id}/pay(id=${order.id})}" method="post" class="d-inline mb-0">
+                                    <button type="submit" class="btn btn-sm btn-gold">
+                                        <i class="fa-solid fa-credit-card me-1"></i>Thanh toán
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
                 </tbody>
             </table>
         </div>
     </div>
 </main>
 
-<footer class="site-footer text-center py-4 text-muted small">© 2026 StrongWine. Tất cả quyền được bảo lưu.</footer>
+<footer class="site-footer text-center mt-5">
+    <div class="container">
+        <p class="mb-0">© 2026 StrongWine. Tất cả quyền được bảo lưu.</p>
+    </div>
+</footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>

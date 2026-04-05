@@ -4,86 +4,127 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bảng giao hàng - StrongWine</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="/css/app.css">
 </head>
 <body>
-<nav class="navbar navbar-dark navbar-modern py-3">
-    <div class="container d-flex justify-content-between">
-        <a class="navbar-brand" href="/home">StrongWine Giao hàng</a>
-        <div class="d-flex gap-2">
-            <form th:action="@{/logout}" method="post">
-                <button type="submit" class="btn btn-sm btn-light">Đăng xuất</button>
+
+<nav class="navbar navbar-dark navbar-modern py-2">
+    <div class="container d-flex justify-content-between align-items-center">
+        <a class="navbar-brand d-flex align-items-center gap-2" href="/home">
+            <span class="brand-logo"><i class="fa-solid fa-wine-glass"></i></span>
+            StrongWine Giao hàng
+        </a>
+        <div class="d-flex gap-2 align-items-center">
+            <span style="font-size:.8rem;color:var(--text-muted)" sec:authentication="name"></span>
+            <form th:action="@{/logout}" method="post" class="mb-0">
+                <button type="submit" class="btn btn-sm btn-outline-secondary">Đăng xuất</button>
             </form>
         </div>
     </div>
 </nav>
 
 <main class="container site-main my-4">
-    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
-    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show mb-3">
+        <span th:text="${success}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show mb-3">
+        <span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <div class="d-flex align-items-center gap-3 mb-4">
+        <div>
+            <div class="section-label">Đơn giao của tôi</div>
+            <h1 class="h4 mb-0">Bảng giao hàng</h1>
+        </div>
+        <p class="mb-0 ms-auto" style="color:var(--text-muted);font-size:.82rem">Hệ thống tự động phân công theo trạng thái sẵn sàng</p>
+    </div>
 
     <div class="panel p-3 p-lg-4 fade-up">
-        <h1 class="h5 mb-3">Danh sách đơn giao của tôi</h1>
-        <p class="text-muted small mb-3">Các đơn bên dưới được hệ thống tự động phân công theo trạng thái sẵn sàng của shipper.</p>
         <div class="table-responsive">
             <table class="table table-modern align-middle">
                 <thead>
-                <tr>
-                    <th>Mã đơn giao hàng</th>
-                    <th>Đơn hàng</th>
-                    <th>Tên nhận</th>
-                    <th>SĐT</th>
-                    <th>Địa chỉ</th>
-                    <th>Trạng thái</th>
-                    <th>Hành động</th>
-                </tr>
+                    <tr>
+                        <th>Mã đơn giao</th>
+                        <th>Đơn hàng</th>
+                        <th>Tên nhận</th>
+                        <th>SĐT</th>
+                        <th>Địa chỉ</th>
+                        <th>Trạng thái</th>
+                        <th>Hành động</th>
+                    </tr>
                 </thead>
                 <tbody>
-                <tr th:each="s : ${shipments}">
-                    <td th:text="${s.id}"></td>
-                    <td th:text="${s.order.id}"></td>
-                    <td th:text="${s.shippingName}"></td>
-                    <td th:text="${s.shippingPhone}"></td>
-                    <td th:text="${s.shippingAddress}"></td>
-                    <td>
-                        <span class="badge"
-                            th:classappend="${s.status.name() == 'COMPLETED' ? ' text-bg-success' : (s.status.name() == 'FAILED' ? ' text-bg-danger' : (s.status.name() == 'DELIVERING' ? ' text-bg-warning' : ' text-bg-secondary'))}"
-                            th:text="${@enumDisplayService.shipmentStatus(s.status)}"></span>
-                    </td>
-                    <td>
-                        <div class="d-flex flex-column gap-1 action-stack">
-                            <form th:if="${s.status.name() == 'ASSIGNED'}" th:action="@{/shipper/shipments/{id}/pickup(id=${s.id})}" method="post">
-                                <button class="btn btn-sm btn-outline-primary w-100" type="submit">Xác nhận lấy hàng</button>
-                            </form>
-                            <form th:if="${s.status.name() == 'PICKED_UP'}" th:action="@{/shipper/shipments/{id}/start(id=${s.id})}" method="post">
-                                <button class="btn btn-sm btn-outline-warning w-100" type="submit">Bắt đầu giao</button>
-                            </form>
-                            <form th:if="${s.status.name() == 'DELIVERING'}" th:action="@{/shipper/shipments/{id}/complete(id=${s.id})}" method="post" class="d-flex gap-1">
-                                <input class="form-control form-control-sm" name="otp" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" minlength="6" maxlength="6" placeholder="OTP 6 số" required>
-                                <button class="btn btn-sm btn-outline-success" type="submit">Hoàn tất</button>
-                            </form>
-                            <form th:if="${s.status.name() == 'DELIVERING'}" th:action="@{/shipper/shipments/{id}/resend-otp(id=${s.id})}" method="post">
-                                <button class="btn btn-sm btn-outline-secondary w-100" type="submit">Gửi lại OTP</button>
-                            </form>
-                            <form th:if="${s.status.name() == 'DELIVERING'}" th:action="@{/shipper/shipments/{id}/fail(id=${s.id})}" method="post" class="d-flex gap-1">
-                                <input class="form-control form-control-sm" name="note" placeholder="Lý do thất bại">
-                                <button class="btn btn-sm btn-outline-danger" type="submit">Thất bại</button>
-                            </form>
-                        </div>
-                    </td>
-                </tr>
-                <tr th:if="${shipments.isEmpty()}">
-                    <td colspan="7" class="text-center text-muted">Hiện chưa có đơn nào được tự động phân công cho bạn.</td>
-                </tr>
+                    <tr th:if="${shipments.isEmpty()}">
+                        <td colspan="7" class="text-center py-5">
+                            <i class="fa-solid fa-truck fa-2x mb-2 d-block" style="color:var(--text-faint)"></i>
+                            <span style="color:var(--text-muted)">Hiện chưa có đơn nào được phân công cho bạn.</span>
+                        </td>
+                    </tr>
+                    <tr th:each="s : ${shipments}">
+                        <td style="color:var(--gold);font-weight:700" th:text="${s.id}"></td>
+                        <td style="color:var(--text-soft)" th:text="${'#' + s.order.id}"></td>
+                        <td style="font-weight:600;color:var(--text)" th:text="${s.shippingName}"></td>
+                        <td th:text="${s.shippingPhone}"></td>
+                        <td style="color:var(--text-muted);font-size:.82rem" th:text="${s.shippingAddress}"></td>
+                        <td>
+                            <span class="badge"
+                                  th:classappend="${s.status.name() == 'COMPLETED' ? ' text-bg-success' : (s.status.name() == 'FAILED' ? ' text-bg-danger' : (s.status.name() == 'DELIVERING' ? ' text-bg-warning' : ' text-bg-secondary'))}"
+                                  th:text="${@enumDisplayService.shipmentStatus(s.status)}"></span>
+                        </td>
+                        <td>
+                            <div class="d-flex flex-column gap-1 action-stack">
+                                <form th:if="${s.status.name() == 'ASSIGNED'}"
+                                      th:action="@{/shipper/shipments/{id}/pickup(id=${s.id})}" method="post" class="mb-0">
+                                    <button class="btn btn-sm btn-outline-secondary w-100">
+                                        <i class="fa-solid fa-box me-1"></i>Xác nhận lấy hàng
+                                    </button>
+                                </form>
+                                <form th:if="${s.status.name() == 'PICKED_UP'}"
+                                      th:action="@{/shipper/shipments/{id}/start(id=${s.id})}" method="post" class="mb-0">
+                                    <button class="btn btn-sm btn-gold w-100">
+                                        <i class="fa-solid fa-truck me-1"></i>Bắt đầu giao
+                                    </button>
+                                </form>
+                                <form th:if="${s.status.name() == 'DELIVERING'}"
+                                      th:action="@{/shipper/shipments/{id}/complete(id=${s.id})}" method="post"
+                                      class="d-flex gap-1 mb-0">
+                                    <input class="form-control form-control-sm" name="otp"
+                                           inputmode="numeric" autocomplete="one-time-code"
+                                           pattern="[0-9]{6}" minlength="6" maxlength="6"
+                                           placeholder="OTP 6 số" required>
+                                    <button class="btn btn-sm btn-outline-success">Hoàn tất</button>
+                                </form>
+                                <form th:if="${s.status.name() == 'DELIVERING'}"
+                                      th:action="@{/shipper/shipments/{id}/resend-otp(id=${s.id})}" method="post" class="mb-0">
+                                    <button class="btn btn-sm btn-outline-secondary w-100">Gửi lại OTP</button>
+                                </form>
+                                <form th:if="${s.status.name() == 'DELIVERING'}"
+                                      th:action="@{/shipper/shipments/{id}/fail(id=${s.id})}" method="post"
+                                      class="d-flex gap-1 mb-0">
+                                    <input class="form-control form-control-sm" name="note" placeholder="Lý do">
+                                    <button class="btn btn-sm btn-outline-danger">Thất bại</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
                 </tbody>
             </table>
         </div>
     </div>
 </main>
 
-<footer class="site-footer text-center py-4 text-muted small">© 2026 StrongWine. Tất cả quyền được bảo lưu.</footer>
+<footer class="site-footer text-center mt-5">
+    <div class="container">
+        <p class="mb-0">© 2026 StrongWine. Tất cả quyền được bảo lưu.</p>
+    </div>
+</footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>

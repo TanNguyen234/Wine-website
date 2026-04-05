@@ -1,289 +1,344 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bảng điều khiển quản trị - StrongWine</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="/css/app.css">
 </head>
 <body class="admin-page">
 <div class="admin-layout">
+
+    <!-- Sidebar -->
     <aside class="admin-sidebar">
         <a class="admin-sidebar-brand" href="/admin">
             <span class="brand-logo"><i class="fa-solid fa-wine-glass"></i></span>
-            <span>StrongWine Admin</span>
+            StrongWine Admin
         </a>
         <nav>
+            <div class="admin-sidebar-section">Điều hướng</div>
             <a class="admin-nav-link active" href="/admin"><i class="fa-solid fa-chart-line"></i>Bảng điều khiển</a>
             <a class="admin-nav-link" href="/admin/users"><i class="fa-solid fa-users"></i>Người dùng</a>
             <a class="admin-nav-link" href="/admin/shippers"><i class="fa-solid fa-truck"></i>Người giao hàng</a>
             <a class="admin-nav-link" href="/admin/shipments"><i class="fa-solid fa-box-open"></i>Đơn giao hàng</a>
+            <div class="admin-sidebar-section">Vận hành</div>
             <a class="admin-nav-link" href="/shipper/dashboard"><i class="fa-solid fa-map-location-dot"></i>Màn hình giao hàng</a>
+            <a class="admin-nav-link" href="/wines"><i class="fa-solid fa-store"></i>Cửa hàng</a>
         </nav>
+        <div style="padding:1rem;border-top:1px solid var(--border);margin-top:auto">
+            <form th:action="@{/logout}" method="post" class="mb-0">
+                <button class="btn btn-outline-secondary btn-sm w-100">
+                    <i class="fa-solid fa-right-from-bracket me-1"></i>Đăng xuất
+                </button>
+            </form>
+        </div>
     </aside>
 
+    <!-- Main -->
     <div class="admin-main">
         <header class="admin-topbar">
             <div>
-                <h1 class="h5 mb-0">Bảng điều khiển quản trị</h1>
-                <small class="text-muted">Theo dõi vận hành, kho và thanh toán</small>
+                <h1>Bảng điều khiển</h1>
+                <small>Theo dõi vận hành, kho và thanh toán</small>
             </div>
             <div class="d-flex align-items-center gap-2">
-                <a href="/wines" class="btn btn-sm btn-outline-secondary">Cửa hàng</a>
-                <form th:action="@{/logout}" method="post" class="d-inline">
-                    <button type="submit" class="btn btn-sm btn-dark">Đăng xuất</button>
-                </form>
+                <span class="badge text-bg-warning" th:text="${lowStockCount} + ' sắp hết hàng'"></span>
+                <span class="badge text-bg-info" th:text="${pendingPayments} + ' thanh toán chờ xử lý'"></span>
             </div>
         </header>
 
         <main class="admin-content">
-    <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
-        <span th:text="${success}"></span>
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
-        <span th:text="${error}"></span>
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
+            <div th:if="${success}" class="alert alert-success alert-dismissible fade show mb-3" role="alert">
+                <span th:text="${success}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            <div th:if="${error}" class="alert alert-danger alert-dismissible fade show mb-3" role="alert">
+                <span th:text="${error}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
 
-    <div class="row g-3 mb-4 fade-up">
-        <div class="col-lg-2 col-md-4 col-6">
-            <div class="stat-card h-100">
-                <div class="stat-label">Sản phẩm</div>
-                <p class="stat-value" th:text="${totalWines}">0</p>
-            </div>
-        </div>
-        <div class="col-lg-2 col-md-4 col-6">
-            <div class="stat-card h-100">
-                <div class="stat-label">Người dùng</div>
-                <p class="stat-value" th:text="${totalUsers}">0</p>
-            </div>
-        </div>
-        <div class="col-lg-2 col-md-4 col-6">
-            <div class="stat-card h-100">
-                <div class="stat-label">Đơn hàng</div>
-                <p class="stat-value" th:text="${totalOrders}">0</p>
-            </div>
-        </div>
-        <div class="col-lg-2 col-md-4 col-6">
-            <div class="stat-card h-100">
-                <div class="stat-label">Đơn giao hàng</div>
-                <p class="stat-value" th:text="${totalShipments}">0</p>
-            </div>
-        </div>
-        <div class="col-lg-2 col-md-4 col-6">
-            <div class="stat-card h-100">
-                <div class="stat-label">Người giao hàng đang hoạt động</div>
-                <p class="stat-value" th:text="${shipperStats['active']}">0</p>
-            </div>
-        </div>
-        <div class="col-lg-2 col-md-4 col-6">
-            <div class="stat-card h-100">
-                <div class="stat-label">Doanh thu (đã thanh toán)</div>
-                <p class="h6 mb-0" th:text="${#numbers.formatDecimal(totalRevenue, 0, 'COMMA', 0, 'POINT') + ' đ'}">0</p>
-            </div>
-        </div>
-    </div>
-
-    <div class="panel panel-muted p-3 mb-3 fade-up">
-        <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between">
-            <div class="d-flex flex-wrap gap-2 align-items-center">
-                <span class="small text-muted me-1">Quản trị nhanh:</span>
-                <a href="/admin/users" class="btn btn-sm btn-outline-dark">Quản lý người dùng</a>
-                <a href="/admin/shippers" class="btn btn-sm btn-outline-dark">Quản lý người giao hàng</a>
-                <a href="/admin/shipments" class="btn btn-sm btn-outline-dark">Quản lý đơn giao hàng</a>
-                <a href="/shipper/dashboard" class="btn btn-sm btn-outline-primary">Màn hình giao hàng</a>
-            </div>
-            <div>
-                <span class="badge text-bg-warning me-1" th:text="${lowStockCount} + ' sản phẩm sắp hết hàng'"></span>
-                <span class="badge text-bg-info" th:text="${pendingPayments} + ' thanh toán chờ xử lý'"></span>
-            </div>
-        </div>
-    </div>
-
-    <ul class="nav nav-tabs admin-menu-tabs" id="adminTabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#products" type="button">Sản phẩm</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#orders" type="button">Đơn hàng</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#inventory" type="button">Kho hàng</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#payments" type="button">Thanh toán</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#alerts" type="button">Cảnh báo</button></li>
-    </ul>
-
-    <div class="tab-content">
-        <section class="tab-pane fade show active" id="products">
-            <div class="panel p-3 p-lg-4 mt-3 fade-up">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h2 class="h6 mb-0">Danh mục sản phẩm</h2>
-                    <a href="/wines/admin/create" class="btn btn-sm btn-dark">Thêm rượu</a>
+            <!-- Stats row -->
+            <div class="row g-3 mb-4 fade-up">
+                <div class="col-lg-2 col-md-4 col-6">
+                    <div class="stat-card h-100">
+                        <div class="stat-label">Sản phẩm</div>
+                        <p class="stat-value" th:text="${totalWines}">0</p>
+                    </div>
                 </div>
-                <div class="row g-3">
-                    <div class="col-lg-3 col-md-4" th:each="wine : ${wines}">
-                        <article class="product-card h-100">
-                            <img th:if="${wine.imageUrl != null}" th:src="${wine.imageUrl}" class="w-100 product-thumb" alt="Hình ảnh rượu">
-                            <div th:unless="${wine.imageUrl != null}" class="product-thumb bg-light d-flex align-items-center justify-content-center"><i class="fa-regular fa-image text-muted"></i></div>
-                            <div class="p-2">
-                                <div class="fw-semibold" th:text="${wine.name}"></div>
-                                <div class="small text-muted" th:text="${@enumDisplayService.wineType(wine.type) + ' - ' + wine.year}"></div>
-                                <div class="price-tag small" th:text="${#numbers.formatDecimal(wine.price, 0, 'COMMA', 0, 'POINT') + ' đ'}"></div>
-                                <div class="d-flex gap-1 mt-2">
-                                    <a class="btn btn-sm btn-outline-dark flex-fill" th:href="@{/wines/admin/edit/{id}(id=${wine.id})}">Sửa</a>
-                                    <form class="flex-fill" th:action="@{/wines/admin/delete/{id}(id=${wine.id})}" method="post" onsubmit="return confirm('Bạn có chắc muốn xóa sản phẩm này?');">
-                                        <button class="btn btn-sm btn-outline-danger w-100" type="submit">Xóa</button>
-                                    </form>
-                                </div>
-                            </div>
-                        </article>
+                <div class="col-lg-2 col-md-4 col-6">
+                    <div class="stat-card h-100">
+                        <div class="stat-label">Người dùng</div>
+                        <p class="stat-value" th:text="${totalUsers}">0</p>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-4 col-6">
+                    <div class="stat-card h-100">
+                        <div class="stat-label">Đơn hàng</div>
+                        <p class="stat-value" th:text="${totalOrders}">0</p>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-4 col-6">
+                    <div class="stat-card h-100">
+                        <div class="stat-label">Đơn giao hàng</div>
+                        <p class="stat-value" th:text="${totalShipments}">0</p>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-4 col-6">
+                    <div class="stat-card h-100">
+                        <div class="stat-label">Shipper hoạt động</div>
+                        <p class="stat-value" th:text="${shipperStats['active']}">0</p>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-4 col-6">
+                    <div class="stat-card h-100">
+                        <div class="stat-label">Doanh thu</div>
+                        <p class="h6 mb-0" style="color:var(--gold);font-family:'Playfair Display',serif;font-size:1rem;margin-top:.25rem"
+                           th:text="${#numbers.formatDecimal(totalRevenue, 0, 'COMMA', 0, 'POINT') + ' đ'}">0</p>
                     </div>
                 </div>
             </div>
-        </section>
 
-        <section class="tab-pane fade" id="orders">
-            <div class="panel p-3 p-lg-4 mt-3 fade-up">
-                <h2 class="h6">Quản lý đơn hàng</h2>
-                <div class="table-responsive">
-                    <table class="table table-modern align-middle">
-                        <thead>
-                        <tr><th>Mã</th><th>Người đặt</th><th>Ngày đặt</th><th>Trạng thái</th><th>Thanh toán</th><th>Tổng tiền</th></tr>
-                        </thead>
-                        <tbody>
-                        <tr th:each="order : ${orders}">
-                            <td th:text="${order.id}"></td>
-                            <td th:text="${order.user.username}"></td>
-                            <td th:text="${#temporals.format(order.orderDate, 'dd/MM/yyyy HH:mm')}"></td>
-                            <td><span class="badge text-bg-secondary" th:text="${@enumDisplayService.orderStatus(order.status)}"></span></td>
-                            <td><span class="badge text-bg-info" th:text="${@enumDisplayService.paymentStatus(order.paymentStatus)}"></span></td>
-                            <td th:text="${#numbers.formatDecimal(order.totalPrice, 0, 'COMMA', 0, 'POINT') + ' đ'}"></td>
-                        </tr>
-                        </tbody>
-                    </table>
+            <!-- Quick actions -->
+            <div class="panel panel-muted p-3 mb-3 fade-up">
+                <div class="d-flex flex-wrap gap-2 align-items-center">
+                    <span style="font-size:.72rem;color:var(--text-faint);font-weight:700;letter-spacing:.08em;text-transform:uppercase">Quản trị nhanh</span>
+                    <a href="/admin/users" class="btn btn-sm btn-outline-secondary">Người dùng</a>
+                    <a href="/admin/shippers" class="btn btn-sm btn-outline-secondary">Người giao hàng</a>
+                    <a href="/admin/shipments" class="btn btn-sm btn-outline-secondary">Đơn giao hàng</a>
+                    <a href="/shipper/dashboard" class="btn btn-sm btn-outline-secondary">Màn hình giao hàng</a>
                 </div>
             </div>
-        </section>
 
-        <section class="tab-pane fade" id="inventory">
-            <div class="panel p-3 p-lg-4 mt-3 fade-up">
-                <h2 class="h6">Quản lý kho</h2>
-                <div class="table-responsive mb-4">
-                    <table class="table table-modern align-middle">
-                        <thead>
-                        <tr><th>Rượu</th><th>Kho</th><th>Tồn hiện tại</th><th>Đã giữ</th><th>Khả dụng</th><th>Mức đặt lại</th><th>Nhập/Xuất</th></tr>
-                        </thead>
-                        <tbody>
-                        <tr th:each="inv : ${inventories}">
-                            <td th:text="${inv.wine.name}"></td>
-                            <td th:text="${inv.warehouse.name}"></td>
-                            <td th:text="${inv.currentQuantity}"></td>
-                            <td th:text="${inv.reservedQuantity}"></td>
-                            <td>
-                                <span th:class="${inv.availableQuantity <= inv.reorderLevel ? 'stock-badge stock-low' : 'stock-badge stock-ok'}"
-                                      th:text="${inv.availableQuantity}"></span>
-                            </td>
-                            <td th:text="${inv.reorderLevel}"></td>
-                            <td>
-                                <div class="d-flex flex-column gap-1">
-                                    <form class="inventory-action-row" th:action="@{/admin/inventory/import/{wineId}(wineId=${inv.wine.id})}" method="post">
-                                        <input type="hidden" name="wineId" th:value="${inv.wine.id}">
-                                        <input type="hidden" name="warehouseId" th:value="${inv.warehouse.id}">
-                                        <input class="form-control form-control-sm inventory-number" type="number" min="1" name="quantity" value="10">
-                                        <input class="form-control form-control-sm inventory-note" name="note" placeholder="Ghi chú">
-                                        <button class="btn btn-sm btn-outline-success" type="submit">Nhập</button>
-                                    </form>
-                                    <form class="inventory-action-row" th:action="@{/admin/inventory/export/{wineId}(wineId=${inv.wine.id})}" method="post">
-                                        <input type="hidden" name="wineId" th:value="${inv.wine.id}">
-                                        <input type="hidden" name="warehouseId" th:value="${inv.warehouse.id}">
-                                        <input class="form-control form-control-sm inventory-number" type="number" min="1" name="quantity" value="5">
-                                        <input class="form-control form-control-sm inventory-note" name="note" placeholder="Ghi chú">
-                                        <button class="btn btn-sm btn-outline-danger" type="submit">Xuất</button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                        </tbody>
-                    </table>
-                </div>
+            <!-- Tabs -->
+            <ul class="nav admin-menu-tabs" id="adminTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#products" type="button">
+                        <i class="fa-solid fa-wine-bottle me-1"></i>Sản phẩm
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#orders" type="button">
+                        <i class="fa-solid fa-receipt me-1"></i>Đơn hàng
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#inventory" type="button">
+                        <i class="fa-solid fa-warehouse me-1"></i>Kho hàng
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#payments" type="button">
+                        <i class="fa-solid fa-credit-card me-1"></i>Thanh toán
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#alerts" type="button">
+                        <i class="fa-solid fa-triangle-exclamation me-1"></i>Cảnh báo
+                    </button>
+                </li>
+            </ul>
 
-                <h3 class="h6">Lịch sử giao dịch kho</h3>
-                <div class="table-responsive">
-                    <table class="table table-modern align-middle">
-                        <thead>
-                        <tr><th>Thời gian</th><th>Rượu</th><th>Thao tác</th><th>Số lượng</th><th>Mã người dùng</th><th>Tham chiếu</th></tr>
-                        </thead>
-                        <tbody>
-                        <tr th:each="tx : ${inventoryTransactions}">
-                            <td th:text="${#temporals.format(tx.createdAt, 'dd/MM/yyyy HH:mm')}"></td>
-                            <td th:text="${tx.wine.name}"></td>
-                            <td th:text="${@enumDisplayService.inventoryOperation(tx.operationType)}"></td>
-                            <td th:text="${tx.quantity}"></td>
-                            <td th:text="${tx.userId}"></td>
-                            <td th:text="${@enumDisplayService.inventoryReferenceType(tx.referenceType) + (tx.referenceId != null ? (' #' + tx.referenceId) : '')}"></td>
-                        </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </section>
-
-        <section class="tab-pane fade" id="payments">
-            <div class="panel p-3 p-lg-4 mt-3 fade-up">
-                <h2 class="h6">Giao dịch thanh toán</h2>
-                <div class="table-responsive mb-4">
-                    <table class="table table-modern align-middle">
-                        <thead>
-                        <tr><th>Ngày tạo</th><th>Đơn hàng</th><th>Mã tham chiếu</th><th>Phương thức</th><th>Trạng thái</th><th>Số tiền</th></tr>
-                        </thead>
-                        <tbody>
-                        <tr th:each="pay : ${payments}">
-                            <td th:text="${#temporals.format(pay.createdAt, 'dd/MM/yyyy HH:mm')}"></td>
-                            <td th:text="${pay.order.id}"></td>
-                            <td th:text="${pay.paymentReference}"></td>
-                            <td th:text="${@enumDisplayService.paymentMethod(pay.method)}"></td>
-                            <td><span class="badge text-bg-secondary" th:text="${@enumDisplayService.paymentStatus(pay.status)}"></span></td>
-                            <td th:text="${#numbers.formatDecimal(pay.amount, 0, 'COMMA', 0, 'POINT') + ' đ'}"></td>
-                        </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <h3 class="h6">Nhật ký sự kiện thanh toán</h3>
-                <div class="table-responsive">
-                    <table class="table table-modern align-middle">
-                        <thead>
-                        <tr><th>Thời gian</th><th>Loại giao dịch</th><th>Trạng thái</th><th>Dữ liệu</th></tr>
-                        </thead>
-                        <tbody>
-                        <tr th:each="ptx : ${paymentTransactions}">
-                            <td th:text="${#temporals.format(ptx.createdAt, 'dd/MM/yyyy HH:mm')}"></td>
-                            <td th:text="${@enumDisplayService.paymentTransactionType(ptx.transactionType)}"></td>
-                            <td th:text="${@enumDisplayService.paymentTransactionStatus(ptx.status)}"></td>
-                            <td class="small text-muted" th:text="${ptx.payload}"></td>
-                        </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </section>
-
-        <section class="tab-pane fade" id="alerts">
-            <div class="panel p-3 p-lg-4 mt-3 fade-up">
-                <h2 class="h6">Cảnh báo tồn kho thấp</h2>
-                <div th:if="${lowStockItems.isEmpty()}" class="alert alert-success mb-0">Không có sản phẩm sắp hết hàng.</div>
-                <div th:unless="${lowStockItems.isEmpty()}" class="list-group">
-                    <div class="list-group-item" th:each="item : ${lowStockItems}">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <strong th:text="${item.wine.name}"></strong>
-                                <div class="small text-muted" th:text="${item.warehouse.name}"></div>
+            <div class="tab-content">
+                <!-- Products tab -->
+                <section class="tab-pane fade show active" id="products">
+                    <div class="panel p-3 p-lg-4 fade-up">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h2 class="h6 mb-0" style="font-family:'Lato',sans-serif;text-transform:uppercase;letter-spacing:.06em;font-size:.8rem;color:var(--text-muted)">
+                                Danh mục sản phẩm
+                            </h2>
+                            <a href="/wines/admin/create" class="btn btn-gold btn-sm">
+                                <i class="fa-solid fa-plus me-1"></i>Thêm rượu
+                            </a>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-lg-3 col-md-4 col-6" th:each="wine : ${wines}">
+                                <article class="product-card h-100">
+                                    <img th:if="${wine.imageUrl != null}" th:src="${wine.imageUrl}"
+                                         class="product-thumb" alt="Rượu vang">
+                                    <div th:unless="${wine.imageUrl != null}"
+                                         class="product-thumb d-flex align-items-center justify-content-center"
+                                         style="background:var(--surface-mid)">
+                                        <i class="fa-solid fa-wine-bottle" style="color:var(--text-faint)"></i>
+                                    </div>
+                                    <div class="p-2">
+                                        <div class="fw-bold mb-1" style="color:var(--text);font-size:.85rem" th:text="${wine.name}"></div>
+                                        <div style="font-size:.75rem;color:var(--text-muted)" th:text="${@enumDisplayService.wineType(wine.type) + ' · ' + wine.year}"></div>
+                                        <div class="price-tag" style="font-size:.9rem" th:text="${#numbers.formatDecimal(wine.price, 0, 'COMMA', 0, 'POINT') + ' đ'}"></div>
+                                        <div class="d-flex gap-1 mt-2">
+                                            <a class="btn btn-sm btn-outline-secondary flex-fill" th:href="@{/wines/admin/edit/{id}(id=${wine.id})}">
+                                                <i class="fa-solid fa-pen me-1"></i>Sửa
+                                            </a>
+                                            <form class="flex-fill mb-0"
+                                                  th:action="@{/wines/admin/delete/{id}(id=${wine.id})}" method="post"
+                                                  onsubmit="return confirm('Bạn có chắc muốn xóa sản phẩm này?');">
+                                                <button class="btn btn-sm btn-outline-danger w-100" type="submit">
+                                                    <i class="fa-solid fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </article>
                             </div>
-                            <span class="stock-badge stock-low" th:text="${'Khả dụng: ' + item.availableQuantity}"></span>
                         </div>
                     </div>
-                </div>
+                </section>
+
+                <!-- Orders tab -->
+                <section class="tab-pane fade" id="orders">
+                    <div class="panel p-3 p-lg-4 fade-up">
+                        <h2 class="h6 mb-3" style="font-family:'Lato',sans-serif;text-transform:uppercase;letter-spacing:.06em;font-size:.8rem;color:var(--text-muted)">Quản lý đơn hàng</h2>
+                        <div class="table-responsive">
+                            <table class="table table-modern align-middle">
+                                <thead>
+                                    <tr><th>Mã</th><th>Người đặt</th><th>Ngày đặt</th><th>Trạng thái</th><th>Thanh toán</th><th>Tổng tiền</th></tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="order : ${orders}">
+                                        <td style="color:var(--gold);font-weight:700" th:text="${order.id}"></td>
+                                        <td th:text="${order.user.username}"></td>
+                                        <td th:text="${#temporals.format(order.orderDate, 'dd/MM/yyyy HH:mm')}"></td>
+                                        <td><span class="badge text-bg-secondary" th:text="${@enumDisplayService.orderStatus(order.status)}"></span></td>
+                                        <td><span class="badge text-bg-info" th:text="${@enumDisplayService.paymentStatus(order.paymentStatus)}"></span></td>
+                                        <td style="color:var(--gold);font-weight:600" th:text="${#numbers.formatDecimal(order.totalPrice, 0, 'COMMA', 0, 'POINT') + ' đ'}"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Inventory tab -->
+                <section class="tab-pane fade" id="inventory">
+                    <div class="panel p-3 p-lg-4 fade-up">
+                        <h2 class="h6 mb-3" style="font-family:'Lato',sans-serif;text-transform:uppercase;letter-spacing:.06em;font-size:.8rem;color:var(--text-muted)">Quản lý kho</h2>
+                        <div class="table-responsive mb-4">
+                            <table class="table table-modern align-middle">
+                                <thead>
+                                    <tr><th>Rượu</th><th>Kho</th><th>Tồn hiện tại</th><th>Đã giữ</th><th>Khả dụng</th><th>Mức đặt lại</th><th>Nhập/Xuất</th></tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="inv : ${inventories}">
+                                        <td style="font-weight:600;color:var(--text)" th:text="${inv.wine.name}"></td>
+                                        <td style="color:var(--text-muted)" th:text="${inv.warehouse.name}"></td>
+                                        <td th:text="${inv.currentQuantity}"></td>
+                                        <td th:text="${inv.reservedQuantity}"></td>
+                                        <td>
+                                            <span th:class="${inv.availableQuantity <= inv.reorderLevel ? 'stock-badge stock-low' : 'stock-badge stock-ok'}"
+                                                  th:text="${inv.availableQuantity}"></span>
+                                        </td>
+                                        <td th:text="${inv.reorderLevel}"></td>
+                                        <td>
+                                            <div class="d-flex flex-column gap-1">
+                                                <form class="inventory-action-row mb-0"
+                                                      th:action="@{/admin/inventory/import/{wineId}(wineId=${inv.wine.id})}" method="post">
+                                                    <input type="hidden" name="wineId" th:value="${inv.wine.id}">
+                                                    <input type="hidden" name="warehouseId" th:value="${inv.warehouse.id}">
+                                                    <input class="form-control form-control-sm inventory-number" type="number" min="1" name="quantity" value="10">
+                                                    <input class="form-control form-control-sm inventory-note" name="note" placeholder="Ghi chú">
+                                                    <button class="btn btn-sm btn-outline-success" type="submit">Nhập</button>
+                                                </form>
+                                                <form class="inventory-action-row mb-0"
+                                                      th:action="@{/admin/inventory/export/{wineId}(wineId=${inv.wine.id})}" method="post">
+                                                    <input type="hidden" name="wineId" th:value="${inv.wine.id}">
+                                                    <input type="hidden" name="warehouseId" th:value="${inv.warehouse.id}">
+                                                    <input class="form-control form-control-sm inventory-number" type="number" min="1" name="quantity" value="5">
+                                                    <input class="form-control form-control-sm inventory-note" name="note" placeholder="Ghi chú">
+                                                    <button class="btn btn-sm btn-outline-danger" type="submit">Xuất</button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <h3 class="h6 mb-3" style="font-family:'Lato',sans-serif;text-transform:uppercase;letter-spacing:.06em;font-size:.75rem;color:var(--text-muted)">Lịch sử giao dịch kho</h3>
+                        <div class="table-responsive">
+                            <table class="table table-modern align-middle">
+                                <thead>
+                                    <tr><th>Thời gian</th><th>Rượu</th><th>Thao tác</th><th>Số lượng</th><th>Mã người dùng</th><th>Tham chiếu</th></tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="tx : ${inventoryTransactions}">
+                                        <td th:text="${#temporals.format(tx.createdAt, 'dd/MM/yyyy HH:mm')}"></td>
+                                        <td th:text="${tx.wine.name}"></td>
+                                        <td th:text="${@enumDisplayService.inventoryOperation(tx.operationType)}"></td>
+                                        <td th:text="${tx.quantity}"></td>
+                                        <td th:text="${tx.userId}"></td>
+                                        <td th:text="${@enumDisplayService.inventoryReferenceType(tx.referenceType) + (tx.referenceId != null ? (' #' + tx.referenceId) : '')}"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Payments tab -->
+                <section class="tab-pane fade" id="payments">
+                    <div class="panel p-3 p-lg-4 fade-up">
+                        <h2 class="h6 mb-3" style="font-family:'Lato',sans-serif;text-transform:uppercase;letter-spacing:.06em;font-size:.8rem;color:var(--text-muted)">Giao dịch thanh toán</h2>
+                        <div class="table-responsive mb-4">
+                            <table class="table table-modern align-middle">
+                                <thead>
+                                    <tr><th>Ngày tạo</th><th>Đơn hàng</th><th>Mã tham chiếu</th><th>Phương thức</th><th>Trạng thái</th><th>Số tiền</th></tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="pay : ${payments}">
+                                        <td th:text="${#temporals.format(pay.createdAt, 'dd/MM/yyyy HH:mm')}"></td>
+                                        <td style="color:var(--gold);font-weight:600" th:text="${pay.order.id}"></td>
+                                        <td style="font-family:monospace;font-size:.8rem" th:text="${pay.paymentReference}"></td>
+                                        <td th:text="${@enumDisplayService.paymentMethod(pay.method)}"></td>
+                                        <td><span class="badge text-bg-secondary" th:text="${@enumDisplayService.paymentStatus(pay.status)}"></span></td>
+                                        <td style="color:var(--gold);font-weight:600" th:text="${#numbers.formatDecimal(pay.amount, 0, 'COMMA', 0, 'POINT') + ' đ'}"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <h3 class="h6 mb-3" style="font-family:'Lato',sans-serif;text-transform:uppercase;letter-spacing:.06em;font-size:.75rem;color:var(--text-muted)">Nhật ký sự kiện thanh toán</h3>
+                        <div class="table-responsive">
+                            <table class="table table-modern align-middle">
+                                <thead>
+                                    <tr><th>Thời gian</th><th>Loại giao dịch</th><th>Trạng thái</th><th>Dữ liệu</th></tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="ptx : ${paymentTransactions}">
+                                        <td th:text="${#temporals.format(ptx.createdAt, 'dd/MM/yyyy HH:mm')}"></td>
+                                        <td th:text="${@enumDisplayService.paymentTransactionType(ptx.transactionType)}"></td>
+                                        <td th:text="${@enumDisplayService.paymentTransactionStatus(ptx.status)}"></td>
+                                        <td style="color:var(--text-faint);font-size:.75rem;max-width:200px;overflow:hidden;text-overflow:ellipsis" th:text="${ptx.payload}"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Alerts tab -->
+                <section class="tab-pane fade" id="alerts">
+                    <div class="panel p-3 p-lg-4 fade-up">
+                        <h2 class="h6 mb-3" style="font-family:'Lato',sans-serif;text-transform:uppercase;letter-spacing:.06em;font-size:.8rem;color:var(--text-muted)">Cảnh báo tồn kho thấp</h2>
+                        <div th:if="${lowStockItems.isEmpty()}" class="alert alert-success mb-0">
+                            <i class="fa-solid fa-circle-check me-2"></i>Không có sản phẩm sắp hết hàng.
+                        </div>
+                        <div th:unless="${lowStockItems.isEmpty()}" class="d-flex flex-column gap-2">
+                            <div th:each="item : ${lowStockItems}"
+                                 style="display:flex;justify-content:space-between;align-items:center;background:var(--surface-mid);border:1px solid var(--border);border-radius:var(--r-md);padding:.9rem 1rem">
+                                <div>
+                                    <div style="font-weight:600;color:var(--text)" th:text="${item.wine.name}"></div>
+                                    <div style="font-size:.8rem;color:var(--text-muted)" th:text="${item.warehouse.name}"></div>
+                                </div>
+                                <span class="stock-badge stock-low" th:text="${'Còn: ' + item.availableQuantity}"></span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
             </div>
-        </section>
-    </div>
         </main>
     </div>
 </div>
@@ -291,6 +346,3 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
-
-
-

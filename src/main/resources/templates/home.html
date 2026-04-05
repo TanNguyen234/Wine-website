@@ -3,35 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StrongWine | Cửa hàng rượu vang</title>
+    <meta name="description" content="StrongWine — Tinh tuyển rượu vang cao cấp, giao hàng nhanh, thanh toán an toàn.">
+    <title>StrongWine | Cửa hàng rượu vang cao cấp</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="/css/app.css">
 </head>
 <body>
-<nav class="navbar navbar-expand-lg navbar-dark navbar-modern py-3">
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-modern py-2">
     <div class="container">
         <a class="navbar-brand d-flex align-items-center gap-2" href="/home">
             <span class="brand-logo"><i class="fa-solid fa-wine-glass"></i></span>
-            <span class="fw-semibold">StrongWine</span>
+            StrongWine
         </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"><span class="navbar-toggler-icon"></span></button>
+        <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
         <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav me-auto ms-lg-4">
+            <ul class="navbar-nav me-auto ms-lg-4 gap-lg-1">
                 <li class="nav-item"><a class="nav-link active" href="/home">Trang chủ</a></li>
                 <li class="nav-item"><a class="nav-link" href="/wines">Sản phẩm</a></li>
                 <li class="nav-item" sec:authorize="isAuthenticated()"><a class="nav-link" href="/orders">Đơn hàng của tôi</a></li>
             </ul>
             <form class="d-flex me-3" action="/wines" method="get">
-                <input class="form-control form-control-sm" type="search" name="name" placeholder="Tìm kiếm rượu vang...">
+                <div class="input-group input-group-sm">
+                    <input class="form-control" type="search" name="name" placeholder="Tìm kiếm rượu vang..." style="min-width:180px">
+                    <button class="btn btn-gold btn-sm" type="submit"><i class="fa-solid fa-magnifying-glass"></i></button>
+                </div>
             </form>
-            <ul class="navbar-nav align-items-lg-center gap-lg-2">
-                <li class="nav-item"><a class="nav-link" href="/cart"><i class="fa-solid fa-cart-shopping"></i> <span class="badge text-bg-light text-dark js-cart-count" th:text="${cartCount}">0</span></a></li>
+            <ul class="navbar-nav align-items-lg-center gap-lg-1">
+                <li class="nav-item">
+                    <a class="nav-link position-relative" href="/cart">
+                        <i class="fa-solid fa-wine-bottle me-1"></i>
+                        <span class="js-cart-count badge text-bg-light text-dark" th:text="${cartCount}">0</span>
+                    </a>
+                </li>
                 <li class="nav-item" sec:authorize="!isAuthenticated()"><a class="nav-link" href="/login">Đăng nhập</a></li>
-                <li class="nav-item" sec:authorize="!isAuthenticated()"><a class="nav-link" href="/register">Đăng ký</a></li>
-                <li class="nav-item" sec:authorize="hasRole('ADMIN')"><a class="nav-link" href="/admin">Quản trị</a></li>
+                <li class="nav-item" sec:authorize="!isAuthenticated()">
+                    <a class="btn btn-gold btn-sm ms-1" href="/register">Đăng ký</a>
+                </li>
+                <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                    <a class="nav-link" href="/admin"><i class="fa-solid fa-gauge me-1"></i>Quản trị</a>
+                </li>
                 <li class="nav-item" sec:authorize="isAuthenticated()">
-                    <form th:action="@{/logout}" method="post"><button class="btn btn-sm btn-outline-light">Đăng xuất</button></form>
+                    <form th:action="@{/logout}" method="post" class="mb-0">
+                        <button class="btn btn-sm btn-outline-secondary ms-1">Đăng xuất</button>
+                    </form>
                 </li>
             </ul>
         </div>
@@ -39,34 +60,60 @@
 </nav>
 
 <main class="container site-main my-4 my-lg-5">
-    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
-    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+        <i class="fa-solid fa-circle-check me-2"></i><span th:text="${success}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+        <i class="fa-solid fa-triangle-exclamation me-2"></i><span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <!-- Hero -->
     <section class="hero-modern mb-5 fade-up">
         <div class="row align-items-center">
             <div class="col-lg-7">
-                <h1 class="display-5 fw-bold mb-3">Tinh tuyển rượu vang cao cấp cho gu thưởng thức hiện đại.</h1>
-                <p class="lead text-light-emphasis mb-4">Khám phá vang đỏ, trắng, hồng và vang sủi với thanh toán an toàn và tồn kho theo thời gian thực.</p>
-                <a href="/wines" class="btn btn-light btn-lg px-4">Khám phá sản phẩm</a>
+                <div class="section-label">Bộ sưu tập độc quyền</div>
+                <h1>Tinh tuyển rượu vang<br><em>cao cấp</em> cho những khoảnh khắc đặc biệt.</h1>
+                <div class="hero-divider"></div>
+                <p class="lead mb-4">Khám phá vang đỏ, trắng, hồng và vang sủi với thanh toán an toàn và tồn kho theo thời gian thực.</p>
+                <div class="d-flex gap-3 flex-wrap">
+                    <a href="/wines" class="btn btn-gold btn-lg">Khám phá bộ sưu tập</a>
+                    <a href="/wines?type=Red" class="btn btn-outline-secondary btn-lg">Vang đỏ</a>
+                </div>
+            </div>
+            <div class="col-lg-5 d-none d-lg-flex justify-content-end">
+                <div style="display:flex;gap:1rem;opacity:.55">
+                    <i class="fa-solid fa-wine-glass" style="font-size:7rem;color:var(--gold-dim);transform:rotate(-8deg)"></i>
+                    <i class="fa-solid fa-wine-bottle" style="font-size:8rem;color:var(--crimson-soft);transform:rotate(6deg);margin-top:1.5rem"></i>
+                </div>
             </div>
         </div>
     </section>
 
+    <!-- Featured wines -->
     <section class="fade-up">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h2 class="h4 mb-0">Bộ sưu tập nổi bật</h2>
-            <a href="/wines" class="text-decoration-none">Xem tất cả</a>
+        <div class="section-title-line mb-4">
+            <div>
+                <div class="section-label">Được yêu thích nhất</div>
+                <h2 class="h3 mb-0">Bộ sưu tập nổi bật</h2>
+            </div>
+            <a href="/wines" class="btn btn-outline-secondary btn-sm ms-auto">Xem tất cả <i class="fa-solid fa-arrow-right ms-1"></i></a>
         </div>
-        <div class="row g-4">
-            <div class="col-md-6 col-lg-4" th:each="wine : ${featuredWines}">
+
+        <div th:if="${featuredWines != null and !featuredWines.isEmpty()}" class="row g-4">
+            <div class="col-md-6 col-lg-4 fade-up" th:each="wine : ${featuredWines}">
                 <article class="product-card h-100">
-                    <img th:if="${wine.imageUrl != null}" th:src="${wine.imageUrl}" alt="Hình ảnh rượu" class="media-cover-lg">
-                    <div th:unless="${wine.imageUrl != null}" class="media-placeholder-lg"><i class="fa-regular fa-image fs-1"></i></div>
-                    <div class="p-3 d-flex flex-column h-100">
-                        <div class="d-flex justify-content-between mb-2">
+                    <img th:if="${wine.imageUrl != null}" th:src="${wine.imageUrl}" alt="Rượu vang" class="media-cover-lg">
+                    <div th:unless="${wine.imageUrl != null}" class="media-placeholder-lg">
+                        <i class="fa-solid fa-wine-bottle"></i>
+                    </div>
+                    <div class="p-3 d-flex flex-column" style="flex:1">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
                             <span class="badge text-bg-dark" th:text="${@enumDisplayService.wineType(wine.type)}">Loại</span>
                             <span class="badge text-bg-secondary" th:text="${wine.year}">Năm</span>
                         </div>
-                        <h3 class="h6" th:text="${wine.name}">Tên rượu</h3>
+                        <h3 class="h6 mb-1 fw-bold" style="font-family:'Lato',sans-serif" th:text="${wine.name}">Tên rượu</h3>
                         <p class="price-tag mb-2" th:text="${#numbers.formatDecimal(wine.price, 0, 'COMMA', 0, 'POINT') + ' đ'}">0 đ</p>
                         <div class="mb-3">
                             <span th:with="stock=${availableStockByWineId[wine.id]}"
@@ -74,38 +121,66 @@
                                   th:text="${stock > 20 ? 'Còn hàng: ' + stock : (stock > 0 ? 'Sắp hết: ' + stock : 'Hết hàng')}"></span>
                         </div>
                         <div class="d-grid gap-2 mt-auto">
-                            <a th:href="@{/wines/{id}(id=${wine.id})}" class="btn btn-outline-dark flex-fill">Xem chi tiết</a>
-                            <button type="button" class="btn btn-dark w-100 flex-fill" data-cart-add="true" th:disabled="${availableStockByWineId[wine.id] <= 0}" th:attr="data-cart-product-id=${wine.id},data-cart-name=${wine.name},data-cart-price=${wine.price},data-cart-image=${wine.imageUrl},data-cart-stock=${availableStockByWineId[wine.id]}">Thêm vào giỏ</button>
-                            <button type="button" class="btn btn-danger w-100 flex-fill" data-cart-add="true" data-cart-redirect="/cart/checkout" th:disabled="${availableStockByWineId[wine.id] <= 0}" th:attr="data-cart-product-id=${wine.id},data-cart-name=${wine.name},data-cart-price=${wine.price},data-cart-image=${wine.imageUrl},data-cart-stock=${availableStockByWineId[wine.id]}">Mua ngay</button>
+                            <a th:href="@{/wines/{id}(id=${wine.id})}" class="btn btn-outline-secondary btn-sm">Xem chi tiết</a>
+                            <button type="button" class="btn btn-gold btn-sm"
+                                    data-cart-add="true"
+                                    th:disabled="${availableStockByWineId[wine.id] <= 0}"
+                                    th:attr="data-cart-product-id=${wine.id},data-cart-name=${wine.name},data-cart-price=${wine.price},data-cart-image=${wine.imageUrl},data-cart-stock=${availableStockByWineId[wine.id]}">
+                                <i class="fa-solid fa-cart-plus me-1"></i>Thêm vào giỏ
+                            </button>
+                            <button type="button" class="btn btn-danger btn-sm"
+                                    data-cart-add="true" data-cart-redirect="/cart/checkout"
+                                    th:disabled="${availableStockByWineId[wine.id] <= 0}"
+                                    th:attr="data-cart-product-id=${wine.id},data-cart-name=${wine.name},data-cart-price=${wine.price},data-cart-image=${wine.imageUrl},data-cart-stock=${availableStockByWineId[wine.id]}">
+                                Mua ngay
+                            </button>
                         </div>
                     </div>
                 </article>
             </div>
         </div>
+
+        <div th:if="${featuredWines == null or featuredWines.isEmpty()}" class="text-center py-5">
+            <i class="fa-solid fa-wine-bottle fa-3x mb-3" style="color:var(--text-faint)"></i>
+            <p class="text-muted">Chưa có sản phẩm nổi bật.</p>
+        </div>
     </section>
 </main>
 
-<button id="aiToggle" class="ai-fab" title="AI tư vấn"><i class="fa-solid fa-robot"></i></button>
+<!-- AI Assistant -->
+<button id="aiToggle" class="ai-fab" title="AI tư vấn rượu vang">
+    <i class="fa-solid fa-robot"></i>
+</button>
 <section id="aiPanel" class="ai-panel p-3">
-    <div class="d-flex justify-content-between align-items-center mb-2">
-        <h6 class="mb-0"><i class="fa-solid fa-wand-magic-sparkles me-1"></i> AI Tư vấn rượu vang</h6>
+    <div class="d-flex justify-content-between align-items-center mb-2 pb-2" style="border-bottom:1px solid var(--border)">
+        <h6><i class="fa-solid fa-wand-magic-sparkles me-1"></i>AI Tư vấn rượu vang</h6>
+        <button id="aiClose" class="btn-close" style="filter:invert(1) opacity(.5)"></button>
     </div>
-    <div id="aiFeed" class="ai-feed border rounded p-2 mb-2"></div>
-    <div class="d-flex gap-2 mb-2">
-        <button class="btn btn-sm btn-light border" data-ai-question="Gợi ý một chai vang đỏ khô">Vang đỏ khô</button>
-        <button class="btn btn-sm btn-light border" data-ai-question="Gợi ý rượu dùng với hải sản">Hải sản</button>
+    <div id="aiFeed" class="ai-feed mb-2"></div>
+    <div class="d-flex gap-2 mb-2 flex-wrap">
+        <button class="btn btn-sm btn-outline-secondary" data-ai-question="Gợi ý một chai vang đỏ khô">Vang đỏ khô</button>
+        <button class="btn btn-sm btn-outline-secondary" data-ai-question="Gợi ý rượu dùng với hải sản">Hải sản</button>
     </div>
     <form id="aiForm" class="d-flex gap-2">
         <input id="aiPrompt" class="form-control form-control-sm" placeholder="Hỏi gợi ý rượu vang...">
-        <button class="btn btn-sm btn-dark" type="submit">Gửi</button>
+        <button class="btn btn-gold btn-sm" type="submit"><i class="fa-solid fa-paper-plane"></i></button>
     </form>
 </section>
 
-<footer class="site-footer text-center py-4 text-muted small">© 2026 StrongWine. Tất cả quyền được bảo lưu.</footer>
+<footer class="site-footer text-center">
+    <div class="container">
+        <div class="mb-2">
+            <span class="brand-logo d-inline-flex" style="width:28px;height:28px;font-size:.75rem">
+                <i class="fa-solid fa-wine-glass"></i>
+            </span>
+        </div>
+        <p class="mb-1" style="font-family:'Playfair Display',serif;font-size:.85rem;color:var(--text-muted)">StrongWine</p>
+        <p class="mb-0" style="font-size:.75rem;letter-spacing:.05em">© 2026 StrongWine. Tất cả quyền được bảo lưu.</p>
+    </div>
+</footer>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="/js/cart-client.js"></script>
 <script src="/js/ai-assistant.js"></script>
 </body>
 </html>
-
-

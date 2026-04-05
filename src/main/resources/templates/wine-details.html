@@ -4,82 +4,164 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title th:text="${wine.name + ' | StrongWine'}">StrongWine</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="/css/app.css">
 </head>
 <body>
-<nav class="navbar navbar-expand-lg navbar-dark navbar-modern py-3">
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-modern py-2">
     <div class="container">
-        <a class="navbar-brand d-flex align-items-center gap-2" href="/home"><span class="brand-logo"><i class="fa-solid fa-wine-glass"></i></span><span class="fw-semibold">StrongWine</span></a>
-        <div class="ms-auto d-flex gap-3 align-items-center">
+        <a class="navbar-brand d-flex align-items-center gap-2" href="/home">
+            <span class="brand-logo"><i class="fa-solid fa-wine-glass"></i></span>
+            StrongWine
+        </a>
+        <div class="ms-auto d-flex gap-2 align-items-center">
             <a class="nav-link text-white" href="/wines">Sản phẩm</a>
             <a class="nav-link text-white" sec:authorize="isAuthenticated()" href="/orders">Đơn hàng của tôi</a>
-            <a class="nav-link text-white" href="/cart"><i class="fa-solid fa-cart-shopping"></i> <span class="badge text-bg-light text-dark js-cart-count" th:text="${cartCount}">0</span></a>
+            <a class="nav-link text-white" href="/cart">
+                <i class="fa-solid fa-wine-bottle me-1"></i>
+                <span class="js-cart-count badge text-bg-light text-dark" th:text="${cartCount}">0</span>
+            </a>
         </div>
     </div>
 </nav>
 
-<main class="container site-main my-4">
-    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
-    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
-    <section class="row g-4 mb-4">
-        <div class="col-lg-6">
-            <div class="panel p-2">
-                <img th:if="${wine.imageUrl != null}" th:src="${wine.imageUrl}" class="media-cover-xl rounded" alt="Hình ảnh rượu">
-                <div th:unless="${wine.imageUrl != null}" class="media-placeholder-xl rounded"><i class="fa-regular fa-image fs-1"></i></div>
+<main class="container site-main my-4 my-lg-5">
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+        <i class="fa-solid fa-circle-check me-2"></i><span th:text="${success}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+        <i class="fa-solid fa-triangle-exclamation me-2"></i><span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb" style="background:none;padding:0;font-size:.82rem">
+            <li class="breadcrumb-item"><a href="/home" style="color:var(--text-muted)">Trang chủ</a></li>
+            <li class="breadcrumb-item"><a href="/wines" style="color:var(--text-muted)">Sản phẩm</a></li>
+            <li class="breadcrumb-item active" style="color:var(--text-soft)" th:text="${wine.name}">Sản phẩm</li>
+        </ol>
+    </nav>
+
+    <section class="row g-4 mb-5 fade-up">
+        <!-- Image -->
+        <div class="col-lg-5">
+            <div class="panel p-3" style="position:sticky;top:100px">
+                <img th:if="${wine.imageUrl != null}" th:src="${wine.imageUrl}" class="media-cover-xl" style="border-radius:var(--r-md)" alt="Rượu vang">
+                <div th:unless="${wine.imageUrl != null}" class="media-placeholder-xl" style="border-radius:var(--r-md)">
+                    <i class="fa-solid fa-wine-bottle fa-3x" style="color:var(--text-faint)"></i>
+                </div>
             </div>
         </div>
-        <div class="col-lg-6">
-            <div class="panel p-4 h-100">
-                <div class="d-flex gap-2 mb-2">
+
+        <!-- Details -->
+        <div class="col-lg-7">
+            <div class="panel p-4 p-lg-5 h-100 d-flex flex-column">
+                <!-- Tags -->
+                <div class="d-flex gap-2 flex-wrap mb-3">
                     <span class="badge text-bg-dark" th:text="${@enumDisplayService.wineType(wine.type)}"></span>
                     <span class="badge text-bg-secondary" th:text="${wine.year}"></span>
-                    <span class="badge text-bg-light" th:if="${wine.country != null and !wine.country.isBlank()}" th:text="${wine.country}"></span>
+                    <span class="badge text-bg-secondary" th:if="${wine.country != null and !wine.country.isBlank()}"
+                          th:text="'🌍 ' + ${wine.country}"></span>
                     <span th:class="${availableStock > 20 ? 'stock-badge stock-ok' : (availableStock > 0 ? 'stock-badge stock-low' : 'stock-badge stock-out')}"
                           th:text="${availableStock > 20 ? 'Còn hàng' : (availableStock > 0 ? 'Sắp hết hàng' : 'Hết hàng')}"></span>
                 </div>
-                <h1 class="h3" th:text="${wine.name}"></h1>
-                <p class="price-tag mb-3" th:text="${#numbers.formatDecimal(wine.price, 0, 'COMMA', 0, 'POINT') + ' đ'}"></p>
+
+                <h1 class="mb-1" style="font-size:2rem" th:text="${wine.name}">Tên rượu</h1>
+                <div class="hero-divider mb-3"></div>
+                <p class="price-tag mb-4" style="font-size:2rem"
+                   th:text="${#numbers.formatDecimal(wine.price, 0, 'COMMA', 0, 'POINT') + ' đ'}">0 đ</p>
+
                 <div class="mb-4">
-                    <h2 class="h6 text-uppercase text-muted">Mô tả</h2>
-                    <p class="mb-0" th:text="${wine.description}"></p>
+                    <h2 class="h6 text-uppercase mb-2" style="font-family:'Lato',sans-serif;font-size:.72rem;letter-spacing:.1em;color:var(--text-muted)">Mô tả sản phẩm</h2>
+                    <p style="color:var(--text-soft);line-height:1.75" th:text="${wine.description}">Mô tả</p>
                 </div>
-                <div class="d-flex gap-2 align-items-center mb-2">
-                    <input type="number" class="form-control qty-input" id="detailQuantity" value="1" min="1" th:attr="max=${availableStock}">
-                    <button type="button" class="btn btn-dark btn-lg" data-cart-add="true" data-cart-quantity-selector="#detailQuantity" th:disabled="${availableStock <= 0}" th:attr="data-cart-product-id=${wine.id},data-cart-name=${wine.name},data-cart-price=${wine.price},data-cart-image=${wine.imageUrl},data-cart-stock=${availableStock}"><i class="fa-solid fa-cart-plus me-1"></i>Thêm vào giỏ hàng</button>
+
+                <!-- Add to cart -->
+                <div class="d-flex gap-3 align-items-center mb-3 flex-wrap">
+                    <div>
+                        <label class="form-label" style="font-size:.75rem;margin-bottom:.3rem">Số lượng</label>
+                        <input type="number" class="form-control qty-input" id="detailQuantity" value="1" min="1"
+                               th:attr="max=${availableStock}" style="width:90px">
+                    </div>
+                    <div class="pt-3">
+                        <button type="button" class="btn btn-gold btn-lg"
+                                data-cart-add="true" data-cart-quantity-selector="#detailQuantity"
+                                th:disabled="${availableStock <= 0}"
+                                th:attr="data-cart-product-id=${wine.id},data-cart-name=${wine.name},data-cart-price=${wine.price},data-cart-image=${wine.imageUrl},data-cart-stock=${availableStock}">
+                            <i class="fa-solid fa-cart-plus me-2"></i>Thêm vào giỏ hàng
+                        </button>
+                    </div>
                 </div>
-                <div class="d-flex gap-2 align-items-center">
-                    <button type="button" class="btn btn-danger btn-lg" data-cart-add="true" data-cart-redirect="/cart/checkout" data-cart-quantity="1" th:disabled="${availableStock <= 0}" th:attr="data-cart-product-id=${wine.id},data-cart-name=${wine.name},data-cart-price=${wine.price},data-cart-image=${wine.imageUrl},data-cart-stock=${availableStock}">Mua ngay</button>
+                <div>
+                    <button type="button" class="btn btn-danger btn-lg w-100"
+                            data-cart-add="true" data-cart-redirect="/cart/checkout" data-cart-quantity="1"
+                            th:disabled="${availableStock <= 0}"
+                            th:attr="data-cart-product-id=${wine.id},data-cart-name=${wine.name},data-cart-price=${wine.price},data-cart-image=${wine.imageUrl},data-cart-stock=${availableStock}">
+                        <i class="fa-solid fa-bolt me-2"></i>Mua ngay
+                    </button>
                 </div>
             </div>
         </div>
     </section>
 
-    <section class="panel p-4">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h2 class="h5 mb-0">Đánh giá khách hàng</h2>
-            <span class="text-muted small" th:text="${reviews.size()} + ' đánh giá'"></span>
-        </div>
-        <div th:if="${reviews.isEmpty()}" class="alert alert-light border">Chưa có đánh giá nào.</div>
-        <div th:each="review : ${reviews}" class="border rounded p-3 mb-3">
-            <div class="d-flex justify-content-between">
-                <strong th:text="${review.user.username}"></strong>
-                <small class="text-muted" th:text="${#temporals.format(review.createdAt, 'dd/MM/yyyy HH:mm')}"></small>
+    <!-- Reviews -->
+    <section class="panel p-4 p-lg-5 fade-up">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <div class="section-label">Khách hàng nói gì</div>
+                <h2 class="h4 mb-0">Đánh giá sản phẩm</h2>
             </div>
-            <div class="text-warning mb-1">
-                <span th:each="i : ${#numbers.sequence(1, 5)}" th:text="${i <= review.rating ? '★' : '☆'}"></span>
-            </div>
-            <p class="mb-0" th:text="${review.comment}"></p>
+            <span style="color:var(--text-muted);font-size:.82rem" th:text="${reviews.size()} + ' đánh giá'"></span>
         </div>
 
-        <div sec:authorize="isAuthenticated()" class="mt-4">
-            <h3 class="h6">Viết đánh giá</h3>
+        <div th:if="${reviews.isEmpty()}" class="text-center py-4" style="color:var(--text-muted)">
+            <i class="fa-regular fa-star fa-2x mb-2 d-block" style="color:var(--text-faint)"></i>
+            Chưa có đánh giá nào. Hãy là người đầu tiên!
+        </div>
+
+        <div th:each="review : ${reviews}" class="mb-3 p-3 p-lg-4"
+             style="background:var(--surface-mid);border:1px solid var(--border);border-radius:var(--r-md)">
+            <div class="d-flex justify-content-between align-items-start mb-1">
+                <strong style="color:var(--text)" th:text="${review.user.username}">Người dùng</strong>
+                <small style="color:var(--text-muted);font-size:.75rem"
+                       th:text="${#temporals.format(review.createdAt, 'dd/MM/yyyy HH:mm')}"></small>
+            </div>
+            <div class="mb-2" style="color:var(--gold);font-size:1rem">
+                <span th:each="i : ${#numbers.sequence(1, 5)}"
+                      th:text="${i <= review.rating ? '★' : '☆'}"></span>
+            </div>
+            <p class="mb-0" style="color:var(--text-soft);font-size:.9rem" th:text="${review.comment}"></p>
+        </div>
+
+        <!-- Write review -->
+        <div sec:authorize="isAuthenticated()" class="mt-4 pt-4" style="border-top:1px solid var(--border)">
+            <h3 class="h6 mb-3" style="font-family:'Lato',sans-serif;text-transform:uppercase;letter-spacing:.06em;font-size:.75rem;color:var(--text-muted)">
+                Viết đánh giá của bạn
+            </h3>
             <form th:action="@{/reviews/create}" method="post" class="row g-2">
                 <input type="hidden" name="wineId" th:value="${wine.id}">
-                <div class="col-md-2"><select class="form-select" name="rating" required><option value="5">5</option><option value="4">4</option><option value="3">3</option><option value="2">2</option><option value="1">1</option></select></div>
-                <div class="col-md-8"><input name="comment" class="form-control" placeholder="Chia sẻ cảm nhận của bạn" required></div>
-                <div class="col-md-2"><button class="btn btn-dark w-100">Gửi</button></div>
+                <div class="col-md-2">
+                    <select class="form-select" name="rating" required>
+                        <option value="5">★★★★★ (5)</option>
+                        <option value="4">★★★★☆ (4)</option>
+                        <option value="3">★★★☆☆ (3)</option>
+                        <option value="2">★★☆☆☆ (2)</option>
+                        <option value="1">★☆☆☆☆ (1)</option>
+                    </select>
+                </div>
+                <div class="col-md-8">
+                    <input name="comment" class="form-control" placeholder="Chia sẻ cảm nhận của bạn về sản phẩm này..." required>
+                </div>
+                <div class="col-md-2">
+                    <button class="btn btn-gold w-100">Gửi đánh giá</button>
+                </div>
             </form>
         </div>
     </section>
@@ -87,13 +169,25 @@
 
 <button id="aiToggle" class="ai-fab" title="AI gợi ý kết hợp"><i class="fa-solid fa-robot"></i></button>
 <section id="aiPanel" class="ai-panel p-3">
-    <h6><i class="fa-solid fa-sparkles me-1"></i> AI gợi ý kết hợp</h6>
-    <div id="aiFeed" class="ai-feed border rounded p-2 mb-2"></div>
-    <div class="d-flex gap-2 mb-2"><button class="btn btn-sm btn-light border" data-ai-question="Gợi ý món ăn phù hợp với chai rượu này">Món ăn phù hợp</button></div>
-    <form id="aiForm" class="d-flex gap-2"><input id="aiPrompt" class="form-control form-control-sm" placeholder="Hỏi về món ăn kết hợp"><button class="btn btn-sm btn-dark">Hỏi</button></form>
+    <div class="d-flex justify-content-between align-items-center mb-2 pb-2" style="border-bottom:1px solid var(--border)">
+        <h6><i class="fa-solid fa-sparkles me-1"></i>AI gợi ý kết hợp</h6>
+        <button id="aiClose" class="btn-close" style="filter:invert(1) opacity(.5)"></button>
+    </div>
+    <div id="aiFeed" class="ai-feed mb-2"></div>
+    <div class="d-flex gap-2 mb-2">
+        <button class="btn btn-sm btn-outline-secondary" data-ai-question="Gợi ý món ăn phù hợp với chai rượu này">Món ăn phù hợp</button>
+    </div>
+    <form id="aiForm" class="d-flex gap-2">
+        <input id="aiPrompt" class="form-control form-control-sm" placeholder="Hỏi về món ăn kết hợp...">
+        <button class="btn btn-gold btn-sm" type="submit"><i class="fa-solid fa-paper-plane"></i></button>
+    </form>
 </section>
 
-<footer class="site-footer text-center py-4 text-muted small">© 2026 StrongWine. Tất cả quyền được bảo lưu.</footer>
+<footer class="site-footer text-center">
+    <div class="container">
+        <p class="mb-0">© 2026 StrongWine. Tất cả quyền được bảo lưu.</p>
+    </div>
+</footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="/js/cart-client.js"></script>
