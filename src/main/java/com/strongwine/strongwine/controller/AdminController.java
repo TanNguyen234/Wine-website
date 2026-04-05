@@ -13,6 +13,8 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -75,9 +77,26 @@ public class AdminController {
         model.addAttribute("shipmentStats", shipmentStats);
         model.addAttribute("totalShipments", totalShipments);
         
-        // Note: Full data lists (wines, users, orders, inventories, payments) have been removed 
-        // to prevent OOM errors. They are now accessed via dedicated paginated controllers.
-        
+        // Chart Data: Revenue Last 7 Days
+        LocalDateTime sevenDaysAgo = LocalDateTime.now().minusDays(7);
+        List<Object[]> revenueData = orderService.getDailyRevenueLast7Days(sevenDaysAgo);
+        model.addAttribute("revenueLabels", revenueData.stream().map(row -> row[0].toString()).collect(java.util.stream.Collectors.toList()));
+        model.addAttribute("revenueValues", revenueData.stream().map(row -> row[1]).collect(java.util.stream.Collectors.toList()));
+
+        // Chart Data: Order Status Counts
+        List<Object[]> statusData = orderService.getOrderStatusCounts();
+        model.addAttribute("statusLabels", statusData.stream().map(row -> row[0].toString()).collect(java.util.stream.Collectors.toList()));
+        model.addAttribute("statusValues", statusData.stream().map(row -> row[1]).collect(java.util.stream.Collectors.toList()));
+
+        // Chart Data: Top 5 Selling Wines
+        List<Object[]> topSecondaryData = wineService.getTopSellingWines(5);
+        model.addAttribute("topWineLabels", topSecondaryData.stream().map(row -> row[0].toString()).collect(java.util.stream.Collectors.toList()));
+        model.addAttribute("topWineValues", topSecondaryData.stream().map(row -> row[1]).collect(java.util.stream.Collectors.toList()));
+
+        // Chart Data: Inventory Low vs Normal
+        model.addAttribute("inventoryLabels", List.of("Low Stock", "Normal Stock"));
+        model.addAttribute("inventoryValues", List.of(lowStockCount, totalWines - lowStockCount));
+
         return "admin-dashboard";
     }
 }

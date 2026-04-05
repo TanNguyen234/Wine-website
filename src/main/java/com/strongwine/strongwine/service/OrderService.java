@@ -215,6 +215,14 @@ public class OrderService {
         inventoryService.releaseOrderReservation(order);
     }
 
+    public List<Object[]> getDailyRevenueLast7Days(LocalDateTime startDate) {
+        return orderRepository.getDailyRevenueLast7Days(startDate);
+    }
+
+    public List<Object[]> getOrderStatusCounts() {
+        return orderRepository.getOrderStatusCounts();
+    }
+
     private PaymentMethod parsePaymentMethod(String paymentMethod) {
         try {
             return PaymentMethod.valueOf(paymentMethod == null ? "STRIPE" : paymentMethod.toUpperCase());

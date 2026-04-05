@@ -16,6 +16,13 @@ import java.util.List;
  */
 @Repository
 public interface WineRepository extends JpaRepository<Wine, Long> {
+
+    @Query("SELECT w.name, SUM(oi.quantity) " +
+           "FROM OrderItem oi " +
+           "JOIN oi.wine w " +
+           "GROUP BY w.id, w.name " +
+           "ORDER BY SUM(oi.quantity) DESC")
+    List<Object[]> getTopSellingWines(Pageable pageable);
     
     Page<Wine> findByDeletedFalse(Pageable pageable);
     List<Wine> findByDeletedFalse();

@@ -6,8 +6,10 @@ import com.strongwine.strongwine.entity.User;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -15,6 +17,17 @@ import java.util.List;
  */
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Long> {
+
+    @Query("SELECT CAST(o.orderDate AS date), SUM(o.totalPrice) " +
+           "FROM Order o " +
+           "WHERE o.status = com.strongwine.strongwine.entity.OrderStatus.PAID " +
+           "AND o.orderDate >= :startDate " +
+           "GROUP BY CAST(o.orderDate AS date) " +
+           "ORDER BY CAST(o.orderDate AS date) ASC")
+    List<Object[]> getDailyRevenueLast7Days(@Param("startDate") LocalDateTime startDate);
+
+    @Query("SELECT o.status, COUNT(o) FROM Order o GROUP BY o.status")
+    List<Object[]> getOrderStatusCounts();
     
     /**
      * Find all orders by user

@@ -115,7 +115,7 @@
             </div>
 
             <!-- Dashboard Alerts -->
-            <div class="panel p-3 p-lg-4 fade-up">
+            <div class="panel p-3 p-lg-4 fade-up mb-4">
                 <h2 class="h6 mb-3" style="font-family:'Lato',sans-serif;text-transform:uppercase;letter-spacing:.06em;font-size:.8rem;color:var(--text-muted)">Cảnh báo tồn kho thấp</h2>
                 <div th:if="${lowStockItems == null || lowStockItems.isEmpty()}" class="alert alert-success mb-0">
                     <i class="fa-solid fa-circle-check me-2"></i>Không có sản phẩm sắp hết hàng.
@@ -132,6 +132,176 @@
                 </div>
             </div>
 
+            <!-- Charts Section -->
+            <div class="row g-4 mb-4 fade-up">
+                <div class="col-lg-8">
+                    <div class="panel p-4">
+                        <h2 class="h6 mb-4" style="text-transform:uppercase;letter-spacing:.1em;font-size:.75rem;color:var(--text-muted)">Xu hướng doanh thu (7 ngày qua)</h2>
+                        <div style="height:300px">
+                            <canvas id="revenueChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="panel p-4">
+                        <h2 class="h6 mb-4" style="text-transform:uppercase;letter-spacing:.1em;font-size:.75rem;color:var(--text-muted)">Trạng thái đơn hàng</h2>
+                        <div style="height:300px">
+                            <canvas id="statusChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="panel p-4">
+                        <h2 class="h6 mb-4" style="text-transform:uppercase;letter-spacing:.1em;font-size:.75rem;color:var(--text-muted)">Top 5 sản phẩm bán chạy nhất</h2>
+                        <div style="height:300px">
+                            <canvas id="topWinesChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="panel p-4">
+                        <h2 class="h6 mb-4" style="text-transform:uppercase;letter-spacing:.1em;font-size:.75rem;color:var(--text-muted)">Tình trạng kho hàng</h2>
+                        <div style="height:300px">
+                            <canvas id="inventoryChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    document.addEventListener('DOMContentLoaded', function() {
+        const gold = '#c9a84c';
+        const goldLight = '#d4bc72';
+        const border = 'rgba(201, 168, 76, 0.2)';
+        const text = '#e0e0e0';
+        const surface = '#1a1a1a';
+
+        // Helper to create gradient
+        function getGradient(ctx, chartArea) {
+            const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
+            gradient.addColorStop(0, 'rgba(201, 168, 76, 0)');
+            gradient.addColorStop(1, 'rgba(201, 168, 76, 0.3)');
+            return gradient;
+        }
+
+        // 1. Revenue Chart
+        const revCtx = document.getElementById('revenueChart').getContext('2d');
+        new Chart(revCtx, {
+            type: 'line',
+            data: {
+                labels: /*[[${revenueLabels}]]*/ [],
+                datasets: [{
+                    label: 'Doanh thu (đ)',
+                    data: /*[[${revenueValues}]]*/ [],
+                    borderColor: gold,
+                    backgroundColor: function(context) {
+                        const chart = context.chart;
+                        const {ctx, chartArea} = chart;
+                        if (!chartArea) return null;
+                        return getGradient(ctx, chartArea);
+                    },
+                    fill: true,
+                    tension: 0.4,
+                    borderWidth: 3,
+                    pointBackgroundColor: gold,
+                    pointRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { 
+                        beginAtZero: true, 
+                        grid: { color: border },
+                        ticks: { color: text, font: { size: 10 } }
+                    },
+                    x: { 
+                        grid: { display: false },
+                        ticks: { color: text, font: { size: 10 } }
+                    }
+                }
+            }
+        });
+
+        // 2. Status Chart
+        const statusCtx = document.getElementById('statusChart').getContext('2d');
+        new Chart(statusCtx, {
+            type: 'doughnut',
+            data: {
+                labels: /*[[${statusLabels}]]*/ [],
+                datasets: [{
+                    data: /*[[${statusValues}]]*/ [],
+                    backgroundColor: [gold, goldLight, '#888', '#444', '#222'],
+                    borderWidth: 0,
+                    hoverOffset: 10
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom', labels: { color: text, boxWidth: 12, font: { size: 11 } } }
+                },
+                cutout: '70%'
+            }
+        });
+
+        // 3. Top Wines Chart
+        const wineCtx = document.getElementById('topWinesChart').getContext('2d');
+        new Chart(wineCtx, {
+            type: 'bar',
+            data: {
+                labels: /*[[${topWineLabels}]]*/ [],
+                datasets: [{
+                    label: 'Số lượng bán',
+                    data: /*[[${topWineValues}]]*/ [],
+                    backgroundColor: gold,
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { color: border }, ticks: { color: text, font: { size: 10 } } },
+                    y: { grid: { display: false }, ticks: { color: text, font: { size: 10 } } }
+                }
+            }
+        });
+
+        // 4. Inventory Chart
+        const invCtx = document.getElementById('inventoryChart').getContext('2d');
+        new Chart(invCtx, {
+            type: 'pie',
+            data: {
+                labels: /*[[${inventoryLabels}]]*/ [],
+                datasets: [{
+                    data: /*[[${inventoryValues}]]*/ [],
+                    backgroundColor: ['#d9534f', gold],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom', labels: { color: text, boxWidth: 12, font: { size: 11 } } }
+                }
+            }
+        });
+    });
+    /*]]>*/
+</script>
 </body>
 </html>

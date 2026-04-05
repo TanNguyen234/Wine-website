@@ -45,6 +45,10 @@ public class WineService {
     public long countWines() {
         return wineRepository.count();
     }
+
+    public List<Object[]> getTopSellingWines(int limit) {
+        return wineRepository.getTopSellingWines(org.springframework.data.domain.PageRequest.of(0, limit));
+    }
     
     /**
      * Get wine by ID
