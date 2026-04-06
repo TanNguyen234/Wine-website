@@ -102,6 +102,13 @@
                                                 <i class="fa-solid" th:classappend="${house.active} ? 'fa-ban' : 'fa-check'"></i>
                                             </button>
                                         </form>
+                                        <form th:action="@{'/admin/warehouses/delete/' + ${house.id}}" method="post" class="mb-0">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger"
+                                                    title="Xóa kho"
+                                                    onclick="return confirm('Xác nhận xóa nhà kho này? Hành động không thể hoàn tác.')">
+                                                <i class="fa-solid fa-trash"></i>
+                                            </button>
+                                        </form>
                                     </div>
                                 </td>
                             </tr>

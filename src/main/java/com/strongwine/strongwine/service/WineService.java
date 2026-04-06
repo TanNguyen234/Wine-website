@@ -119,10 +119,12 @@ public class WineService {
     public Page<Wine> searchWinesPage(String keyword, String type, String country, Integer year,
                                       BigDecimal minPrice, BigDecimal maxPrice, Pageable pageable) {
         String normalizedKeyword = normalizeOptionalText(keyword, 255);
+        String keywordPattern = toFlexibleSearchPattern(normalizedKeyword);
         String normalizedCountry = normalizeOptionalText(country, 100);
         String normalizedType = normalizeType(type, false);
+        Integer effectiveYear = year != null ? year : extractYearFromKeyword(normalizedKeyword);
 
-        if (year != null && (year < 1900 || year > Year.now().getValue() + 1)) {
+        if (effectiveYear != null && (effectiveYear < 1900 || effectiveYear > Year.now().getValue() + 1)) {
             throw new IllegalArgumentException("Năm sản xuất không hợp lệ");
         }
         if (minPrice != null && minPrice.compareTo(BigDecimal.ZERO) < 0) {
@@ -135,7 +137,7 @@ public class WineService {
             throw new IllegalArgumentException("Khoảng giá không hợp lệ");
         }
 
-        return wineRepository.searchWines(normalizedKeyword, normalizedType, normalizedCountry, year, minPrice, maxPrice, pageable);
+        return wineRepository.searchWines(keywordPattern, normalizedType, normalizedCountry, effectiveYear, minPrice, maxPrice, pageable);
     }
     
     /**
@@ -252,6 +254,41 @@ public class WineService {
             throw new IllegalArgumentException("Đường dẫn ảnh không hợp lệ");
         }
         return normalized;
+    }
+
+    private String toFlexibleSearchPattern(String keyword) {
+        if (keyword == null) {
+            return null;
+        }
+
+        String normalized = keyword
+                .replaceAll("[-_/]+", " ")
+                .replaceAll("\\s+", " ")
+                .trim();
+
+        if (normalized.isEmpty()) {
+            return null;
+        }
+
+        return "%" + normalized.replace(" ", "%") + "%";
+    }
+
+    private Integer extractYearFromKeyword(String keyword) {
+        if (keyword == null) {
+            return null;
+        }
+
+        String[] tokens = keyword.split("\\s+");
+        for (String token : tokens) {
+            if (token.matches("\\d{4}")) {
+                try {
+                    return Integer.parseInt(token);
+                } catch (NumberFormatException ignored) {
+                    return null;
+                }
+            }
+        }
+        return null;
     }
 }
 

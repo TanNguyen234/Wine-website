@@ -1,9 +1,9 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quáº£n lÃ½ Ä‘Æ¡n hÃ ng - TÃ¹y chá»n quáº£n trá»‹ - StrongWine</title>
+    <title>Quản lý đơn hàng - Tùy chọn quản trị - StrongWine</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
@@ -20,24 +20,24 @@
             StrongWine Admin
         </a>
         <nav>
-            <div class="admin-sidebar-section">Äiá»u hÆ°á»›ng</div>
-            <a class="admin-nav-link" href="/admin"><i class="fa-solid fa-chart-line"></i>Báº£ng Ä‘iá»u khiá»ƒn</a>
+            <div class="admin-sidebar-section">Điều hướng</div>
+            <a class="admin-nav-link" href="/admin"><i class="fa-solid fa-chart-line"></i>Bảng điều khiển</a>
             <a class="admin-nav-link" href="/admin/wines"><i class="fa-solid fa-wine-bottle"></i>Quản lý Rượu</a>
             <a class="admin-nav-link" href="/admin/warehouses"><i class="fa-solid fa-warehouse"></i>Quản lý Kho</a>
-            <a class="admin-nav-link`" href="/admin/users"><i class="fa-solid fa-users"></i>NgÆ°á»i dÃ¹ng</a>
-            <a class="admin-nav-link active" href="/admin/orders"><i class="fa-solid fa-receipt"></i>ÄÆ¡n hÃ ng</a>
-            <a class="admin-nav-link" href="/admin/inventory"><i class="fa-solid fa-warehouse"></i>Kho hÃ ng</a>
-            <a class="admin-nav-link" href="/admin/payments"><i class="fa-solid fa-credit-card"></i>Thanh toÃ¡n</a>
-            <a class="admin-nav-link" href="/admin/shippers"><i class="fa-solid fa-truck"></i>NgÆ°á»i giao hÃ ng</a>
-            <a class="admin-nav-link" href="/admin/shipments"><i class="fa-solid fa-box-open"></i>ÄÆ¡n giao hÃ ng</a>
-            <div class="admin-sidebar-section">Váº­n hÃ nh</div>
-            <a class="admin-nav-link" href="/shipper/dashboard"><i class="fa-solid fa-map-location-dot"></i>MÃ n hÃ¬nh giao hÃ ng</a>
-            <a class="admin-nav-link" href="/wines"><i class="fa-solid fa-store"></i>Cá»­a hÃ ng</a>
+            <a class="admin-nav-link" href="/admin/users"><i class="fa-solid fa-users"></i>Người dùng</a>
+            <a class="admin-nav-link active" href="/admin/orders"><i class="fa-solid fa-receipt"></i>Đơn hàng</a>
+            <a class="admin-nav-link" href="/admin/inventory"><i class="fa-solid fa-warehouse"></i>Kho hàng</a>
+            <a class="admin-nav-link" href="/admin/payments"><i class="fa-solid fa-credit-card"></i>Thanh toán</a>
+            <a class="admin-nav-link" href="/admin/shippers"><i class="fa-solid fa-truck"></i>Người giao hàng</a>
+            <a class="admin-nav-link" href="/admin/shipments"><i class="fa-solid fa-box-open"></i>Đơn giao hàng</a>
+            <div class="admin-sidebar-section">Vận hành</div>
+            <a class="admin-nav-link" href="/shipper/dashboard"><i class="fa-solid fa-map-location-dot"></i>Màn hình giao hàng</a>
+            <a class="admin-nav-link" href="/wines"><i class="fa-solid fa-store"></i>Cửa hàng</a>
         </nav>
         <div style="padding:1rem;border-top:1px solid var(--border);margin-top:auto">
             <form th:action="@{/logout}" method="post" class="mb-0">
                 <button class="btn btn-outline-secondary btn-sm w-100">
-                    <i class="fa-solid fa-right-from-bracket me-1"></i>ÄÄƒng xuáº¥t
+                    <i class="fa-solid fa-right-from-bracket me-1"></i>Đăng xuất
                 </button>
             </form>
         </div>
@@ -46,8 +46,8 @@
     <div class="admin-main">
         <header class="admin-topbar">
             <div>
-                <h1>ÄÆ¡n hÃ ng</h1>
-                <small>Danh sÃ¡ch toÃ n bá»™ Ä‘Æ¡n hÃ ng</small>
+                <h1>Đơn hàng</h1>
+                <small>Danh sách toàn bộ đơn hàng</small>
             </div>
         </header>
 
@@ -62,11 +62,11 @@
             </div>
 
             <div class="panel p-3 p-lg-4 fade-up">
-                <h2 class="h6 mb-3" style="font-family:'Lato',sans-serif;text-transform:uppercase;letter-spacing:.06em;font-size:.8rem;color:var(--text-muted)">Danh sÃ¡ch Ä‘Æ¡n hÃ ng</h2>
+                <h2 class="h6 mb-3" style="font-family:'Lato',sans-serif;text-transform:uppercase;letter-spacing:.06em;font-size:.8rem;color:var(--text-muted)">Danh sách đơn hàng</h2>
                 <div class="table-responsive">
                     <table class="table table-modern align-middle">
                         <thead>
-                            <tr><th>MÃ£</th><th>NgÆ°á»i Ä‘áº·t</th><th>NgÃ y Ä‘áº·t</th><th>Tráº¡ng thÃ¡i</th><th>Thanh toÃ¡n</th><th>Tá»•ng tiá»n</th></tr>
+                            <tr><th>Mã</th><th>Người đặt</th><th>Ngày đặt</th><th>Trạng thái</th><th>Thanh toán</th><th>Tổng tiền</th></tr>
                         </thead>
                         <tbody>
                             <tr th:each="order : ${orders}">
@@ -75,10 +75,10 @@
                                 <td th:text="${#temporals.format(order.orderDate, 'dd/MM/yyyy HH:mm')}"></td>
                                 <td><span class="badge text-bg-secondary" th:text="${@enumDisplayService.orderStatus(order.status)}"></span></td>
                                 <td><span class="badge text-bg-info" th:text="${@enumDisplayService.paymentStatus(order.paymentStatus)}"></span></td>
-                                <td style="color:var(--gold);font-weight:600" th:text="${#numbers.formatDecimal(order.totalPrice, 0, 'COMMA', 0, 'POINT') + ' Ä‘'}"></td>
+                                <td style="color:var(--gold);font-weight:600" th:text="${#numbers.formatDecimal(order.totalPrice, 0, 'COMMA', 0, 'POINT') + ' đ'}"></td>
                             </tr>
                             <tr th:if="${orders == null || orders.isEmpty()}">
-                                <td colspan="6" class="text-center text-muted py-4">ChÆ°a cÃ³ Ä‘Æ¡n hÃ ng nÃ o</td>
+                                <td colspan="6" class="text-center text-muted py-4">Chưa có đơn hàng nào</td>
                             </tr>
                         </tbody>
                     </table>

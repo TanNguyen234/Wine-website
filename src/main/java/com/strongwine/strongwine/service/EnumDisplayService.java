@@ -118,6 +118,7 @@ public class EnumDisplayService {
         return switch (referenceType.trim().toUpperCase()) {
             case "MANUAL_IMPORT" -> "Nhập kho thủ công";
             case "MANUAL_EXPORT" -> "Xuất kho thủ công";
+            case "MANUAL_ADJUST" -> "Điều chỉnh kho thủ công";
             case "ORDER" -> "Đơn hàng";
             case "PAYMENT" -> "Thanh toán";
             case "ORDER_CANCEL" -> "Hủy đơn";

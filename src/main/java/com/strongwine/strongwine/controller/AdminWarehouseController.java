@@ -12,9 +12,13 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.Set;
+
 @Controller
 @RequestMapping("/admin/warehouses")
 public class AdminWarehouseController {
+
+    private static final Set<String> ALLOWED_SORT_FIELDS = Set.of("id", "name", "location", "createdAt", "active");
 
     @Autowired
     private WarehouseService warehouseService;
@@ -28,14 +32,15 @@ public class AdminWarehouseController {
             Model model) {
 
         Sort.Direction direction = "asc".equalsIgnoreCase(sortDir) ? Sort.Direction.ASC : Sort.Direction.DESC;
-        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
+        String safeSortBy = ALLOWED_SORT_FIELDS.contains(sortBy) ? sortBy : "createdAt";
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, safeSortBy));
 
         Page<Warehouse> warehousePage = warehouseService.getWarehousesPage(pageable);
 
         model.addAttribute("warehouses", warehousePage.getContent());
         model.addAttribute("currentPage", page);
         model.addAttribute("pageSize", size);
-        model.addAttribute("sortBy", sortBy);
+        model.addAttribute("sortBy", safeSortBy);
         model.addAttribute("sortDir", sortDir.toLowerCase());
         model.addAttribute("totalPages", warehousePage.getTotalPages());
         model.addAttribute("hasNext", warehousePage.hasNext());
@@ -93,6 +98,19 @@ public class AdminWarehouseController {
             redirectAttributes.addFlashAttribute("success", "Thay đổi trạng thái thành công!");
         } catch (Exception ex) {
             redirectAttributes.addFlashAttribute("error", "Đã xảy ra lỗi khi thay đổi trạng thái!");
+        }
+        return "redirect:/admin/warehouses";
+    }
+
+    @PostMapping("/delete/{id}")
+    public String deleteWarehouse(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        try {
+            warehouseService.deleteWarehouse(id);
+            redirectAttributes.addFlashAttribute("success", "Xóa nhà kho thành công!");
+        } catch (IllegalArgumentException ex) {
+            redirectAttributes.addFlashAttribute("error", ex.getMessage());
+        } catch (Exception ex) {
+            redirectAttributes.addFlashAttribute("error", "Đã xảy ra lỗi khi xóa nhà kho!");
         }
         return "redirect:/admin/warehouses";
     }

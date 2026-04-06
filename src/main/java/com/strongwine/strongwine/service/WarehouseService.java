@@ -1,6 +1,7 @@
 package com.strongwine.strongwine.service;
 
 import com.strongwine.strongwine.entity.Warehouse;
+import com.strongwine.strongwine.repository.InventoryRepository;
 import com.strongwine.strongwine.repository.WarehouseRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -23,6 +24,9 @@ public class WarehouseService {
     @Autowired
     private WarehouseRepository warehouseRepository;
 
+    @Autowired
+    private InventoryRepository inventoryRepository;
+
     public List<Warehouse> getAllWarehouses() {
         return warehouseRepository.findAll();
     }
@@ -38,6 +42,9 @@ public class WarehouseService {
 
     public Warehouse createWarehouse(Warehouse warehouse) {
         validateWarehouse(warehouse, null);
+        warehouse.setName(warehouse.getName().trim());
+        warehouse.setLocation(warehouse.getLocation() != null ? warehouse.getLocation().trim() : null);
+        warehouse.setActive(Boolean.TRUE.equals(warehouse.getActive()));
         return warehouseRepository.save(warehouse);
     }
 
@@ -49,7 +56,7 @@ public class WarehouseService {
         
         warehouse.setName(warehouseDetails.getName().trim());
         warehouse.setLocation(warehouseDetails.getLocation() != null ? warehouseDetails.getLocation().trim() : null);
-        warehouse.setActive(warehouseDetails.getActive());
+        warehouse.setActive(Boolean.TRUE.equals(warehouseDetails.getActive()));
         
         return warehouseRepository.save(warehouse);
     }
@@ -59,6 +66,17 @@ public class WarehouseService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Warehouse not found"));
         warehouse.setActive(!Boolean.TRUE.equals(warehouse.getActive()));
         warehouseRepository.save(warehouse);
+    }
+
+    public void deleteWarehouse(Long id) {
+        Warehouse warehouse = warehouseRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Warehouse not found"));
+
+        if (inventoryRepository.existsByWarehouseId(id)) {
+            throw new IllegalArgumentException("Không thể xóa kho vì đã có dữ liệu tồn kho liên quan");
+        }
+
+        warehouseRepository.delete(warehouse);
     }
 
     private void validateWarehouse(Warehouse warehouse, Long currentId) {

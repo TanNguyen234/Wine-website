@@ -21,4 +21,6 @@ public interface InventoryRepository extends JpaRepository<Inventory, Long> {
     
     List<Inventory> findByCurrentQuantityLessThanEqual(Integer quantity);
     List<Inventory> findByCurrentQuantityGreaterThan(Integer quantity);
+
+    boolean existsByWarehouseId(Long warehouseId);
 }

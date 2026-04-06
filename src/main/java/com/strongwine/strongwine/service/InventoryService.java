@@ -60,8 +60,17 @@ public class InventoryService {
     }
 
     public void ensureInventoryForAllWines() {
-        Warehouse warehouse = getDefaultWarehouse();
-        wineRepository.findByDeletedFalse().forEach(wine -> getOrCreateInventory(wine.getId(), warehouse.getId()));
+        List<Warehouse> activeWarehouses = warehouseRepository.findByActiveTrue();
+        if (activeWarehouses.isEmpty()) {
+            return;
+        }
+
+        List<Wine> wines = wineRepository.findByDeletedFalse();
+        for (Warehouse warehouse : activeWarehouses) {
+            for (Wine wine : wines) {
+                getOrCreateInventory(wine.getId(), warehouse.getId());
+            }
+        }
     }
 
     public Map<Long, Integer> getAvailableStockByWineIds(List<Long> wineIds) {
@@ -87,6 +96,10 @@ public class InventoryService {
         return getInventoryOverview().stream()
                 .filter(inv -> inv.getAvailableQuantity() <= inv.getReorderLevel())
                 .count();
+    }
+
+    public long countInventories() {
+        return getInventoryOverview().size();
     }
 
     public List<Inventory> getLowStockInventories() {
@@ -148,6 +161,48 @@ public class InventoryService {
         recordTransaction(saved, quantity, InventoryOperationType.EXPORT, "MANUAL_EXPORT", null, userId, createdBy, note);
         createStockLog(saved, "Stock export -" + quantity);
         return saved;
+    }
+
+    public Inventory adjustStock(Long wineId, Long warehouseId, Integer targetQuantity, String createdBy, String note) {
+        if (targetQuantity == null || targetQuantity < 0) {
+            throw new IllegalArgumentException("Target quantity must be greater than or equal to 0");
+        }
+
+        Wine wine = getActiveWine(wineId);
+        Warehouse warehouse = getActiveWarehouse(warehouseId);
+
+        Inventory inventory = inventoryRepository.findByWineIdAndWarehouseIdWithPessimisticLock(wineId, warehouseId)
+                .orElseGet(() -> createEmptyInventory(wine, warehouse));
+
+        if (targetQuantity < inventory.getReservedQuantity()) {
+            throw new IllegalArgumentException("Target quantity cannot be lower than reserved quantity");
+        }
+
+        int before = inventory.getCurrentQuantity();
+        int delta = targetQuantity - before;
+        inventory.setCurrentQuantity(targetQuantity);
+        inventory.setUpdatedAt(LocalDateTime.now());
+
+        Inventory saved = saveInventory(inventory);
+        Long userId = resolveUserId(createdBy);
+        String resolvedNote = (note == null || note.isBlank())
+                ? ("Adjusted stock from " + before + " to " + targetQuantity)
+                : note;
+        recordTransaction(saved, delta, InventoryOperationType.ADJUSTMENT, "MANUAL_ADJUST", null, userId, createdBy, resolvedNote);
+        createStockLog(saved, "Stock adjusted from " + before + " to " + targetQuantity);
+        return saved;
+    }
+
+    public Inventory updateReorderLevel(Long inventoryId, Integer reorderLevel) {
+        if (reorderLevel == null || reorderLevel < 0) {
+            throw new IllegalArgumentException("Reorder level must be greater than or equal to 0");
+        }
+
+        Inventory inventory = inventoryRepository.findById(inventoryId)
+                .orElseThrow(() -> new IllegalArgumentException("Inventory not found with id: " + inventoryId));
+        inventory.setReorderLevel(reorderLevel);
+        inventory.setUpdatedAt(LocalDateTime.now());
+        return saveInventory(inventory);
     }
 
     public Inventory importStock(Long wineId, Integer quantity, Long userId, String note) {

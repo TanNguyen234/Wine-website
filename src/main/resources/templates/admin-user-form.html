@@ -1,9 +1,9 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${editingUser != null ? 'Cáº­p nháº­t ngÆ°á»i dÃ¹ng' : 'Táº¡o ngÆ°á»i dÃ¹ng'} + ' - StrongWine'">Biá»ƒu máº«u ngÆ°á»i dÃ¹ng</title>
+    <title th:text="${editingUser != null ? 'Cập nhật người dùng' : 'Tạo người dùng'} + ' - StrongWine'">Biểu mẫu người dùng</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
@@ -19,17 +19,17 @@
             StrongWine Admin
         </a>
         <nav>
-            <div class="admin-sidebar-section">Äiá»u hÆ°á»›ng</div>
-            <a class="admin-nav-link" href="/admin"><i class="fa-solid fa-chart-line"></i>Báº£ng Ä‘iá»u khiá»ƒn</a>
+            <div class="admin-sidebar-section">Điều hướng</div>
+            <a class="admin-nav-link" href="/admin"><i class="fa-solid fa-chart-line"></i>Bảng điều khiển</a>
             <a class="admin-nav-link" href="/admin/wines"><i class="fa-solid fa-wine-bottle"></i>Quản lý Rượu</a>
             <a class="admin-nav-link" href="/admin/warehouses"><i class="fa-solid fa-warehouse"></i>Quản lý Kho</a>
-            <a class="admin-nav-link` active" href="/admin/users"><i class="fa-solid fa-users"></i>NgÆ°á»i dÃ¹ng</a>
-            <a class="admin-nav-link" href="/admin/shippers"><i class="fa-solid fa-truck"></i>NgÆ°á»i giao hÃ ng</a>
-            <a class="admin-nav-link" href="/admin/shipments"><i class="fa-solid fa-box-open"></i>ÄÆ¡n giao hÃ ng</a>
+            <a class="admin-nav-link active" href="/admin/users"><i class="fa-solid fa-users"></i>Người dùng</a>
+            <a class="admin-nav-link" href="/admin/shippers"><i class="fa-solid fa-truck"></i>Người giao hàng</a>
+            <a class="admin-nav-link" href="/admin/shipments"><i class="fa-solid fa-box-open"></i>Đơn giao hàng</a>
         </nav>
         <div style="padding:1rem;border-top:1px solid var(--border);margin-top:auto">
             <form th:action="@{/logout}" method="post" class="mb-0">
-                <button class="btn btn-outline-secondary btn-sm w-100"><i class="fa-solid fa-right-from-bracket me-1"></i>ÄÄƒng xuáº¥t</button>
+                <button class="btn btn-outline-secondary btn-sm w-100"><i class="fa-solid fa-right-from-bracket me-1"></i>Đăng xuất</button>
             </form>
         </div>
     </aside>
@@ -37,11 +37,11 @@
     <div class="admin-main">
         <header class="admin-topbar">
             <div>
-                <h1 th:text="${editingUser != null ? 'Cáº­p nháº­t ngÆ°á»i dÃ¹ng #' + editingUser.id : 'Táº¡o ngÆ°á»i dÃ¹ng má»›i'}">NgÆ°á»i dÃ¹ng</h1>
-                <small>Chuáº©n hÃ³a thÃ´ng tin tÃ i khoáº£n vÃ  phÃ¢n quyá»n</small>
+                <h1 th:text="${editingUser != null ? 'Cập nhật người dùng #' + editingUser.id : 'Tạo người dùng mới'}">Người dùng</h1>
+                <small>Chuẩn hóa thông tin tài khoản và phân quyền</small>
             </div>
             <div class="d-flex gap-2">
-                <a class="btn btn-sm btn-outline-secondary" href="/admin/users">Danh sÃ¡ch ngÆ°á»i dÃ¹ng</a>
+                <a class="btn btn-sm btn-outline-secondary" href="/admin/users">Danh sách người dùng</a>
             </div>
         </header>
 
@@ -59,7 +59,7 @@
                 <div class="panel p-4 p-lg-5 fade-up">
                     <form th:action="${editingUser != null ? '/admin/users/edit/' + editingUser.id : '/admin/users/create'}" method="post">
                         <div class="mb-3">
-                            <label class="form-label">TÃªn Ä‘Äƒng nháº­p <span class="text-danger">*</span></label>
+                            <label class="form-label">Tên đăng nhập <span class="text-danger">*</span></label>
                             <input class="form-control" name="username" required
                                    th:value="${editingUser != null ? editingUser.username : ''}">
                         </div>
@@ -70,13 +70,13 @@
                         </div>
                         <div class="mb-3">
                             <label class="form-label"
-                                   th:text="${editingUser != null ? 'Máº­t kháº©u má»›i (Ä‘á»ƒ trá»‘ng náº¿u khÃ´ng Ä‘á»•i)' : 'Máº­t kháº©u'}"></label>
+                                   th:text="${editingUser != null ? 'Mật khẩu mới (để trống nếu không đổi)' : 'Mật khẩu'}"></label>
                             <input class="form-control" type="password" name="password" th:required="${editingUser == null}">
                         </div>
                         <div class="mb-4">
-                            <label class="form-label">Vai trÃ² <span class="text-danger">*</span></label>
+                            <label class="form-label">Vai trò <span class="text-danger">*</span></label>
                             <select class="form-select" name="role" required>
-                                <option value="" disabled th:selected="${editingUser == null}">-- Chá»n vai trÃ² --</option>
+                                <option value="" disabled th:selected="${editingUser == null}">-- Chọn vai trò --</option>
                                 <option th:each="role : ${roles}" th:value="${role}"
                                         th:text="${@enumDisplayService.userRole(role)}"
                                         th:selected="${editingUser != null and editingUser.role == role}"></option>
@@ -84,9 +84,9 @@
                         </div>
                         <div class="d-flex gap-2">
                             <button class="btn btn-gold" type="submit">
-                                <i class="fa-solid fa-check me-1"></i>LÆ°u ngÆ°á»i dÃ¹ng
+                                <i class="fa-solid fa-check me-1"></i>Lưu người dùng
                             </button>
-                            <a class="btn btn-outline-secondary" href="/admin/users">Quay láº¡i</a>
+                            <a class="btn btn-outline-secondary" href="/admin/users">Quay lại</a>
                         </div>
                     </form>
                 </div>

@@ -62,6 +62,7 @@ public class AdminController {
         long totalOrders = orderService.countOrders();
         Double totalRevenue = orderService.getTotalRevenue();
         long lowStockCount = inventoryService.countLowStockInventories();
+        long totalInventories = inventoryService.countInventories();
         long pendingPayments = paymentService.countPendingPayments();
         Map<String, Long> shipperStats = shipperService.getShipperOverviewStats();
         Map<?, Long> shipmentStats = shipmentService.getShipmentStatusStats();
@@ -95,7 +96,7 @@ public class AdminController {
 
         // Chart Data: Inventory Low vs Normal
         model.addAttribute("inventoryLabels", List.of("Low Stock", "Normal Stock"));
-        model.addAttribute("inventoryValues", List.of(lowStockCount, totalWines - lowStockCount));
+        model.addAttribute("inventoryValues", List.of(lowStockCount, Math.max(0, totalInventories - lowStockCount)));
 
         return "admin-dashboard";
     }

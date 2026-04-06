@@ -13,9 +13,13 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.util.Set;
+
 @Controller
 @RequestMapping("/admin/wines")
 public class AdminWineController {
+
+    private static final Set<String> ALLOWED_SORT_FIELDS = Set.of("id", "name", "type", "country", "year", "price", "createdAt", "updatedAt");
 
     @Autowired
     private WineService wineService;
@@ -30,7 +34,8 @@ public class AdminWineController {
             Model model) {
 
         Sort.Direction direction = "asc".equalsIgnoreCase(sortDir) ? Sort.Direction.ASC : Sort.Direction.DESC;
-        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
+        String safeSortBy = ALLOWED_SORT_FIELDS.contains(sortBy) ? sortBy : "createdAt";
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, safeSortBy));
 
         Page<Wine> winePage;
         if (keyword != null && !keyword.trim().isEmpty()) {
@@ -43,7 +48,7 @@ public class AdminWineController {
         model.addAttribute("keyword", keyword);
         model.addAttribute("currentPage", page);
         model.addAttribute("pageSize", size);
-        model.addAttribute("sortBy", sortBy);
+        model.addAttribute("sortBy", safeSortBy);
         model.addAttribute("sortDir", sortDir.toLowerCase());
         model.addAttribute("totalPages", winePage.getTotalPages());
         model.addAttribute("hasNext", winePage.hasNext());

@@ -1,18 +1,17 @@
 package com.strongwine.strongwine.dto;
 
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 
 public class StockOperationRequest {
 
-    @NotNull(message = "wineId is required")
     private Long wineId;
 
     @NotNull(message = "warehouseId is required")
     private Long warehouseId;
 
     @NotNull(message = "quantity is required")
-    @Positive(message = "quantity must be greater than 0")
+    @PositiveOrZero(message = "quantity must be greater than or equal to 0")
     private Integer quantity;
 
     private String note;

@@ -58,6 +58,18 @@ public class AdminInventoryApiController {
         return ResponseEntity.ok(updated);
     }
 
+    @PostMapping("/adjust/{wineId}")
+    public ResponseEntity<Inventory> adjustStock(@PathVariable Long wineId,
+                                                 @Valid @RequestBody StockOperationRequest request,
+                                                 Authentication authentication) {
+        if (request.getWineId() != null && !wineId.equals(request.getWineId())) {
+            throw new IllegalArgumentException("wineId in path and body do not match");
+        }
+        String actor = extractUsername(authentication);
+        Inventory updated = inventoryService.adjustStock(wineId, request.getWarehouseId(), request.getQuantity(), actor, request.getNote());
+        return ResponseEntity.ok(updated);
+    }
+
     private String extractUsername(Authentication authentication) {
         if (authentication == null || !(authentication.getPrincipal() instanceof UserDetails)) {
             return "system";

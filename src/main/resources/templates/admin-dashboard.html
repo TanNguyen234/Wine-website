@@ -1,9 +1,9 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Báº£ng Ä‘iá»u khiá»ƒn quáº£n trá»‹ - StrongWine</title>
+    <title>Bảng điều khiển quản trị - StrongWine</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
@@ -21,21 +21,21 @@
             StrongWine Admin
         </a>
         <nav>
-            <div class="admin-sidebar-section">Äiá»u hÆ°á»›ng</div>
-            <a class="admin-nav-link active" href="/admin"><i class="fa-solid fa-chart-line"></i>Báº£ng Ä‘iá»u khiá»ƒn</a>
+            <div class="admin-sidebar-section">Điều hướng</div>
+            <a class="admin-nav-link active" href="/admin"><i class="fa-solid fa-chart-line"></i>Bảng điều khiển</a>
             <a class="admin-nav-link" href="/admin/wines"><i class="fa-solid fa-wine-bottle"></i>Quản lý Rượu</a>
             <a class="admin-nav-link" href="/admin/warehouses"><i class="fa-solid fa-warehouse"></i>Quản lý Kho</a>
-            <a class="admin-nav-link`" href="/admin/users"><i class="fa-solid fa-users"></i>NgÆ°á»i dÃ¹ng</a>
-            <a class="admin-nav-link" href="/admin/shippers"><i class="fa-solid fa-truck"></i>NgÆ°á»i giao hÃ ng</a>
-            <a class="admin-nav-link" href="/admin/shipments"><i class="fa-solid fa-box-open"></i>ÄÆ¡n giao hÃ ng</a>
-            <div class="admin-sidebar-section">Váº­n hÃ nh</div>
-            <a class="admin-nav-link" href="/shipper/dashboard"><i class="fa-solid fa-map-location-dot"></i>MÃ n hÃ¬nh giao hÃ ng</a>
-            <a class="admin-nav-link" href="/wines"><i class="fa-solid fa-store"></i>Cá»­a hÃ ng</a>
+            <a class="admin-nav-link" href="/admin/users"><i class="fa-solid fa-users"></i>Người dùng</a>
+            <a class="admin-nav-link" href="/admin/shippers"><i class="fa-solid fa-truck"></i>Người giao hàng</a>
+            <a class="admin-nav-link" href="/admin/shipments"><i class="fa-solid fa-box-open"></i>Đơn giao hàng</a>
+            <div class="admin-sidebar-section">Vận hành</div>
+            <a class="admin-nav-link" href="/shipper/dashboard"><i class="fa-solid fa-map-location-dot"></i>Màn hình giao hàng</a>
+            <a class="admin-nav-link" href="/wines"><i class="fa-solid fa-store"></i>Cửa hàng</a>
         </nav>
         <div style="padding:1rem;border-top:1px solid var(--border);margin-top:auto">
             <form th:action="@{/logout}" method="post" class="mb-0">
                 <button class="btn btn-outline-secondary btn-sm w-100">
-                    <i class="fa-solid fa-right-from-bracket me-1"></i>ÄÄƒng xuáº¥t
+                    <i class="fa-solid fa-right-from-bracket me-1"></i>Đăng xuất
                 </button>
             </form>
         </div>
@@ -45,12 +45,12 @@
     <div class="admin-main">
         <header class="admin-topbar">
             <div>
-                <h1>Báº£ng Ä‘iá»u khiá»ƒn</h1>
-                <small>Theo dÃµi váº­n hÃ nh, kho vÃ  thanh toÃ¡n</small>
+                <h1>Bảng điều khiển</h1>
+                <small>Theo dõi vận hành, kho và thanh toán</small>
             </div>
             <div class="d-flex align-items-center gap-2">
-                <span class="badge text-bg-warning" th:text="${lowStockCount} + ' sáº¯p háº¿t hÃ ng'"></span>
-                <span class="badge text-bg-info" th:text="${pendingPayments} + ' thanh toÃ¡n chá» xá»­ lÃ½'"></span>
+                <span class="badge text-bg-warning" th:text="${lowStockCount} + ' sắp hết hàng'"></span>
+                <span class="badge text-bg-info" th:text="${pendingPayments} + ' thanh toán chờ xử lý'"></span>
             </div>
         </header>
 
@@ -68,31 +68,31 @@
             <div class="row g-3 mb-4 fade-up">
                 <div class="col-lg-2 col-md-4 col-6">
                     <div class="stat-card h-100">
-                        <div class="stat-label">Sáº£n pháº©m</div>
+                        <div class="stat-label">Sản phẩm</div>
                         <p class="stat-value" th:text="${totalWines}">0</p>
                     </div>
                 </div>
                 <div class="col-lg-2 col-md-4 col-6">
                     <div class="stat-card h-100">
-                        <div class="stat-label">NgÆ°á»i dÃ¹ng</div>
+                        <div class="stat-label">Người dùng</div>
                         <p class="stat-value" th:text="${totalUsers}">0</p>
                     </div>
                 </div>
                 <div class="col-lg-2 col-md-4 col-6">
                     <div class="stat-card h-100">
-                        <div class="stat-label">ÄÆ¡n hÃ ng</div>
+                        <div class="stat-label">Đơn hàng</div>
                         <p class="stat-value" th:text="${totalOrders}">0</p>
                     </div>
                 </div>
                 <div class="col-lg-2 col-md-4 col-6">
                     <div class="stat-card h-100">
-                        <div class="stat-label">ÄÆ¡n giao hÃ ng</div>
+                        <div class="stat-label">Đơn giao hàng</div>
                         <p class="stat-value" th:text="${totalShipments}">0</p>
                     </div>
                 </div>
                 <div class="col-lg-2 col-md-4 col-6">
                     <div class="stat-card h-100">
-                        <div class="stat-label">Shipper hoáº¡t Ä‘á»™ng</div>
+                        <div class="stat-label">Shipper hoạt động</div>
                         <p class="stat-value" th:text="${shipperStats['active']}">0</p>
                     </div>
                 </div>
@@ -100,7 +100,7 @@
                     <div class="stat-card h-100">
                         <div class="stat-label">Doanh thu</div>
                         <p class="h6 mb-0" style="color:var(--gold);font-family:'Playfair Display',serif;font-size:1rem;margin-top:.25rem"
-                           th:text="${#numbers.formatDecimal(totalRevenue, 0, 'COMMA', 0, 'POINT') + ' Ä‘'}">0</p>
+                           th:text="${#numbers.formatDecimal(totalRevenue, 0, 'COMMA', 0, 'POINT') + ' đ'}">0</p>
                     </div>
                 </div>
             </div>
@@ -108,19 +108,19 @@
             <!-- Quick actions -->
             <div class="panel panel-muted p-3 mb-3 fade-up">
                 <div class="d-flex flex-wrap gap-2 align-items-center">
-                    <span style="font-size:.72rem;color:var(--text-faint);font-weight:700;letter-spacing:.08em;text-transform:uppercase">Quáº£n trá»‹ nhanh</span>
-                    <a href="/admin/users" class="btn btn-sm btn-outline-secondary">NgÆ°á»i dÃ¹ng</a>
-                    <a href="/admin/shippers" class="btn btn-sm btn-outline-secondary">NgÆ°á»i giao hÃ ng</a>
-                    <a href="/admin/shipments" class="btn btn-sm btn-outline-secondary">ÄÆ¡n giao hÃ ng</a>
-                    <a href="/shipper/dashboard" class="btn btn-sm btn-outline-secondary">MÃ n hÃ¬nh giao hÃ ng</a>
+                    <span style="font-size:.72rem;color:var(--text-faint);font-weight:700;letter-spacing:.08em;text-transform:uppercase">Quản trị nhanh</span>
+                    <a href="/admin/users" class="btn btn-sm btn-outline-secondary">Người dùng</a>
+                    <a href="/admin/shippers" class="btn btn-sm btn-outline-secondary">Người giao hàng</a>
+                    <a href="/admin/shipments" class="btn btn-sm btn-outline-secondary">Đơn giao hàng</a>
+                    <a href="/shipper/dashboard" class="btn btn-sm btn-outline-secondary">Màn hình giao hàng</a>
                 </div>
             </div>
 
             <!-- Dashboard Alerts -->
             <div class="panel p-3 p-lg-4 fade-up mb-4">
-                <h2 class="h6 mb-3" style="font-family:'Lato',sans-serif;text-transform:uppercase;letter-spacing:.06em;font-size:.8rem;color:var(--text-muted)">Cáº£nh bÃ¡o tá»“n kho tháº¥p</h2>
+                <h2 class="h6 mb-3" style="font-family:'Lato',sans-serif;text-transform:uppercase;letter-spacing:.06em;font-size:.8rem;color:var(--text-muted)">Cảnh báo tồn kho thấp</h2>
                 <div th:if="${lowStockItems == null || lowStockItems.isEmpty()}" class="alert alert-success mb-0">
-                    <i class="fa-solid fa-circle-check me-2"></i>KhÃ´ng cÃ³ sáº£n pháº©m sáº¯p háº¿t hÃ ng.
+                    <i class="fa-solid fa-circle-check me-2"></i>Không có sản phẩm sắp hết hàng.
                 </div>
                 <div th:unless="${lowStockItems == null || lowStockItems.isEmpty()}" class="d-flex flex-column gap-2">
                     <div th:each="item : ${lowStockItems}"
@@ -129,7 +129,7 @@
                             <div style="font-weight:600;color:var(--text)" th:text="${item.wine.name}"></div>
                             <div style="font-size:.8rem;color:var(--text-muted)" th:text="${item.warehouse.name}"></div>
                         </div>
-                        <span class="stock-badge stock-low" th:text="${'CÃ²n: ' + item.availableQuantity}"></span>
+                        <span class="stock-badge stock-low" th:text="${'Còn: ' + item.availableQuantity}"></span>
                     </div>
                 </div>
             </div>
@@ -138,7 +138,7 @@
             <div class="row g-4 mb-4 fade-up">
                 <div class="col-lg-8">
                     <div class="panel p-4">
-                        <h2 class="h6 mb-4" style="text-transform:uppercase;letter-spacing:.1em;font-size:.75rem;color:var(--text-muted)">Xu hÆ°á»›ng doanh thu (7 ngÃ y qua)</h2>
+                        <h2 class="h6 mb-4" style="text-transform:uppercase;letter-spacing:.1em;font-size:.75rem;color:var(--text-muted)">Xu hướng doanh thu (7 ngày qua)</h2>
                         <div style="height:300px">
                             <canvas id="revenueChart"></canvas>
                         </div>
@@ -146,7 +146,7 @@
                 </div>
                 <div class="col-lg-4">
                     <div class="panel p-4">
-                        <h2 class="h6 mb-4" style="text-transform:uppercase;letter-spacing:.1em;font-size:.75rem;color:var(--text-muted)">Tráº¡ng thÃ¡i Ä‘Æ¡n hÃ ng</h2>
+                        <h2 class="h6 mb-4" style="text-transform:uppercase;letter-spacing:.1em;font-size:.75rem;color:var(--text-muted)">Trạng thái đơn hàng</h2>
                         <div style="height:300px">
                             <canvas id="statusChart"></canvas>
                         </div>
@@ -154,7 +154,7 @@
                 </div>
                 <div class="col-lg-6">
                     <div class="panel p-4">
-                        <h2 class="h6 mb-4" style="text-transform:uppercase;letter-spacing:.1em;font-size:.75rem;color:var(--text-muted)">Top 5 sáº£n pháº©m bÃ¡n cháº¡y nháº¥t</h2>
+                        <h2 class="h6 mb-4" style="text-transform:uppercase;letter-spacing:.1em;font-size:.75rem;color:var(--text-muted)">Top 5 sản phẩm bán chạy nhất</h2>
                         <div style="height:300px">
                             <canvas id="topWinesChart"></canvas>
                         </div>
@@ -162,7 +162,7 @@
                 </div>
                 <div class="col-lg-6">
                     <div class="panel p-4">
-                        <h2 class="h6 mb-4" style="text-transform:uppercase;letter-spacing:.1em;font-size:.75rem;color:var(--text-muted)">TÃ¬nh tráº¡ng kho hÃ ng</h2>
+                        <h2 class="h6 mb-4" style="text-transform:uppercase;letter-spacing:.1em;font-size:.75rem;color:var(--text-muted)">Tình trạng kho hàng</h2>
                         <div style="height:300px">
                             <canvas id="inventoryChart"></canvas>
                         </div>
@@ -200,7 +200,7 @@
             data: {
                 labels: /*[[${revenueLabels}]]*/ [],
                 datasets: [{
-                    label: 'Doanh thu (Ä‘)',
+                    label: 'Doanh thu (đ)',
                     data: /*[[${revenueValues}]]*/ [],
                     borderColor: gold,
                     backgroundColor: function(context) {
@@ -264,7 +264,7 @@
             data: {
                 labels: /*[[${topWineLabels}]]*/ [],
                 datasets: [{
-                    label: 'Sá»‘ lÆ°á»£ng bÃ¡n',
+                    label: 'Số lượng bán',
                     data: /*[[${topWineValues}]]*/ [],
                     backgroundColor: gold,
                     borderRadius: 4

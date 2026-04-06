@@ -55,7 +55,7 @@ public interface WineRepository extends JpaRepository<Wine, Long> {
      * Search wines by name, type, and year
      */
     @Query("SELECT w FROM Wine w WHERE w.deleted = false AND " +
-           "(:keyword IS NULL OR LOWER(w.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(COALESCE(w.description, '')) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND " +
+           "(:keyword IS NULL OR LOWER(CONCAT(COALESCE(w.name, ''), ' ', COALESCE(w.description, ''), ' ', COALESCE(w.type, ''), ' ', COALESCE(w.country, ''))) LIKE LOWER(:keyword)) AND " +
            "(:type IS NULL OR w.type = :type) AND " +
            "(:country IS NULL OR LOWER(COALESCE(w.country, '')) = LOWER(:country)) AND " +
            "(:year IS NULL OR w.year = :year) AND " +
@@ -69,7 +69,7 @@ public interface WineRepository extends JpaRepository<Wine, Long> {
                           @Param("maxPrice") BigDecimal maxPrice);
 
     @Query("SELECT w FROM Wine w WHERE w.deleted = false AND " +
-            "(:keyword IS NULL OR LOWER(w.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(COALESCE(w.description, '')) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND " +
+           "(:keyword IS NULL OR LOWER(CONCAT(COALESCE(w.name, ''), ' ', COALESCE(w.description, ''), ' ', COALESCE(w.type, ''), ' ', COALESCE(w.country, ''))) LIKE LOWER(:keyword)) AND " +
             "(:type IS NULL OR w.type = :type) AND " +
             "(:country IS NULL OR LOWER(COALESCE(w.country, '')) = LOWER(:country)) AND " +
             "(:year IS NULL OR w.year = :year) AND " +

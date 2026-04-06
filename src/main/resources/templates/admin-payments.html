@@ -1,9 +1,9 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quáº£n lÃ½ thanh toÃ¡n - TÃ¹y chá»n quáº£n trá»‹ - StrongWine</title>
+    <title>Quản lý thanh toán - Tùy chọn quản trị - StrongWine</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
@@ -20,24 +20,24 @@
             StrongWine Admin
         </a>
         <nav>
-            <div class="admin-sidebar-section">Äiá»u hÆ°á»›ng</div>
-            <a class="admin-nav-link" href="/admin"><i class="fa-solid fa-chart-line"></i>Báº£ng Ä‘iá»u khiá»ƒn</a>
+            <div class="admin-sidebar-section">Điều hướng</div>
+            <a class="admin-nav-link" href="/admin"><i class="fa-solid fa-chart-line"></i>Bảng điều khiển</a>
             <a class="admin-nav-link" href="/admin/wines"><i class="fa-solid fa-wine-bottle"></i>Quản lý Rượu</a>
             <a class="admin-nav-link" href="/admin/warehouses"><i class="fa-solid fa-warehouse"></i>Quản lý Kho</a>
-            <a class="admin-nav-link`" href="/admin/users"><i class="fa-solid fa-users"></i>NgÆ°á»i dÃ¹ng</a>
-            <a class="admin-nav-link" href="/admin/orders"><i class="fa-solid fa-receipt"></i>ÄÆ¡n hÃ ng</a>
-            <a class="admin-nav-link" href="/admin/inventory"><i class="fa-solid fa-warehouse"></i>Kho hÃ ng</a>
-            <a class="admin-nav-link active" href="/admin/payments"><i class="fa-solid fa-credit-card"></i>Thanh toÃ¡n</a>
-            <a class="admin-nav-link" href="/admin/shippers"><i class="fa-solid fa-truck"></i>NgÆ°á»i giao hÃ ng</a>
-            <a class="admin-nav-link" href="/admin/shipments"><i class="fa-solid fa-box-open"></i>ÄÆ¡n giao hÃ ng</a>
-            <div class="admin-sidebar-section">Váº­n hÃ nh</div>
-            <a class="admin-nav-link" href="/shipper/dashboard"><i class="fa-solid fa-map-location-dot"></i>MÃ n hÃ¬nh giao hÃ ng</a>
-            <a class="admin-nav-link" href="/wines"><i class="fa-solid fa-store"></i>Cá»­a hÃ ng</a>
+            <a class="admin-nav-link" href="/admin/users"><i class="fa-solid fa-users"></i>Người dùng</a>
+            <a class="admin-nav-link" href="/admin/orders"><i class="fa-solid fa-receipt"></i>Đơn hàng</a>
+            <a class="admin-nav-link" href="/admin/inventory"><i class="fa-solid fa-warehouse"></i>Kho hàng</a>
+            <a class="admin-nav-link active" href="/admin/payments"><i class="fa-solid fa-credit-card"></i>Thanh toán</a>
+            <a class="admin-nav-link" href="/admin/shippers"><i class="fa-solid fa-truck"></i>Người giao hàng</a>
+            <a class="admin-nav-link" href="/admin/shipments"><i class="fa-solid fa-box-open"></i>Đơn giao hàng</a>
+            <div class="admin-sidebar-section">Vận hành</div>
+            <a class="admin-nav-link" href="/shipper/dashboard"><i class="fa-solid fa-map-location-dot"></i>Màn hình giao hàng</a>
+            <a class="admin-nav-link" href="/wines"><i class="fa-solid fa-store"></i>Cửa hàng</a>
         </nav>
         <div style="padding:1rem;border-top:1px solid var(--border);margin-top:auto">
             <form th:action="@{/logout}" method="post" class="mb-0">
                 <button class="btn btn-outline-secondary btn-sm w-100">
-                    <i class="fa-solid fa-right-from-bracket me-1"></i>ÄÄƒng xuáº¥t
+                    <i class="fa-solid fa-right-from-bracket me-1"></i>Đăng xuất
                 </button>
             </form>
         </div>
@@ -46,8 +46,8 @@
     <div class="admin-main">
         <header class="admin-topbar">
             <div>
-                <h1>Thanh toÃ¡n</h1>
-                <small>Danh sÃ¡ch cÃ¡c giao dá»‹ch thanh toÃ¡n</small>
+                <h1>Thanh toán</h1>
+                <small>Danh sách các giao dịch thanh toán</small>
             </div>
         </header>
 
@@ -62,11 +62,11 @@
             </div>
 
             <div class="panel p-3 p-lg-4 fade-up mb-4">
-                <h2 class="h6 mb-3" style="font-family:'Lato',sans-serif;text-transform:uppercase;letter-spacing:.06em;font-size:.8rem;color:var(--text-muted)">Giao dá»‹ch thanh toÃ¡n</h2>
+                <h2 class="h6 mb-3" style="font-family:'Lato',sans-serif;text-transform:uppercase;letter-spacing:.06em;font-size:.8rem;color:var(--text-muted)">Giao dịch thanh toán</h2>
                 <div class="table-responsive mb-4">
                     <table class="table table-modern align-middle">
                         <thead>
-                            <tr><th>NgÃ y táº¡o</th><th>ÄÆ¡n hÃ ng</th><th>MÃ£ tham chiáº¿u</th><th>PhÆ°Æ¡ng thá»©c</th><th>Tráº¡ng thÃ¡i</th><th>Sá»‘ tiá»n</th></tr>
+                            <tr><th>Ngày tạo</th><th>Đơn hàng</th><th>Mã tham chiếu</th><th>Phương thức</th><th>Trạng thái</th><th>Số tiền</th></tr>
                         </thead>
                         <tbody>
                             <tr th:each="pay : ${payments}">
@@ -75,10 +75,10 @@
                                 <td style="font-family:monospace;font-size:.8rem" th:text="${pay.paymentReference}"></td>
                                 <td th:text="${@enumDisplayService.paymentMethod(pay.method)}"></td>
                                 <td><span class="badge text-bg-secondary" th:text="${@enumDisplayService.paymentStatus(pay.status)}"></span></td>
-                                <td style="color:var(--gold);font-weight:600" th:text="${#numbers.formatDecimal(pay.amount, 0, 'COMMA', 0, 'POINT') + ' Ä‘'}"></td>
+                                <td style="color:var(--gold);font-weight:600" th:text="${#numbers.formatDecimal(pay.amount, 0, 'COMMA', 0, 'POINT') + ' đ'}"></td>
                             </tr>
                             <tr th:if="${payments == null || payments.isEmpty()}">
-                                <td colspan="6" class="text-center text-muted py-4">ChÆ°a cÃ³ giao dá»‹ch thanh toÃ¡n nÃ o</td>
+                                <td colspan="6" class="text-center text-muted py-4">Chưa có giao dịch thanh toán nào</td>
                             </tr>
                         </tbody>
                     </table>
@@ -88,11 +88,11 @@
             </div>
 
             <div class="panel p-3 p-lg-4 fade-up">
-                <h3 class="h6 mb-3" style="font-family:'Lato',sans-serif;text-transform:uppercase;letter-spacing:.06em;font-size:.75rem;color:var(--text-muted)">Nháº­t kÃ½ sá»± kiá»‡n thanh toÃ¡n</h3>
+                <h3 class="h6 mb-3" style="font-family:'Lato',sans-serif;text-transform:uppercase;letter-spacing:.06em;font-size:.75rem;color:var(--text-muted)">Nhật ký sự kiện thanh toán</h3>
                 <div class="table-responsive">
                     <table class="table table-modern align-middle">
                         <thead>
-                            <tr><th>Thá»i gian</th><th>Loáº¡i giao dá»‹ch</th><th>Tráº¡ng thÃ¡i</th><th>Dá»¯ liá»‡u</th></tr>
+                            <tr><th>Thời gian</th><th>Loại giao dịch</th><th>Trạng thái</th><th>Dữ liệu</th></tr>
                         </thead>
                         <tbody>
                             <tr th:each="tx : ${paymentTransactions}">
@@ -102,7 +102,7 @@
                                 <td style="max-width:300px" class="text-truncate" th:text="${tx.payload}"></td>
                             </tr>
                             <tr th:if="${paymentTransactions == null || paymentTransactions.isEmpty()}">
-                                <td colspan="4" class="text-center text-muted py-4">ChÆ°a cÃ³ nháº­t kÃ½ sá»± kiá»‡n thanh toÃ¡n</td>
+                                <td colspan="4" class="text-center text-muted py-4">Chưa có nhật ký sự kiện thanh toán</td>
                             </tr>
                         </tbody>
                     </table>

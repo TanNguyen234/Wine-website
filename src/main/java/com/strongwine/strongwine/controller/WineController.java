@@ -4,6 +4,7 @@ import com.strongwine.strongwine.entity.Wine;
 import com.strongwine.strongwine.service.FileStorageService;
 import com.strongwine.strongwine.service.InventoryService;
 import com.strongwine.strongwine.service.ReviewService;
+import com.strongwine.strongwine.service.WarehouseService;
 import com.strongwine.strongwine.service.WineService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -44,6 +45,9 @@ public class WineController {
 
     @Autowired
     private InventoryService inventoryService;
+
+    @Autowired
+    private WarehouseService warehouseService;
     
     /**
      * Wine list page with search and filter
@@ -149,6 +153,7 @@ public class WineController {
     @GetMapping("/admin/create")
     public String showCreateForm(Model model) {
         model.addAttribute("wine", new Wine());
+        model.addAttribute("warehouses", warehouseService.getAllWarehouses().stream().filter(w -> Boolean.TRUE.equals(w.getActive())).toList());
         return "wine-form";
     }
     
@@ -160,6 +165,7 @@ public class WineController {
         Wine wine = wineService.getWineById(id)
             .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Wine not found"));
         model.addAttribute("wine", wine);
+        model.addAttribute("warehouses", warehouseService.getAllWarehouses().stream().filter(w -> Boolean.TRUE.equals(w.getActive())).toList());
         return "wine-form";
     }
     
@@ -176,6 +182,9 @@ public class WineController {
             @RequestParam(required = false) String description,
             @RequestParam(required = false) String imageUrl,
             @RequestParam(required = false) MultipartFile imageFile,
+            @RequestParam(required = false) Long warehouseId,
+            @RequestParam(required = false) Integer initialQuantity,
+            @RequestParam(required = false) Integer reorderLevel,
             RedirectAttributes redirectAttributes) {
         
         try {
@@ -213,9 +222,20 @@ public class WineController {
             }
             
             wine.setImageUrl(finalImageUrl);
-            wineService.createWine(wine);
+            Wine createdWine = wineService.createWine(wine);
+
+            if (warehouseId != null) {
+                if (reorderLevel != null && reorderLevel >= 0) {
+                    com.strongwine.strongwine.entity.Inventory inventory = inventoryService.getOrCreateInventory(createdWine.getId(), warehouseId);
+                    inventoryService.updateReorderLevel(inventory.getId(), reorderLevel);
+                }
+                if (initialQuantity != null && initialQuantity > 0) {
+                    inventoryService.importStock(createdWine.getId(), warehouseId, initialQuantity, "admin", "Khởi tạo tồn kho khi tạo sản phẩm");
+                }
+            }
+
             redirectAttributes.addFlashAttribute("success", "Tạo sản phẩm rượu thành công!");
-            return "redirect:/admin";
+            return "redirect:/admin/wines";
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Không thể tạo sản phẩm: " + e.getMessage());
             return "redirect:/wines/admin/create";
@@ -236,6 +256,9 @@ public class WineController {
             @RequestParam(required = false) String description,
             @RequestParam(required = false) String imageUrl,
             @RequestParam(required = false) MultipartFile imageFile,
+            @RequestParam(required = false) Long warehouseId,
+            @RequestParam(required = false) Integer initialQuantity,
+            @RequestParam(required = false) Integer reorderLevel,
             RedirectAttributes redirectAttributes) {
         
         try {
@@ -278,8 +301,19 @@ public class WineController {
             
             wine.setImageUrl(finalImageUrl);
             wineService.updateWine(id, wine);
+
+            if (warehouseId != null) {
+                com.strongwine.strongwine.entity.Inventory inventory = inventoryService.getOrCreateInventory(id, warehouseId);
+                if (reorderLevel != null && reorderLevel >= 0) {
+                    inventoryService.updateReorderLevel(inventory.getId(), reorderLevel);
+                }
+                if (initialQuantity != null && initialQuantity > 0) {
+                    inventoryService.importStock(id, warehouseId, initialQuantity, "admin", "Nhập bổ sung trong màn hình cập nhật sản phẩm");
+                }
+            }
+
             redirectAttributes.addFlashAttribute("success", "Cập nhật sản phẩm rượu thành công!");
-            return "redirect:/admin";
+            return "redirect:/admin/wines";
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Không thể cập nhật sản phẩm: " + e.getMessage());
             return "redirect:/wines/admin/edit/" + id;
@@ -305,7 +339,7 @@ public class WineController {
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Không thể xóa sản phẩm: " + e.getMessage());
         }
-        return "redirect:/admin";
+        return "redirect:/admin/wines";
     }
 }
 

@@ -1,9 +1,9 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quáº£n lÃ½ ngÆ°á»i giao hÃ ng - StrongWine</title>
+    <title>Quản lý người giao hàng - StrongWine</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
@@ -19,20 +19,20 @@
             StrongWine Admin
         </a>
         <nav>
-            <div class="admin-sidebar-section">Äiá»u hÆ°á»›ng</div>
-            <a class="admin-nav-link" href="/admin"><i class="fa-solid fa-chart-line"></i>Báº£ng Ä‘iá»u khiá»ƒn</a>
+            <div class="admin-sidebar-section">Điều hướng</div>
+            <a class="admin-nav-link" href="/admin"><i class="fa-solid fa-chart-line"></i>Bảng điều khiển</a>
             <a class="admin-nav-link" href="/admin/wines"><i class="fa-solid fa-wine-bottle"></i>Quản lý Rượu</a>
             <a class="admin-nav-link" href="/admin/warehouses"><i class="fa-solid fa-warehouse"></i>Quản lý Kho</a>
-            <a class="admin-nav-link`" href="/admin/users"><i class="fa-solid fa-users"></i>NgÆ°á»i dÃ¹ng</a>
-            <a class="admin-nav-link active" href="/admin/shippers"><i class="fa-solid fa-truck"></i>NgÆ°á»i giao hÃ ng</a>
-            <a class="admin-nav-link" href="/admin/shipments"><i class="fa-solid fa-box-open"></i>ÄÆ¡n giao hÃ ng</a>
-            <div class="admin-sidebar-section">Váº­n hÃ nh</div>
-            <a class="admin-nav-link" href="/shipper/dashboard"><i class="fa-solid fa-map-location-dot"></i>MÃ n hÃ¬nh giao hÃ ng</a>
-            <a class="admin-nav-link" href="/wines"><i class="fa-solid fa-store"></i>Cá»­a hÃ ng</a>
+            <a class="admin-nav-link" href="/admin/users"><i class="fa-solid fa-users"></i>Người dùng</a>
+            <a class="admin-nav-link active" href="/admin/shippers"><i class="fa-solid fa-truck"></i>Người giao hàng</a>
+            <a class="admin-nav-link" href="/admin/shipments"><i class="fa-solid fa-box-open"></i>Đơn giao hàng</a>
+            <div class="admin-sidebar-section">Vận hành</div>
+            <a class="admin-nav-link" href="/shipper/dashboard"><i class="fa-solid fa-map-location-dot"></i>Màn hình giao hàng</a>
+            <a class="admin-nav-link" href="/wines"><i class="fa-solid fa-store"></i>Cửa hàng</a>
         </nav>
         <div style="padding:1rem;border-top:1px solid var(--border);margin-top:auto">
             <form th:action="@{/logout}" method="post" class="mb-0">
-                <button class="btn btn-outline-secondary btn-sm w-100"><i class="fa-solid fa-right-from-bracket me-1"></i>ÄÄƒng xuáº¥t</button>
+                <button class="btn btn-outline-secondary btn-sm w-100"><i class="fa-solid fa-right-from-bracket me-1"></i>Đăng xuất</button>
             </form>
         </div>
     </aside>
@@ -40,12 +40,12 @@
     <div class="admin-main">
         <header class="admin-topbar">
             <div>
-                <h1>Quáº£n lÃ½ ngÆ°á»i giao hÃ ng</h1>
-                <small>Theo dÃµi hiá»‡u suáº¥t vÃ  tráº¡ng thÃ¡i giao nháº­n</small>
+                <h1>Quản lý người giao hàng</h1>
+                <small>Theo dõi hiệu suất và trạng thái giao nhận</small>
             </div>
             <div class="d-flex gap-2">
-                <a class="btn btn-sm btn-outline-secondary" href="/admin/shipments">ÄÆ¡n giao hÃ ng</a>
-                <a class="btn btn-gold btn-sm" href="/admin/shippers/create"><i class="fa-solid fa-plus me-1"></i>ThÃªm ngÆ°á»i giao hÃ ng</a>
+                <a class="btn btn-sm btn-outline-secondary" href="/admin/shipments">Đơn giao hàng</a>
+                <a class="btn btn-gold btn-sm" href="/admin/shippers/create"><i class="fa-solid fa-plus me-1"></i>Thêm người giao hàng</a>
             </div>
         </header>
 
@@ -63,19 +63,19 @@
             <div class="row g-3 mb-3 fade-up">
                 <div class="col-md-4">
                     <div class="stat-card h-100">
-                        <div class="stat-label">Tá»•ng sá»‘ ngÆ°á»i giao hÃ ng</div>
+                        <div class="stat-label">Tổng số người giao hàng</div>
                         <p class="stat-value" th:text="${shipperStats['total']}">0</p>
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="stat-card h-100">
-                        <div class="stat-label">Äang hoáº¡t Ä‘á»™ng</div>
+                        <div class="stat-label">Đang hoạt động</div>
                         <p class="stat-value" style="color:var(--ok-light)" th:text="${shipperStats['active']}">0</p>
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="stat-card h-100">
-                        <div class="stat-label">Sáºµn sÃ ng nháº­n Ä‘Æ¡n</div>
+                        <div class="stat-label">Sẵn sàng nhận đơn</div>
                         <p class="stat-value" th:text="${shipperStats['available']}">0</p>
                     </div>
                 </div>
@@ -87,14 +87,14 @@
                         <thead>
                             <tr>
                                 <th><span class="th-sort">ID <i class="fa-solid fa-sort"></i></span></th>
-                                <th><span class="th-sort">TÃ i khoáº£n <i class="fa-solid fa-sort"></i></span></th>
-                                <th><span class="th-sort">TÃªn <i class="fa-solid fa-sort"></i></span></th>
-                                <th>Äiá»‡n thoáº¡i</th>
-                                <th>PhÆ°Æ¡ng tiá»‡n</th>
-                                <th>Tráº¡ng thÃ¡i</th>
-                                <th>Sáºµn sÃ ng</th>
-                                <th>Cáº­p nháº­t</th>
-                                <th>Thao tÃ¡c</th>
+                                <th><span class="th-sort">Tài khoản <i class="fa-solid fa-sort"></i></span></th>
+                                <th><span class="th-sort">Tên <i class="fa-solid fa-sort"></i></span></th>
+                                <th>Điện thoại</th>
+                                <th>Phương tiện</th>
+                                <th>Trạng thái</th>
+                                <th>Sẵn sàng</th>
+                                <th>Cập nhật</th>
+                                <th>Thao tác</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -107,16 +107,16 @@
                                 <td><span class="badge text-bg-secondary" th:text="${@enumDisplayService.shipperStatus(s.status)}"></span></td>
                                 <td>
                                     <span th:class="${s.isAvailable ? 'badge text-bg-success' : 'badge text-bg-warning'}"
-                                          th:text="${s.isAvailable ? 'Sáºµn sÃ ng' : 'Táº¡m nghá»‰'}"></span>
+                                          th:text="${s.isAvailable ? 'Sẵn sàng' : 'Tạm nghỉ'}"></span>
                                 </td>
                                 <td style="font-size:.8rem" th:text="${#temporals.format(s.updatedAt, 'dd/MM/yyyy HH:mm')}"></td>
                                 <td>
                                     <div class="d-flex gap-2">
                                         <a class="btn btn-sm btn-outline-secondary" th:href="@{/admin/shippers/edit/{id}(id=${s.id})}">
-                                            <i class="fa-solid fa-pen me-1"></i>Sá»­a
+                                            <i class="fa-solid fa-pen me-1"></i>Sửa
                                         </a>
                                         <form th:action="@{/admin/shippers/delete/{id}(id=${s.id})}" method="post" class="mb-0"
-                                              onsubmit="return confirm('Báº¡n cÃ³ cháº¯c muá»‘n xÃ³a ngÆ°á»i giao hÃ ng nÃ y?');">
+                                              onsubmit="return confirm('Bạn có chắc muốn xóa người giao hàng này?');">
                                             <button class="btn btn-sm btn-outline-danger"><i class="fa-solid fa-trash"></i></button>
                                         </form>
                                     </div>

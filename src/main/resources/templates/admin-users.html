@@ -1,9 +1,9 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quáº£n lÃ½ ngÆ°á»i dÃ¹ng - StrongWine</title>
+    <title>Quản lý người dùng - StrongWine</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
@@ -19,20 +19,20 @@
             StrongWine Admin
         </a>
         <nav>
-            <div class="admin-sidebar-section">Äiá»u hÆ°á»›ng</div>
-            <a class="admin-nav-link" href="/admin"><i class="fa-solid fa-chart-line"></i>Báº£ng Ä‘iá»u khiá»ƒn</a>
+            <div class="admin-sidebar-section">Điều hướng</div>
+            <a class="admin-nav-link" href="/admin"><i class="fa-solid fa-chart-line"></i>Bảng điều khiển</a>
             <a class="admin-nav-link" href="/admin/wines"><i class="fa-solid fa-wine-bottle"></i>Quản lý Rượu</a>
             <a class="admin-nav-link" href="/admin/warehouses"><i class="fa-solid fa-warehouse"></i>Quản lý Kho</a>
-            <a class="admin-nav-link` active" href="/admin/users"><i class="fa-solid fa-users"></i>NgÆ°á»i dÃ¹ng</a>
-            <a class="admin-nav-link" href="/admin/shippers"><i class="fa-solid fa-truck"></i>NgÆ°á»i giao hÃ ng</a>
-            <a class="admin-nav-link" href="/admin/shipments"><i class="fa-solid fa-box-open"></i>ÄÆ¡n giao hÃ ng</a>
-            <div class="admin-sidebar-section">Váº­n hÃ nh</div>
-            <a class="admin-nav-link" href="/shipper/dashboard"><i class="fa-solid fa-map-location-dot"></i>MÃ n hÃ¬nh giao hÃ ng</a>
-            <a class="admin-nav-link" href="/wines"><i class="fa-solid fa-store"></i>Cá»­a hÃ ng</a>
+            <a class="admin-nav-link active" href="/admin/users"><i class="fa-solid fa-users"></i>Người dùng</a>
+            <a class="admin-nav-link" href="/admin/shippers"><i class="fa-solid fa-truck"></i>Người giao hàng</a>
+            <a class="admin-nav-link" href="/admin/shipments"><i class="fa-solid fa-box-open"></i>Đơn giao hàng</a>
+            <div class="admin-sidebar-section">Vận hành</div>
+            <a class="admin-nav-link" href="/shipper/dashboard"><i class="fa-solid fa-map-location-dot"></i>Màn hình giao hàng</a>
+            <a class="admin-nav-link" href="/wines"><i class="fa-solid fa-store"></i>Cửa hàng</a>
         </nav>
         <div style="padding:1rem;border-top:1px solid var(--border);margin-top:auto">
             <form th:action="@{/logout}" method="post" class="mb-0">
-                <button class="btn btn-outline-secondary btn-sm w-100"><i class="fa-solid fa-right-from-bracket me-1"></i>ÄÄƒng xuáº¥t</button>
+                <button class="btn btn-outline-secondary btn-sm w-100"><i class="fa-solid fa-right-from-bracket me-1"></i>Đăng xuất</button>
             </form>
         </div>
     </aside>
@@ -40,12 +40,12 @@
     <div class="admin-main">
         <header class="admin-topbar">
             <div>
-                <h1>Quáº£n lÃ½ ngÆ°á»i dÃ¹ng</h1>
-                <small>Quáº£n trá»‹ tÃ i khoáº£n há»‡ thá»‘ng</small>
+                <h1>Quản lý người dùng</h1>
+                <small>Quản trị tài khoản hệ thống</small>
             </div>
             <div class="d-flex gap-2">
-                <a class="btn btn-sm btn-outline-secondary" href="/wines">Cá»­a hÃ ng</a>
-                <a class="btn btn-gold btn-sm" href="/admin/users/create"><i class="fa-solid fa-plus me-1"></i>ThÃªm ngÆ°á»i dÃ¹ng</a>
+                <a class="btn btn-sm btn-outline-secondary" href="/wines">Cửa hàng</a>
+                <a class="btn btn-gold btn-sm" href="/admin/users/create"><i class="fa-solid fa-plus me-1"></i>Thêm người dùng</a>
             </div>
         </header>
 
@@ -65,10 +65,10 @@
                         <thead>
                             <tr>
                                 <th><span class="th-sort">ID <i class="fa-solid fa-sort"></i></span></th>
-                                <th><span class="th-sort">TÃ i khoáº£n <i class="fa-solid fa-sort"></i></span></th>
+                                <th><span class="th-sort">Tài khoản <i class="fa-solid fa-sort"></i></span></th>
                                 <th><span class="th-sort">Email <i class="fa-solid fa-sort"></i></span></th>
-                                <th><span class="th-sort">Vai trÃ² <i class="fa-solid fa-sort"></i></span></th>
-                                <th>Thao tÃ¡c</th>
+                                <th><span class="th-sort">Vai trò <i class="fa-solid fa-sort"></i></span></th>
+                                <th>Thao tác</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -80,10 +80,10 @@
                                 <td>
                                     <div class="d-flex gap-2">
                                         <a class="btn btn-sm btn-outline-secondary" th:href="@{/admin/users/edit/{id}(id=${u.id})}">
-                                            <i class="fa-solid fa-pen me-1"></i>Sá»­a
+                                            <i class="fa-solid fa-pen me-1"></i>Sửa
                                         </a>
                                         <form th:action="@{/admin/users/delete/{id}(id=${u.id})}" method="post" class="mb-0"
-                                              onsubmit="return confirm('Báº¡n cÃ³ cháº¯c muá»‘n xÃ³a ngÆ°á»i dÃ¹ng nÃ y?');">
+                                              onsubmit="return confirm('Bạn có chắc muốn xóa người dùng này?');">
                                             <button class="btn btn-sm btn-outline-danger"><i class="fa-solid fa-trash"></i></button>
                                         </form>
                                     </div>
