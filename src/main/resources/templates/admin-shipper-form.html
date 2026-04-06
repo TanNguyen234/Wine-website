@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${editingShipper != null ? 'Cập nhật người giao hàng' : 'Tạo người giao hàng'} + ' - StrongWine'">Biểu mẫu người giao hàng</title>
+    <title th:text="${editingShipper != null ? 'Cáº­p nháº­t ngÆ°á»i giao hÃ ng' : 'Táº¡o ngÆ°á»i giao hÃ ng'} + ' - StrongWine'">Biá»ƒu máº«u ngÆ°á»i giao hÃ ng</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
@@ -19,15 +19,17 @@
             StrongWine Admin
         </a>
         <nav>
-            <div class="admin-sidebar-section">Điều hướng</div>
-            <a class="admin-nav-link" href="/admin"><i class="fa-solid fa-chart-line"></i>Bảng điều khiển</a>
-            <a class="admin-nav-link" href="/admin/users"><i class="fa-solid fa-users"></i>Người dùng</a>
-            <a class="admin-nav-link active" href="/admin/shippers"><i class="fa-solid fa-truck"></i>Người giao hàng</a>
-            <a class="admin-nav-link" href="/admin/shipments"><i class="fa-solid fa-box-open"></i>Đơn giao hàng</a>
+            <div class="admin-sidebar-section">Äiá»u hÆ°á»›ng</div>
+            <a class="admin-nav-link" href="/admin"><i class="fa-solid fa-chart-line"></i>Báº£ng Ä‘iá»u khiá»ƒn</a>
+            <a class="admin-nav-link" href="/admin/wines"><i class="fa-solid fa-wine-bottle"></i>Quản lý Rượu</a>
+            <a class="admin-nav-link" href="/admin/warehouses"><i class="fa-solid fa-warehouse"></i>Quản lý Kho</a>
+            <a class="admin-nav-link`" href="/admin/users"><i class="fa-solid fa-users"></i>NgÆ°á»i dÃ¹ng</a>
+            <a class="admin-nav-link active" href="/admin/shippers"><i class="fa-solid fa-truck"></i>NgÆ°á»i giao hÃ ng</a>
+            <a class="admin-nav-link" href="/admin/shipments"><i class="fa-solid fa-box-open"></i>ÄÆ¡n giao hÃ ng</a>
         </nav>
         <div style="padding:1rem;border-top:1px solid var(--border);margin-top:auto">
             <form th:action="@{/logout}" method="post" class="mb-0">
-                <button class="btn btn-outline-secondary btn-sm w-100"><i class="fa-solid fa-right-from-bracket me-1"></i>Đăng xuất</button>
+                <button class="btn btn-outline-secondary btn-sm w-100"><i class="fa-solid fa-right-from-bracket me-1"></i>ÄÄƒng xuáº¥t</button>
             </form>
         </div>
     </aside>
@@ -35,12 +37,12 @@
     <div class="admin-main">
         <header class="admin-topbar">
             <div>
-                <h1 th:text="${editingShipper != null ? 'Cập nhật người giao hàng' : 'Tạo người giao hàng mới'}">Người giao hàng</h1>
-                <small>Quản lý hồ sơ giao nhận và trạng thái sẵn sàng</small>
+                <h1 th:text="${editingShipper != null ? 'Cáº­p nháº­t ngÆ°á»i giao hÃ ng' : 'Táº¡o ngÆ°á»i giao hÃ ng má»›i'}">NgÆ°á»i giao hÃ ng</h1>
+                <small>Quáº£n lÃ½ há»“ sÆ¡ giao nháº­n vÃ  tráº¡ng thÃ¡i sáºµn sÃ ng</small>
             </div>
             <div class="d-flex gap-2">
-                <a class="btn btn-sm btn-outline-secondary" href="/admin/shippers">Danh sách</a>
-                <a class="btn btn-sm btn-outline-secondary" href="/admin/shipments">Đơn giao hàng</a>
+                <a class="btn btn-sm btn-outline-secondary" href="/admin/shippers">Danh sÃ¡ch</a>
+                <a class="btn btn-sm btn-outline-secondary" href="/admin/shipments">ÄÆ¡n giao hÃ ng</a>
             </div>
         </header>
 
@@ -54,29 +56,29 @@
                 <div class="panel p-4 p-lg-5 fade-up">
                     <form th:action="${editingShipper != null ? '/admin/shippers/edit/' + editingShipper.id : '/admin/shippers/create'}" method="post">
                         <div class="mb-3">
-                            <label class="form-label">Tài khoản giao hàng <span class="text-danger">*</span></label>
+                            <label class="form-label">TÃ i khoáº£n giao hÃ ng <span class="text-danger">*</span></label>
                             <select class="form-select" name="userId" required>
-                                <option value="" disabled th:selected="${editingShipper == null}">-- Chọn tài khoản --</option>
+                                <option value="" disabled th:selected="${editingShipper == null}">-- Chá»n tÃ i khoáº£n --</option>
                                 <option th:each="u : ${users}" th:value="${u.id}" th:text="${u.username}"
                                         th:selected="${editingShipper != null and editingShipper.user.id == u.id}"></option>
                             </select>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Tên người giao hàng <span class="text-danger">*</span></label>
+                            <label class="form-label">TÃªn ngÆ°á»i giao hÃ ng <span class="text-danger">*</span></label>
                             <input class="form-control" name="name" required th:value="${editingShipper != null ? editingShipper.name : ''}">
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Số điện thoại <span class="text-danger">*</span></label>
+                            <label class="form-label">Sá»‘ Ä‘iá»‡n thoáº¡i <span class="text-danger">*</span></label>
                             <input class="form-control" name="phone" required th:value="${editingShipper != null ? editingShipper.phone : ''}"
-                                   placeholder="Ví dụ: 0901234567">
+                                   placeholder="VÃ­ dá»¥: 0901234567">
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Phương tiện</label>
+                            <label class="form-label">PhÆ°Æ¡ng tiá»‡n</label>
                             <input class="form-control" name="vehicleType" th:value="${editingShipper != null ? editingShipper.vehicleType : ''}"
-                                   placeholder="Ví dụ: Xe máy, ô tô">
+                                   placeholder="VÃ­ dá»¥: Xe mÃ¡y, Ã´ tÃ´">
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Trạng thái</label>
+                            <label class="form-label">Tráº¡ng thÃ¡i</label>
                             <select class="form-select" name="status">
                                 <option th:each="st : ${statuses}" th:value="${st}"
                                         th:text="${@enumDisplayService.shipperStatus(st)}"
@@ -88,15 +90,15 @@
                                 <input class="form-check-input" type="checkbox" name="isAvailable" id="availableCheck"
                                        th:checked="${editingShipper != null and editingShipper.isAvailable}">
                                 <label class="form-check-label" for="availableCheck" style="text-transform:none;letter-spacing:0;font-size:.9rem">
-                                    Sẵn sàng nhận đơn
+                                    Sáºµn sÃ ng nháº­n Ä‘Æ¡n
                                 </label>
                             </div>
                         </div>
                         <div class="d-flex gap-2">
                             <button class="btn btn-gold" type="submit">
-                                <i class="fa-solid fa-check me-1"></i>Lưu
+                                <i class="fa-solid fa-check me-1"></i>LÆ°u
                             </button>
-                            <a class="btn btn-outline-secondary" href="/admin/shippers">Quay lại</a>
+                            <a class="btn btn-outline-secondary" href="/admin/shippers">Quay láº¡i</a>
                         </div>
                     </form>
                 </div>
@@ -107,3 +109,4 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
+

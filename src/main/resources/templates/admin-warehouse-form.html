@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${warehouse.id != null ? 'Sửa nhà kho - Admin' : 'Thêm nhà kho - Admin'}"></title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="/css/app.css">
+</head>
+<body class="admin-page">
+<div class="admin-layout">
+
+    <aside class="admin-sidebar">
+        <a class="admin-sidebar-brand" href="/admin">
+            <span class="brand-logo"><i class="fa-solid fa-wine-glass"></i></span>
+            StrongWine
+        </a>
+        <nav>
+            <div class="admin-sidebar-section">Điều hướng</div>
+            <a class="admin-nav-link" href="/admin"><i class="fa-solid fa-chart-line"></i>Bảng điều khiển</a>
+            <a class="admin-nav-link" href="/admin/wines"><i class="fa-solid fa-wine-bottle"></i>Quản lý Rượu</a>
+            <a class="admin-nav-link active" href="/admin/warehouses"><i class="fa-solid fa-warehouse"></i>Quản lý Kho</a>
+            <a class="admin-nav-link" href="/admin/inventory"><i class="fa-solid fa-boxes-stacked"></i>Tồn kho tổng</a>
+            <a class="admin-nav-link" href="/admin/users"><i class="fa-solid fa-users"></i>Người dùng</a>
+            <a class="admin-nav-link" href="/admin/shippers"><i class="fa-solid fa-truck"></i>Người giao hàng</a>
+            <a class="admin-nav-link" href="/admin/orders"><i class="fa-solid fa-cart-shopping"></i>Đơn hàng</a>
+            <a class="admin-nav-link" href="/admin/shipments"><i class="fa-solid fa-box-open"></i>Đơn giao hàng</a>
+            <a class="admin-nav-link" href="/admin/payments"><i class="fa-solid fa-credit-card"></i>Thanh toán</a>
+            <div class="admin-sidebar-section">Vận hành</div>
+            <a class="admin-nav-link" href="/shipper/dashboard"><i class="fa-solid fa-map-location-dot"></i>Màn hình giao hàng</a>
+        </nav>
+    </aside>
+
+    <div class="admin-main">
+        <header class="admin-topbar">
+            <div>
+                <h1 th:text="${warehouse.id != null ? 'Cập nhật nhà kho' : 'Thêm nhà kho mới'}"></h1>
+                <small th:text="${warehouse.id != null ? 'Chỉnh sửa thông tin nhà kho đã lưu' : 'Điền thông tin nhà kho mới'}"></small>
+            </div>
+            <div>
+                <a href="/admin/warehouses" class="btn btn-outline-secondary"><i class="fa-solid fa-arrow-left me-2"></i>Trở về</a>
+            </div>
+        </header>
+
+        <main class="admin-content fade-up">
+            <div class="panel p-4" style="max-width: 600px;">
+                <div th:if="${error}" class="alert alert-danger mb-4" th:text="${error}"></div>
+                
+                <form th:action="${warehouse.id != null ? '/admin/warehouses/edit/' + warehouse.id : '/admin/warehouses/create'}" method="post">
+                    
+                    <div class="mb-4">
+                        <label class="form-label">Tên nhà kho <span class="text-danger">*</span></label>
+                        <input type="text" name="name" class="form-control" th:value="${warehouse.name}" required placeholder="VD: Kho Trung Văn, Kho TP.HCM...">
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="form-label">Vị trí địa lý / Địa chỉ</label>
+                        <textarea name="location" class="form-control" rows="3" placeholder="Nhập địa chỉ nhà kho chi tiết..." th:text="${warehouse.location}"></textarea>
+                    </div>
+
+                    <div class="mb-4 d-flex align-items-center gap-3">
+                        <label class="form-label mb-0">Trạng thái Hoạt động</label>
+                        <div class="form-check form-switch" style="font-size: 1.25rem;">
+                            <input class="form-check-input" type="checkbox" name="active" value="true" th:checked="${warehouse.active == null ? true : warehouse.active}">
+                        </div>
+                        <small class="text-muted">(Cho phép giao dịch / lưu trữ)</small>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 mt-5">
+                        <a href="/admin/warehouses" class="btn btn-outline-secondary">Hủy</a>
+                        <button type="submit" class="btn btn-primary px-4"><i class="fa-solid fa-save me-2"></i>Lưu Nhà Kho</button>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

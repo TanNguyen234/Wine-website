@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý Nhà kho - Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="/css/app.css">
+</head>
+<body class="admin-page">
+<div class="admin-layout">
+
+    <!-- Sidebar -->
+    <aside class="admin-sidebar">
+        <a class="admin-sidebar-brand" href="/admin">
+            <span class="brand-logo"><i class="fa-solid fa-wine-glass"></i></span>
+            StrongWine
+        </a>
+        <nav>
+            <div class="admin-sidebar-section">Điều hướng</div>
+            <a class="admin-nav-link" href="/admin"><i class="fa-solid fa-chart-line"></i>Bảng điều khiển</a>
+            <a class="admin-nav-link" href="/admin/wines"><i class="fa-solid fa-wine-bottle"></i>Quản lý Rượu</a>
+            <a class="admin-nav-link active" href="/admin/warehouses"><i class="fa-solid fa-warehouse"></i>Quản lý Kho</a>
+            <a class="admin-nav-link" href="/admin/inventory"><i class="fa-solid fa-boxes-stacked"></i>Tồn kho tổng</a>
+            <a class="admin-nav-link" href="/admin/users"><i class="fa-solid fa-users"></i>Người dùng</a>
+            <a class="admin-nav-link" href="/admin/shippers"><i class="fa-solid fa-truck"></i>Người giao hàng</a>
+            <a class="admin-nav-link" href="/admin/orders"><i class="fa-solid fa-cart-shopping"></i>Đơn hàng</a>
+            <a class="admin-nav-link" href="/admin/shipments"><i class="fa-solid fa-box-open"></i>Đơn giao hàng</a>
+            <a class="admin-nav-link" href="/admin/payments"><i class="fa-solid fa-credit-card"></i>Thanh toán</a>
+            <div class="admin-sidebar-section">Vận hành</div>
+            <a class="admin-nav-link" href="/shipper/dashboard"><i class="fa-solid fa-map-location-dot"></i>Màn hình giao hàng</a>
+        </nav>
+        <div style="padding:1rem;border-top:1px solid var(--border);margin-top:auto">
+            <form th:action="@{/logout}" method="post" class="mb-0">
+                <button class="btn btn-outline-secondary btn-sm w-100">
+                    <i class="fa-solid fa-right-from-bracket me-1"></i>Đăng xuất
+                </button>
+            </form>
+        </div>
+    </aside>
+
+    <!-- Main -->
+    <div class="admin-main">
+        <header class="admin-topbar">
+            <div>
+                <h1>Quản lý Nhà kho</h1>
+                <small>Thêm, sửa và thay đổi trạng thái nhà kho</small>
+            </div>
+            <div>
+                <a href="/admin/warehouses/create" class="btn btn-primary"><i class="fa-solid fa-plus me-2"></i>Thêm nhà kho mới</a>
+            </div>
+        </header>
+
+        <main class="admin-content fade-up">
+            <div th:if="${success}" class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+                <span th:text="${success}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            <div th:if="${error}" class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+                <span th:text="${error}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+
+            <div class="panel p-0">
+                <div class="table-responsive">
+                    <table class="table admin-table mb-0">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Tên nhà kho</th>
+                                <th>Vị trí</th>
+                                <th>Ngày tạo</th>
+                                <th>Trạng thái</th>
+                                <th class="text-end">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="house : ${warehouses}">
+                                <td th:text="${house.id}"></td>
+                                <td th:text="${house.name}" style="font-weight: 600;"></td>
+                                <td>
+                                    <span th:text="${house.location != null ? house.location : 'Chưa cập nhật'}"></span>
+                                </td>
+                                <td th:text="${#temporals.format(house.createdAt, 'dd/MM/yyyy HH:mm')}"></td>
+                                <td>
+                                    <span th:if="${house.active}" class="badge bg-success">Hoạt động</span>
+                                    <span th:unless="${house.active}" class="badge bg-secondary">Ngừng hoạt động</span>
+                                </td>
+                                <td class="text-end">
+                                    <div class="d-flex justify-content-end gap-2">
+                                        <a th:href="@{'/admin/warehouses/edit/' + ${house.id}}" class="btn btn-sm btn-outline-gold" title="Sửa">
+                                            <i class="fa-solid fa-pen"></i>
+                                        </a>
+                                        <form th:action="@{'/admin/warehouses/toggle/' + ${house.id}}" method="post" class="mb-0">
+                                            <button type="submit" class="btn btn-sm" th:classappend="${house.active} ? 'btn-outline-danger' : 'btn-outline-success'" 
+                                                    th:title="${house.active ? 'Ngừng hoạt động' : 'Kích hoạt'}"
+                                                    onclick="return confirm('Bạn có chắc muốn đổi trạng thái nhà kho này?')">
+                                                <i class="fa-solid" th:classappend="${house.active} ? 'fa-ban' : 'fa-check'"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr th:if="${warehouses.isEmpty()}">
+                                <td colspan="6" class="text-center py-4 text-muted">Không có nhà kho nào trong hệ thống, hãy tạo mới!</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </main>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
