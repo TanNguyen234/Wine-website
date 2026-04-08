@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
@@ -20,7 +20,7 @@
             <a class="admin-nav-link" href="/admin/users"><i class="fa-solid fa-users"></i>Người dùng</a>
             <a class="admin-nav-link" href="/admin/shippers"><i class="fa-solid fa-truck"></i>Người giao hàng</a>
             <a class="admin-nav-link" href="/admin/shipments"><i class="fa-solid fa-box-open"></i>Đơn giao hàng</a>
-            <a class="admin-nav-link" href="/shipper/dashboard"><i class="fa-solid fa-map-location-dot"></i>Màn hình giao hàng</a>
+            <a class="admin-nav-link" href="/admin/shipments/traffic"><i class="fa-solid fa-map-location-dot"></i>Màn hình giao hàng</a>
         </nav>
     </aside>
 
@@ -94,7 +94,7 @@
                 <a href="/admin/users" class="btn btn-sm btn-outline-dark">Quản lý người dùng</a>
                 <a href="/admin/shippers" class="btn btn-sm btn-outline-dark">Quản lý người giao hàng</a>
                 <a href="/admin/shipments" class="btn btn-sm btn-outline-dark">Quản lý đơn giao hàng</a>
-                <a href="/shipper/dashboard" class="btn btn-sm btn-outline-primary">Màn hình giao hàng</a>
+                <a href="/admin/shipments/traffic" class="btn btn-sm btn-outline-primary">Màn hình giao hàng</a>
             </div>
             <div>
                 <span class="badge text-bg-warning me-1" th:text="${lowStockCount} + ' sản phẩm sắp hết hàng'"></span>

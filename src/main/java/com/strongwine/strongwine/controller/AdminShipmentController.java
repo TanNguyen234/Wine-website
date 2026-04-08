@@ -14,8 +14,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/admin/shipments")
@@ -48,6 +50,24 @@ public class AdminShipmentController {
         model.addAttribute("filterStatus", status);
         model.addAttribute("filterKeyword", keyword);
         return "admin-shipments";
+    }
+
+    @GetMapping("/traffic")
+    public String trafficDashboard(Model model) {
+        List<ShipmentStatus> activeStatuses = Arrays.asList(
+                ShipmentStatus.ASSIGNED,
+                ShipmentStatus.PICKED_UP,
+                ShipmentStatus.DELIVERING
+        );
+        
+        List<Shipment> activeShipments = shipmentService.getShipmentsForAdmin(null, null, null, null)
+                .stream()
+                .filter(s -> activeStatuses.contains(s.getStatus()))
+                .collect(Collectors.toList());
+
+        model.addAttribute("shipments", activeShipments);
+        model.addAttribute("shipmentStats", shipmentService.getShipmentStatusStats());
+        return "admin-shipments-traffic";
     }
 
     @GetMapping("/edit/{id}")
