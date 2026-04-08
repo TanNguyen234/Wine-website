@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+
+<div th:fragment="ai-assistant">
+    <!-- FAB Toggle -->
+    <button id="aiToggle" class="ai-fab" title="AI Tư vấn">
+        <i class="fa-solid fa-wand-magic-sparkles"></i>
+        <span class="ai-fab-badge"></span>
+    </button>
+
+    <!-- AI Panel -->
+    <section id="aiPanel" class="ai-panel">
+        <header class="ai-header">
+            <div class="d-flex align-items-center gap-3">
+                <div class="ai-logo">
+                    <i class="fa-solid fa-robot"></i>
+                </div>
+                <div>
+                    <h6 class="mb-0 fw-bold">Trợ lý ảo StrongWine</h6>
+                    <div class="d-flex align-items-center gap-1">
+                        <span class="ai-status-dot"></span>
+                        <small class="text-muted small">Đang trực tuyến</small>
+                    </div>
+                </div>
+            </div>
+            <button class="ai-close" id="aiClose">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </header>
+
+        <div id="aiFeed" class="ai-feed">
+            <div class="ai-message ai-message-bot">
+                <div class="ai-bubble">
+                    Xin chào! Tôi là trợ lý chuyên gia của StrongWine. Tôi có thể giúp bạn chọn rượu vang phù hợp hoặc trả lời các thắc mắc về đơn hàng.
+                </div>
+            </div>
+            <div class="ai-suggestions">
+                <p class="small text-muted mb-2 px-1">Gợi ý cho bạn:</p>
+                <div class="d-flex flex-wrap gap-2">
+                    <button class="suggestion-btn" data-ai-question="Gợi ý rượu vang đỏ cho bữa tối">🍷 Vang đỏ Pháp</button>
+                    <button class="suggestion-btn" data-ai-question="Rượu nào hợp với hải sản?">🐟 Hợp hải sản</button>
+                    <button class="suggestion-btn" data-ai-question="Dưới 1 triệu có chai nào ngon?">💰 Dưới 1 triệu</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="ai-input-area">
+            <form id="aiForm" class="ai-form">
+                <input id="aiPrompt" type="text" class="form-control" placeholder="Nhập câu hỏi của bạn..." autocomplete="off">
+                <button type="submit" class="ai-send-btn">
+                    <i class="fa-solid fa-paper-plane"></i>
+                </button>
+            </form>
+        </div>
+    </section>
+</div>
+
+</body>
+</html>

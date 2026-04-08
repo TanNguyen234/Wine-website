@@ -140,30 +140,7 @@
     </div>
 </main>
 
-<button id="aiToggle" class="ai-fab" title="AI tư vấn"><i class="fa-solid fa-wand-magic-sparkles"></i></button>
-<section id="aiPanel" class="ai-panel p-4">
-    <header class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h6 class="mb-0 fw-bold fw-bold">Trợ lý ảo StrongWine</h6>
-            <small class="text-muted">Luôn sẵn sàng tư vấn</small>
-        </div>
-        <button class="btn btn-sm btn-light rounded-circle" onclick="document.getElementById('aiPanel').classList.remove('show')"><i class="fa-solid fa-xmark"></i></button>
-    </header>
-    
-    <div id="aiFeed" class="ai-feed mb-3 overflow-auto" style="height: 300px;">
-        <div class="small text-muted mb-3">Xin chào! Tôi có thể giúp bạn chọn chai rượu vang phù hợp nhất cho bữa tối hoặc làm quà tặng.</div>
-    </div>
-    
-    <div class="d-flex flex-wrap gap-2 mb-3">
-        <button class="btn btn-xs btn-light border py-1 px-2 small" data-ai-question="Gợi ý một chai vang đỏ khô">Vang đỏ khô</button>
-        <button class="btn btn-xs btn-light border py-1 px-2 small" data-ai-question="Gợi ý rượu dùng với hải sản">Với Hải sản</button>
-    </div>
-    
-    <form id="aiForm" class="input-group">
-        <input id="aiPrompt" class="form-control" placeholder="Hỏi tôi bất cứ điều gì...">
-        <button class="btn btn-dark" type="submit"><i class="fa-solid fa-paper-plane"></i></button>
-    </form>
-</section>
+<div th:replace="~{fragments/ai-assistant :: ai-assistant}"></div>
 
 <footer class="site-footer bg-white border-top py-5">
     <div class="container text-center">

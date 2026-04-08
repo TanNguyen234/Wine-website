@@ -166,31 +166,7 @@
     </section>
 </main>
 
-<button id="aiToggle" class="ai-fab" title="AI gợi ý kết hợp"><i class="fa-solid fa-wand-magic-sparkles"></i></button>
-<section id="aiPanel" class="ai-panel p-4">
-    <header class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h6 class="mb-0 fw-bold">Trợ lý Wine Pairing</h6>
-            <small class="text-muted">Gợi ý món ăn kèm lý tưởng</small>
-        </div>
-        <button class="btn btn-sm btn-light rounded-circle" onclick="document.getElementById('aiPanel').classList.remove('show')"><i class="fa-solid fa-xmark"></i></button>
-    </header>
-    
-    <div id="aiFeed" class="ai-feed mb-3 overflow-auto" style="height: 250px;">
-        <div class="small text-muted mb-2">Tôi có thể gợi ý những món ăn kết hợp hoàn hảo nhất với chai rượu này. Click vào nút bên dưới để hỏi nhanh!</div>
-    </div>
-    
-    <div class="mb-3">
-        <button class="btn btn-sm btn-light border w-100 mb-2 text-start" data-ai-question="Gợi ý món ăn phù hợp với chai rượu này">
-            <i class="fa-solid fa-utensils me-2"></i> Món ăn phù hợp nhất?
-        </button>
-    </div>
-    
-    <form id="aiForm" class="input-group">
-        <input id="aiPrompt" class="form-control" placeholder="Hỏi về món ăn kết hợp...">
-        <button class="btn btn-dark" type="submit"><i class="fa-solid fa-paper-plane"></i></button>
-    </form>
-</section>
+<div th:replace="~{fragments/ai-assistant :: ai-assistant}"></div>
 
 <footer class="site-footer bg-white border-top py-5">
     <div class="container text-center">

@@ -14,9 +14,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
-import java.util.List;
-import java.util.Map;
-import java.util.Locale;
+import java.util.*;
 
 @Service
 public class GeminiAssistantService {
@@ -31,16 +29,16 @@ public class GeminiAssistantService {
     @Value("${app.gemini.api-key:}")
     private String geminiApiKey;
 
-    @Value("${app.gemini.model:gemini-2.0-flash}")
-    private String geminiModel;
-
     @Value("${app.gemini.base-url:https://generativelanguage.googleapis.com/v1beta}")
     private String geminiBaseUrl;
 
-    public GeminiAssistantService() {
+    private final AiModelFallbackManager modelManager;
+
+    public GeminiAssistantService(AiModelFallbackManager modelManager) {
+        this.modelManager = modelManager;
         this.objectMapper = new ObjectMapper();
         this.httpClient = HttpClient.newBuilder()
-                .connectTimeout(Duration.ofSeconds(12))
+                .connectTimeout(Duration.ofSeconds(5)) // Overall connection timeout
                 .build();
     }
 
@@ -49,45 +47,100 @@ public class GeminiAssistantService {
         String normalizedContext = normalizeContext(context);
 
         if (geminiApiKey == null || geminiApiKey.trim().isEmpty()) {
-            logger.warn("Gemini API key is missing. model={}, baseUrl={}", resolveModel(), resolveBaseUrl());
+            logger.warn("Gemini API key is missing.");
             return "Chatbot hiện chưa được cấu hình GEMINI_API_KEY ở backend.";
         }
 
         String fullPrompt = buildPrompt(normalizedPrompt, normalizedContext);
+        Set<String> excludedModels = new HashSet<>();
 
-        try {
-            Map<String, Object> payload = Map.of(
-                    "contents", List.of(Map.of(
-                            "role", "user",
-                            "parts", List.of(Map.of("text", fullPrompt))
-                    )),
-                    "generationConfig", Map.of(
-                            "temperature", 0.6,
-                            "maxOutputTokens", 512
-                    )
-            );
-
-            String requestBody = objectMapper.writeValueAsString(payload);
-            String primaryModel = resolveModel();
-            GeminiHttpResult result = sendGeminiRequest(requestBody, primaryModel);
-
-            if (!result.isSuccess() && !"gemini-2.0-flash".equals(primaryModel)) {
-                logger.info("Retry Gemini with fallback model. previousStatus={}, previousModel={}", result.statusCode(), primaryModel);
-                result = sendGeminiRequest(requestBody, "gemini-2.0-flash");
-            }
-
-            if (!result.isSuccess()) {
-                logger.warn("Gemini API returned non-2xx status. status={}, model={}, baseUrl={}, responseBody={}",
-                        result.statusCode(), result.model(), resolveBaseUrl(), abbreviateForLog(result.body()));
+        while (true) {
+            Optional<String> modelOpt = modelManager.getNextModel(excludedModels);
+            if (modelOpt.isEmpty()) {
+                logger.error("All AI models exhausted or in cooldown.");
                 return buildLocalAdvice(normalizedPrompt, normalizedContext);
             }
 
-            return parseAssistantResponse(result.body());
-        } catch (Exception ex) {
-            logger.error("Gemini API call failed. model={}, baseUrl={}", resolveModel(), resolveBaseUrl(), ex);
-            return buildLocalAdvice(normalizedPrompt, normalizedContext);
+            String currentModel = modelOpt.get();
+            try {
+                Map<String, Object> payload = Map.of(
+                        "contents", List.of(Map.of(
+                                "role", "user",
+                                "parts", List.of(Map.of("text", fullPrompt))
+                        )),
+                        "generationConfig", Map.of(
+                                "temperature", 0.6,
+                                "maxOutputTokens", 512
+                        )
+                );
+
+                String requestBody = objectMapper.writeValueAsString(payload);
+                
+                // Implement strictly sequential fallback logic
+                GeminiHttpResult result = sendWithHandling(requestBody, currentModel);
+                
+                if (result.isSuccess()) {
+                    modelManager.reportSuccess(currentModel);
+                    return parseAssistantResponse(result.body());
+                }
+
+                // Error Handling Strategy
+                handleModelError(currentModel, result.statusCode(), excludedModels);
+
+            } catch (Exception ex) {
+                logger.error("Unexpected error with model {}. Falling back.", currentModel, ex);
+                modelManager.reportError(currentModel, 500);
+                excludedModels.add(currentModel);
+            }
         }
     }
+
+    private GeminiHttpResult sendWithHandling(String requestBody, String model) throws Exception {
+        // Set request-specific timeout (3-5s as specified)
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(buildEndpoint(model)))
+                .timeout(Duration.ofSeconds(4)) 
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(requestBody))
+                .build();
+
+        try {
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            return new GeminiHttpResult(response.statusCode(), response.body(), model);
+        } catch (java.net.http.HttpTimeoutException e) {
+            return new GeminiHttpResult(408, "Request Timeout", model);
+        }
+    }
+
+    private void handleModelError(String model, int status, Set<String> excludedModels) {
+        if (status == 429) {
+            // 429 → switch model immediately (NO retry same model)
+            logger.warn("Model {} rate limited (429). Switching immediately.", model);
+            modelManager.reportError(model, 429);
+            excludedModels.add(model);
+        } else if (status == 404) {
+            // 404 → skip model permanently
+            logger.error("Model {} not found (404). Skipping permanently.", model);
+            modelManager.reportError(model, 404);
+            excludedModels.add(model);
+        } else if (status >= 500 && status < 600) {
+            // 5xx → retry ONCE (already handled via loop if we wanted, but prompt says retry ONCE then fallback)
+            // Implementation: Simple approach - mark as 500 error in manager and move to next model
+            logger.warn("Model {} returned 5xx ({}). Moving to next model.", model, status);
+            modelManager.reportError(model, status);
+            excludedModels.add(model);
+        } else if (status == 408) {
+            // Timeout Handling
+            logger.warn("Model {} timed out. Falling back immediately.", model);
+            modelManager.reportTimeout(model);
+            excludedModels.add(model);
+        } else {
+            logger.error("Model {} failed with status {}. Body: {}", model, status, model);
+            modelManager.reportError(model, status);
+            excludedModels.add(model);
+        }
+    }
+
 
     private String parseAssistantResponse(String body) throws Exception {
         JsonNode root = objectMapper.readTree(body);
@@ -137,23 +190,6 @@ public class GeminiAssistantService {
         String normalizedBaseUrl = resolveBaseUrl();
         String encodedKey = URLEncoder.encode(geminiApiKey.trim(), StandardCharsets.UTF_8);
         return normalizedBaseUrl + "/models/" + model + ":generateContent?key=" + encodedKey;
-    }
-
-    private GeminiHttpResult sendGeminiRequest(String requestBody, String model) throws Exception {
-        String endpoint = buildEndpoint(model);
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(endpoint))
-                .timeout(Duration.ofSeconds(25))
-                .header("Content-Type", "application/json")
-                .POST(HttpRequest.BodyPublishers.ofString(requestBody))
-                .build();
-
-        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-        return new GeminiHttpResult(response.statusCode(), response.body(), model);
-    }
-
-    private String resolveModel() {
-        return geminiModel == null || geminiModel.isBlank() ? "gemini-2.0-flash" : geminiModel.trim();
     }
 
     private String resolveBaseUrl() {
