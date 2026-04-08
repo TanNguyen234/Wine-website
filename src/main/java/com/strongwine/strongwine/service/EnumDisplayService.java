@@ -137,6 +137,9 @@ public class EnumDisplayService {
             case "PAYMENT_RETURN" -> "Người dùng quay lại";
             case "STRIPE_WEBHOOK_EVENT" -> "Sự kiện webhook Stripe";
             case "STRIPE_WEBHOOK_PROCESS" -> "Xử lý webhook Stripe";
+            case "VNPAY_SESSION" -> "Phien VNPay";
+            case "VNPAY_RETURN" -> "VNPay return callback";
+            case "VNPAY_IPN" -> "VNPay IPN callback";
             default -> transactionType;
         };
     }

@@ -156,7 +156,7 @@ public class OrderController {
             String baseUrl = request.getScheme() + "://" + request.getServerName()
                     + ((request.getServerPort() == 80 || request.getServerPort() == 443) ? "" : ":" + request.getServerPort());
             String method = order.getPaymentMethod() == null ? PaymentMethod.STRIPE.name() : order.getPaymentMethod().name();
-            String paymentRedirectUrl = paymentService.createPaymentSession(order, method, baseUrl);
+            String paymentRedirectUrl = paymentService.createPaymentSession(order, method, baseUrl, request.getRemoteAddr());
             return "redirect:" + paymentRedirectUrl;
         } catch (Exception ex) {
             redirectAttributes.addFlashAttribute("error", "Không thể tạo phiên thanh toán: " + rootCauseMessage(ex));

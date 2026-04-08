@@ -41,7 +41,7 @@ public class CartController {
     private static final Logger log = LoggerFactory.getLogger(CartController.class);
 
     private static final String CHECKOUT_TOKEN_SESSION_KEY = "checkout:token";
-    private static final List<String> SUPPORTED_PAYMENT_METHODS = List.of("STRIPE");
+    private static final List<String> SUPPORTED_PAYMENT_METHODS = List.of("STRIPE", "VNPAY");
     private static final Set<String> ALLOWED_PAYMENT_METHODS = Set.copyOf(SUPPORTED_PAYMENT_METHODS);
     private static final Pattern EMAIL_PATTERN = Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$");
     
@@ -206,7 +206,7 @@ public class CartController {
                     normalizedPaymentMethod);
 
             String baseUrl = request.getScheme() + "://" + request.getServerName() + (request.getServerPort() == 80 || request.getServerPort() == 443 ? "" : ":" + request.getServerPort());
-            String paymentRedirectUrl = paymentService.createPaymentSession(order, normalizedPaymentMethod, baseUrl);
+            String paymentRedirectUrl = paymentService.createPaymentSession(order, normalizedPaymentMethod, baseUrl, request.getRemoteAddr());
 
             session.removeAttribute(CHECKOUT_TOKEN_SESSION_KEY);
 

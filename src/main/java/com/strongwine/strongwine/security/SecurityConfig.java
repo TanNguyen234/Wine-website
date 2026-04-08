@@ -59,7 +59,7 @@ public class SecurityConfig {
                 // Shipper pages for SHIPPER only
                 .requestMatchers("/shipper/**").hasRole("SHIPPER")
                 // Public pages
-                .requestMatchers("/", "/home", "/wines", "/wines/**", "/cart/**", "/register", "/login", "/forgot-password", "/reset-password", "/css/**", "/js/**", "/images/**", "/uploads/**", "/payment/webhook").permitAll()
+                .requestMatchers("/", "/home", "/wines", "/wines/**", "/cart/**", "/register", "/login", "/forgot-password", "/reset-password", "/css/**", "/js/**", "/images/**", "/uploads/**", "/payment/webhook", "/api/payments/vnpay/**").permitAll()
                 // API Auth endpoint
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/assistant/**").permitAll()

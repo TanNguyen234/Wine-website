@@ -44,30 +44,45 @@ public class PaymentService {
     private StripeService stripeService;
 
     @Autowired
+    private VNPayService vnPayService;
+
+    @Autowired
     @Lazy
     private PaymentService self;
 
     @Value("${stripe.webhookSecret:}")
     private String stripeWebhookSecret;
 
-    public String createPaymentSession(Order order, String method, String baseUrl) {
+    public String createPaymentSession(Order order, String method, String baseUrl, String clientIp) {
         PaymentMethod paymentMethod = parseMethod(method);
-        if (paymentMethod != PaymentMethod.STRIPE) {
-            throw new IllegalArgumentException("Hiện tại chỉ hỗ trợ thanh toán STRIPE");
-        }
-
         Payment payment = self.createInitialPayment(order, paymentMethod);
-        
-        Session session;
-        try {
-            session = stripeService.createCheckoutSession(payment, baseUrl);
-        } catch (Exception ex) {
-            self.updatePaymentFailed(payment.getId(), ex.getMessage());
-            throw new RuntimeException("Không thể tạo phiên Stripe Checkout", ex);
-        }
 
-        self.updatePaymentWithSession(payment.getId(), session);
+        try {
+            return switch (paymentMethod) {
+                case STRIPE -> createStripeSession(payment, baseUrl);
+                case VNPAY -> createVnPaySession(payment, baseUrl, clientIp);
+                default -> throw new IllegalArgumentException("Phuong thuc thanh toan chua duoc ho tro: " + paymentMethod.name());
+            };
+        } catch (Exception ex) {
+            self.updatePaymentFailed(
+                    payment.getId(),
+                    paymentMethod.name() + "_SESSION",
+                    paymentMethod.name() + "_SESSION_FAILED",
+                    ex.getMessage());
+            throw new RuntimeException("Khong the tao phien thanh toan " + paymentMethod.name(), ex);
+        }
+    }
+
+    private String createStripeSession(Payment payment, String baseUrl) throws Exception {
+        Session session = stripeService.createCheckoutSession(payment, baseUrl);
+        self.updatePaymentWithStripeSession(payment.getId(), session);
         return session.getUrl();
+    }
+
+    private String createVnPaySession(Payment payment, String baseUrl, String clientIp) {
+        String paymentUrl = vnPayService.createPaymentUrl(payment, baseUrl, clientIp);
+        self.updatePaymentWithVnPaySession(payment.getId(), payment.getPaymentReference(), paymentUrl);
+        return paymentUrl;
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -90,7 +105,7 @@ public class PaymentService {
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void updatePaymentWithSession(Long paymentId, Session session) {
+    public void updatePaymentWithStripeSession(Long paymentId, Session session) {
         Payment payment = paymentRepository.findById(paymentId)
                 .orElseThrow(() -> new RuntimeException("Payment not found"));
         payment.setGatewaySessionId(session.getId());
@@ -101,14 +116,25 @@ public class PaymentService {
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void updatePaymentFailed(Long paymentId, String errorMessage) {
+    public void updatePaymentWithVnPaySession(Long paymentId, String txnRef, String paymentUrl) {
+        Payment payment = paymentRepository.findById(paymentId)
+                .orElseThrow(() -> new RuntimeException("Payment not found"));
+        payment.setGatewaySessionId(txnRef);
+        payment.setGatewayResponse("VNPAY_SESSION_CREATED");
+        payment.setUpdatedAt(LocalDateTime.now());
+        paymentRepository.save(payment);
+        saveTransaction(payment, "VNPAY_SESSION", "REDIRECT", paymentUrl);
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void updatePaymentFailed(Long paymentId, String transactionType, String gatewayResponse, String errorMessage) {
         Payment payment = paymentRepository.findById(paymentId)
                 .orElseThrow(() -> new RuntimeException("Payment not found"));
         payment.setStatus(PaymentStatus.FAILED);
-        payment.setGatewayResponse(limitLength("STRIPE_SESSION_FAILED: " + errorMessage, MAX_GATEWAY_RESPONSE_LENGTH));
+        payment.setGatewayResponse(limitLength(gatewayResponse + ": " + errorMessage, MAX_GATEWAY_RESPONSE_LENGTH));
         payment.setUpdatedAt(LocalDateTime.now());
         paymentRepository.save(payment);
-        saveTransaction(payment, "STRIPE_SESSION", "FAILED", errorMessage);
+        saveTransaction(payment, transactionType, "FAILED", errorMessage);
     }
 
     @Transactional
@@ -121,7 +147,7 @@ public class PaymentService {
                 return new PaymentCallbackResult(false, "Không thể truy cập đơn hàng thanh toán", null);
             }
 
-            boolean finalizedNow = finalizeSuccessfulPayment(payment, "STRIPE_SUCCESS_REDIRECT", session.getId());
+            boolean finalizedNow = finalizeSuccessfulPayment(payment, "STRIPE_SUCCESS_REDIRECT", session.getId(), "STRIPE_PAYMENT_SUCCESS");
             if (finalizedNow) {
                 return new PaymentCallbackResult(true, "Thanh toán thành công", payment.getOrder().getId());
             }
@@ -134,6 +160,70 @@ public class PaymentService {
 
     public PaymentCallbackResult handleStripeCancel() {
         return new PaymentCallbackResult(false, "Bạn đã hủy phiên thanh toán Stripe", null);
+    }
+
+    @Transactional
+    public PaymentCallbackResult handleVnPayReturn(Map<String, String> callbackParams, Long userId) {
+        try {
+            if (!vnPayService.isValidSignature(callbackParams)) {
+                return new PaymentCallbackResult(false, "Chu ky VNPay khong hop le", null);
+            }
+
+            Payment payment = resolveAndValidateVnPayPayment(callbackParams, true);
+            String payload = vnPayService.compactPayload(callbackParams);
+            saveTransaction(payment, "VNPAY_RETURN", "RECEIVED", payload);
+
+            if (vnPayService.isSuccessfulResponse(callbackParams)) {
+                boolean finalizedNow = finalizeSuccessfulPayment(payment, "VNPAY_RETURN", payload, "VNPAY_PAYMENT_SUCCESS");
+                if (!isOrderOwner(payment, userId)) {
+                    return new PaymentCallbackResult(false, "Khong the truy cap don hang thanh toan", null);
+                }
+                String message = finalizedNow ? "Thanh toan VNPay thanh cong" : "Thanh toan da duoc xac nhan";
+                return new PaymentCallbackResult(true, message, payment.getOrder().getId());
+            }
+
+            processVnPayFailure(payment, callbackParams, "VNPAY_RETURN", payload);
+            if (!isOrderOwner(payment, userId)) {
+                return new PaymentCallbackResult(false, "Khong the truy cap don hang thanh toan", null);
+            }
+            return new PaymentCallbackResult(false, mapVnPayFailureMessage(callbackParams), payment.getOrder().getId());
+        } catch (Exception ex) {
+            return new PaymentCallbackResult(false, "Xac thuc VNPay that bai: " + ex.getMessage(), null);
+        }
+    }
+
+    @Transactional
+    public Map<String, String> handleVnPayIpn(Map<String, String> callbackParams) {
+        if (!vnPayService.isValidSignature(callbackParams)) {
+            return Map.of("RspCode", "97", "Message", "Invalid checksum");
+        }
+
+        try {
+            Payment payment = resolveAndValidateVnPayPayment(callbackParams, true);
+            String payload = vnPayService.compactPayload(callbackParams);
+            saveTransaction(payment, "VNPAY_IPN", "RECEIVED", payload);
+
+            if (vnPayService.isSuccessfulResponse(callbackParams)) {
+                if (payment.getStatus() == PaymentStatus.SUCCESS) {
+                    saveTransaction(payment, "VNPAY_IPN", "SKIPPED", "ALREADY_SUCCESS:" + payload);
+                    return Map.of("RspCode", "02", "Message", "Order already confirmed");
+                }
+                finalizeSuccessfulPayment(payment, "VNPAY_IPN", payload, "VNPAY_PAYMENT_SUCCESS");
+                return Map.of("RspCode", "00", "Message", "Confirm Success");
+            }
+
+            if (payment.getStatus() == PaymentStatus.SUCCESS) {
+                saveTransaction(payment, "VNPAY_IPN", "SKIPPED", "ALREADY_SUCCESS:" + payload);
+                return Map.of("RspCode", "02", "Message", "Order already confirmed");
+            }
+
+            processVnPayFailure(payment, callbackParams, "VNPAY_IPN", payload);
+            return Map.of("RspCode", "00", "Message", "Confirm Success");
+        } catch (IllegalArgumentException | IllegalStateException ex) {
+            return Map.of("RspCode", "01", "Message", "Order not found");
+        } catch (Exception ex) {
+            return Map.of("RspCode", "99", "Message", "Unknown error");
+        }
     }
 
     @Transactional
@@ -219,10 +309,10 @@ public class PaymentService {
             throw new IllegalStateException("Stripe session chưa ở trạng thái paid");
         }
 
-        finalizeSuccessfulPayment(payment, "STRIPE_WEBHOOK_PROCESS", eventId);
+        finalizeSuccessfulPayment(payment, "STRIPE_WEBHOOK_PROCESS", eventId, "STRIPE_PAYMENT_SUCCESS");
     }
 
-    private boolean finalizeSuccessfulPayment(Payment payment, String transactionType, String payload) {
+    private boolean finalizeSuccessfulPayment(Payment payment, String transactionType, String payload, String gatewayResponse) {
         if (payment.getStatus() == PaymentStatus.SUCCESS) {
             saveTransaction(payment, transactionType, "SKIPPED", "ALREADY_SUCCESS:" + payload);
             orderService.markOrderPaid(payment.getOrder().getId(), payment.getPaymentReference());
@@ -230,7 +320,7 @@ public class PaymentService {
         }
 
         payment.setStatus(PaymentStatus.SUCCESS);
-        payment.setGatewayResponse("STRIPE_PAYMENT_SUCCESS");
+        payment.setGatewayResponse(gatewayResponse);
         payment.setUpdatedAt(LocalDateTime.now());
         paymentRepository.save(payment);
         saveTransaction(payment, transactionType, "SUCCESS", payload);
@@ -253,6 +343,25 @@ public class PaymentService {
         payment.setUpdatedAt(LocalDateTime.now());
         paymentRepository.save(payment);
         saveTransaction(payment, "STRIPE_WEBHOOK_PROCESS", targetStatus.name(), eventId);
+        orderService.cancelPendingOrder(payment.getOrder().getId());
+    }
+
+    private void processVnPayFailure(Payment payment, Map<String, String> callbackParams, String transactionType, String payload) {
+        if (payment.getStatus() == PaymentStatus.SUCCESS) {
+            saveTransaction(payment, transactionType, "SKIPPED", "ALREADY_SUCCESS:" + payload);
+            return;
+        }
+
+        String responseCode = safeValue(callbackParams, "vnp_ResponseCode");
+        String transactionStatus = safeValue(callbackParams, "vnp_TransactionStatus");
+        boolean cancelled = "24".equals(responseCode) || "24".equals(transactionStatus);
+
+        PaymentStatus targetStatus = cancelled ? PaymentStatus.CANCELLED : PaymentStatus.FAILED;
+        payment.setStatus(targetStatus);
+        payment.setGatewayResponse("VNPAY_" + (responseCode == null ? "UNKNOWN" : responseCode));
+        payment.setUpdatedAt(LocalDateTime.now());
+        paymentRepository.save(payment);
+        saveTransaction(payment, transactionType, targetStatus.name(), payload);
         orderService.cancelPendingOrder(payment.getOrder().getId());
     }
 
@@ -299,7 +408,7 @@ public class PaymentService {
             throw new IllegalStateException("Mismatched paymentReference giữa Stripe metadata và DB");
         }
 
-        long expectedAmountTotal = toStripeAmount(payment.getOrder().getTotalPrice(), payment.getCurrency());
+        long expectedAmountTotal = toGatewayAmount(payment.getOrder().getTotalPrice(), payment.getCurrency());
         Long stripeAmountTotal = session.getAmountTotal();
         if (stripeAmountTotal == null || stripeAmountTotal.longValue() != expectedAmountTotal) {
             throw new IllegalStateException("Số tiền Stripe không khớp tổng đơn hàng");
@@ -329,7 +438,72 @@ public class PaymentService {
         return payment;
     }
 
-    private long toStripeAmount(BigDecimal amount, String currency) {
+    private Payment resolveAndValidateVnPayPayment(Map<String, String> callbackParams, boolean lockForUpdate) {
+        String txnRef = vnPayService.getTxnRef(callbackParams);
+        if (txnRef == null || txnRef.isBlank()) {
+            throw new IllegalArgumentException("VNPay callback thieu vnp_TxnRef");
+        }
+
+        Payment payment = paymentRepository.findByPaymentReference(txnRef)
+                .orElseThrow(() -> new IllegalStateException("Khong tim thay payment theo txnRef VNPay"));
+
+        if (lockForUpdate) {
+            payment = paymentRepository.findByIdForUpdate(payment.getId())
+                    .orElseThrow(() -> new IllegalStateException("Payment khong ton tai khi xu ly VNPay callback"));
+        }
+
+        if (payment.getMethod() != PaymentMethod.VNPAY) {
+            throw new IllegalStateException("Payment method khong phai VNPay");
+        }
+
+        long callbackAmount = vnPayService.getAmount(callbackParams);
+        long expectedAmount = vnPayService.toVnPayAmount(payment.getOrder().getTotalPrice());
+        if (callbackAmount != expectedAmount) {
+            throw new IllegalStateException("So tien VNPay khong khop tong don hang");
+        }
+
+        String gatewaySessionId = payment.getGatewaySessionId();
+        if (gatewaySessionId == null || gatewaySessionId.isBlank()) {
+            payment.setGatewaySessionId(txnRef);
+            payment.setUpdatedAt(LocalDateTime.now());
+            payment = paymentRepository.save(payment);
+        } else if (!Objects.equals(gatewaySessionId, txnRef)) {
+            throw new IllegalStateException("Mismatched txnRef giua VNPay va DB");
+        }
+
+        return payment;
+    }
+
+    private boolean isOrderOwner(Payment payment, Long userId) {
+        if (userId == null) {
+            return true;
+        }
+        return payment.getOrder().getUser() != null && Objects.equals(payment.getOrder().getUser().getId(), userId);
+    }
+
+    private String mapVnPayFailureMessage(Map<String, String> callbackParams) {
+        String responseCode = safeValue(callbackParams, "vnp_ResponseCode");
+        if ("24".equals(responseCode)) {
+            return "Ban da huy giao dich VNPay";
+        }
+        if ("00".equals(responseCode)) {
+            return "Giao dich VNPay khong thanh cong";
+        }
+        if (responseCode == null || responseCode.isBlank()) {
+            return "Thanh toan VNPay that bai";
+        }
+        return "Thanh toan VNPay that bai (ma " + responseCode + ")";
+    }
+
+    private String safeValue(Map<String, String> values, String key) {
+        if (values == null) {
+            return null;
+        }
+        String value = values.get(key);
+        return value == null ? null : value.trim();
+    }
+
+    private long toGatewayAmount(BigDecimal amount, String currency) {
         String normalizedCurrency = currency == null ? "" : currency.trim().toUpperCase();
         BigDecimal stripeAmount = ZERO_DECIMAL_CURRENCIES.contains(normalizedCurrency)
                 ? amount
