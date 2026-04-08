@@ -8,112 +8,140 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="/css/app.css">
 </head>
-<body class="admin-page">
-<div class="admin-layout">
-    <aside class="admin-sidebar">
-        <a class="admin-sidebar-brand" href="/admin">
-            <span class="brand-logo"><i class="fa-solid fa-wine-glass"></i></span>
-            <span>StrongWine Admin</span>
-        </a>
-        <nav>
-            <a class="admin-nav-link" href="/admin"><i class="fa-solid fa-chart-line"></i>Bảng điều khiển</a>
-            <a class="admin-nav-link" href="/admin/users"><i class="fa-solid fa-users"></i>Người dùng</a>
-            <a class="admin-nav-link" href="/admin/shippers"><i class="fa-solid fa-truck"></i>Người giao hàng</a>
-            <a class="admin-nav-link active" href="/admin/shipments"><i class="fa-solid fa-box-open"></i>Đơn giao hàng</a>
-        </nav>
-    </aside>
+<body class="admin-pa<div class="admin-layout">
+    <!-- Sidebar -->
+    <!-- Sidebar Fragment -->
+    <aside th:replace="~{fragments/admin-sidebar :: sidebar(activePage='shipments')}"></aside>
 
+    <!-- Main Content Area -->
     <div class="admin-main">
-        <header class="admin-topbar">
-            <div>
-                <h1 class="h5 mb-0" th:text="${'Cập nhật đơn giao hàng #' + editingShipment.id}"></h1>
-                <small class="text-muted">Quản lý thông tin giao nhận và trạng thái</small>
-            </div>
-            <div class="d-flex gap-2">
-                <a class="btn btn-sm btn-outline-secondary" href="/admin/shipments">Danh sách</a>
-                <a class="btn btn-sm btn-outline-secondary" href="/admin/shippers">Người giao hàng</a>
-                <form th:action="@{/logout}" method="post" class="d-inline">
-                    <button type="submit" class="btn btn-sm btn-outline-secondary">Đăng xuất</button>
-                </form>
+        <header class="admin-topbar sticky-top bg-white border-bottom px-4">
+            <div class="d-flex align-items-center justify-content-between w-100">
+                <div>
+                    <h2 class="h5 fw-bold mb-0" th:text="${'Chi tiết Giao hàng #' + editingShipment.id}">Quản lý Vận chuyển</h2>
+                    <p class="text-muted small mb-0 d-none d-md-block">Theo dõi tiến độ, cập nhật thông tin nhận hàng và quản lý OTP.</p>
+                </div>
+                
+                <div class="d-flex align-items-center gap-3">
+                    <a class="btn btn-outline-dark btn-sm rounded-pill px-4 py-2 shadow-sm" href="/admin/shipments">
+                        <i class="fa-solid fa-arrow-left me-1 small"></i> Danh sách
+                    </a>
+                </div>
             </div>
         </header>
 
-        <main class="admin-content">
-            <div class="admin-form-wrap">
-                <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <main class="admin-content p-4 d-flex justify-content-center pt-5">
+            <div class="w-100" style="max-width: 800px;">
+                <!-- Alert Messages -->
+                <div th:if="${success}" class="alert alert-success border-0 shadow-sm mb-4 alert-dismissible fade show fade-up" role="alert">
+                    <i class="fa-solid fa-circle-check me-2"></i>
                     <span th:text="${success}"></span>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
-                <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                <div th:if="${error}" class="alert alert-danger border-0 shadow-sm mb-4 alert-dismissible fade show fade-up" role="alert">
+                    <i class="fa-solid fa-circle-xmark me-2"></i>
                     <span th:text="${error}"></span>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
 
-                <div class="panel p-4 p-lg-5 fade-up">
-                    <form th:action="${'/admin/shipments/edit/' + editingShipment.id}" method="post">
-            <div class="mb-3">
-                <label class="form-label">Đơn hàng</label>
-                <input class="form-control" type="text"
-                       th:value="${'#' + editingShipment.order.id + ' - ' + editingShipment.order.user.username}" readonly>
-            </div>
+                <!-- Shipment Form Panel -->
+                <div class="bg-white border rounded-4 shadow-sm fade-up overflow-hidden mb-5">
+                    <div class="px-4 py-3 bg-light border-bottom d-flex align-items-center justify-content-between">
+                        <span class="fw-bold small text-muted text-uppercase">Hồ sơ giao nhận</span>
+                        <span th:class="${'badge rounded-pill px-3 py-1 ' + (editingShipment.status.name() == 'COMPLETED' ? 'bg-success text-white' : (editingShipment.status.name() == 'FAILED' ? 'bg-danger text-white' : 'bg-dark text-white'))}" 
+                              th:text="${@enumDisplayService.shipmentStatus(editingShipment.status)}">Status</span>
+                    </div>
 
-            <div class="row g-3">
-                <div class="col-md-6">
-                    <label class="form-label">Tên người nhận</label>
-                    <input class="form-control" name="shippingName" required
-                           th:value="${editingShipment != null ? editingShipment.shippingName : ''}">
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label">Số điện thoại nhận hàng</label>
-                    <input class="form-control" name="shippingPhone" required
-                           th:value="${editingShipment != null ? editingShipment.shippingPhone : ''}">
-                </div>
-            </div>
+                    <form th:action="${'/admin/shipments/edit/' + editingShipment.id}" method="post" class="p-4 p-md-5">
+                        <div class="mb-4">
+                            <label class="form-label small fw-bold text-muted text-uppercase mb-2">Đơn hàng gốc</label>
+                            <input class="form-control border-0 bg-light px-3 py-2 fw-bold" type="text"
+                                   th:value="${'#' + editingShipment.order.id + ' — Khách hàng: ' + editingShipment.order.user.username}" readonly>
+                        </div>
 
-            <div class="mt-3">
-                <label class="form-label">Địa chỉ nhận hàng</label>
-                <textarea class="form-control" rows="2" name="shippingAddress" required
-                          th:text="${editingShipment != null ? editingShipment.shippingAddress : ''}"></textarea>
-            </div>
+                        <div class="row g-4 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-muted text-uppercase mb-2">Người nhận hàng <mark class="bg-transparent text-danger">*</mark></label>
+                                <input class="form-control border-0 bg-light px-3 py-2" name="shippingName" required
+                                       th:value="${editingShipment.shippingName}">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-muted text-uppercase mb-2">Số điện thoại <mark class="bg-transparent text-danger">*</mark></label>
+                                <input class="form-control border-0 bg-light px-3 py-2" name="shippingPhone" required
+                                       th:value="${editingShipment.shippingPhone}">
+                            </div>
+                        </div>
 
-            <div class="row g-3 mt-1">
-                <div class="col-md-12">
-                    <label class="form-label">Trạng thái</label>
-                    <select class="form-select" name="status" required>
-                        <option th:each="st : ${statuses}"
-                                th:value="${st}"
-                                th:text="${@enumDisplayService.shipmentStatus(st)}"
-                                th:selected="${editingShipment.status == st}"></option>
-                    </select>
-                </div>
-            </div>
+                        <div class="mb-4">
+                            <label class="form-label small fw-bold text-muted text-uppercase mb-2">Địa chỉ giao hàng <mark class="bg-transparent text-danger">*</mark></label>
+                            <textarea class="form-control border-0 bg-light px-3 py-2" rows="2" name="shippingAddress" required
+                                      th:text="${editingShipment.shippingAddress}"></textarea>
+                        </div>
 
-            <div class="mt-3">
-                <label class="form-label">Ghi chú thất bại (chỉ dùng khi chọn trạng thái thất bại)</label>
-                <input class="form-control" name="failureNote" th:value="${editingShipment.failureNote}">
-            </div>
+                        <div class="row g-4 mb-4">
+                            <div class="col-md-12">
+                                <label class="form-label small fw-bold text-muted text-uppercase mb-2">Cập nhật trạng thái thủ công</label>
+                                <select class="form-select border-0 bg-light px-3 py-2 fw-medium" name="status" required>
+                                    <option th:each="st : ${statuses}"
+                                            th:value="${st}"
+                                            th:text="${@enumDisplayService.shipmentStatus(st)}"
+                                            th:selected="${editingShipment.status == st}"></option>
+                                </select>
+                                <div class="form-text small">Cảnh báo: Thay đổi trạng thái thủ công có thể ảnh hưởng đến quy trình OTP.</div>
+                            </div>
+                        </div>
 
-            <div class="mt-3 p-3 bg-light rounded">
-                <div class="row g-2 small">
-                    <div class="col-md-4"><strong>OTP hiện tại:</strong> <span th:text="${editingShipment.otpCode != null ? 'Đã tạo OTP' : 'Không hiển thị mã'}"></span></div>
-                    <div class="col-md-4"><strong>Xác thực OTP:</strong> <span th:text="${editingShipment.otpVerified ? 'Đã xác thực' : 'Chưa xác thực'}"></span></div>
-                    <div class="col-md-4"><strong>Cập nhật:</strong> <span th:text="${#temporals.format(editingShipment.updatedAt, 'dd/MM/yyyy HH:mm')}"></span></div>
-                </div>
-            </div>
+                        <div class="mb-5">
+                            <label class="form-label small fw-bold text-muted text-uppercase mb-2">Lý do thất bại (nếu có)</label>
+                            <input class="form-control border-0 bg-light px-3 py-2" name="failureNote" th:value="${editingShipment.failureNote}" placeholder="Vd: Khách hàng không nghe máy...">
+                        </div>
 
-            <div class="d-flex flex-wrap gap-2 mt-4">
-                <button class="btn btn-dark" type="submit">Lưu đơn giao hàng</button>
-                <a class="btn btn-outline-secondary" href="/admin/shipments">Quay lại</a>
-            </div>
+                        <div class="bg-light-accent rounded-3 p-3 mb-5 border border-accent border-opacity-10">
+                            <div class="row g-3 align-items-center">
+                                <div class="col-auto">
+                                    <div class="bg-white rounded-circle shadow-sm d-flex align-items-center justify-content-center text-accent" style="width: 40px; height: 40px;">
+                                        <i class="fa-solid fa-shield-halved"></i>
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="row g-2 small fw-medium">
+                                        <div class="col-md-4"><span class="text-muted">Mã OTP:</span> <span th:text="${editingShipment.otpCode != null ? '🔒 Đã phát hành' : '❌ Chưa có'}"></span></div>
+                                        <div class="col-md-4"><span class="text-muted">Xác thực:</span> <span th:class="${editingShipment.otpVerified ? 'text-success' : 'text-danger'}" th:text="${editingShipment.otpVerified ? '✓ Đã xong' : '○ Chờ'}"></span></div>
+                                        <div class="col-md-4 text-md-end"><span class="text-muted">Cập nhật lúc:</span> <span th:text="${#temporals.format(editingShipment.updatedAt, 'HH:mm - dd/MM')}"></span></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex flex-wrap gap-3 justify-content-end">
+                            <a class="btn btn-light rounded-pill px-5 py-2 fw-bold text-muted" href="/admin/shipments">Hủy</a>
+                            <button class="btn btn-dark rounded-pill px-5 py-2 fw-bold shadow-sm" type="submit">
+                                <i class="fa-solid fa-floppy-disk me-2"></i> Lưu đơn hàng
+                            </button>
+                        </div>
                     </form>
 
-                    <div class="mt-3 d-flex gap-2">
-                        <form th:action="@{/admin/shipments/{id}/resend-otp(id=${editingShipment.id})}" method="post">
-                            <button class="btn btn-sm btn-outline-primary" type="submit">Tạo lại và gửi OTP</button>
-                        </form>
+                    <div class="bg-light px-4 py-4 border-top d-flex flex-wrap gap-2 justify-content-between align-items-center">
+                        <div class="d-flex gap-2">
+                            <form th:action="@{/admin/shipments/{id}/resend-otp(id=${editingShipment.id})}" method="post">
+                                <button class="btn btn-white btn-sm border rounded-pill px-3 shadow-sm fw-bold text-primary" type="submit">
+                                    <i class="fa-solid fa-paper-plane me-1"></i> Gửi lại OTP
+                                </button>
+                            </form>
+                        </div>
+                        
                         <form th:if="${canDelete}" th:action="@{/admin/shipments/{id}/delete(id=${editingShipment.id})}" method="post"
-                              onsubmit="return confirm('Chỉ đơn giao hàng ở trạng thái chờ phân công mới được xóa. Xác nhận xóa?');">
-                            <button class="btn btn-sm btn-outline-danger" type="submit">Xóa đơn giao hàng</button>
+                              onsubmit="return confirm('Xác nhận xóa đơn giao hàng này khỏi hệ thống?');">
+                            <button class="btn btn-outline-danger btn-sm rounded-pill px-3" type="submit">
+                                <i class="fa-solid fa-trash-can me-1"></i> Xóa vĩnh viễn
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>a đơn giao hàng</button>
                         </form>
                     </div>
                 </div>

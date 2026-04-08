@@ -10,100 +10,144 @@
 </head>
 <body class="admin-page">
 <div class="admin-layout">
-    <aside class="admin-sidebar">
-        <a class="admin-sidebar-brand" href="/admin">
-            <span class="brand-logo"><i class="fa-solid fa-wine-glass"></i></span>
-            <span>StrongWine Admin</span>
-        </a>
-        <nav>
-            <a class="admin-nav-link" href="/admin"><i class="fa-solid fa-chart-line"></i>Bảng điều khiển</a>
-            <a class="admin-nav-link" href="/admin/users"><i class="fa-solid fa-users"></i>Người dùng</a>
-            <a class="admin-nav-link" href="/admin/shippers"><i class="fa-solid fa-truck"></i>Người giao hàng</a>
-            <a class="admin-nav-link" href="/admin/shipments"><i class="fa-solid fa-box-open"></i>Đơn giao hàng</a>
-            <a class="admin-nav-link active" href="/admin/shipments/traffic"><i class="fa-solid fa-map-location-dot"></i>Màn hình giao hàng</a>
+    <!-- Sidebar -->
+    <aside class="admin-sidebar shadow-sm">
+        <div class="px-4 py-4 mb-3">
+            <a class="admin-sidebar-brand d-flex align-items-center gap-3" href="/admin">
+                <span class="brand-logo shadow-sm"><i class="fa-solid fa-wine-glass"></i></span>
+                <div class="lh-1">
+                    <span class="fw-bold d-block">StrongWine</span>
+                    <small class="text-muted text-uppercase fw-bold" style="font-size: 0.65rem; letter-spacing: 0.05em;">Admin Console</small>
+                </div>
+            </a>
+        </div>
+        
+        <nav class="admin-nav px-3">
+            <div class="text-muted small fw-bold text-uppercase px-3 mb-2" style="font-size: 0.7rem; letter-spacing: 0.1em;">Vận hành</div>
+            <a class="admin-nav-link" href="/admin">
+                <i class="fa-solid fa-chart-pie"></i><span>Tổng quan</span>
+            </a>
+            <a class="admin-nav-link" href="/admin/shipments">
+                <i class="fa-solid fa-truck-ramp-box"></i><span>Đơn giao hàng</span>
+            </a>
+            <a class="admin-nav-link active" href="/admin/shipments/traffic">
+                <i class="fa-solid fa-map-location-dot"></i><span>Trạm điều phối</span>
+            </a>
+            
+            <div class="text-muted small fw-bold text-uppercase px-3 mt-4 mb-2" style="font-size: 0.7rem; letter-spacing: 0.1em;">Quản lý</div>
+            <a class="admin-nav-link" href="/admin/users">
+                <i class="fa-solid fa-users"></i><span>Người dùng</span>
+            </a>
+            <a class="admin-nav-link" href="/admin/shippers">
+                <i class="fa-solid fa-id-badge"></i><span>Đội ngũ Shipper</span>
+            </a>
+            <a class="admin-nav-link" href="/wines">
+                <i class="fa-solid fa-store"></i><span>Xem cửa hàng</span>
+            </a>
         </nav>
+        
+        <div class="mt-auto px-3 pb-4">
+            <form th:action="@{/logout}" method="post">
+                <button type="submit" class="btn btn-light w-100 text-danger small fw-bold border-0 py-2">
+                    <i class="fa-solid fa-right-from-bracket me-2"></i> Đăng xuất
+                </button>
+            </form>
+        </div>
     </aside>
 
+    <!-- Main Content Area -->
     <div class="admin-main">
-        <header class="admin-topbar">
-            <div>
-                <h1 class="h5 mb-0">Màn hình giao hàng hệ thống</h1>
-                <small class="text-muted">Theo dõi thời gian thực tất cả các đơn hàng đang vận chuyển</small>
-            </div>
-            <div class="d-flex gap-2">
-                <a class="btn btn-sm btn-outline-secondary" href="/admin/shipments">Quản lý nâng cao</a>
-                <form th:action="@{/logout}" method="post" class="d-inline">
-                    <button type="submit" class="btn btn-sm btn-outline-secondary">Đăng xuất</button>
-                </form>
+        <header class="admin-topbar sticky-top bg-white border-bottom px-4">
+            <div class="d-flex align-items-center justify-content-between w-100">
+                <div>
+                    <h2 class="h5 fw-bold mb-0">Màn hình điều phối vận hành</h2>
+                    <p class="text-muted small mb-0 d-none d-md-block">Theo dõi thời gian thực các đơn hàng đang trên đường giao.</p>
+                </div>
+                
+                <div class="d-flex align-items-center gap-3">
+                    <a class="btn btn-dark btn-sm rounded-pill px-4 py-2 shadow-sm" href="/admin/shipments">
+                        <i class="fa-solid fa-list-check me-1"></i> Danh sách chi tiết
+                    </a>
+                </div>
             </div>
         </header>
 
-        <main class="admin-content">
-            <div class="row g-3 mb-4 fade-up">
+        <main class="admin-content p-4">
+            <!-- Summary Stats -->
+            <div class="row g-4 mb-5 fade-up">
                 <div class="col-md-4">
-                    <div class="stat-card h-100 border-start border-warning border-4">
-                        <div class="stat-label">Đã phân công</div>
-                        <p class="stat-value" th:text="${shipmentStats[T(com.strongwine.strongwine.entity.ShipmentStatus).ASSIGNED]}">0</p>
+                    <div class="bg-white border rounded-4 p-4 shadow-sm h-100 transition-base hover-shadow border-bottom-primary">
+                        <div class="small fw-bold text-muted text-uppercase mb-2" style="font-size: 0.65rem;">Đã gán Shipper</div>
+                        <div class="h3 fw-bold mb-0 text-primary" th:text="${shipmentStats[T(com.strongwine.strongwine.entity.ShipmentStatus).ASSIGNED]}">0</div>
                     </div>
                 </div>
                 <div class="col-md-4">
-                    <div class="stat-card h-100 border-start border-primary border-4">
-                        <div class="stat-label">Đã lấy hàng</div>
-                        <p class="stat-value" th:text="${shipmentStats[T(com.strongwine.strongwine.entity.ShipmentStatus).PICKED_UP]}">0</p>
+                    <div class="bg-white border rounded-4 p-4 shadow-sm h-100 transition-base hover-shadow border-bottom-warning">
+                        <div class="small fw-bold text-muted text-uppercase mb-2" style="font-size: 0.65rem;">Hàng đã rời kho</div>
+                        <div class="h3 fw-bold mb-0 text-warning" th:text="${shipmentStats[T(com.strongwine.strongwine.entity.ShipmentStatus).PICKED_UP]}">0</div>
                     </div>
                 </div>
                 <div class="col-md-4">
-                    <div class="stat-card h-100 border-start border-info border-4">
-                        <div class="stat-label">Đang giao</div>
-                        <p class="stat-value" th:text="${shipmentStats[T(com.strongwine.strongwine.entity.ShipmentStatus).DELIVERING]}">0</p>
+                    <div class="bg-white border rounded-4 p-4 shadow-sm h-100 transition-base hover-shadow border-bottom-info">
+                        <div class="small fw-bold text-muted text-uppercase mb-2" style="font-size: 0.65rem;">Đang trên đường giao</div>
+                        <div class="h3 fw-bold mb-0 text-info" th:text="${shipmentStats[T(com.strongwine.strongwine.entity.ShipmentStatus).DELIVERING]}">0</div>
                     </div>
                 </div>
             </div>
 
-            <div class="panel p-3 p-lg-4 fade-up">
-                <h2 class="h6 mb-3">Danh sách đơn hàng đang vận hành</h2>
+            <!-- Monitoring Table -->
+            <div class="bg-white border rounded-4 shadow-sm overflow-hidden fade-up">
+                <div class="px-4 py-3 border-bottom d-flex align-items-center justify-content-between bg-light-accent">
+                    <h3 class="h6 fw-bold mb-0"><i class="fa-solid fa-radar me-2 text-accent"></i> Vận hành trực tuyến</h3>
+                    <span class="badge bg-white text-dark shadow-sm border small px-3" th:text="${shipments.size() + ' đơn đang xử lý'}"></span>
+                </div>
                 <div class="table-responsive">
-                    <table class="table table-modern align-middle">
+                    <table class="table table-modern align-middle mb-0 border-0">
                         <thead>
-                        <tr>
-                            <th>Mã đơn giao</th>
-                            <th>Đơn hàng</th>
-                            <th>Người giao hàng</th>
-                            <th>Người nhận & Địa chỉ</th>
-                            <th>SĐT</th>
-                            <th>Trạng thái</th>
-                            <th>Cập nhật</th>
-                        </tr>
+                            <tr>
+                                <th class="ps-4">Vận chuyển</th>
+                                <th>Đơn hàng</th>
+                                <th>Người phụ trách</th>
+                                <th>Khách hàng & Địa chỉ</th>
+                                <th>Liên lạc</th>
+                                <th>Tiến độ</th>
+                                <th class="pe-4">Cập nhật lúc</th>
+                            </tr>
                         </thead>
                         <tbody>
-                        <tr th:each="s : ${shipments}">
-                            <td th:text="${s.id}"></td>
-                            <td>
-                                <div>#<span th:text="${s.order.id}"></span></div>
-                                <div class="small text-muted" th:text="${s.order.user.username}"></div>
-                            </td>
-                            <td>
-                                <div th:if="${s.shipper != null}">
-                                    <strong th:text="${s.shipper.name}"></strong><br>
-                                    <span class="small text-muted" th:text="${'(@' + s.shipper.user.username + ')'}"></span>
-                                </div>
-                                <span th:unless="${s.shipper != null}" class="text-danger">Chưa có người giao</span>
-                            </td>
-                            <td>
-                                <div th:text="${s.shippingName}"></div>
-                                <div class="small text-muted" th:text="${s.shippingAddress}"></div>
-                            </td>
-                            <td th:text="${s.shippingPhone}"></td>
-                            <td>
-                                <span class="badge"
-                                      th:classappend="${s.status.name() == 'DELIVERING' ? ' text-bg-warning' : (s.status.name() == 'PICKED_UP' ? ' text-bg-info' : ' text-bg-secondary')}"
-                                      th:text="${@enumDisplayService.shipmentStatus(s.status)}"></span>
-                            </td>
-                            <td class="small" th:text="${#temporals.format(s.updatedAt, 'HH:mm dd/MM')}"></td>
-                        </tr>
-                        <tr th:if="${shipments.isEmpty()}">
-                            <td colspan="7" class="text-center text-muted py-4">Hiện không có đơn hàng nào đang trong quá trình giao nhận.</td>
-                        </tr>
+                            <tr th:each="s : ${shipments}">
+                                <td class="ps-4 fw-bold" th:text="${'#' + s.id}"></td>
+                                <td>
+                                    <div class="fw-bold" th:text="${'#' + s.order.id}"></div>
+                                    <div class="small text-muted" th:text="${s.order.user.username}"></div>
+                                </td>
+                                <td>
+                                    <div th:if="${s.shipper != null}" class="d-flex align-items-center gap-2">
+                                        <div class="bg-dark text-white rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 28px; height: 28px; font-size: 0.6rem;" th:text="${#strings.substring(s.shipper.name,0,1)}"></div>
+                                        <div>
+                                            <div class="fw-bold small" th:text="${s.shipper.name}"></div>
+                                            <div class="text-muted" style="font-size: 0.65rem;" th:text="${'@' + s.shipper.user.username}"></div>
+                                        </div>
+                                    </div>
+                                    <span th:unless="${s.shipper != null}" class="badge bg-danger shadow-sm rounded-pill px-3 py-1">Chưa gán</span>
+                                </td>
+                                <td>
+                                    <div class="fw-bold small text-dark" th:text="${s.shippingName}"></div>
+                                    <div class="small text-muted text-truncate" style="max-width: 200px;" th:text="${s.shippingAddress}"></div>
+                                </td>
+                                <td class="small fw-medium" th:text="${s.shippingPhone}"></td>
+                                <td>
+                                    <span th:class="${'badge rounded-pill px-3 py-2 ' + (s.status.name() == 'DELIVERING' ? 'bg-warning-subtle text-warning' : (s.status.name() == 'PICKED_UP' ? 'bg-info-subtle text-info' : 'bg-secondary-subtle text-secondary'))}"
+                                          th:text="${@enumDisplayService.shipmentStatus(s.status)}"></span>
+                                </td>
+                                <td class="pe-4 small text-muted fw-medium" th:text="${#temporals.format(s.updatedAt, 'HH:mm - dd/MM')}"></td>
+                            </tr>
+                            <tr th:if="${shipments.isEmpty()}">
+                                <td colspan="7" class="text-center text-muted py-5">
+                                    <i class="fa-solid fa-couch fs-2 mb-3 d-block opacity-25"></i>
+                                    Hiện tại chưa có hoạt động vận chuyển nào diễn ra.
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -111,6 +155,7 @@
         </main>
     </div>
 </div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

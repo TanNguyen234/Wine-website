@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chi tiết đơn hàng - StrongWine Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="/css/app.css">
+</head>
+<body class="admin-page">
+<div class="admin-layout">
+    <!-- Sidebar -->
+    <aside class="admin-sidebar shadow-sm">
+        <div class="px-4 py-4 mb-3">
+            <a class="admin-sidebar-brand d-flex align-items-center gap-3" href="/admin">
+                <span class="brand-logo shadow-sm"><i class="fa-solid fa-wine-glass"></i></span>
+                <div class="lh-1">
+                    <span class="fw-bold d-block">StrongWine</span>
+                    <small class="text-muted text-uppercase fw-bold" style="font-size: 0.65rem; letter-spacing: 0.05em;">Admin Console</small>
+                </div>
+            </a>
+        </div>
+        
+        <nav class="admin-nav px-3">
+            <div class="text-muted small fw-bold text-uppercase px-3 mb-2" style="font-size: 0.7rem; letter-spacing: 0.1em;">Vận hành</div>
+            <a class="admin-nav-link active" href="/admin">
+                <i class="fa-solid fa-chart-pie"></i><span>Tổng quan</span>
+            </a>
+            <a class="admin-nav-link" href="/admin/shipments">
+                <i class="fa-solid fa-truck-ramp-box"></i><span>Đơn giao hàng</span>
+            </a>
+            <a class="admin-nav-link" href="/admin/shipments/traffic">
+                <i class="fa-solid fa-map-location-dot"></i><span>Trạm điều phối</span>
+            </a>
+            
+            <div class="text-muted small fw-bold text-uppercase px-3 mt-4 mb-2" style="font-size: 0.7rem; letter-spacing: 0.1em;">Quản lý</div>
+            <a class="admin-nav-link" href="/admin/users">
+                <i class="fa-solid fa-users"></i><span>Người dùng</span>
+            </a>
+            <a class="admin-nav-link" href="/admin/shippers">
+                <i class="fa-solid fa-id-badge"></i><span>Đội ngũ Shipper</span>
+            </a>
+            <a class="admin-nav-link" href="/wines">
+                <i class="fa-solid fa-store"></i><span>Xem cửa hàng</span>
+            </a>
+        </nav>
+        
+        <div class="mt-auto px-3 pb-4">
+            <form th:action="@{/logout}" method="post">
+                <button type="submit" class="btn btn-light w-100 text-danger small fw-bold border-0 py-2">
+                    <i class="fa-solid fa-right-from-bracket me-2"></i> Đăng xuất
+                </button>
+            </form>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <div class="admin-main">
+        <header class="admin-topbar sticky-top bg-white border-bottom px-4">
+            <div class="d-flex align-items-center justify-content-between w-100">
+                <div class="d-flex align-items-center gap-3">
+                    <a class="btn btn-outline-dark btn-sm rounded-circle d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;" href="/admin" title="Quay lại Tổng quan">
+                        <i class="fa-solid fa-arrow-left"></i>
+                    </a>
+                    <div>
+                        <h2 class="h5 fw-bold mb-0" th:text="${'Chi tiết đơn hàng #' + order.id}"></h2>
+                        <p class="text-muted small mb-0 d-none d-md-block">Quản lý trạng thái và thông tin giao nhận khách hàng.</p>
+                    </div>
+                </div>
+                
+                <div class="d-flex align-items-center gap-2">
+                    <form th:if="${order.status != T(com.strongwine.strongwine.entity.OrderStatus).CANCELLED and order.status != T(com.strongwine.strongwine.entity.OrderStatus).COMPLETED}"
+                          th:action="@{/admin/orders/{id}/cancel(id=${order.id})}" method="post" onsubmit="return confirm('Hủy đơn hàng này?');">
+                        <button class="btn btn-danger btn-sm rounded-pill px-4 py-2 shadow-sm" type="submit">
+                            <i class="fa-solid fa-ban me-1"></i> Hủy đơn
+                        </button>
+                    </form>
+                    <a class="btn btn-dark btn-sm rounded-pill px-4 py-2 shadow-sm" href="/admin/shipments">
+                        <i class="fa-solid fa-truck-ramp-box me-1"></i> Vận đơn
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <main class="admin-content p-4">
+            <div th:if="${success}" class="alert alert-success border-0 shadow-sm mb-4 alert-dismissible fade show fade-up" role="alert">
+                <i class="fa-solid fa-circle-check me-2"></i>
+                <span th:text="${success}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            <div th:if="${error}" class="alert alert-danger border-0 shadow-sm mb-4 alert-dismissible fade show fade-up" role="alert">
+                <i class="fa-solid fa-circle-xmark me-2"></i>
+                <span th:text="${error}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+
+            <!-- Two Column Layout -->
+            <div class="row g-4 fade-up">
+                <!-- Left Column (Order Info & Products) -->
+                <div class="col-xl-8">
+                    <!-- Products Table -->
+                    <div class="bg-white border rounded-4 p-4 shadow-sm mb-4">
+                        <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-4">
+                            <h3 class="h6 fw-bold mb-0"><i class="fa-solid fa-box-open me-2 text-accent"></i>Sản phẩm trong đơn</h3>
+                            <span class="badge bg-light text-dark shadow-sm border" th:text="${order.orderItems.size() + ' mặt hàng'}"></span>
+                        </div>
+                        
+                        <div class="table-responsive">
+                            <table class="table table-modern align-middle mb-0 border-0">
+                                <thead class="text-muted small text-uppercase">
+                                    <tr>
+                                        <th class="ps-3 border-0">Sản phẩm</th>
+                                        <th class="text-end border-0">Đơn giá</th>
+                                        <th class="text-center border-0" style="width: 100px;">S.Lg</th>
+                                        <th class="text-end pe-3 border-0">Thành tiền</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="item : ${order.orderItems}">
+                                        <td class="ps-3">
+                                            <div class="d-flex align-items-center gap-3">
+                                                <div class="bg-light rounded d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                                                    <i class="fa-solid fa-wine-bottle text-muted opacity-50 fs-5"></i>
+                                                </div>
+                                                <div class="fw-bold text-dark" th:text="${item.wine.name}"></div>
+                                            </div>
+                                        </td>
+                                        <td class="text-end fw-medium" th:text="${#numbers.formatDecimal(item.price, 0, 'COMMA', 0, 'POINT') + ' đ'}"></td>
+                                        <td class="text-center bg-light rounded-3 fw-bold my-2 d-inline-block w-100" th:text="${item.quantity}"></td>
+                                        <td class="text-end pe-3 fw-bold text-accent" th:text="${#numbers.formatDecimal(item.price * item.quantity, 0, 'COMMA', 0, 'POINT') + ' đ'}"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- Totals Area -->
+                        <div class="bg-light rounded-4 p-4 mt-4 text-end">
+                            <div class="d-flex justify-content-end align-items-center gap-4 mb-2 opacity-75">
+                                <span class="small fw-bold text-uppercase">Tạm tính:</span>
+                                <span class="fs-5 fw-medium" th:text="${#numbers.formatDecimal(order.totalPrice, 0, 'COMMA', 0, 'POINT') + ' đ'}"></span>
+                            </div>
+                            <div class="d-flex justify-content-end align-items-center gap-4 mb-3 opacity-75">
+                                <span class="small fw-bold text-uppercase">Phí giao hàng:</span>
+                                <span class="fs-5 fw-medium">0 đ</span>
+                            </div>
+                            <div class="d-flex justify-content-end align-items-center gap-4 border-top border-dark-subtle pt-3">
+                                <span class="small fw-bold text-uppercase text-dark">Tổng cộng:</span>
+                                <span class="fs-3 fw-bold text-dark" th:text="${#numbers.formatDecimal(order.totalPrice, 0, 'COMMA', 0, 'POINT') + ' đ'}"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column (Customer & Status) -->
+                <div class="col-xl-4">
+                    <!-- Status Card -->
+                    <div class="bg-white border rounded-4 p-4 shadow-sm mb-4 d-flex flex-column gap-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h3 class="h6 fw-bold mb-0"><i class="fa-solid fa-signal me-2 text-primary"></i>Trạng thái</h3>
+                            <span class="small text-muted fw-bold" th:text="${#temporals.format(order.orderDate, 'HH:mm dd/MM/yyyy')}"></span>
+                        </div>
+                        
+                        <div class="bg-light rounded-3 p-3 d-flex justify-content-between align-items-center">
+                            <span class="small fw-bold text-muted text-uppercase">Đơn hàng</span>
+                            <span th:class="${'badge rounded-pill px-3 py-2 ' + (order.status.name() == 'COMPLETED' ? 'bg-success-subtle text-success' : (order.status.name() == 'CANCELLED' ? 'bg-danger-subtle text-danger' : 'bg-primary-subtle text-primary'))}"
+                                  th:text="${@enumDisplayService.orderStatus(order.status)}"></span>
+                        </div>
+
+                        <div class="bg-light rounded-3 p-3 d-flex justify-content-between align-items-center">
+                            <span class="small fw-bold text-muted text-uppercase">Thanh toán</span>
+                            <span th:class="${'badge rounded-pill px-3 py-2 ' + (order.paymentStatus.name() == 'SUCCESS' ? 'bg-info-subtle text-info' : 'bg-secondary-subtle text-secondary')}"
+                                  th:text="${@enumDisplayService.paymentStatus(order.paymentStatus)}"></span>
+                        </div>
+
+                        <div class="bg-light rounded-3 p-3 d-flex justify-content-between align-items-center">
+                            <span class="small fw-bold text-muted text-uppercase">Vận chuyển</span>
+                            <span th:if="${shipment != null}" th:class="${'badge rounded-pill px-3 py-2 ' + (shipment.status.name() == 'COMPLETED' ? 'bg-success-subtle text-success' : 'bg-warning-subtle text-warning')}"
+                                  th:text="${@enumDisplayService.shipmentStatus(shipment.status)}"></span>
+                            <span th:if="${shipment == null}" class="badge bg-light text-muted border fst-italic">Chưa tạo đơn</span>
+                        </div>
+                    </div>
+
+                    <!-- Customer Info Card -->
+                    <div class="bg-white border rounded-4 p-4 shadow-sm mb-4">
+                        <h3 class="h6 fw-bold border-bottom pb-3 mb-4"><i class="fa-solid fa-user-circle me-2 text-info"></i>Thông tin Khách hàng</h3>
+                        
+                        <div class="mb-3">
+                            <div class="small fw-bold text-muted text-uppercase mb-1" style="font-size: 0.65rem;">Người đặt & Tài khoản</div>
+                            <div class="fw-bold d-flex align-items-center gap-2">
+                                <span th:text="${order.user.username}"></span>
+                                <span class="badge bg-light text-dark border small" th:text="${'ID: ' + order.user.id}"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="small fw-bold text-muted text-uppercase mb-1" style="font-size: 0.65rem;">Người nhận</div>
+                            <div class="fw-medium text-dark" th:text="${order.shippingFullName}"></div>
+                            <div class="small text-muted mt-1"><i class="fa-solid fa-phone me-1 small"></i> <span th:text="${order.shippingPhone}"></span></div>
+                        </div>
+
+                        <div class="mb-0">
+                            <div class="small fw-bold text-muted text-uppercase mb-1" style="font-size: 0.65rem;">Địa chỉ giao hàng</div>
+                            <div class="small text-dark lh-base p-2 bg-light rounded" th:text="${order.shippingAddress}"></div>
+                        </div>
+                    </div>
+
+                    <!-- Payment Reference Card -->
+                    <div class="bg-dark text-white border-0 rounded-4 p-4 shadow-lg shadow-dark-subtle">
+                        <h3 class="h6 fw-bold mb-3 text-white-50"><i class="fa-solid fa-file-invoice-dollar me-2"></i>Chi tiết thanh toán</h3>
+                        <div class="small mb-1 text-white-50">Mã tham chiếu:</div>
+                        <div class="fw-bold font-monospace bg-white bg-opacity-10 py-2 px-3 rounded text-break" th:text="${order.paymentReference != null ? order.paymentReference : 'N/A'}"></div>
+                        <div class="small text-white-50 mt-3 d-flex align-items-center gap-2">
+                            <i class="fa-solid fa-shield-check"></i> Thanh toán an toàn
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

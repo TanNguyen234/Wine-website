@@ -10,111 +10,154 @@
 </head>
 <body class="admin-page">
 <div class="admin-layout">
-    <aside class="admin-sidebar">
-        <a class="admin-sidebar-brand" href="/admin">
-            <span class="brand-logo"><i class="fa-solid fa-wine-glass"></i></span>
-            <span>StrongWine Admin</span>
-        </a>
-        <nav>
-            <a class="admin-nav-link" href="/admin"><i class="fa-solid fa-chart-line"></i>Bảng điều khiển</a>
-            <a class="admin-nav-link" href="/admin/users"><i class="fa-solid fa-users"></i>Người dùng</a>
-            <a class="admin-nav-link active" href="/admin/shippers"><i class="fa-solid fa-truck"></i>Người giao hàng</a>
-            <a class="admin-nav-link" href="/admin/shipments"><i class="fa-solid fa-box-open"></i>Đơn giao hàng</a>
+    <!-- Sidebar -->
+    <aside class="admin-sidebar shadow-sm">
+        <div class="px-4 py-4 mb-3">
+            <a class="admin-sidebar-brand d-flex align-items-center gap-3" href="/admin">
+                <span class="brand-logo shadow-sm"><i class="fa-solid fa-wine-glass"></i></span>
+                <div class="lh-1">
+                    <span class="fw-bold d-block">StrongWine</span>
+                    <small class="text-muted text-uppercase fw-bold" style="font-size: 0.65rem; letter-spacing: 0.05em;">Admin Console</small>
+                </div>
+            </a>
+        </div>
+        
+        <nav class="admin-nav px-3">
+            <div class="text-muted small fw-bold text-uppercase px-3 mb-2" style="font-size: 0.7rem; letter-spacing: 0.1em;">Vận hành</div>
+            <a class="admin-nav-link" href="/admin">
+                <i class="fa-solid fa-chart-pie"></i><span>Tổng quan</span>
+            </a>
+            <a class="admin-nav-link" href="/admin/shipments">
+                <i class="fa-solid fa-truck-ramp-box"></i><span>Đơn giao hàng</span>
+            </a>
+            <a class="admin-nav-link" href="/admin/shipments/traffic">
+                <i class="fa-solid fa-map-location-dot"></i><span>Trạm điều phối</span>
+            </a>
+            
+            <div class="text-muted small fw-bold text-uppercase px-3 mt-4 mb-2" style="font-size: 0.7rem; letter-spacing: 0.1em;">Quản lý</div>
+            <a class="admin-nav-link" href="/admin/users">
+                <i class="fa-solid fa-users"></i><span>Người dùng</span>
+            </a>
+            <a class="admin-nav-link active" href="/admin/shippers">
+                <i class="fa-solid fa-id-badge"></i><span>Đội ngũ Shipper</span>
+            </a>
+            <a class="admin-nav-link" href="/wines">
+                <i class="fa-solid fa-store"></i><span>Xem cửa hàng</span>
+            </a>
         </nav>
+        
+        <div class="mt-auto px-3 pb-4">
+            <form th:action="@{/logout}" method="post">
+                <button type="submit" class="btn btn-light w-100 text-danger small fw-bold border-0 py-2">
+                    <i class="fa-solid fa-right-from-bracket me-2"></i> Đăng xuất
+                </button>
+            </form>
+        </div>
     </aside>
 
+    <!-- Main Content Area -->
     <div class="admin-main">
-        <header class="admin-topbar">
-            <div>
-                <h1 class="h5 mb-0">Quản lý người giao hàng</h1>
-                <small class="text-muted">Theo dõi hiệu suất và trạng thái giao nhận</small>
-            </div>
-            <div class="d-flex gap-2">
-                <a class="btn btn-sm btn-outline-secondary" href="/admin/shipments">Đơn giao hàng</a>
-                <a class="btn btn-sm btn-dark" href="/admin/shippers/create">Thêm người giao hàng</a>
-                <form th:action="@{/logout}" method="post" class="d-inline">
-                    <button type="submit" class="btn btn-sm btn-outline-secondary">Đăng xuất</button>
-                </form>
+        <header class="admin-topbar sticky-top bg-white border-bottom px-4">
+            <div class="d-flex align-items-center justify-content-between w-100">
+                <div>
+                    <h2 class="h5 fw-bold mb-0">Quản lý đội ngũ Shipper</h2>
+                    <p class="text-muted small mb-0 d-none d-md-block">Theo dõi hiệu suất và trạng thái giao nhận trực tuyến.</p>
+                </div>
+                
+                <div class="d-flex align-items-center gap-3">
+                    <a class="btn btn-dark btn-sm rounded-pill px-4 py-2 shadow-sm" href="/admin/shippers/create">
+                        <i class="fa-solid fa-plus me-1"></i> Thêm nhân sự
+                    </a>
+                </div>
             </div>
         </header>
 
-        <main class="admin-content">
-            <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <main class="admin-content p-4">
+            <div th:if="${success}" class="alert alert-success border-0 shadow-sm mb-4 alert-dismissible fade show fade-up" role="alert">
+                <i class="fa-solid fa-circle-check me-2"></i>
                 <span th:text="${success}"></span>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
-            <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
-                <span th:text="${error}"></span>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-
-            <div class="row g-3 mb-3 fade-up">
+            
+            <!-- Statistical Tiles -->
+            <div class="row g-4 mb-4 fade-up">
                 <div class="col-md-4">
-                    <div class="stat-card h-100">
-                        <div class="stat-label">Tổng số người giao hàng</div>
-                        <p class="stat-value" th:text="${shipperStats['total']}">0</p>
+                    <div class="bg-white border rounded-4 p-4 shadow-sm transition-base hover-shadow">
+                        <div class="small fw-bold text-muted text-uppercase mb-2" style="font-size: 0.65rem;">Tổng nhân sự</div>
+                        <div class="h3 fw-bold mb-0 text-dark" th:text="${shipperStats['total']}">0</div>
                     </div>
                 </div>
                 <div class="col-md-4">
-                    <div class="stat-card h-100">
-                        <div class="stat-label">Người giao hàng đang hoạt động</div>
-                        <p class="stat-value" th:text="${shipperStats['active']}">0</p>
+                    <div class="bg-white border rounded-4 p-4 shadow-sm transition-base hover-shadow bg-light-accent">
+                        <div class="small fw-bold text-accent text-uppercase mb-2" style="font-size: 0.65rem;">Đang hoạt động</div>
+                        <div class="h3 fw-bold mb-0 text-accent" th:text="${shipperStats['active']}">0</div>
                     </div>
                 </div>
                 <div class="col-md-4">
-                    <div class="stat-card h-100">
-                        <div class="stat-label">Người giao hàng sẵn sàng nhận đơn</div>
-                        <p class="stat-value" th:text="${shipperStats['available']}">0</p>
+                    <div class="bg-white border rounded-4 p-4 shadow-sm transition-base hover-shadow bg-success-subtle">
+                        <div class="small fw-bold text-success text-uppercase mb-2" style="font-size: 0.65rem;">Sẵn sàng nhận đơn</div>
+                        <div class="h3 fw-bold mb-0 text-success" th:text="${shipperStats['available']}">0</div>
                     </div>
                 </div>
             </div>
 
-            <div class="panel p-3 p-lg-4 fade-up">
+            <div class="bg-white border rounded-4 shadow-sm overflow-hidden fade-up">
                 <div class="table-responsive">
-                    <table class="table table-modern align-middle">
+                    <table class="table table-modern align-middle mb-0 border-0">
                         <thead>
-                        <tr>
-                            <th><span class="th-sort">ID <i class="fa-solid fa-sort"></i></span></th>
-                            <th><span class="th-sort">Tài khoản <i class="fa-solid fa-sort"></i></span></th>
-                            <th><span class="th-sort">Tên <i class="fa-solid fa-sort"></i></span></th>
-                            <th><span class="th-sort">Điện thoại <i class="fa-solid fa-sort"></i></span></th>
-                            <th><span class="th-sort">Phương tiện <i class="fa-solid fa-sort"></i></span></th>
-                            <th><span class="th-sort">Trạng thái <i class="fa-solid fa-sort"></i></span></th>
-                            <th>Sẵn sàng</th>
-                            <th><span class="th-sort">Cập nhật <i class="fa-solid fa-sort"></i></span></th>
-                            <th>Thao tác</th>
-                        </tr>
+                            <tr>
+                                <th class="ps-4">Nhân viên</th>
+                                <th>Liên lạc</th>
+                                <th>Phương tiện</th>
+                                <th>Hoạt động</th>
+                                <th>Sẵn sàng</th>
+                                <th>Cập nhật</th>
+                                <th class="pe-4 text-end">Hành động</th>
+                            </tr>
                         </thead>
                         <tbody>
-                        <tr th:each="s : ${shippers}">
-                            <td th:text="${s.id}"></td>
-                            <td th:text="${s.user.username}"></td>
-                            <td th:text="${s.name}"></td>
-                            <td th:text="${s.phone}"></td>
-                            <td th:text="${s.vehicleType}"></td>
-                            <td><span class="badge text-bg-secondary" th:text="${@enumDisplayService.shipperStatus(s.status)}"></span></td>
-                            <td>
-                                <span th:class="${s.isAvailable ? 'badge text-bg-success' : 'badge text-bg-warning'}"
-                                      th:text="${s.isAvailable ? 'Sẵn sàng' : 'Tạm nghỉ'}"></span>
-                            </td>
-                            <td th:text="${#temporals.format(s.updatedAt, 'dd/MM/yyyy HH:mm')}"></td>
-                            <td>
-                                <div class="d-flex gap-2">
-                                    <a class="btn btn-sm btn-outline-dark" th:href="@{/admin/shippers/edit/{id}(id=${s.id})}">Sửa</a>
-                                    <form th:action="@{/admin/shippers/delete/{id}(id=${s.id})}" method="post" onsubmit="return confirm('Bạn có chắc muốn xóa người giao hàng này?');">
-                                        <button class="btn btn-sm btn-outline-danger" type="submit">Xóa</button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
+                            <tr th:each="s : ${shippers}">
+                                <td class="ps-4">
+                                    <div class="d-flex align-items-center gap-3 py-2">
+                                        <div class="bg-light rounded-circle d-flex align-items-center justify-content-center fw-bold text-muted" style="width: 40px; height: 40px;">
+                                            <i class="fa-solid fa-id-card"></i>
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold" th:text="${s.name}"></div>
+                                            <div class="small text-muted" th:text="${'@' + s.user.username}"></div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="small fw-medium" th:text="${s.phone}"></td>
+                                <td>
+                                    <span class="badge bg-light text-dark border px-3 py-2 rounded-pill shadow-inner" th:text="${s.vehicleType}"></span>
+                                </td>
+                                <td>
+                                    <span class="badge rounded-pill px-3 py-2 bg-secondary-subtle text-secondary" th:text="${@enumDisplayService.shipperStatus(s.status)}"></span>
+                                </td>
+                                <td>
+                                    <span th:class="${s.isAvailable ? 'badge bg-success shadow-sm px-3 py-2 rounded-pill' : 'badge bg-warning shadow-sm px-3 py-2 rounded-pill'}"
+                                          th:text="${s.isAvailable ? 'Sẵn sàng' : 'Tạm nghỉ'}"></span>
+                                </td>
+                                <td class="small text-muted" th:text="${#temporals.format(s.updatedAt, 'dd/MM/yyyy HH:mm')}"></td>
+                                <td class="pe-4 text-end">
+                                    <div class="d-flex justify-content-end gap-2">
+                                        <a class="btn btn-sm btn-outline-dark rounded-pill px-3" th:href="@{/admin/shippers/edit/{id}(id=${s.id})}">Sửa</a>
+                                        <form th:action="@{/admin/shippers/delete/{id}(id=${s.id})}" method="post" onsubmit="return confirm('Xác nhận xóa nhân sự này?');">
+                                            <button class="btn btn-sm btn-outline-danger rounded-pill px-3" type="submit">Xóa</button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
-                <nav class="mt-3" aria-label="Điều hướng bảng người giao hàng">
-                    <ul class="pagination pagination-modern pagination-sm mb-0">
-                        <li class="page-item disabled"><span class="page-link">Trước</span></li>
-                        <li class="page-item active"><span class="page-link">1</span></li>
-                        <li class="page-item disabled"><span class="page-link">Sau</span></li>
+                <!-- Pagination -->
+                <nav class="p-4 border-top" aria-label="Pagination">
+                    <ul class="pagination pagination-modern pagination-sm mb-0 gap-1">
+                        <li class="page-item disabled"><span class="page-link border-0">Trước</span></li>
+                        <li class="page-item"><span class="page-link border shadow-sm rounded-circle text-accent active" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">1</span></li>
+                        <li class="page-item disabled"><span class="page-link border-0">Sau</span></li>
                     </ul>
                 </nav>
             </div>

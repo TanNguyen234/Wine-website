@@ -10,77 +10,146 @@
 </head>
 <body class="admin-page">
 <div class="admin-layout">
-    <aside class="admin-sidebar">
-        <a class="admin-sidebar-brand" href="/admin">
-            <span class="brand-logo"><i class="fa-solid fa-wine-glass"></i></span>
-            <span>StrongWine Admin</span>
-        </a>
-        <nav>
-            <a class="admin-nav-link" href="/admin"><i class="fa-solid fa-chart-line"></i>Bảng điều khiển</a>
-            <a class="admin-nav-link" href="/admin/users"><i class="fa-solid fa-users"></i>Người dùng</a>
-            <a class="admin-nav-link active" href="/admin/shippers"><i class="fa-solid fa-truck"></i>Người giao hàng</a>
-            <a class="admin-nav-link" href="/admin/shipments"><i class="fa-solid fa-box-open"></i>Đơn giao hàng</a>
+    <!-- Sidebar -->
+    <aside class="admin-sidebar shadow-sm">
+        <div class="px-4 py-4 mb-3">
+            <a class="admin-sidebar-brand d-flex align-items-center gap-3" href="/admin">
+                <span class="brand-logo shadow-sm"><i class="fa-solid fa-wine-glass"></i></span>
+                <div class="lh-1">
+                    <span class="fw-bold d-block">StrongWine</span>
+                    <small class="text-muted text-uppercase fw-bold" style="font-size: 0.65rem; letter-spacing: 0.05em;">Admin Console</small>
+                </div>
+            </a>
+        </div>
+        
+        <nav class="admin-nav px-3">
+            <div class="text-muted small fw-bold text-uppercase px-3 mb-2" style="font-size: 0.7rem; letter-spacing: 0.1em;">Vận hành</div>
+            <a class="admin-nav-link" href="/admin">
+                <i class="fa-solid fa-chart-pie"></i><span>Tổng quan</span>
+            </a>
+            <a class="admin-nav-link" href="/admin/shipments">
+                <i class="fa-solid fa-truck-ramp-box"></i><span>Đơn giao hàng</span>
+            </a>
+            <a class="admin-nav-link" href="/admin/shipments/traffic">
+                <i class="fa-solid fa-map-location-dot"></i><span>Trạm điều phối</span>
+            </a>
+            
+            <div class="text-muted small fw-bold text-uppercase px-3 mt-4 mb-2" style="font-size: 0.7rem; letter-spacing: 0.1em;">Quản lý</div>
+            <a class="admin-nav-link" href="/admin/users">
+                <i class="fa-solid fa-users"></i><span>Người dùng</span>
+            </a>
+            <a class="admin-nav-link active" href="/admin/shippers">
+                <i class="fa-solid fa-id-badge"></i><span>Đội ngũ Shipper</span>
+            </a>
+            <a class="admin-nav-link" href="/wines">
+                <i class="fa-solid fa-store"></i><span>Xem cửa hàng</span>
+            </a>
         </nav>
+        
+        <div class="mt-auto px-3 pb-4">
+            <form th:action="@{/logout}" method="post">
+                <button type="submit" class="btn btn-light w-100 text-danger small fw-bold border-0 py-2">
+                    <i class="fa-solid fa-right-from-bracket me-2"></i> Đăng xuất
+                </button>
+            </form>
+        </div>
     </aside>
 
+    <!-- Main Content Area -->
     <div class="admin-main">
-        <header class="admin-topbar">
-            <div>
-                <h1 class="h5 mb-0" th:text="${editingShipper != null ? 'Cập nhật người giao hàng' : 'Tạo người giao hàng mới'}"></h1>
-                <small class="text-muted">Quản lý hồ sơ giao nhận và trạng thái sẵn sàng</small>
-            </div>
-            <div class="d-flex gap-2">
-                <a class="btn btn-sm btn-outline-secondary" href="/admin/shippers">Danh sách</a>
-                <a class="btn btn-sm btn-outline-secondary" href="/admin/shipments">Đơn giao hàng</a>
-                <form th:action="@{/logout}" method="post" class="d-inline">
-                    <button type="submit" class="btn btn-sm btn-outline-secondary">Đăng xuất</button>
-                </form>
+        <header class="admin-topbar sticky-top bg-white border-bottom px-4">
+            <div class="d-flex align-items-center justify-content-between w-100">
+                <div>
+                    <h2 class="h5 fw-bold mb-0" th:text="${editingShipper != null ? 'Chỉnh sửa Shipper' : 'Thêm Shipper mới'}">Thiết lập nhân viên</h2>
+                    <p class="text-muted small mb-0 d-none d-md-block">Cấu hình hồ sơ vận chuyển, phương tiện và trạng thái làm việc.</p>
+                </div>
+                
+                <div class="d-flex align-items-center gap-3">
+                    <a class="btn btn-outline-dark btn-sm rounded-pill px-4 py-2" href="/admin/shippers">
+                        <i class="fa-solid fa-arrow-left me-1 small"></i> Danh sách
+                    </a>
+                </div>
             </div>
         </header>
 
-        <main class="admin-content">
-            <div class="admin-form-wrap">
-                <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <main class="admin-content p-4 d-flex justify-content-center pt-5">
+            <div class="w-100" style="max-width: 700px;">
+                <!-- Alert Messages -->
+                <div th:if="${error}" class="alert alert-danger border-0 shadow-sm mb-4 alert-dismissible fade show fade-up" role="alert">
+                    <i class="fa-solid fa-circle-xmark me-2"></i>
                     <span th:text="${error}"></span>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
 
-                <div class="panel p-4 p-lg-5 fade-up">
+                <!-- Form Panel -->
+                <div class="bg-white border rounded-4 p-4 p-md-5 shadow-sm fade-up">
                     <form th:action="${editingShipper != null ? '/admin/shippers/edit/' + editingShipper.id : '/admin/shippers/create'}" method="post">
-                        <div class="mb-3">
-                            <label class="form-label">Tài khoản giao hàng (vai trò người giao hàng)</label>
-                            <select class="form-select" name="userId" required>
-                                <option value="" disabled th:selected="${editingShipper == null}">-- Chọn tài khoản --</option>
-                                <option th:each="u : ${users}" th:value="${u.id}" th:text="${u.username}"
-                                        th:selected="${editingShipper != null and editingShipper.user.id == u.id}"></option>
-                            </select>
+                        <div class="mb-4">
+                            <label class="form-label small fw-bold text-muted text-uppercase mb-2">Tài khoản liên kết</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-0 px-3 text-muted"><i class="fa-solid fa-user-circle small"></i></span>
+                                <select class="form-select border-0 bg-light px-3 py-2" name="userId" required>
+                                    <option value="" disabled th:selected="${editingShipper == null}">-- Chọn tài khoản người dùng --</option>
+                                    <option th:each="u : ${users}" th:value="${u.id}" th:text="${u.username}"
+                                            th:selected="${editingShipper != null and editingShipper.user.id == u.id}"></option>
+                                </select>
+                            </div>
+                            <div class="form-text small">Chỉ những tài khoản có vai trò Shipper mới hiển thị ở đây.</div>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label">Tên người giao hàng</label>
-                            <input class="form-control" name="name" required th:value="${editingShipper != null ? editingShipper.name : ''}">
+
+                        <div class="row g-4 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-muted text-uppercase mb-2">Họ tên nhân viên</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-0 px-3 text-muted"><i class="fa-solid fa-id-card small"></i></span>
+                                    <input class="form-control border-0 bg-light px-3 py-2" name="name" required th:value="${editingShipper != null ? editingShipper.name : ''}" placeholder="Nhập tên đầy đủ">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-muted text-uppercase mb-2">Số điện thoại</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-0 px-3 text-muted"><i class="fa-solid fa-phone small"></i></span>
+                                    <input class="form-control border-0 bg-light px-3 py-2" name="phone" required th:value="${editingShipper != null ? editingShipper.phone : ''}" placeholder="Vd: 0901234567">
+                                </div>
+                            </div>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label">Số điện thoại</label>
-                            <input class="form-control" name="phone" required th:value="${editingShipper != null ? editingShipper.phone : ''}" placeholder="Ví dụ: 0901234567">
+
+                        <div class="mb-4">
+                            <label class="form-label small fw-bold text-muted text-uppercase mb-2">Phương tiện di chuyển</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-0 px-3 text-muted"><i class="fa-solid fa-motorcycle small"></i></span>
+                                <input class="form-control border-0 bg-light px-3 py-2" name="vehicleType" th:value="${editingShipper != null ? editingShipper.vehicleType : ''}" placeholder="Vd: Honda SH, Xe tải 500kg...">
+                            </div>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label">Phương tiện</label>
-                            <input class="form-control" name="vehicleType" th:value="${editingShipper != null ? editingShipper.vehicleType : ''}" placeholder="Ví dụ: Xe máy, ô tô">
+
+                        <div class="row g-4 mb-5">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-muted text-uppercase mb-2">Xếp loại / Nhóm</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-0 px-3 text-muted"><i class="fa-solid fa-ranking-star small"></i></span>
+                                    <select class="form-select border-0 bg-light px-3 py-2" name="status">
+                                        <option th:each="st : ${statuses}" th:value="${st}" th:text="${@enumDisplayService.shipperStatus(st)}"
+                                                th:selected="${editingShipper != null and editingShipper.status == st}"></option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6 d-flex align-items-end">
+                                <div class="bg-light p-3 rounded-3 w-100 d-flex align-items-center">
+                                    <div class="form-check form-switch mb-0 fs-6 fw-medium text-dark">
+                                        <input class="form-check-input accent-switch" type="checkbox" name="isAvailable" id="availableCheck" th:checked="${editingShipper != null and editingShipper.isAvailable}">
+                                        <label class="form-check-label ms-2" for="availableCheck">Sẵn sàng điều phối đơn</label>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label">Trạng thái</label>
-                            <select class="form-select" name="status">
-                                <option th:each="st : ${statuses}" th:value="${st}" th:text="${@enumDisplayService.shipperStatus(st)}"
-                                        th:selected="${editingShipper != null and editingShipper.status == st}"></option>
-                            </select>
-                        </div>
-                        <div class="form-check mb-4">
-                            <input class="form-check-input" type="checkbox" name="isAvailable" id="availableCheck" th:checked="${editingShipper != null and editingShipper.isAvailable}">
-                            <label class="form-check-label" for="availableCheck">Sẵn sàng nhận đơn</label>
-                        </div>
-                        <div class="d-flex gap-2">
-                            <button class="btn btn-dark" type="submit">Lưu</button>
-                            <a class="btn btn-outline-secondary" href="/admin/shippers">Quay lại</a>
+
+                        <hr class="my-4 opacity-5">
+
+                        <div class="d-grid gap-3 d-md-flex justify-content-md-end">
+                            <a class="btn btn-light rounded-pill px-5 py-2 fw-bold text-muted" href="/admin/shippers">Hủy bỏ</a>
+                            <button class="btn btn-dark rounded-pill px-5 py-2 fw-bold shadow-sm" type="submit">
+                                <i class="fa-solid fa-floppy-disk me-2 small"></i> Lưu hồ sơ
+                            </button>
                         </div>
                     </form>
                 </div>
