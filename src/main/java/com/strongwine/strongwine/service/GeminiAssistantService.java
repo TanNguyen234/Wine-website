@@ -42,7 +42,7 @@ public class GeminiAssistantService {
                 .build();
     }
 
-    public String ask(String prompt, String context) {
+    public String ask(String prompt, String context, List<Map<String, String>> history) {
         String normalizedPrompt = normalizePrompt(prompt);
         String normalizedContext = normalizeContext(context);
 
@@ -51,7 +51,33 @@ public class GeminiAssistantService {
             return "Chatbot hiện chưa được cấu hình GEMINI_API_KEY ở backend.";
         }
 
-        String fullPrompt = buildPrompt(normalizedPrompt, normalizedContext);
+        String systemContext = buildSystemContext(normalizedContext);
+        List<Map<String, Object>> contents = new ArrayList<>();
+        
+        // Always add historical context or fresh system context
+        if (history != null && !history.isEmpty()) {
+            // Include system context in the first user message of the conversation if history exists
+            // Or better yet, just prepend it to the VERY first message in history if we had access to it.
+            // For simplicity and effectiveness in Gemini, we'll prepend it to the current prompt if history exists.
+            for (Map<String, String> msg : history) {
+                contents.add(Map.of(
+                    "role", msg.get("role"),
+                    "parts", List.of(Map.of("text", msg.get("content")))
+                ));
+            }
+        }
+        
+        // Ensure system instructions are present
+        String userText = normalizedPrompt;
+        if (!systemContext.isEmpty()) {
+            userText = "[INSTRUCTION]: " + systemContext + "\n\n[USER QUESTION]: " + normalizedPrompt;
+        }
+
+        contents.add(Map.of(
+            "role", "user",
+            "parts", List.of(Map.of("text", userText))
+        ));
+
         Set<String> excludedModels = new HashSet<>();
 
         while (true) {
@@ -64,27 +90,24 @@ public class GeminiAssistantService {
             String currentModel = modelOpt.get();
             try {
                 Map<String, Object> payload = Map.of(
-                        "contents", List.of(Map.of(
-                                "role", "user",
-                                "parts", List.of(Map.of("text", fullPrompt))
-                        )),
+                        "contents", contents,
                         "generationConfig", Map.of(
-                                "temperature", 0.6,
-                                "maxOutputTokens", 512
+                                "temperature", 0.7,
+                                "maxOutputTokens", 1024
                         )
                 );
 
                 String requestBody = objectMapper.writeValueAsString(payload);
-                
-                // Implement strictly sequential fallback logic
+                logger.info("Gemini Request [{}]: {}", currentModel, abbreviateForLog(requestBody));
+
                 GeminiHttpResult result = sendWithHandling(requestBody, currentModel);
+                logger.info("Gemini Response [{}]: Status={}, Body={}", currentModel, result.statusCode(), abbreviateForLog(result.body()));
                 
                 if (result.isSuccess()) {
                     modelManager.reportSuccess(currentModel);
                     return parseAssistantResponse(result.body());
                 }
 
-                // Error Handling Strategy
                 handleModelError(currentModel, result.statusCode(), excludedModels);
 
             } catch (Exception ex) {
@@ -172,17 +195,18 @@ public class GeminiAssistantService {
         return textBuilder.toString();
     }
 
-    private String buildPrompt(String prompt, String context) {
+    private String buildSystemContext(String context) {
         StringBuilder builder = new StringBuilder();
-        builder.append("Bạn là trợ lý tư vấn rượu vang của StrongWine. ")
-                .append("Trả lời ngắn gọn, rõ ràng, bằng tiếng Việt, ưu tiên tư vấn mua hàng thực tế.")
-                .append(" Không bịa thông tin tồn kho hoặc giá nếu không chắc chắn; hãy nói rõ là cần kiểm tra trên website.");
+        builder.append("Bạn là chuyên gia tư vấn rượu vang cao cấp của StrongWine - hệ thống cửa hàng rượu vang lớn nhất Việt Nam.\n")
+                .append("Nhiệm vụ: Tư vấn nhiệt tình, chuyên nghiệp, ưu tiên gợi ý sản phẩm phù hợp với nhu cầu và ngân sách.\n")
+                .append("Phong cách: Ngắn gọn, lịch sự, sử dụng tiếng Việt tự nhiên. Nếu có liệt kê, hãy sử dụng bullet points.\n")
+                .append("Lưu ý: Không bịa đặt thông tin về kỹ thuật nếu không có trong ngữ cảnh. ")
+                .append("Nếu khách hàng hỏi về giá hoặc tồn kho, hãy ưu tiên thông tin trong ngữ cảnh trang, nếu không thấy hãy nhắc khách hàng xem trực tiếp trên web.");
 
-        if (!context.isEmpty()) {
-            builder.append("\n\nNgữ cảnh trang hiện tại: ").append(context);
+        if (context != null && !context.isEmpty()) {
+            builder.append("\n\n[DỮ LIỆU NGỮ CẢNH TRANG HIỆN TẠI]: ").append(context);
         }
 
-        builder.append("\n\nCâu hỏi khách hàng: ").append(prompt);
         return builder.toString();
     }
 

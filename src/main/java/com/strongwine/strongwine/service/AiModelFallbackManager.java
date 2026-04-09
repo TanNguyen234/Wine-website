@@ -15,18 +15,13 @@ import java.util.concurrent.atomic.AtomicLong;
 public class AiModelFallbackManager {
 
     private static final long COOLDOWN_SECONDS = 60;
-    
-    // Strict priority list
+
     private final List<String> priorityList = List.of(
-        "gemini-3.1-flash-lite",
-        "gemini-2.5-flash-lite",
-        "gemini-3-flash",
-        "gemini-2.5-flash",
-        "gemma-3-27b",
-        "gemma-3-12b",
-        "gemma-3-4b",
-        "gemma-3-1b"
-    );
+            "gemini-2.5-flash",
+            "gemini-2.5-flash-lite",
+            "gemini-2.5-pro",
+            "gemini-2.0-flash",
+            "gemini-2.0-flash-lite");
 
     private final Map<String, Instant> cooldowns = new ConcurrentHashMap<>();
     private final Set<String> permanentlyUnavailable = Collections.newSetFromMap(new ConcurrentHashMap<>());
@@ -35,15 +30,15 @@ public class AiModelFallbackManager {
 
     public Optional<String> getNextModel(Set<String> excludedModels) {
         Instant now = Instant.now();
-        
+
         return priorityList.stream()
-            .filter(model -> !permanentlyUnavailable.contains(model))
-            .filter(model -> !excludedModels.contains(model))
-            .filter(model -> {
-                Instant expiry = cooldowns.get(model);
-                return expiry == null || now.isAfter(expiry);
-            })
-            .findFirst();
+                .filter(model -> !permanentlyUnavailable.contains(model))
+                .filter(model -> !excludedModels.contains(model))
+                .filter(model -> {
+                    Instant expiry = cooldowns.get(model);
+                    return expiry == null || now.isAfter(expiry);
+                })
+                .findFirst();
     }
 
     public void reportError(String model, int statusCode) {
@@ -68,10 +63,11 @@ public class AiModelFallbackManager {
 
     public double getSuccessRate(String model) {
         long total = totalCounts.getOrDefault(model, new AtomicLong(0)).get();
-        if (total == 0) return 0.0;
+        if (total == 0)
+            return 0.0;
         return (double) successCounts.getOrDefault(model, new AtomicLong(0)).get() / total;
     }
-    
+
     public List<String> getAllModels() {
         return priorityList;
     }
