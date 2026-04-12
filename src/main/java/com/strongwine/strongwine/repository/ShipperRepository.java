@@ -33,6 +33,10 @@ public interface ShipperRepository extends JpaRepository<Shipper, Long> {
     @Query("SELECT s FROM Shipper s WHERE s.id = :shipperId")
     Optional<Shipper> findByIdForUpdate(@Param("shipperId") Long shipperId);
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT s FROM Shipper s WHERE s.status = :status AND s.isAvailable = true ORDER BY s.lastAssignmentAt ASC NULLS FIRST")
+    Optional<Shipper> findFirstAvailableByRoundRobin(@Param("status") ShipperStatus status);
+
     Optional<Shipper> findFirstByStatusOrderByIdAsc(ShipperStatus status);
 }
 

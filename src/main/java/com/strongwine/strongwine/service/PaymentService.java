@@ -315,7 +315,6 @@ public class PaymentService {
     private boolean finalizeSuccessfulPayment(Payment payment, String transactionType, String payload, String gatewayResponse) {
         if (payment.getStatus() == PaymentStatus.SUCCESS) {
             saveTransaction(payment, transactionType, "SKIPPED", "ALREADY_SUCCESS:" + payload);
-            orderService.markOrderPaid(payment.getOrder().getId(), payment.getPaymentReference());
             return false;
         }
 

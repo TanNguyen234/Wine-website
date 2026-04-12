@@ -37,16 +37,17 @@ public class VNPayApiController {
                                Authentication authentication,
                                RedirectAttributes redirectAttributes) {
         Long userId = getUserId(authentication);
+
+        if (userId == null) {
+            redirectAttributes.addFlashAttribute("error", "Vui long dang nhap de xac thuc thanh toan");
+            return "redirect:/login";
+        }
+
         PaymentCallbackResult result = paymentService.handleVnPayReturn(callbackParams, userId);
 
         if (!result.isSuccess()) {
             redirectAttributes.addFlashAttribute("error", result.getMessage());
             return "redirect:/cart";
-        }
-
-        if (userId == null) {
-            redirectAttributes.addFlashAttribute("success", result.getMessage());
-            return "redirect:/login";
         }
 
         Order order = orderService.getOrderById(result.getOrderId()).orElse(null);

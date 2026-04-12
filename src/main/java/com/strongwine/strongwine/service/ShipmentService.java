@@ -19,6 +19,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
@@ -84,6 +85,7 @@ public class ShipmentService {
     public record BackfillSummary(int created, int existed, int skipped, int failed) {
     }
 
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public EnsureShipmentResult ensureShipmentForPaidOrder(Long orderId) {
         if (orderId == null) {
             throw new IllegalArgumentException("Thiếu mã đơn hàng");
@@ -94,6 +96,7 @@ public class ShipmentService {
         return ensureShipmentForPaidOrder(order);
     }
 
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public EnsureShipmentResult ensureShipmentForPaidOrder(Order order) {
         if (order == null || order.getId() == null) {
             throw new IllegalArgumentException("Đơn hàng không hợp lệ để tạo đơn giao hàng");
@@ -110,6 +113,7 @@ public class ShipmentService {
         return EnsureShipmentResult.CREATED;
     }
 
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public BackfillSummary backfillMissingShipmentsForPaidOrders() {
         int created = 0;
         int existed = 0;
@@ -156,15 +160,22 @@ public class ShipmentService {
             return;
         }
 
-        Shipment shipment = shipmentRepository.findByOrderId(orderId)
-                .orElseThrow(() -> new IllegalStateException("Không thể tạo đơn giao hàng cho đơn: " + orderId));
-        if (shipment.getOtpDeliveryStatus() == OtpDeliveryStatus.SENT
-                && shipment.getOtpCode() != null
-                && Boolean.FALSE.equals(shipment.getOtpVerified())) {
-            return;
+        // OTP sending is isolated: failure here must NOT roll back the shipment
+        try {
+            Shipment shipment = shipmentRepository.findByOrderId(orderId).orElse(null);
+            if (shipment == null) {
+                return;
+            }
+            if (shipment.getOtpDeliveryStatus() == OtpDeliveryStatus.SENT
+                    && shipment.getOtpCode() != null
+                    && Boolean.FALSE.equals(shipment.getOtpVerified())) {
+                return;
+            }
+            sendOtpForShipment(shipment.getId(), "system-order-paid", "ORDER_PAID:" + (paymentReference == null ? "N/A" : paymentReference));
+        } catch (Exception ex) {
+            // Log but do not propagate — shipment exists, OTP will be retried via admin or resend
+            org.slf4j.LoggerFactory.getLogger(getClass()).warn("OTP send failed for order {} after shipment creation", orderId, ex);
         }
-
-        sendOtpForShipment(shipment.getId(), "system-order-paid", "ORDER_PAID:" + (paymentReference == null ? "N/A" : paymentReference));
     }
 
     public Shipment createAutoShipmentForPaidOrder(Order order) {
@@ -863,7 +874,8 @@ public class ShipmentService {
     private Optional<Shipper> findAssignableShipper() {
         Set<Long> checkedShipperIds = new HashSet<>();
 
-        Optional<Shipper> preferred = shipperRepository.findFirstByStatusAndIsAvailableTrueOrderByIdAsc(ShipperStatus.ACTIVE);
+        // Round-robin: prefer shipper with oldest lastAssignmentAt (fairness)
+        Optional<Shipper> preferred = shipperRepository.findFirstAvailableByRoundRobin(ShipperStatus.ACTIVE);
         if (preferred.isPresent()) {
             Long preferredId = preferred.get().getId();
             if (preferredId != null) {
