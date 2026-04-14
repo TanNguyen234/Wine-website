@@ -109,7 +109,7 @@
                                 </td>
                                 <td class="text-muted" th:text="${u.email}">Email</td>
                                 <td>
-                                    <span th:class="${'badge rounded-pill px-3 py-2 ' + (u.role.name() == 'ROLE_ADMIN' ? 'bg-dark text-white' : (u.role.name() == 'ROLE_SHIPPER' ? 'bg-accent-subtle text-accent' : 'bg-light text-dark'))}"
+                                    <span th:class="${'badge rounded-pill px-3 py-2 ' + (u.role == 'ROLE_ADMIN' ? 'bg-dark text-white' : (u.role == 'ROLE_SHIPPER' ? 'bg-accent-subtle text-accent' : 'bg-light text-dark'))}"
                                           th:text="${@enumDisplayService.userRole(u.role)}">Role</span>
                                 </td>
                                 <td class="pe-4 text-end">

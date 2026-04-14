@@ -86,10 +86,10 @@
                                   th:text="${@enumDisplayService.paymentStatus(order.paymentStatus)}"></span>
                         </td>
                         <td>
-                            <span th:class="${'badge rounded-pill px-3 py-2 ' + (order.status == T(com.strongwine.strongwine.entity.OrderStatus).COMPLETED ? 'bg-success' : (order.status == T(com.strongwine.strongwine.entity.OrderStatus).CANCELLED ? 'bg-danger' : 'bg-secondary'))}" 
+                            <span th:class="${'badge rounded-pill px-3 py-2 ' + (order.status == T(com.strongwine.strongwine.entity.OrderStatus).PAID ? 'bg-success' : (order.status == T(com.strongwine.strongwine.entity.OrderStatus).CANCELLED ? 'bg-danger' : 'bg-secondary'))}" 
                                   th:text="${@enumDisplayService.orderStatus(order.status)}"></span>
                         </td>
-                        <td th:with="shipment=${shipmentByOrderId != null ? shipmentByOrderId[order.id] : null}">
+                        <td th:with="shipment=${shipmentByOrderId != null ? shipmentByOrderId.get(order.id) : null}">
                             <div th:if="${shipment != null}">
                                 <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2" th:text="${@enumDisplayService.shipmentStatus(shipment.status)}"></span>
                                 <div class="small text-muted mt-1" th:if="${shipment.shipper != null}">
