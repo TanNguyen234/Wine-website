@@ -2,6 +2,8 @@ package com.strongwine.strongwine.controller.api;
 
 import com.strongwine.strongwine.dto.AiAssistantRequest;
 import com.strongwine.strongwine.service.GeminiAssistantService;
+import com.strongwine.strongwine.service.WineService;
+import com.strongwine.strongwine.entity.Wine;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -16,15 +18,28 @@ import java.util.Map;
 public class AiAssistantApiController {
 
     private final GeminiAssistantService geminiAssistantService;
+    private final WineService wineService;
 
-    public AiAssistantApiController(GeminiAssistantService geminiAssistantService) {
+    public AiAssistantApiController(GeminiAssistantService geminiAssistantService, WineService wineService) {
         this.geminiAssistantService = geminiAssistantService;
+        this.wineService = wineService;
     }
 
     @PostMapping("/chat")
     public ResponseEntity<Map<String, String>> chat(@RequestBody AiAssistantRequest request, jakarta.servlet.http.HttpSession session) {
         String prompt = request == null ? null : request.getPrompt();
         String context = request == null ? null : request.getContext();
+        
+        // Append wine context
+        StringBuilder wineContextBuilder = new StringBuilder(context == null ? "" : context + " | ");
+        wineContextBuilder.append("Thông tin danh sách rượu tại cửa hàng (ID, Tên, Giá VND, Loại): ");
+        List<Wine> allWines = wineService.getAllWines();
+        if (allWines != null) {
+            for (Wine w : allWines) {
+                wineContextBuilder.append(String.format("[%d] %s - %s VND (%s); ", w.getId(), w.getName(), w.getPrice(), w.getType()));
+            }
+        }
+        context = wineContextBuilder.toString();
 
         // 1. Get History from Session
         @SuppressWarnings("unchecked")

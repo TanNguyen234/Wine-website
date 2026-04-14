@@ -158,14 +158,23 @@ h1, h2, h3, h4, h5, h6 {
 .media-cover-lg {
     width: 100%;
     height: 300px;
-    object-fit: cover;
+    object-fit: contain;
     background: var(--bg-subtle);
-    padding: 20px;
+    padding: 24px;
+    transition: var(--transition-base);
+}
+
+.media-cover-xl {
+    width: 100%;
+    height: 500px;
+    object-fit: contain;
+    background: var(--bg-subtle);
+    padding: 40px;
     transition: var(--transition-base);
 }
 
 .product-card:hover .media-cover-lg {
-    transform: scale(1.05);
+    transform: scale(1.02);
 }
 
 .price-tag {

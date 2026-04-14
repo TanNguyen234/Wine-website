@@ -252,8 +252,8 @@ public class GeminiAssistantService {
             return "";
         }
         String normalized = context.trim();
-        if (normalized.length() > 300) {
-            return normalized.substring(0, 300);
+        if (normalized.length() > 5000) {
+            return normalized.substring(0, 5000);
         }
         return normalized;
     }

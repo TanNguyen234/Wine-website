@@ -23,6 +23,11 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.IsoFields;
+import java.util.LinkedHashMap;
+import java.util.TreeMap;
 
 /**
  * Service class for Order business logic
@@ -170,6 +175,41 @@ public class OrderService {
      */
     public Double getTotalRevenue() {
         return orderRepository.getTotalRevenue();
+    }
+
+    public Map<String, Double> getRevenueStatsByWeek() {
+        return orderRepository.findByStatus(OrderStatus.PAID).stream()
+                .collect(Collectors.groupingBy(o -> {
+                    LocalDateTime dt = o.getPaidAt() != null ? o.getPaidAt() : o.getOrderDate();
+                    if (dt == null) return "Unknown";
+                    int year = dt.get(IsoFields.WEEK_BASED_YEAR);
+                    int week = dt.get(IsoFields.WEEK_OF_WEEK_BASED_YEAR);
+                    return String.format("%d-W%02d", year, week);
+                }, TreeMap::new, Collectors.summingDouble(o -> o.getTotalPrice() != null ? o.getTotalPrice().doubleValue() : 0.0)));
+    }
+
+    public Map<String, Double> getRevenueStatsByMonth() {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM");
+        return orderRepository.findByStatus(OrderStatus.PAID).stream()
+                .collect(Collectors.groupingBy(o -> {
+                    LocalDateTime dt = o.getPaidAt() != null ? o.getPaidAt() : o.getOrderDate();
+                    return dt != null ? dt.format(formatter) : "Unknown";
+                }, TreeMap::new, Collectors.summingDouble(o -> o.getTotalPrice() != null ? o.getTotalPrice().doubleValue() : 0.0)));
+    }
+
+    public Map<String, Double> getRevenueStatsByQuarter() {
+        return orderRepository.findByStatus(OrderStatus.PAID).stream()
+                .collect(Collectors.groupingBy(o -> {
+                    LocalDateTime dt = o.getPaidAt() != null ? o.getPaidAt() : o.getOrderDate();
+                    if (dt == null) return "Unknown";
+                    int year = dt.getYear();
+                    int q = dt.get(IsoFields.QUARTER_OF_YEAR);
+                    return String.format("%d-Q%d", year, q);
+                }, TreeMap::new, Collectors.summingDouble(o -> o.getTotalPrice() != null ? o.getTotalPrice().doubleValue() : 0.0)));
+    }
+
+    public List<Order> getPaidOrders() {
+        return orderRepository.findByStatus(OrderStatus.PAID);
     }
 
     public void markOrderPaid(Long orderId, String paymentReference) {

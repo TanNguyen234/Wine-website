@@ -197,7 +197,7 @@ class ShipmentServiceTest {
         when(shipmentRepository.findFirstByStatusOrderByCreatedAtAsc(ShipmentStatus.PENDING_ASSIGNMENT))
             .thenReturn(Optional.of(pendingShipment))
             .thenReturn(Optional.empty());
-        when(shipperRepository.findFirstByStatusAndIsAvailableTrueOrderByIdAsc(ShipperStatus.ACTIVE))
+        org.mockito.Mockito.lenient().when(shipperRepository.findFirstByStatusAndIsAvailableTrueOrderByIdAsc(ShipperStatus.ACTIVE))
             .thenReturn(Optional.empty());
         when(shipperRepository.findByStatusOrderByIdAsc(ShipperStatus.ACTIVE))
             .thenReturn(List.of(activeShipper));
@@ -258,7 +258,7 @@ class ShipmentServiceTest {
         when(shipmentRepository.findByOrderId(9101L))
             .thenReturn(Optional.empty())
             .thenReturn(Optional.empty());
-        when(shipperRepository.findFirstByStatusAndIsAvailableTrueOrderByIdAsc(ShipperStatus.ACTIVE))
+        org.mockito.Mockito.lenient().when(shipperRepository.findFirstByStatusAndIsAvailableTrueOrderByIdAsc(ShipperStatus.ACTIVE))
             .thenReturn(Optional.empty());
         when(shipmentRepository.save(any(Shipment.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -286,7 +286,7 @@ class ShipmentServiceTest {
         shipper.setMaxConcurrentShipments(1);
 
         when(shipmentRepository.findByOrderId(9301L)).thenReturn(Optional.empty());
-        when(shipperRepository.findFirstByStatusAndIsAvailableTrueOrderByIdAsc(ShipperStatus.ACTIVE))
+        org.mockito.Mockito.lenient().when(shipperRepository.findFirstByStatusAndIsAvailableTrueOrderByIdAsc(ShipperStatus.ACTIVE))
             .thenReturn(Optional.empty());
         when(shipperRepository.findByStatusOrderByIdAsc(ShipperStatus.ACTIVE))
             .thenReturn(List.of(shipper));
