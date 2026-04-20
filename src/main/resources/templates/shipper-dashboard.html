@@ -71,6 +71,11 @@
                             <div class="col-sm-6">
                                 <div class="small text-muted text-uppercase fw-bold mb-1" style="font-size: 0.65rem;">Địa chỉ giao hàng</div>
                                 <div class="text-dark small lh-sm" th:text="${s.shippingAddress}">Địa chỉ cụ thể</div>
+                                
+                                <div th:if="${s.order.note != null and !s.order.note.isBlank()}" class="mt-3">
+                                    <div class="small text-muted text-uppercase fw-bold mb-1" style="font-size: 0.65rem;">Lưu ý</div>
+                                    <div class="text-danger small fw-medium lh-sm bg-danger-subtle p-2 rounded-2" th:text="${s.order.note}">Ghi chú đơn hàng</div>
+                                </div>
                             </div>
                         </div>
                     </div>

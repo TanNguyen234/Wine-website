@@ -64,10 +64,15 @@ public class CartController {
         if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getPrincipal())) {
             return null;
         }
-        if (!(authentication.getPrincipal() instanceof UserDetails userDetails)) {
+        String username;
+        if (authentication.getPrincipal() instanceof UserDetails userDetails) {
+            username = userDetails.getUsername();
+        } else {
+            username = authentication.getName();
+        }
+        if (username == null || username.isBlank()) {
             return null;
         }
-        String username = userDetails.getUsername();
         User user = userRepository.findByUsername(username).orElse(null);
         return user != null ? user.getId() : null;
     }

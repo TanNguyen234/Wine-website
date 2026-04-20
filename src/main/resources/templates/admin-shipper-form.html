@@ -86,15 +86,21 @@
                     <form th:action="${editingShipper != null ? '/admin/shippers/edit/' + editingShipper.id : '/admin/shippers/create'}" method="post">
                         <div class="mb-4">
                             <label class="form-label small fw-bold text-muted text-uppercase mb-2">Tài khoản liên kết</label>
+                            <div th:if="${users == null or #lists.isEmpty(users)}" class="alert alert-warning border-0 rounded-3 py-2 px-3 small mb-2">
+                                <i class="fa-solid fa-triangle-exclamation me-1"></i>
+                                Không có tài khoản Shipper nào còn trống. Vui lòng tạo tài khoản có vai trò <strong>SHIPPER</strong> trước tại
+                                <a href="/admin/users" class="alert-link">Quản lý người dùng</a>.
+                            </div>
                             <div class="input-group">
                                 <span class="input-group-text bg-light border-0 px-3 text-muted"><i class="fa-solid fa-user-circle small"></i></span>
-                                <select class="form-select border-0 bg-light px-3 py-2" name="userId" required>
+                                <select class="form-select border-0 bg-light px-3 py-2" name="userId"
+                                        th:required="${users != null and not #lists.isEmpty(users)}">
                                     <option value="" disabled th:selected="${editingShipper == null}">-- Chọn tài khoản người dùng --</option>
                                     <option th:each="u : ${users}" th:value="${u.id}" th:text="${u.username}"
                                             th:selected="${editingShipper != null and editingShipper.user.id == u.id}"></option>
                                 </select>
                             </div>
-                            <div class="form-text small">Chỉ những tài khoản có vai trò Shipper mới hiển thị ở đây.</div>
+                            <div class="form-text small">Chỉ những tài khoản có vai trò Shipper chưa được liên kết mới hiển thị ở đây.</div>
                         </div>
 
                         <div class="row g-4 mb-4">
@@ -147,7 +153,9 @@
 
                         <div class="d-grid gap-3 d-md-flex justify-content-md-end">
                             <a class="btn btn-light rounded-pill px-5 py-2 fw-bold text-muted" href="/admin/shippers">Hủy bỏ</a>
-                            <button class="btn btn-dark rounded-pill px-5 py-2 fw-bold shadow-sm" type="submit">
+                            <button class="btn btn-dark rounded-pill px-5 py-2 fw-bold shadow-sm" type="submit"
+                                    th:disabled="${editingShipper == null and (users == null or #lists.isEmpty(users))}"
+                                    th:title="${editingShipper == null and (users == null or #lists.isEmpty(users)) ? 'Không thể tạo khi chưa có tài khoản Shipper' : ''}">
                                 <i class="fa-solid fa-floppy-disk me-2 small"></i> Lưu hồ sơ
                             </button>
                         </div>

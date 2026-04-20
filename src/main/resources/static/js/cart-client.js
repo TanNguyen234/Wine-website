@@ -296,7 +296,7 @@
                     email: form.querySelector("#email")?.value || "",
                     address: form.querySelector("#address")?.value || "",
                     note: form.querySelector("#note")?.value || "",
-                    paymentMethod: form.querySelector("#paymentMethod")?.value || "",
+                    paymentMethod: form.querySelector("input[name='paymentMethod']:checked")?.value || "",
                     checkoutToken: checkoutTokenInput ? checkoutTokenInput.value : "",
                     deliveryLat: null,
                     deliveryLng: null,

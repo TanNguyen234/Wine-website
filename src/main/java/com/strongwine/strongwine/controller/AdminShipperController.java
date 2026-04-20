@@ -36,13 +36,18 @@ public class AdminShipperController {
     }
 
     @PostMapping("/create")
-    public String createShipper(@RequestParam Long userId,
-                                @RequestParam String name,
-                                @RequestParam String phone,
+    public String createShipper(@RequestParam(required = false) Long userId,
+                                @RequestParam(required = false) String name,
+                                @RequestParam(required = false) String phone,
                                 @RequestParam(required = false) String vehicleType,
                                 @RequestParam(defaultValue = "ACTIVE") ShipperStatus status,
                                 @RequestParam(defaultValue = "false") boolean isAvailable,
                                 RedirectAttributes redirectAttributes) {
+        if (userId == null) {
+            redirectAttributes.addFlashAttribute("error",
+                    "Vui lòng chọn tài khoản người dùng. Hãy tạo tài khoản có vai trò SHIPPER trước.");
+            return "redirect:/admin/shippers/create";
+        }
         try {
             shipperService.createShipper(userId, name, phone, vehicleType, status, isAvailable);
             redirectAttributes.addFlashAttribute("success", "Tạo shipper thành công");
@@ -69,13 +74,17 @@ public class AdminShipperController {
 
     @PostMapping("/edit/{id}")
     public String updateShipper(@PathVariable Long id,
-                                @RequestParam Long userId,
-                                @RequestParam String name,
-                                @RequestParam String phone,
+                                @RequestParam(required = false) Long userId,
+                                @RequestParam(required = false) String name,
+                                @RequestParam(required = false) String phone,
                                 @RequestParam(required = false) String vehicleType,
                                 @RequestParam(defaultValue = "ACTIVE") ShipperStatus status,
                                 @RequestParam(defaultValue = "false") boolean isAvailable,
                                 RedirectAttributes redirectAttributes) {
+        if (userId == null) {
+            redirectAttributes.addFlashAttribute("error", "Vui lòng chọn tài khoản người dùng hợp lệ.");
+            return "redirect:/admin/shippers/edit/" + id;
+        }
         try {
             shipperService.updateShipper(id, userId, name, phone, vehicleType, status, isAvailable);
             redirectAttributes.addFlashAttribute("success", "Cập nhật shipper thành công");

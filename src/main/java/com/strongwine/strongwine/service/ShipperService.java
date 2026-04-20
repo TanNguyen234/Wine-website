@@ -12,6 +12,8 @@ import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -66,16 +68,24 @@ public class ShipperService {
 
     @Transactional(readOnly = true)
     public List<User> getAvailableUsersForShipper() {
+        // Fetch all shipper user IDs in one query to avoid N+1 problem
+        Set<Long> assignedUserIds = shipperRepository.findAll().stream()
+                .map(s -> s.getUser().getId())
+                .collect(java.util.stream.Collectors.toSet());
         return userRepository.findByRole("SHIPPER").stream()
-                .filter(u -> !shipperRepository.existsByUserId(u.getId()))
+                .filter(u -> !assignedUserIds.contains(u.getId()))
                 .toList();
     }
 
     @Transactional(readOnly = true)
     public List<User> getAvailableUsersForShipper(Long shipperId) {
         Long currentUserId = shipperId == null ? null : getShipperById(shipperId).getUser().getId();
+        // Fetch all shipper user IDs in one query to avoid N+1 problem
+        Set<Long> assignedUserIds = shipperRepository.findAll().stream()
+                .map(s -> s.getUser().getId())
+                .collect(java.util.stream.Collectors.toSet());
         return userRepository.findByRole("SHIPPER").stream()
-                .filter(u -> u.getId().equals(currentUserId) || !shipperRepository.existsByUserId(u.getId()))
+                .filter(u -> u.getId().equals(currentUserId) || !assignedUserIds.contains(u.getId()))
                 .toList();
     }
 
@@ -87,21 +97,29 @@ public class ShipperService {
                                  Boolean isAvailable) {
         User user = getShipperUser(userId);
         if (shipperRepository.existsByUserId(user.getId())) {
-            throw new IllegalArgumentException("Selected user already has a shipper profile");
+            throw new IllegalArgumentException("User đã có hồ sơ shipper");
         }
 
         Shipper shipper = new Shipper();
         shipper.setUser(user);
-        shipper.setName(requireText(name, "Shipper name is required"));
-        shipper.setPhone(requireText(phone, "Shipper phone is required"));
+        shipper.setName(requireText(name, "Tên shipper không được để trống"));
+        shipper.setPhone(requireText(phone, "Số điện thoại không được để trống"));
         shipper.setVehicleType(trimToNull(vehicleType));
         shipper.setStatus(status == null ? ShipperStatus.ACTIVE : status);
-        shipper.setIsAvailable(isAvailable != null && isAvailable);
+        shipper.setIsAvailable(Boolean.TRUE.equals(isAvailable));
         shipper.setCreatedAt(LocalDateTime.now());
         shipper.setUpdatedAt(LocalDateTime.now());
 
         Shipper saved = shipperRepository.save(shipper);
-        shipmentService.onShipperProfileUpdated(saved.getId());
+        // Flush before calling dispatch to avoid pessimistic-lock conflict within same transaction
+        shipperRepository.flush();
+        try {
+            shipmentService.onShipperProfileUpdated(saved.getId());
+        } catch (Exception ex) {
+            // onShipperProfileUpdated is best-effort: shipper creation must not fail if dispatch fails
+            org.slf4j.LoggerFactory.getLogger(getClass()).warn(
+                    "onShipperProfileUpdated failed for new shipper id={}: {}", saved.getId(), ex.getMessage());
+        }
         return saved;
     }
 
@@ -116,19 +134,26 @@ public class ShipperService {
         User user = getShipperUser(userId);
 
         if (shipperRepository.existsByUserIdAndIdNot(user.getId(), id)) {
-            throw new IllegalArgumentException("Selected user already belongs to another shipper profile");
+            throw new IllegalArgumentException("User đã thuộc về hồ sơ shipper khác");
         }
 
         shipper.setUser(user);
-        shipper.setName(requireText(name, "Shipper name is required"));
-        shipper.setPhone(requireText(phone, "Shipper phone is required"));
+        shipper.setName(requireText(name, "Tên shipper không được để trống"));
+        shipper.setPhone(requireText(phone, "Số điện thoại không được để trống"));
         shipper.setVehicleType(trimToNull(vehicleType));
         shipper.setStatus(status == null ? ShipperStatus.ACTIVE : status);
-        shipper.setIsAvailable(isAvailable != null && isAvailable);
+        shipper.setIsAvailable(Boolean.TRUE.equals(isAvailable));
         shipper.setUpdatedAt(LocalDateTime.now());
 
         Shipper saved = shipperRepository.save(shipper);
-        shipmentService.onShipperProfileUpdated(saved.getId());
+        // Flush before calling dispatch to avoid pessimistic-lock conflict within same transaction
+        shipperRepository.flush();
+        try {
+            shipmentService.onShipperProfileUpdated(saved.getId());
+        } catch (Exception ex) {
+            org.slf4j.LoggerFactory.getLogger(getClass()).warn(
+                    "onShipperProfileUpdated failed for shipper id={}: {}", saved.getId(), ex.getMessage());
+        }
         return saved;
     }
 
@@ -150,7 +175,7 @@ public class ShipperService {
     }
 
     private String requireText(String value, String message) {
-        if (value == null || value.trim().isBlank()) {
+        if (value == null || value.isBlank()) {
             throw new IllegalArgumentException(message);
         }
         return value.trim();
