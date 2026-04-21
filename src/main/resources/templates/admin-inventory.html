@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý kho hàng - StrongWine</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="/css/app.css">
+</head>
+<body class="admin-page">
+<div class="admin-layout">
+    <!-- Sidebar -->
+    <aside class="admin-sidebar shadow-sm">
+        <div class="px-4 py-4 mb-3">
+            <a class="admin-sidebar-brand d-flex align-items-center gap-3" href="/admin">
+                <span class="brand-logo shadow-sm"><i class="fa-solid fa-wine-glass"></i></span>
+                <div class="lh-1">
+                    <span class="fw-bold d-block">StrongWine</span>
+                    <small class="text-muted text-uppercase fw-bold" style="font-size: 0.65rem; letter-spacing: 0.05em;">Admin Console</small>
+                </div>
+            </a>
+        </div>
+        
+        <nav class="admin-nav px-3">
+            <div class="text-muted small fw-bold text-uppercase px-3 mb-2" style="font-size: 0.7rem; letter-spacing: 0.1em;">Vận hành</div>
+            <a class="admin-nav-link" href="/admin">
+                <i class="fa-solid fa-chart-pie"></i><span>Tổng quan</span>
+            </a>
+            <a class="admin-nav-link" href="/admin/shipments">
+                <i class="fa-solid fa-truck-ramp-box"></i><span>Đơn giao hàng</span>
+            </a>
+            <a class="admin-nav-link" href="/admin/shipments/traffic">
+                <i class="fa-solid fa-map-location-dot"></i><span>Trạm điều phối</span>
+            </a>
+            
+            <div class="text-muted small fw-bold text-uppercase px-3 mt-4 mb-2" style="font-size: 0.7rem; letter-spacing: 0.1em;">Quản lý</div>
+            <a class="admin-nav-link active" href="/admin/inventory">
+                <i class="fa-solid fa-boxes-stacked"></i><span>Kho hàng</span>
+            </a>
+            <a class="admin-nav-link" href="/admin/users">
+                <i class="fa-solid fa-users"></i><span>Người dùng</span>
+            </a>
+            <a class="admin-nav-link" href="/admin/shippers">
+                <i class="fa-solid fa-id-badge"></i><span>Đội ngũ Shipper</span>
+            </a>
+            <a class="admin-nav-link" href="/wines">
+                <i class="fa-solid fa-store"></i><span>Xem cửa hàng</span>
+            </a>
+        </nav>
+        
+        <div class="mt-auto px-3 pb-4">
+            <form th:action="@{/logout}" method="post">
+                <button type="submit" class="btn btn-light w-100 text-danger small fw-bold border-0 py-2">
+                    <i class="fa-solid fa-right-from-bracket me-2"></i> Đăng xuất
+                </button>
+            </form>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="admin-main">
+        <header class="admin-topbar sticky-top bg-white border-bottom px-4">
+            <div class="d-flex align-items-center justify-content-between w-100">
+                <div>
+                    <h2 class="h5 fw-bold mb-0">Quản lý kho hàng</h2>
+                    <p class="text-muted small mb-0 d-none d-md-block">Nhập/xuất kho, theo dõi tồn kho, cảnh báo hàng sắp hết.</p>
+                </div>
+                <div class="d-flex align-items-center gap-3">
+                    <div class="position-relative me-2">
+                        <i class="fa-solid fa-bell text-muted fs-5"></i>
+                        <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle" th:if="${lowStockCount > 0}"></span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="admin-content p-4">
+            <div th:if="${success}" class="alert alert-success border-0 shadow-sm mb-4 alert-dismissible fade show fade-up" role="alert">
+                <i class="fa-solid fa-circle-check me-2"></i>
+                <span th:text="${success}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            <div th:if="${error}" class="alert alert-danger border-0 shadow-sm mb-4 alert-dismissible fade show fade-up" role="alert">
+                <i class="fa-solid fa-circle-xmark me-2"></i>
+                <span th:text="${error}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+
+            <!-- Statistical Tiles -->
+            <div class="row g-4 mb-4 fade-up">
+                <div class="col-6 col-lg-3">
+                    <div class="bg-white border rounded-4 p-4 shadow-sm h-100 transition-base hover-shadow">
+                        <div class="small fw-bold text-muted text-uppercase mb-2" style="font-size: 0.65rem;">Tổng sản phẩm trong kho</div>
+                        <div class="h3 fw-bold mb-0 text-dark" th:text="${inventories.size()}">0</div>
+                    </div>
+                </div>
+                <div class="col-6 col-lg-3">
+                    <div class="bg-white border rounded-4 p-4 shadow-sm h-100 transition-base hover-shadow" th:classappend="${lowStockCount > 0 ? ' border-danger border-2' : ''}">
+                        <div class="small fw-bold text-uppercase mb-2" th:class="${lowStockCount > 0 ? 'text-danger' : 'text-muted'}" style="font-size: 0.65rem;">Cảnh báo tồn kho thấp</div>
+                        <div class="h3 fw-bold mb-0" th:class="${lowStockCount > 0 ? 'text-danger' : 'text-dark'}" th:text="${lowStockCount}">0</div>
+                    </div>
+                </div>
+                <div class="col-6 col-lg-3">
+                    <div class="bg-white border rounded-4 p-4 shadow-sm h-100 transition-base hover-shadow">
+                        <div class="small fw-bold text-muted text-uppercase mb-2" style="font-size: 0.65rem;">Tổng giao dịch kho</div>
+                        <div class="h3 fw-bold mb-0 text-dark" th:text="${transactions.size()}">0</div>
+                    </div>
+                </div>
+                <div class="col-6 col-lg-3">
+                    <div class="bg-white border rounded-4 p-4 shadow-sm h-100 transition-base hover-shadow">
+                        <div class="small fw-bold text-muted text-uppercase mb-2" style="font-size: 0.65rem;">Nhà kho</div>
+                        <div class="h3 fw-bold mb-0 text-dark" th:text="${warehouses.size()}">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Low Stock Alerts -->
+            <div th:if="${!lowStockItems.isEmpty()}" class="bg-white border border-danger border-opacity-25 rounded-4 shadow-sm p-4 mb-4 fade-up">
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <i class="fa-solid fa-triangle-exclamation text-danger fs-5"></i>
+                    <h3 class="h6 fw-bold mb-0 text-danger">Cảnh báo tồn kho thấp</h3>
+                    <span class="badge bg-danger rounded-pill" th:text="${lowStockItems.size()}">0</span>
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-6 col-xl-4" th:each="item : ${lowStockItems}">
+                        <div class="d-flex align-items-center gap-3 p-3 bg-danger bg-opacity-10 rounded-3">
+                            <div class="bg-danger bg-opacity-25 rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; min-width: 40px;">
+                                <i class="fa-solid fa-warning text-danger"></i>
+                            </div>
+                            <div class="flex-fill overflow-hidden">
+                                <div class="fw-bold text-truncate" th:text="${item.wine.name}">Wine Name</div>
+                                <div class="small text-muted">
+                                    <span th:text="${@enumDisplayService.wineType(item.wine.type)}">Type</span>
+                                    <span th:if="${item.wine.category != null}" class="ms-1">
+                                        · <span th:text="${item.wine.category.name}">Category</span>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="text-end" style="min-width: 80px;">
+                                <div class="fw-bold text-danger" th:text="'Còn: ' + ${item.availableQuantity}">0</div>
+                                <div class="small text-muted" th:text="'Mức cảnh báo: ' + ${item.reorderLevel}">10</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabbed Interface -->
+            <div class="fade-up">
+                <ul class="nav nav-pills custom-pills mb-4 gap-2" id="inventoryTabs" role="tablist">
+                    <li class="nav-item"><button class="nav-link active px-4 py-2 fw-bold" data-bs-toggle="tab" data-bs-target="#stockOverview" type="button">Tổng quan tồn kho</button></li>
+                    <li class="nav-item"><button class="nav-link px-4 py-2 fw-bold" data-bs-toggle="tab" data-bs-target="#stockOperations" type="button">Nhập / Xuất kho</button></li>
+                    <li class="nav-item"><button class="nav-link px-4 py-2 fw-bold" data-bs-toggle="tab" data-bs-target="#transactionHistory" type="button">Lịch sử giao dịch</button></li>
+                </ul>
+
+                <div class="tab-content border-top pt-4">
+                    <!-- Stock Overview Tab -->
+                    <section class="tab-pane fade show active" id="stockOverview">
+                        <!-- Filter by category -->
+                        <div class="d-flex justify-content-between align-items-center mb-4 px-2">
+                            <h3 class="h5 fw-bold mb-0">Tồn kho theo sản phẩm</h3>
+                            <div class="d-flex gap-2">
+                                <select class="form-select form-select-sm" id="categoryFilter" style="width: auto;" onchange="filterInventoryByCategory(this.value)">
+                                    <option value="all">Tất cả loại</option>
+                                    <option value="Red">Vang đỏ</option>
+                                    <option value="White">Vang trắng</option>
+                                    <option value="Rose">Vang hồng</option>
+                                    <option value="Sparkling">Vang sủi</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="bg-white border rounded-4 shadow-sm overflow-hidden">
+                            <div class="table-responsive">
+                                <table class="table table-modern border-0 mb-0" id="inventoryTable">
+                                    <thead>
+                                        <tr>
+                                            <th class="ps-4">Sản phẩm</th>
+                                            <th>Loại</th>
+                                            <th>Danh mục</th>
+                                            <th>Kho hàng</th>
+                                            <th>Tổng tồn</th>
+                                            <th>Đã giữ</th>
+                                            <th>Khả dụng</th>
+                                            <th class="pe-4">Mức cảnh báo</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="inv : ${inventories}" th:attr="data-wine-type=${inv.wine.type}">
+                                            <td class="ps-4 fw-bold" th:text="${inv.wine.name}">Wine</td>
+                                            <td>
+                                                <span class="badge bg-light text-dark border rounded-pill px-3 py-1" th:text="${@enumDisplayService.wineType(inv.wine.type)}">Type</span>
+                                            </td>
+                                            <td>
+                                                <span th:if="${inv.wine.category != null}" th:text="${inv.wine.category.name}">Category</span>
+                                                <span th:unless="${inv.wine.category != null}" class="text-muted">—</span>
+                                            </td>
+                                            <td th:text="${inv.warehouse.name}">Warehouse</td>
+                                            <td th:text="${inv.currentQuantity}">0</td>
+                                            <td>
+                                                <span th:class="${inv.reservedQuantity > 0 ? 'badge bg-warning-subtle text-warning rounded-pill px-3 py-1' : ''}" th:text="${inv.reservedQuantity}">0</span>
+                                            </td>
+                                            <td>
+                                                <span th:class="${'badge rounded-pill px-3 py-2 ' + (inv.availableQuantity <= inv.reorderLevel ? 'bg-danger-subtle text-danger' : (inv.availableQuantity <= inv.reorderLevel * 2 ? 'bg-warning-subtle text-warning' : 'bg-success-subtle text-success'))}"
+                                                      th:text="${inv.availableQuantity}">0</span>
+                                            </td>
+                                            <td class="pe-4 text-muted small" th:text="${inv.reorderLevel}">10</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Stock Operations Tab -->
+                    <section class="tab-pane fade" id="stockOperations">
+                        <div class="row g-4 px-2">
+                            <div class="col-lg-6">
+                                <div class="bg-white border rounded-4 shadow-sm p-4 h-100">
+                                    <div class="d-flex align-items-center gap-2 mb-4">
+                                        <div class="bg-success bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                            <i class="fa-solid fa-arrow-down text-success"></i>
+                                        </div>
+                                        <h3 class="h6 fw-bold mb-0">Nhập kho</h3>
+                                    </div>
+                                    <form id="importForm" method="post" th:action="@{/admin/inventory/import/__${inventories.isEmpty() ? 0 : inventories[0].wine.id}__}">
+                                        <div class="mb-3">
+                                            <label class="form-label small fw-bold text-muted text-uppercase">Sản phẩm *</label>
+                                            <select class="form-select" id="importWineId" name="wineId" required onchange="updateImportFormAction()">
+                                                <option value="">— Chọn sản phẩm —</option>
+                                                <option th:each="inv : ${inventories}" th:value="${inv.wine.id}" th:text="${inv.wine.name}" th:attr="data-warehouse-id=${inv.warehouse.id}">Wine</option>
+                                            </select>
+                                        </div>
+                                        <input type="hidden" id="importWarehouseId" name="warehouseId" th:value="${warehouses.isEmpty() ? '' : warehouses[0].id}">
+                                        <div class="mb-3">
+                                            <label class="form-label small fw-bold text-muted text-uppercase">Số lượng *</label>
+                                            <input class="form-control" type="number" name="quantity" min="1" value="1" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label small fw-bold text-muted text-uppercase">Lý do nhập kho *</label>
+                                            <select class="form-select" id="importReasonSelect" onchange="toggleCustomNote('import')" required>
+                                                <option value="">— Chọn lý do —</option>
+                                                <option value="Nhập từ nhà cung cấp">Nhập từ nhà cung cấp</option>
+                                                <option value="Hàng trả về từ đơn hàng">Hàng trả về từ đơn hàng</option>
+                                                <option value="Kiểm kê điều chỉnh tăng">Kiểm kê điều chỉnh tăng</option>
+                                                <option value="Chuyển kho (nhận vào)">Chuyển kho (nhận vào)</option>
+                                                <option value="custom">Lý do khác...</option>
+                                            </select>
+                                        </div>
+                                        <div class="mb-3 d-none" id="importCustomNoteGroup">
+                                            <label class="form-label small fw-bold text-muted text-uppercase">Ghi chú tùy chỉnh *</label>
+                                            <input class="form-control" type="text" id="importCustomNote" placeholder="Nhập lý do cụ thể...">
+                                        </div>
+                                        <input type="hidden" name="note" id="importNote">
+                                        <button class="btn btn-success w-100 py-2" type="submit" onclick="return prepareNote('import')">
+                                            <i class="fa-solid fa-arrow-down me-1"></i> Xác nhận nhập kho
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                            <div class="col-lg-6">
+                                <div class="bg-white border rounded-4 shadow-sm p-4 h-100">
+                                    <div class="d-flex align-items-center gap-2 mb-4">
+                                        <div class="bg-danger bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                            <i class="fa-solid fa-arrow-up text-danger"></i>
+                                        </div>
+                                        <h3 class="h6 fw-bold mb-0">Xuất kho</h3>
+                                    </div>
+                                    <form id="exportForm" method="post" th:action="@{/admin/inventory/export/__${inventories.isEmpty() ? 0 : inventories[0].wine.id}__}">
+                                        <div class="mb-3">
+                                            <label class="form-label small fw-bold text-muted text-uppercase">Sản phẩm *</label>
+                                            <select class="form-select" id="exportWineId" name="wineId" required onchange="updateExportFormAction()">
+                                                <option value="">— Chọn sản phẩm —</option>
+                                                <option th:each="inv : ${inventories}" th:value="${inv.wine.id}" th:text="${inv.wine.name + ' (Khả dụng: ' + inv.availableQuantity + ')'}" th:attr="data-warehouse-id=${inv.warehouse.id},data-available=${inv.availableQuantity}">Wine</option>
+                                            </select>
+                                        </div>
+                                        <input type="hidden" id="exportWarehouseId" name="warehouseId" th:value="${warehouses.isEmpty() ? '' : warehouses[0].id}">
+                                        <div class="mb-3">
+                                            <label class="form-label small fw-bold text-muted text-uppercase">Số lượng *</label>
+                                            <input class="form-control" type="number" name="quantity" id="exportQuantity" min="1" value="1" required>
+                                            <div class="form-text text-muted" id="exportAvailableInfo"></div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label small fw-bold text-muted text-uppercase">Lý do xuất kho *</label>
+                                            <select class="form-select" id="exportReasonSelect" onchange="toggleCustomNote('export')" required>
+                                                <option value="">— Chọn lý do —</option>
+                                                <option value="Hỏng / Hết hạn sử dụng">Hỏng / Hết hạn sử dụng</option>
+                                                <option value="Chuyển kho (xuất đi)">Chuyển kho (xuất đi)</option>
+                                                <option value="Kiểm kê điều chỉnh giảm">Kiểm kê điều chỉnh giảm</option>
+                                                <option value="Xuất trả nhà cung cấp">Xuất trả nhà cung cấp</option>
+                                                <option value="Xuất cho sự kiện / quà tặng">Xuất cho sự kiện / quà tặng</option>
+                                                <option value="custom">Lý do khác...</option>
+                                            </select>
+                                        </div>
+                                        <div class="mb-3 d-none" id="exportCustomNoteGroup">
+                                            <label class="form-label small fw-bold text-muted text-uppercase">Ghi chú tùy chỉnh *</label>
+                                            <input class="form-control" type="text" id="exportCustomNote" placeholder="Nhập lý do cụ thể...">
+                                        </div>
+                                        <input type="hidden" name="note" id="exportNote">
+                                        <button class="btn btn-danger w-100 py-2" type="submit" onclick="return prepareNote('export')">
+                                            <i class="fa-solid fa-arrow-up me-1"></i> Xác nhận xuất kho
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Transaction History Tab -->
+                    <section class="tab-pane fade" id="transactionHistory">
+                        <div class="d-flex justify-content-between align-items-center mb-4 px-2">
+                            <h3 class="h5 fw-bold mb-0">Lịch sử giao dịch kho</h3>
+                            <span class="badge bg-dark rounded-pill px-3 py-2" th:text="${transactions.size() + ' giao dịch gần nhất'}">0</span>
+                        </div>
+                        <div class="bg-white border rounded-4 shadow-sm overflow-hidden">
+                            <div class="table-responsive">
+                                <table class="table table-modern border-0 mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th class="ps-4">Thời gian</th>
+                                            <th>Sản phẩm</th>
+                                            <th>Loại thao tác</th>
+                                            <th>Nguồn</th>
+                                            <th>Số lượng</th>
+                                            <th>Ghi chú</th>
+                                            <th class="pe-4">Người thực hiện</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="tx : ${transactions}">
+                                            <td class="ps-4 small text-muted" th:text="${#temporals.format(tx.createdAt, 'dd/MM/yyyy HH:mm')}">Time</td>
+                                            <td class="fw-bold" th:text="${tx.wine.name}">Wine</td>
+                                            <td>
+                                                <span th:class="${'badge rounded-pill px-3 py-2 ' + 
+                                                    (tx.operationType.name() == 'IMPORT' ? 'bg-success-subtle text-success' : 
+                                                    (tx.operationType.name() == 'EXPORT' ? 'bg-danger-subtle text-danger' : 
+                                                    (tx.operationType.name() == 'ORDER' ? 'bg-info-subtle text-info' : 
+                                                    (tx.operationType.name() == 'CANCEL' ? 'bg-warning-subtle text-warning' : 'bg-secondary-subtle text-secondary'))))}"
+                                                      th:text="${@enumDisplayService.inventoryOperation(tx.operationType)}">Op</span>
+                                            </td>
+                                            <td>
+                                                <span class="small" th:text="${@enumDisplayService.inventoryReferenceType(tx.referenceType)}">Ref</span>
+                                                <span th:if="${tx.referenceId != null}" class="small text-muted" th:text="' #' + ${tx.referenceId}"></span>
+                                            </td>
+                                            <td>
+                                                <span th:class="${tx.operationType.name() == 'IMPORT' ? 'text-success fw-bold' : (tx.operationType.name() == 'EXPORT' ? 'text-danger fw-bold' : 'fw-bold')}"
+                                                      th:text="${(tx.operationType.name() == 'IMPORT' ? '+' : (tx.operationType.name() == 'EXPORT' ? '-' : '')) + tx.quantity}">0</span>
+                                            </td>
+                                            <td class="small" style="max-width: 200px;">
+                                                <span th:if="${tx.note != null and !tx.note.isBlank()}" th:text="${tx.note}" class="text-truncate d-inline-block" style="max-width: 200px;" th:title="${tx.note}">Note</span>
+                                                <span th:unless="${tx.note != null and !tx.note.isBlank()}" class="text-muted">—</span>
+                                            </td>
+                                            <td class="pe-4 small text-muted" th:text="${tx.createdBy}">User</td>
+                                        </tr>
+                                        <tr th:if="${transactions.isEmpty()}">
+                                            <td colspan="7" class="text-center text-muted py-5">
+                                                <i class="fa-regular fa-folder-open fs-1 mb-3 opacity-25 d-block"></i>
+                                                Chưa có giao dịch kho nào được ghi nhận.
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Filter inventory table by wine type
+    function filterInventoryByCategory(type) {
+        const rows = document.querySelectorAll('#inventoryTable tbody tr');
+        rows.forEach(row => {
+            if (type === 'all' || row.getAttribute('data-wine-type') === type) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+
+    // Toggle custom note input
+    function toggleCustomNote(prefix) {
+        const select = document.getElementById(prefix + 'ReasonSelect');
+        const customGroup = document.getElementById(prefix + 'CustomNoteGroup');
+        const customInput = document.getElementById(prefix + 'CustomNote');
+        if (select.value === 'custom') {
+            customGroup.classList.remove('d-none');
+            customInput.setAttribute('required', 'required');
+        } else {
+            customGroup.classList.add('d-none');
+            customInput.removeAttribute('required');
+            customInput.value = '';
+        }
+    }
+
+    // Prepare note before submit
+    function prepareNote(prefix) {
+        const select = document.getElementById(prefix + 'ReasonSelect');
+        const customInput = document.getElementById(prefix + 'CustomNote');
+        const noteInput = document.getElementById(prefix + 'Note');
+
+        if (!select.value) {
+            alert('Vui lòng chọn lý do ' + (prefix === 'import' ? 'nhập' : 'xuất') + ' kho.');
+            return false;
+        }
+
+        if (select.value === 'custom') {
+            if (!customInput.value.trim()) {
+                alert('Vui lòng nhập lý do cụ thể.');
+                customInput.focus();
+                return false;
+            }
+            noteInput.value = customInput.value.trim();
+        } else {
+            noteInput.value = select.value;
+        }
+        return true;
+    }
+
+    // Update import form action with selected wine ID
+    function updateImportFormAction() {
+        const select = document.getElementById('importWineId');
+        const form = document.getElementById('importForm');
+        const wineId = select.value || '0';
+        form.action = '/admin/inventory/import/' + wineId;
+
+        // Update warehouse ID from selected option
+        const selectedOption = select.options[select.selectedIndex];
+        if (selectedOption && selectedOption.dataset.warehouseId) {
+            document.getElementById('importWarehouseId').value = selectedOption.dataset.warehouseId;
+        }
+    }
+
+    // Update export form action with selected wine ID
+    function updateExportFormAction() {
+        const select = document.getElementById('exportWineId');
+        const form = document.getElementById('exportForm');
+        const wineId = select.value || '0';
+        form.action = '/admin/inventory/export/' + wineId;
+
+        // Update warehouse ID and show available qty
+        const selectedOption = select.options[select.selectedIndex];
+        if (selectedOption && selectedOption.dataset.warehouseId) {
+            document.getElementById('exportWarehouseId').value = selectedOption.dataset.warehouseId;
+        }
+        const available = selectedOption ? (selectedOption.dataset.available || '0') : '0';
+        const qtyInput = document.getElementById('exportQuantity');
+        qtyInput.max = available;
+        document.getElementById('exportAvailableInfo').textContent = 'Khả dụng: ' + available + ' sản phẩm';
+    }
+</script>
+</body>
+</html>

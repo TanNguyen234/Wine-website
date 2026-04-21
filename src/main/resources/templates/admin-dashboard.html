@@ -33,6 +33,9 @@
             <a class="admin-nav-link" href="/admin/shipments/traffic">
                 <i class="fa-solid fa-map-location-dot"></i><span>Trạm điều phối</span>
             </a>
+            <a class="admin-nav-link" href="/admin/inventory">
+                <i class="fa-solid fa-boxes-stacked"></i><span>Kho hàng</span>
+            </a>
             
             <div class="text-muted small fw-bold text-uppercase px-3 mt-4 mb-2" style="font-size: 0.7rem; letter-spacing: 0.1em;">Quản lý</div>
             <a class="admin-nav-link" href="/admin/users">
@@ -147,7 +150,7 @@
                             <div class="col-xl-3 col-lg-4 col-md-6" th:each="wine : ${wines}">
                                 <div class="bg-white border rounded-4 overflow-hidden shadow-sm h-100 transition-base hover-shadow">
                                     <div class="ratio ratio-1x1 bg-light position-relative">
-                                        <img th:if="${wine.imageUrl != null}" th:src="${wine.imageUrl}" class="object-fit-cover w-100 h-100" alt="Wine">
+                                        <img th:if="${wine.imageUrl != null}" th:src="${wine.imageUrl}" class="object-fit-contain w-100 h-100 p-2" alt="Wine">
                                         <div th:unless="${wine.imageUrl != null}" class="d-flex align-items-center justify-content-center text-muted"><i class="fa-regular fa-image fs-1"></i></div>
                                         <div class="position-absolute top-0 end-0 p-3">
                                             <span class="badge bg-white text-dark shadow-sm border" th:text="${wine.year}"></span>
@@ -204,6 +207,37 @@
                     
                     <!-- Inventory Tab -->
                     <section class="tab-pane fade" id="inventory">
+                         <!-- Low Stock Alerts -->
+                         <div th:if="${!lowStockItems.isEmpty()}" class="mb-4">
+                             <div class="bg-white border border-danger border-opacity-25 rounded-4 shadow-sm p-4">
+                                 <div class="d-flex align-items-center justify-content-between mb-3">
+                                     <div class="d-flex align-items-center gap-2">
+                                         <i class="fa-solid fa-triangle-exclamation text-danger fs-5"></i>
+                                         <h5 class="h6 fw-bold mb-0 text-danger">Cảnh báo tồn kho thấp</h5>
+                                         <span class="badge bg-danger rounded-pill" th:text="${lowStockItems.size()}">0</span>
+                                     </div>
+                                     <a href="/admin/inventory" class="btn btn-sm btn-outline-danger rounded-pill px-3">
+                                         <i class="fa-solid fa-arrow-right me-1"></i> Quản lý kho
+                                     </a>
+                                 </div>
+                                 <div class="row g-2">
+                                     <div class="col-md-6 col-xl-4" th:each="item : ${lowStockItems}">
+                                         <div class="d-flex align-items-center gap-3 p-3 bg-danger bg-opacity-10 rounded-3">
+                                             <div class="bg-danger bg-opacity-25 rounded-circle d-flex align-items-center justify-content-center" style="width: 36px; height: 36px; min-width: 36px;">
+                                                 <i class="fa-solid fa-warning text-danger small"></i>
+                                             </div>
+                                             <div class="flex-fill overflow-hidden">
+                                                 <div class="fw-bold small text-truncate" th:text="${item.wine.name}">Wine</div>
+                                                 <div class="small text-muted" th:text="${@enumDisplayService.wineType(item.wine.type)}">Type</div>
+                                             </div>
+                                             <div class="text-end" style="min-width: 60px;">
+                                                 <div class="fw-bold text-danger small" th:text="'Còn: ' + ${item.availableQuantity}">0</div>
+                                             </div>
+                                         </div>
+                                     </div>
+                                 </div>
+                             </div>
+                         </div>
                          <div class="bg-white border rounded-4 shadow-sm overflow-hidden mb-5">
                             <div class="table-responsive">
                                 <table class="table table-modern border-0 mb-0">

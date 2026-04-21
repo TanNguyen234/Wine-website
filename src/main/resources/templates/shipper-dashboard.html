@@ -57,6 +57,7 @@
                             <div class="d-flex align-items-center gap-3">
                                 <span class="badge bg-dark rounded-pill px-3 py-2 fw-medium" th:text="${'Vận chuyển #' + s.id}"></span>
                                 <span class="small text-muted fw-bold">ORDER <span th:text="${'#' + s.order.id}"></span></span>
+                                <span class="small text-muted opacity-50 ms-2" th:text="${#temporals.format(s.order.orderDate, 'HH:mm dd/MM/yyyy')}"></span>
                             </div>
                             <span th:class="${'badge rounded-pill px-3 py-2 ' + (s.status.name() == 'COMPLETED' ? 'bg-success-subtle text-success' : (s.status.name() == 'FAILED' ? 'bg-danger-subtle text-danger' : (s.status.name() == 'DELIVERING' ? 'bg-warning-subtle text-warning' : 'bg-secondary-subtle text-secondary')))}"
                                   th:text="${@enumDisplayService.shipmentStatus(s.status)}"></span>
@@ -75,6 +76,30 @@
                                 <div th:if="${s.order.note != null and !s.order.note.isBlank()}" class="mt-3">
                                     <div class="small text-muted text-uppercase fw-bold mb-1" style="font-size: 0.65rem;">Lưu ý</div>
                                     <div class="text-danger small fw-medium lh-sm bg-danger-subtle p-2 rounded-2" th:text="${s.order.note}">Ghi chú đơn hàng</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Chi tiết bổ sung -->
+                        <div class="row g-3 mt-3 pt-3 border-top border-light">
+                            <div class="col-sm-6">
+                                <div class="small text-muted text-uppercase fw-bold mb-1" style="font-size: 0.65rem;">Sản phẩm</div>
+                                <div class="small text-dark lh-sm">
+                                    <div th:each="item : ${s.order.orderItems}" class="mb-1">
+                                        <i class="fa-solid fa-wine-bottle small opacity-25 me-1"></i>
+                                        <span th:text="${item.wine.name}"></span>
+                                        <span class="text-muted small">x</span>
+                                        <span class="fw-bold" th:text="${item.quantity}"></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="small text-muted text-uppercase fw-bold mb-1" style="font-size: 0.65rem;">Thanh toán</div>
+                                <div class="fw-bold text-accent fs-5" th:text="${#numbers.formatDecimal(s.order.totalPrice, 0, 'COMMA', 0, 'POINT') + ' đ'}"></div>
+                                <div class="small text-muted">
+                                    <span th:text="${@enumDisplayService.paymentMethod(s.order.paymentMethod)}"></span>
+                                    <span class="mx-1 opacity-50">•</span>
+                                    <span th:text="${@enumDisplayService.paymentStatus(s.order.paymentStatus)}"></span>
                                 </div>
                             </div>
                         </div>

@@ -34,7 +34,7 @@ public class AdminInventoryController {
         if (bindingResult.hasErrors()) {
             String message = bindingResult.getFieldError() != null ? bindingResult.getFieldError().getDefaultMessage() : "Dữ liệu không hợp lệ";
             redirectAttributes.addFlashAttribute("error", message);
-            return "redirect:/admin";
+            return "redirect:/admin/inventory";
         }
         try {
             Long userId = extractUserId(authentication);
@@ -45,7 +45,7 @@ public class AdminInventoryController {
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Nhập kho thất bại: " + e.getMessage());
         }
-        return "redirect:/admin";
+        return "redirect:/admin/inventory";
     }
 
     @PostMapping("/export/{wineId}")
@@ -57,7 +57,7 @@ public class AdminInventoryController {
         if (bindingResult.hasErrors()) {
             String message = bindingResult.getFieldError() != null ? bindingResult.getFieldError().getDefaultMessage() : "Dữ liệu không hợp lệ";
             redirectAttributes.addFlashAttribute("error", message);
-            return "redirect:/admin";
+            return "redirect:/admin/inventory";
         }
         try {
             Long userId = extractUserId(authentication);
@@ -68,7 +68,7 @@ public class AdminInventoryController {
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Xuất kho thất bại: " + e.getMessage());
         }
-        return "redirect:/admin";
+        return "redirect:/admin/inventory";
     }
 
     private Long extractUserId(Authentication authentication) {

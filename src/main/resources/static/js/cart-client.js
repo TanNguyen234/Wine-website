@@ -1,6 +1,33 @@
 (function () {
     const STORAGE_KEY = "cart";
 
+    function showToast(message, type) {
+        const existingToast = document.getElementById('sw-stock-toast');
+        if (existingToast) existingToast.remove();
+
+        const bgClass = type === 'warning' ? 'bg-warning text-dark' : (type === 'danger' ? 'bg-danger text-white' : 'bg-dark text-white');
+        const iconClass = type === 'warning' ? 'fa-triangle-exclamation' : (type === 'danger' ? 'fa-circle-xmark' : 'fa-circle-info');
+
+        const toast = document.createElement('div');
+        toast.id = 'sw-stock-toast';
+        toast.style.cssText = 'position:fixed;top:20px;right:20px;z-index:9999;min-width:320px;max-width:440px;padding:14px 20px;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,0.18);font-size:0.95rem;display:flex;align-items:center;gap:10px;animation:toastSlideIn 0.35s ease;';
+        toast.className = bgClass;
+        toast.innerHTML = '<i class="fa-solid ' + iconClass + '"></i><span>' + message + '</span>';
+
+        if (!document.getElementById('sw-toast-style')) {
+            const style = document.createElement('style');
+            style.id = 'sw-toast-style';
+            style.textContent = '@keyframes toastSlideIn{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:translateX(0)}}@keyframes toastFadeOut{from{opacity:1}to{opacity:0;transform:translateY(-10px)}}';
+            document.head.appendChild(style);
+        }
+
+        document.body.appendChild(toast);
+        setTimeout(() => {
+            toast.style.animation = 'toastFadeOut 0.3s ease forwards';
+            setTimeout(() => toast.remove(), 300);
+        }, 3500);
+    }
+
     function toNumber(value, fallback) {
         const n = Number(value);
         return Number.isFinite(n) ? n : fallback;
@@ -81,17 +108,26 @@
         const existing = items.find((x) => x.productId === productId);
 
         if (existing) {
-            existing.quantity = Math.min(existing.quantity + quantity, stock);
+            const newQty = existing.quantity + quantity;
+            const cappedQty = Math.min(newQty, stock);
+            if (cappedQty < newQty) {
+                showToast('Chỉ còn ' + stock + ' sản phẩm "' + (payload.name || 'Sản phẩm') + '" trong kho. Số lượng đã được điều chỉnh.', 'warning');
+            }
+            existing.quantity = cappedQty;
             existing.name = payload.name || existing.name;
             existing.price = Math.max(0, toNumber(payload.price, existing.price));
             existing.image = payload.image || existing.image;
             existing.stock = stock;
         } else {
+            const cappedQty = Math.min(quantity, stock);
+            if (cappedQty < quantity) {
+                showToast('Chỉ còn ' + stock + ' sản phẩm "' + (payload.name || 'Sản phẩm') + '" trong kho. Số lượng đã được điều chỉnh.', 'warning');
+            }
             items.push({
                 productId,
                 name: String(payload.name || "Sản phẩm"),
                 price: Math.max(0, toNumber(payload.price, 0)),
-                quantity: Math.min(quantity, stock),
+                quantity: cappedQty,
                 image: payload.image ? String(payload.image) : "",
                 stock
             });
@@ -122,6 +158,9 @@
         }
 
         item.quantity = Math.min(qty, Math.max(0, item.stock));
+        if (qty > item.stock) {
+            showToast('Số lượng tối đa cho "' + (item.name || 'Sản phẩm') + '" là ' + item.stock + '. Đã điều chỉnh lại.', 'warning');
+        }
         if (item.quantity <= 0) {
             removeItem(targetId);
             return;

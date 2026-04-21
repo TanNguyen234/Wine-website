@@ -1,5 +1,6 @@
 package com.strongwine.strongwine.controller;
 
+import com.strongwine.strongwine.service.CategoryService;
 import com.strongwine.strongwine.service.OrderService;
 import com.strongwine.strongwine.service.InventoryService;
 import com.strongwine.strongwine.service.PaymentService;
@@ -8,6 +9,7 @@ import com.strongwine.strongwine.service.ShipmentService;
 import com.strongwine.strongwine.service.ShipperService;
 import com.strongwine.strongwine.service.UserService;
 import com.strongwine.strongwine.service.WineService;
+import com.strongwine.strongwine.repository.WarehouseRepository;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -36,6 +38,8 @@ public class AdminController {
     private final PaymentService paymentService;
     private final ShipperService shipperService;
     private final ShipmentService shipmentService;
+    private final CategoryService categoryService;
+    private final WarehouseRepository warehouseRepository;
 
     public AdminController(WineService wineService,
                            UserService userService,
@@ -44,7 +48,9 @@ public class AdminController {
                            InventoryService inventoryService,
                            PaymentService paymentService,
                            ShipperService shipperService,
-                           ShipmentService shipmentService) {
+                           ShipmentService shipmentService,
+                           CategoryService categoryService,
+                           WarehouseRepository warehouseRepository) {
         this.wineService = wineService;
         this.userService = userService;
         this.orderService = orderService;
@@ -53,6 +59,8 @@ public class AdminController {
         this.paymentService = paymentService;
         this.shipperService = shipperService;
         this.shipmentService = shipmentService;
+        this.categoryService = categoryService;
+        this.warehouseRepository = warehouseRepository;
     }
     
     /**
@@ -105,6 +113,27 @@ public class AdminController {
         }
         
         return "admin-dashboard";
+    }
+
+    /**
+     * Admin inventory management page
+     */
+    @GetMapping("/inventory")
+    public String inventoryPage(Model model) {
+        var inventories = inventoryService.getInventoryOverview();
+        var lowStockItems = inventoryService.getLowStockInventories();
+        var transactions = inventoryService.getRecentTransactions();
+        var categories = categoryService.getAllCategories();
+        var warehouses = warehouseRepository.findAll();
+
+        model.addAttribute("inventories", inventories);
+        model.addAttribute("lowStockItems", lowStockItems);
+        model.addAttribute("lowStockCount", lowStockItems.size());
+        model.addAttribute("transactions", transactions);
+        model.addAttribute("categories", categories);
+        model.addAttribute("warehouses", warehouses);
+
+        return "admin-inventory";
     }
 
     @GetMapping("/export-revenue")
