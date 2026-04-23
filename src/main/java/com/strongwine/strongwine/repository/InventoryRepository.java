@@ -21,4 +21,7 @@ public interface InventoryRepository extends JpaRepository<Inventory, Long> {
     
     List<Inventory> findByCurrentQuantityLessThanEqual(Integer quantity);
     List<Inventory> findByCurrentQuantityGreaterThan(Integer quantity);
+
+    @Query("SELECT COALESCE(SUM(i.currentQuantity), 0) FROM Inventory i")
+    long getTotalCurrentQuantity();
 }

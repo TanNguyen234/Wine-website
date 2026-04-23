@@ -88,6 +88,14 @@ public class InventoryService {
         return inventoryTransactionRepository.findTop100ByOrderByCreatedAtDesc();
     }
 
+    public long getTotalStockQuantity() {
+        return inventoryRepository.getTotalCurrentQuantity();
+    }
+
+    public long getTotalTransactionCount() {
+        return inventoryTransactionRepository.count();
+    }
+
     public Inventory importStock(Long wineId, Long warehouseId, Integer quantity, String createdBy, String note) {
         validateQuantity(quantity);
 

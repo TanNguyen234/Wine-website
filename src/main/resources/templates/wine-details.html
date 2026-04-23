@@ -87,9 +87,9 @@
                 <div class="mt-auto">
                     <div class="d-flex gap-3 align-items-center mb-3">
                         <div class="input-group" style="width: 140px;">
-                            <button class="btn btn-outline-dark border-end-0" type="button" onclick="const qtyInputDecrease = document.getElementById('detailQuantity'); if(qtyInputDecrease.value > 1) qtyInputDecrease.value--">-</button>
+                            <button class="btn btn-outline-dark border-end-0" type="button" onclick="const qtyInputDecrease = document.getElementById('detailQuantity'); if(parseInt(qtyInputDecrease.value) > 1) qtyInputDecrease.value--">-</button>
                             <input type="number" class="form-control text-center bg-white border-start-0 border-end-0" id="detailQuantity" value="1" min="1" th:attr="max=${availableStock}">
-                            <button class="btn btn-outline-dark border-start-0" type="button" onclick="const qtyInputIncrease = document.getElementById('detailQuantity'); if(qtyInputIncrease.value < qtyInputIncrease.max) qtyInputIncrease.value++">+</button>
+                            <button class="btn btn-outline-dark border-start-0" type="button" onclick="const qtyInputIncrease = document.getElementById('detailQuantity'); if(parseInt(qtyInputIncrease.value) < parseInt(qtyInputIncrease.max)) qtyInputIncrease.value++">+</button>
                         </div>
                         <button type="button" class="btn btn-dark flex-grow-1 py-3" data-cart-add="true" data-cart-quantity-selector="#detailQuantity" th:disabled="${availableStock <= 0}" th:attr="data-cart-product-id=${wine.id},data-cart-name=${wine.name},data-cart-price=${wine.price},data-cart-image=${wine.imageUrl},data-cart-stock=${availableStock}">
                             <i class="fa-solid fa-cart-plus me-2"></i>Thêm vào giỏ hàng

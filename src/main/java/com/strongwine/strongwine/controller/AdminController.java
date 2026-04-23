@@ -130,6 +130,8 @@ public class AdminController {
         model.addAttribute("lowStockItems", lowStockItems);
         model.addAttribute("lowStockCount", lowStockItems.size());
         model.addAttribute("transactions", transactions);
+        model.addAttribute("totalStockQuantity", inventoryService.getTotalStockQuantity());
+        model.addAttribute("totalTransactionCount", inventoryService.getTotalTransactionCount());
         model.addAttribute("categories", categories);
         model.addAttribute("warehouses", warehouses);
 
