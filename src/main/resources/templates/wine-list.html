@@ -242,9 +242,15 @@
                               th:text="${stock > 20 ? 'Còn hàng: ' + stock : (stock > 0 ? 'Sắp hết: ' + stock : 'Hết hàng')}"></span>
                     </div>
                     <div class="d-grid gap-2 mt-auto" th:with="stock=${(availableStockByWineId != null and availableStockByWineId[wine.id] != null) ? availableStockByWineId[wine.id] : 0}">
-                        <a th:href="@{/wines/{id}(id=${wine.id})}" class="btn btn-outline-secondary btn-sm">
-                            <i class="fa-solid fa-eye me-1"></i>Chi tiết
-                        </a>
+                        <div class="d-flex gap-2">
+                            <a th:href="@{/wines/{id}(id=${wine.id})}" class="btn btn-outline-secondary btn-sm flex-fill">
+                                <i class="fa-solid fa-eye me-1"></i>Chi tiết
+                            </a>
+                            <button type="button" class="btn btn-outline-gold btn-sm flex-fill btn-quick-view"
+                                    th:attr="data-wine-id=${wine.id},data-wine-name=${wine.name},data-wine-price=${#numbers.formatDecimal(wine.price, 0, 'COMMA', 0, 'POINT') + ' đ'},data-wine-type=${@enumDisplayService.wineType(wine.type)},data-wine-year=${wine.year},data-wine-country=${wine.country},data-wine-desc=${wine.description},data-wine-img=${wine.imageUrl}">
+                                <i class="fa-solid fa-magnifying-glass-plus me-1"></i>Xem nhanh
+                            </button>
+                        </div>
                         <button type="button" class="btn btn-gold btn-sm" data-cart-add="true"
                                 th:disabled="${stock <= 0}"
                                 th:attr="data-cart-product-id=${wine.id},data-cart-name=${wine.name},data-cart-price=${wine.price},data-cart-image=${wine.imageUrl},data-cart-stock=${stock}">
@@ -305,9 +311,42 @@
     </div>
 </footer>
 
+<!-- Quick View Modal -->
+<div class="modal fade" id="quickViewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content bg-dark text-light border-gold" style="border: 1px solid var(--gold-border); background-color: var(--surface) !important;">
+            <div class="modal-header border-bottom-0 pb-0">
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="row g-4 align-items-center">
+                    <div class="col-md-5 text-center">
+                        <img class="modal-wine-img img-fluid rounded border-gold" src="" alt="Rượu vang" style="max-height: 320px; object-fit: cover; border: 1px solid var(--gold-border);">
+                    </div>
+                    <div class="col-md-7">
+                        <span class="badge text-bg-warning text-dark mb-2 modal-wine-type">Loại</span>
+                        <span class="badge text-bg-secondary mb-2 modal-wine-year">Năm</span>
+                        <h3 class="modal-wine-name font-serif mb-2" style="color: var(--gold-prime);">Tên Rượu</h3>
+                        <p class="text-muted small mb-2"><i class="fa-solid fa-earth-americas me-1"></i><span class="modal-wine-country">Xuất xứ</span></p>
+                        <h4 class="modal-wine-price text-danger mb-3">0 đ</h4>
+                        <p class="modal-wine-desc text-secondary small mb-4">Mô tả nếm thử...</p>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-gold btn-sm modal-add-to-cart-btn js-add-to-cart" data-wine-id="">
+                                <i class="fa-solid fa-cart-plus me-1"></i>Thêm vào giỏ
+                            </button>
+                            <button type="button" class="btn btn-outline-light btn-sm" data-bs-dismiss="modal">Đóng</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="/js/cart-client.js"></script>
 <script src="/js/ai-assistant.js"></script>
 <script src="/js/wine-filters.js"></script>
+<script src="/js/wine-filter-drawer.js"></script>
 </body>
 </html>
