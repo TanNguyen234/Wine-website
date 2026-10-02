@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chi tiết đơn hàng - StrongWine</title>
+    <title th:text="${'Chi tiết đơn hàng #' + order.id + ' - StrongWine'}">Chi tiết đơn hàng - StrongWine</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
@@ -25,13 +25,14 @@
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav me-auto ms-lg-4 gap-lg-1">
                 <li class="nav-item"><a class="nav-link" href="/home">Trang chủ</a></li>
+                <li class="nav-item"><a class="nav-link" href="/wines">Bộ sưu tập rượu</a></li>
                 <li class="nav-item"><a class="nav-link active" href="/orders">Đơn hàng của tôi</a></li>
             </ul>
-            <ul class="navbar-nav">
+            <ul class="navbar-nav align-items-center gap-2">
                 <li class="nav-item" sec:authorize="hasRole('ADMIN')"><a class="nav-link" href="/admin">Quản trị</a></li>
                 <li class="nav-item" sec:authorize="isAuthenticated()">
                     <form th:action="@{/logout}" method="post" class="d-inline mb-0">
-                        <button type="submit" class="btn btn-sm btn-outline-secondary ms-1">Đăng xuất</button>
+                        <button type="submit" class="btn btn-sm btn-outline-secondary">Đăng xuất</button>
                     </form>
                 </li>
             </ul>
@@ -49,12 +50,30 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
 
-    <!-- Header -->
-    <div class="panel p-4 mb-3 fade-up">
+    <!-- Live Tracking Alert Toast Notification (Dynamic via SSE) -->
+    <div id="liveTrackingToast" class="alert alert-info alert-dismissible fade d-none mb-4" role="alert">
+        <div class="d-flex align-items-center gap-2">
+            <i class="fa-solid fa-bell fa-shake text-warning"></i>
+            <div>
+                <strong id="liveToastTitle">Thông báo đơn hàng:</strong>
+                <span id="liveToastMessage" class="ms-1"></span>
+            </div>
+        </div>
+        <button type="button" class="btn-close" onclick="document.getElementById('liveTrackingToast').classList.add('d-none')"></button>
+    </div>
+
+    <!-- Header Panel -->
+    <div class="panel p-4 mb-4 fade-up">
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
             <div>
-                <div class="section-label">Chi tiết</div>
-                <h1 class="h4 mb-0">
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <span class="section-label mb-0">Theo dõi hành trình</span>
+                    <span id="sseIndicator" class="sse-live-pill">
+                        <span class="sse-pulse-dot"></span>
+                        <span id="sseStatusText">Đang theo dõi trực tiếp</span>
+                    </span>
+                </div>
+                <h1 class="h3 mb-0">
                     Đơn hàng <span style="color:var(--gold)" th:text="${'#' + order.id}"></span>
                 </h1>
             </div>
@@ -66,13 +85,109 @@
                     </button>
                 </form>
                 <a class="btn btn-outline-secondary btn-sm" href="/orders">
-                    <i class="fa-solid fa-arrow-left me-1"></i>Quay lại
+                    <i class="fa-solid fa-arrow-left me-1"></i>Quay lại danh sách
                 </a>
             </div>
         </div>
 
-        <div style="height:1px;background:var(--border);margin:1.25rem 0"></div>
+        <!-- Cancellation Banner if Cancelled -->
+        <div th:if="${order.status == T(com.strongwine.strongwine.entity.OrderStatus).CANCELLED}" 
+             class="alert alert-danger mt-3 mb-0">
+            <i class="fa-solid fa-ban me-2"></i>Đơn hàng này đã bị hủy. Nếu quý khách đã thanh toán, số tiền sẽ được hoàn trả theo chính sách.
+        </div>
 
+        <!-- Shopee-Style 5-Step Glowing Timeline -->
+        <div class="timeline-stepper" id="orderTimelineStepper"
+             th:with="
+                isPaid=${order.paymentStatus == T(com.strongwine.strongwine.entity.PaymentStatus).SUCCESS or order.status == T(com.strongwine.strongwine.entity.OrderStatus).PAID},
+                isShipAssigned=${shipment != null and (shipment.status == T(com.strongwine.strongwine.entity.ShipmentStatus).ASSIGNED or shipment.status == T(com.strongwine.strongwine.entity.ShipmentStatus).PICKED_UP or shipment.status == T(com.strongwine.strongwine.entity.ShipmentStatus).DELIVERING or shipment.status == T(com.strongwine.strongwine.entity.ShipmentStatus).COMPLETED)},
+                isDelivering=${shipment != null and (shipment.status == T(com.strongwine.strongwine.entity.ShipmentStatus).DELIVERING or shipment.status == T(com.strongwine.strongwine.entity.ShipmentStatus).COMPLETED)},
+                isCompleted=${shipment != null and shipment.status == T(com.strongwine.strongwine.entity.ShipmentStatus).COMPLETED}
+             ">
+            <!-- Step 1: Đã Đặt Hàng -->
+            <div class="timeline-step completed" id="step-1">
+                <div class="step-node">
+                    <i class="fa-solid fa-file-invoice"></i>
+                </div>
+                <div class="step-title">Đã Đặt Hàng</div>
+                <div class="step-time" th:text="${#temporals.format(order.orderDate, 'HH:mm dd/MM')}">10:00 01/01</div>
+            </div>
+
+            <!-- Step 2: Đã Thanh Toán -->
+            <div class="timeline-step" id="step-2"
+                 th:classappend="${isPaid ? 'completed' : 'active'}">
+                <div class="step-node">
+                    <i class="fa-solid fa-credit-card"></i>
+                </div>
+                <div class="step-title">Đã Thanh Toán</div>
+                <div class="step-time" id="step-2-time" 
+                     th:text="${isPaid ? 'Hoàn tất' : 'Chờ thanh toán'}">Chờ thanh toán</div>
+            </div>
+
+            <!-- Step 3: Đang Chuẩn Bị -->
+            <div class="timeline-step" id="step-3"
+                 th:classappend="${isShipAssigned ? 'completed' : (isPaid ? 'active' : '')}">
+                <div class="step-node">
+                    <i class="fa-solid fa-boxes-packing"></i>
+                </div>
+                <div class="step-title">Đang Chuẩn Bị</div>
+                <div class="step-time" id="step-3-time"
+                     th:text="${isShipAssigned ? 'Đã đóng gói' : (isPaid ? 'Đang chuẩn bị' : 'Chờ xử lý')}">Đang chuẩn bị</div>
+            </div>
+
+            <!-- Step 4: Đang Giao Hàng -->
+            <div class="timeline-step" id="step-4"
+                 th:classappend="${isCompleted ? 'completed' : (isDelivering ? 'active' : '')}">
+                <div class="step-node">
+                    <i class="fa-solid fa-truck-fast"></i>
+                </div>
+                <div class="step-title">Đang Giao Hàng</div>
+                <div class="step-time" id="step-4-time"
+                     th:text="${isCompleted ? 'Đã giao' : (isDelivering ? 'Đang trên đường' : 'Chờ vận chuyển')}">Chờ vận chuyển</div>
+            </div>
+
+            <!-- Step 5: Giao Thành Công -->
+            <div class="timeline-step" id="step-5"
+                 th:classappend="${isCompleted ? 'completed' : ''}">
+                <div class="step-node">
+                    <i class="fa-solid fa-circle-check"></i>
+                </div>
+                <div class="step-title">Giao Thành Công</div>
+                <div class="step-time" id="step-5-time"
+                     th:text="${isCompleted ? 'Đã nhận hàng' : 'Dự kiến hoàn thành'}">Chờ nhận hàng</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- OTP Vault Security Card (Bảo Mật Giao Nhận Rượu Vang Quý Tộc) -->
+    <div id="otpVaultCard" class="otp-vault-card mb-4 fade-up"
+         th:if="${shipment != null and shipment.otpCode != null}"
+         th:style="${shipment.status == T(com.strongwine.strongwine.entity.ShipmentStatus).COMPLETED ? 'display:none;' : ''}">
+        <div class="row align-items-center g-3">
+            <div class="col-lg-7">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <i class="fa-solid fa-shield-halved text-warning fs-5"></i>
+                    <span class="section-label mb-0" style="color:var(--gold-light)">Bảo Mật Giao Nhận Rượu Vang (Chống Tráo Đổi)</span>
+                </div>
+                <h4 class="mb-1" style="color:var(--text)">Mã OTP Nhận Hàng Của Quý Khách</h4>
+                <p class="mb-0 text-muted small">
+                    Để đảm bảo an toàn tuyệt đối cho các chai vang quý, vui lòng chỉ đọc mã này cho nhân viên giao hàng sau khi quý khách đã kiểm tra nguyên vẹn nút chai và tem niêm phong.
+                </p>
+            </div>
+            <div class="col-lg-5 text-lg-end">
+                <div class="d-inline-flex flex-column align-items-lg-end align-items-start gap-2">
+                    <div class="otp-code-box" id="otpCodeDisplay" th:text="${shipment.otpCode}">888999</div>
+                    <button type="button" class="btn btn-outline-warning btn-sm" id="btnCopyOtp" onclick="copyOtpToClipboard()">
+                        <i class="fa-regular fa-copy me-1"></i><span id="copyOtpText">Sao chép mã OTP</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Metadata & Shipper Contact Card -->
+    <div class="panel p-4 mb-4 fade-up">
+        <div class="section-label mb-3">Thông tin giao vận & Thanh toán</div>
         <div class="row g-3">
             <div class="col-md-3 col-6">
                 <div class="section-label" style="font-size:.65rem">Ngày đặt</div>
@@ -80,18 +195,18 @@
             </div>
             <div class="col-md-3 col-6">
                 <div class="section-label" style="font-size:.65rem">Thanh toán</div>
-                <span class="badge text-bg-info" th:text="${@enumDisplayService.paymentStatus(order.paymentStatus)}"></span>
+                <span id="orderPaymentBadge" class="badge text-bg-info" th:text="${@enumDisplayService.paymentStatus(order.paymentStatus)}"></span>
             </div>
             <div class="col-md-3 col-6">
                 <div class="section-label" style="font-size:.65rem">Trạng thái đơn</div>
-                <span class="badge text-bg-secondary" th:text="${@enumDisplayService.orderStatus(order.status)}"></span>
+                <span id="orderStatusBadge" class="badge text-bg-secondary" th:text="${@enumDisplayService.orderStatus(order.status)}"></span>
             </div>
             <div class="col-md-3 col-6">
-                <div class="section-label" style="font-size:.65rem">Giao hàng</div>
-                <span class="badge text-bg-primary" th:if="${shipment != null}"
+                <div class="section-label" style="font-size:.65rem">Trạng thái giao hàng</div>
+                <span id="shipmentStatusBadge" class="badge text-bg-primary" th:if="${shipment != null}"
                       th:text="${@enumDisplayService.shipmentStatus(shipment.status)}"></span>
-                <span style="color:var(--text-faint);font-size:.8rem" th:if="${shipment == null}"
-                      th:text="${order.paymentStatus == T(com.strongwine.strongwine.entity.PaymentStatus).SUCCESS ? 'Đang tạo đơn' : 'Chưa tạo đơn'}"></span>
+                <span id="shipmentStatusBadgePending" style="color:var(--text-faint);font-size:.8rem" th:if="${shipment == null}"
+                      th:text="${order.paymentStatus == T(com.strongwine.strongwine.entity.PaymentStatus).SUCCESS ? 'Đang tạo vận đơn' : 'Chưa tạo vận đơn'}"></span>
             </div>
             <div class="col-md-4 col-6">
                 <div class="section-label" style="font-size:.65rem">Người nhận</div>
@@ -101,14 +216,24 @@
                 <div class="section-label" style="font-size:.65rem">Số điện thoại</div>
                 <div style="color:var(--text-soft)" th:text="${order.shippingPhone}"></div>
             </div>
-            <div class="col-md-4" th:if="${shipment != null}">
-                <div class="section-label" style="font-size:.65rem">Shipper</div>
-                <div style="color:var(--text-soft)" th:if="${shipment.shipper != null}" th:text="${shipment.shipper.name}"></div>
-                <span style="color:var(--text-faint);font-size:.8rem" th:unless="${shipment.shipper != null}">Chưa phân công</span>
+            <div class="col-md-4" id="shipperInfoWrap">
+                <div class="section-label" style="font-size:.65rem">Nhân viên giao rượu</div>
+                <div id="shipperName" style="color:var(--text-soft)" th:if="${shipment != null and shipment.shipper != null}">
+                    <i class="fa-solid fa-user-tie me-1 text-gold"></i>
+                    <strong th:text="${shipment.shipper.name}"></strong>
+                    <span th:if="${shipment.shipper.phone != null}" class="ms-2">
+                        <a th:href="${'tel:' + shipment.shipper.phone}" class="btn btn-outline-success btn-sm py-0 px-2" style="font-size:0.75rem">
+                            <i class="fa-solid fa-phone me-1"></i><span th:text="${shipment.shipper.phone}"></span>
+                        </a>
+                    </span>
+                </div>
+                <span id="shipperPending" style="color:var(--text-faint);font-size:.8rem" th:unless="${shipment != null and shipment.shipper != null}">
+                    Chưa phân công nhân viên
+                </span>
             </div>
             <div class="col-12">
                 <div class="section-label" style="font-size:.65rem">Địa chỉ giao hàng</div>
-                <div style="color:var(--text-soft)" th:text="${order.shippingAddress}"></div>
+                <div style="color:var(--text-soft)"><i class="fa-solid fa-location-dot me-2 text-gold"></i><span th:text="${order.shippingAddress}"></span></div>
             </div>
             <div class="col-md-6" th:if="${order.paymentReference != null}">
                 <div class="section-label" style="font-size:.65rem">Mã tham chiếu thanh toán</div>
@@ -132,7 +257,20 @@
                 </thead>
                 <tbody>
                     <tr th:each="item : ${order.orderItems}">
-                        <td style="font-weight:600;color:var(--text)" th:text="${item.wine.name}"></td>
+                        <td>
+                            <div class="d-flex align-items-center gap-3">
+                                <img th:if="${item.wine.imageUrl != null and !#strings.isEmpty(item.wine.imageUrl)}"
+                                     th:src="${item.wine.imageUrl}" alt="Chai vang" class="cart-thumb" style="width:48px;height:48px;">
+                                <div th:unless="${item.wine.imageUrl != null and !#strings.isEmpty(item.wine.imageUrl)}"
+                                     class="cart-thumb-placeholder" style="width:48px;height:48px;font-size:1.2rem">
+                                    <i class="fa-solid fa-wine-bottle text-gold"></i>
+                                </div>
+                                <div>
+                                    <div style="font-weight:600;color:var(--text)" th:text="${item.wine.name}"></div>
+                                    <small class="text-muted" th:text="${item.wine.category != null ? item.wine.category.name : ''}"></small>
+                                </div>
+                            </div>
+                        </td>
                         <td class="text-end" style="color:var(--text-soft)"
                             th:text="${#numbers.formatDecimal(item.price, 0, 'COMMA', 0, 'POINT') + ' đ'}"></td>
                         <td class="text-end" style="color:var(--text-soft)" th:text="${item.quantity}"></td>
@@ -152,10 +290,153 @@
 
 <footer class="site-footer text-center mt-5">
     <div class="container">
-        <p class="mb-0">© 2026 StrongWine. Tất cả quyền được bảo lưu.</p>
+        <p class="mb-0">© 2026 StrongWine Maison de Vins. Tất cả quyền được bảo lưu.</p>
     </div>
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/js/order-tracking-realtime.js"></script>
+
+<script th:inline="javascript">
+    const currentOrderId = /*[[${order.id}]]*/ 0;
+
+    // Clipboard copy helper
+    function copyOtpToClipboard() {
+        const otpText = document.getElementById('otpCodeDisplay')?.textContent?.trim();
+        if (otpText && navigator.clipboard) {
+            navigator.clipboard.writeText(otpText).then(() => {
+                const copyBtn = document.getElementById('copyOtpText');
+                if (copyBtn) {
+                    copyBtn.textContent = 'Đã sao chép!';
+                    setTimeout(() => { copyBtn.textContent = 'Sao chép mã OTP'; }, 2500);
+                }
+            });
+        }
+    }
+
+    // Initialize Real-time Shopee-style SSE Stream
+    document.addEventListener('DOMContentLoaded', () => {
+        if (!currentOrderId) return;
+
+        const liveToast = document.getElementById('liveTrackingToast');
+        const liveToastMessage = document.getElementById('liveToastMessage');
+        const sseIndicator = document.getElementById('sseIndicator');
+        const sseStatusText = document.getElementById('sseStatusText');
+
+        function showNotification(title, message) {
+            if (liveToast && liveToastMessage) {
+                document.getElementById('liveToastTitle').textContent = title;
+                liveToastMessage.textContent = message;
+                liveToast.classList.remove('d-none');
+                liveToast.classList.add('show');
+            }
+        }
+
+        window.orderTracker = new StrongWineTracking(currentOrderId, {
+            onConnect: () => {
+                if (sseIndicator && sseStatusText) {
+                    sseIndicator.style.borderColor = 'rgba(61, 160, 99, 0.4)';
+                    sseStatusText.textContent = 'Đang theo dõi trực tiếp';
+                }
+            },
+            onDisconnect: () => {
+                if (sseIndicator && sseStatusText) {
+                    sseIndicator.style.borderColor = 'rgba(160, 112, 32, 0.4)';
+                    sseStatusText.textContent = 'Đang kết nối lại...';
+                }
+            },
+            onStatusChange: (data) => {
+                console.log('SSE Order status changed:', data);
+                showNotification('Cập nhật đơn hàng', data.message || `Trạng thái đơn: ${data.status}`);
+                
+                const orderBadge = document.getElementById('orderStatusBadge');
+                if (orderBadge) orderBadge.textContent = data.status;
+
+                if (data.status === 'PAID') {
+                    const step2 = document.getElementById('step-2');
+                    const step3 = document.getElementById('step-3');
+                    if (step2) {
+                        step2.classList.add('completed');
+                        step2.classList.remove('active');
+                        document.getElementById('step-2-time').textContent = 'Hoàn tất';
+                    }
+                    if (step3) {
+                        step3.classList.add('active');
+                        document.getElementById('step-3-time').textContent = 'Đang chuẩn bị';
+                    }
+                    const paymentBadge = document.getElementById('orderPaymentBadge');
+                    if (paymentBadge) paymentBadge.textContent = 'Đã thanh toán';
+                }
+            },
+            onShipmentChange: (data) => {
+                console.log('SSE Shipment changed:', data);
+                showNotification('Vận chuyển trực tiếp', `Trạng thái giao hàng: ${data.status}`);
+                
+                const shipBadge = document.getElementById('shipmentStatusBadge');
+                if (shipBadge) shipBadge.textContent = data.status;
+
+                // Update shipper info if present
+                if (data.shipperName) {
+                    const shipperWrap = document.getElementById('shipperInfoWrap');
+                    if (shipperWrap) {
+                        shipperWrap.innerHTML = `
+                            <div class="section-label" style="font-size:.65rem">Nhân viên giao rượu</div>
+                            <div style="color:var(--text-soft)">
+                                <i class="fa-solid fa-user-tie me-1 text-gold"></i>
+                                <strong>${data.shipperName}</strong>
+                                ${data.shipperPhone ? `
+                                    <span class="ms-2">
+                                        <a href="tel:${data.shipperPhone}" class="btn btn-outline-success btn-sm py-0 px-2" style="font-size:0.75rem">
+                                            <i class="fa-solid fa-phone me-1"></i>${data.shipperPhone}
+                                        </a>
+                                    </span>
+                                ` : ''}
+                            </div>
+                        `;
+                    }
+                }
+
+                // Advance timeline steps
+                const step3 = document.getElementById('step-3');
+                const step4 = document.getElementById('step-4');
+                const step5 = document.getElementById('step-5');
+
+                if (data.status === 'ASSIGNED' || data.status === 'PICKED_UP') {
+                    if (step3) {
+                        step3.classList.add('completed');
+                        step3.classList.remove('active');
+                    }
+                    if (step4) {
+                        step4.classList.add('active');
+                    }
+                } else if (data.status === 'DELIVERING') {
+                    if (step3) {
+                        step3.classList.add('completed');
+                        step3.classList.remove('active');
+                    }
+                    if (step4) {
+                        step4.classList.add('active');
+                        document.getElementById('step-4-time').textContent = 'Đang trên đường';
+                    }
+                    // Show OTP Vault card if present
+                    const otpCard = document.getElementById('otpVaultCard');
+                    if (otpCard) otpCard.style.display = 'block';
+                } else if (data.status === 'COMPLETED') {
+                    if (step4) {
+                        step4.classList.add('completed');
+                        step4.classList.remove('active');
+                        document.getElementById('step-4-time').textContent = 'Đã giao';
+                    }
+                    if (step5) {
+                        step5.classList.add('completed');
+                        document.getElementById('step-5-time').textContent = 'Hoàn thành';
+                    }
+                    const otpCard = document.getElementById('otpVaultCard');
+                    if (otpCard) otpCard.style.display = 'none';
+                }
+            }
+        });
+    });
+</script>
 </body>
 </html>
