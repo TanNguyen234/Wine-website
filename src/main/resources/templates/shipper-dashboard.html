@@ -2,8 +2,8 @@
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bảng giao hàng - StrongWine</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Bảng Giao Hàng - StrongWine Shipper Cockpit</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
@@ -11,173 +11,212 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="/css/app.css">
 </head>
-<body>
+<body class="admin-page">
 
-<nav class="navbar navbar-dark navbar-modern py-2">
+<nav class="navbar navbar-dark navbar-modern py-2 sticky-top" style="background:rgba(20,16,12,0.95);backdrop-filter:blur(10px)">
     <div class="container d-flex justify-content-between align-items-center">
-        <a class="navbar-brand d-flex align-items-center gap-2" href="/home">
-            <span class="brand-logo"><i class="fa-solid fa-wine-glass"></i></span>
-            StrongWine Giao hàng
+        <a class="navbar-brand d-flex align-items-center gap-2" href="/shipper/dashboard">
+            <span class="brand-logo"><i class="fa-solid fa-truck-fast"></i></span>
+            <span class="d-none d-sm-inline">StrongWine Shipper</span>
+            <span class="d-inline d-sm-none">Shipper</span>
         </a>
         <div class="d-flex gap-2 align-items-center">
-            <span style="font-size:.8rem;color:var(--text-muted)" sec:authentication="name"></span>
+            <span id="shipperOnlineBadge" class="sse-live-pill py-1 px-2" style="font-size:0.68rem">
+                <span class="sse-pulse-dot"></span> Trực tuyến
+            </span>
+            <a th:if="${isAdminView}" href="/admin" class="btn btn-sm btn-outline-warning py-1 px-2" style="font-size:0.75rem">
+                <i class="fa-solid fa-screwdriver-wrench me-1"></i>Admin
+            </a>
             <form th:action="@{/logout}" method="post" class="mb-0">
-                <button type="submit" class="btn btn-sm btn-outline-secondary">Đăng xuất</button>
+                <button type="submit" class="btn btn-sm btn-outline-secondary py-1 px-2" style="font-size:0.75rem">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                </button>
             </form>
         </div>
     </div>
 </nav>
 
-<main class="container site-main my-4">
+<main class="container my-3" style="max-width:760px">
+    <!-- Live Assignment Alert -->
+    <div id="shipperLiveAlert" class="alert alert-warning alert-dismissible fade show d-none mb-3"></div>
+
     <div th:if="${success}" class="alert alert-success alert-dismissible fade show mb-3">
-        <span th:text="${success}"></span>
+        <i class="fa-solid fa-circle-check me-2"></i><span th:text="${success}"></span>
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
     <div th:if="${error}" class="alert alert-danger alert-dismissible fade show mb-3">
-        <span th:text="${error}"></span>
+        <i class="fa-solid fa-triangle-exclamation me-2"></i><span th:text="${error}"></span>
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
 
-    <div class="d-flex align-items-center gap-3 mb-4">
+    <!-- Header & Filter Chips -->
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
         <div>
-            <div class="section-label" th:text="${isAdminView ? 'Giám sát vận chuyển' : 'Đơn giao của tôi'}">Đơn giao của tôi</div>
-            <h1 class="h4 mb-0" th:text="${isAdminView ? 'Quản lý lộ trình' : 'Bảng giao hàng'}">Bảng giao hàng</h1>
+            <div class="section-label mb-0" th:text="${isAdminView ? 'Chế độ giám sát vận chuyển' : 'Lộ trình cá nhân'}">Lộ trình cá nhân</div>
+            <h1 class="h5 mb-0 text-gold-light">Danh Sách Đơn Giao Hàng</h1>
         </div>
-        <p class="mb-0 ms-auto" style="color:var(--text-muted);font-size:.82rem" th:text="${isAdminView ? 'Chế độ quản trị: Đang xem tất cả đơn chưa hoàn tất' : 'Hệ thống tự động phân công theo trạng thái sẵn sàng'}">Hệ thống tự động phân công theo trạng thái sẵn sàng</p>
+        <div class="badge text-bg-dark border border-gold-border py-2 px-3">
+            <i class="fa-solid fa-box me-1 text-gold"></i>
+            <span th:text="${shipments != null ? shipments.size() : 0} + ' vận đơn'"></span>
+        </div>
     </div>
 
-    <div class="panel p-3 p-lg-4 fade-up">
-        <div class="table-responsive">
-            <table class="table table-modern align-middle">
-                <thead>
-                    <tr>
-                        <th>Mã đơn giao</th>
-                        <th>Đơn hàng</th>
-                        <th>Tên nhận</th>
-                        <th>SĐT</th>
-                        <th>Địa chỉ</th>
-                        <th>Trạng thái</th>
-                        <th>Hành động</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr th:if="${shipments.isEmpty()}">
-                        <td colspan="7" class="text-center py-5">
-                            <i class="fa-solid fa-truck fa-2x mb-2 d-block" style="color:var(--text-faint)"></i>
-                            <span style="color:var(--text-muted)" th:text="${isAdminView ? 'Hiện không có đơn hàng nào đang trong quá trình vận chuyển.' : 'Hiện chưa có đơn nào được phân công cho bạn.'}">Hiện chưa có đơn nào được phân công cho bạn.</span>
-                        </td>
-                    </tr>
-                    <tr th:each="s : ${shipments}">
-                        <td style="color:var(--gold);font-weight:700" th:text="${s.id}"></td>
-                        <td style="color:var(--text-soft)" th:text="${'#' + s.order.id}"></td>
-                        <td style="font-weight:600;color:var(--text)" th:text="${s.shippingName}"></td>
-                        <td th:text="${s.shippingPhone}"></td>
-                        <td style="color:var(--text-muted);font-size:.82rem" th:text="${s.shippingAddress}"></td>
-                        <td>
-                            <span class="badge"
-                                  th:classappend="${s.status.name() == 'COMPLETED' ? ' text-bg-success' : (s.status.name() == 'FAILED' ? ' text-bg-danger' : (s.status.name() == 'DELIVERING' ? ' text-bg-warning' : ' text-bg-secondary'))}"
-                                  th:text="${@enumDisplayService.shipmentStatus(s.status)}"></span>
-                        </td>
-                        <td>
-                            <div class="d-flex flex-column gap-1 action-stack">
-                                <form th:if="${s.status.name() == 'ASSIGNED'}"
-                                      th:action="@{/shipper/shipments/{id}/pickup(id=${s.id})}" method="post" class="mb-0">
-                                    <button class="btn btn-sm btn-outline-secondary w-100">
-                                        <i class="fa-solid fa-box me-1"></i>Xác nhận lấy hàng
-                                    </button>
-                                </form>
-                                <form th:if="${s.status.name() == 'PICKED_UP'}"
-                                      th:action="@{/shipper/shipments/{id}/start(id=${s.id})}" method="post" class="mb-0">
-                                    <button class="btn btn-sm btn-gold w-100">
-                                        <i class="fa-solid fa-truck me-1"></i>Bắt đầu giao
-                                    </button>
-                                </form>
-                                <div th:if="${s.status.name() == 'DELIVERING'}" style="background:var(--surface-mid);padding:1rem;border-radius:var(--r-md);border:1px solid var(--border)">
-                                    <div class="mb-2" style="font-size:.8rem;color:var(--text-muted);text-align:center">Nhập mã OTP (6 số) để sát thực</div>
-                                    <form th:action="@{/shipper/shipments/{id}/complete(id=${s.id})}" method="post" 
-                                          class="d-flex flex-column gap-2 mb-0" th:id="'otpForm-' + ${s.id}">
-                                        <div class="d-flex gap-1 justify-content-center otp-container" th:data-shipment-id="${s.id}">
-                                            <input type="text" class="form-control text-center otp-box" maxlength="1" inputmode="numeric" style="width:2.2rem;height:2.6rem;font-size:1.1rem;font-weight:700;border-radius:var(--r-sm);padding:0">
-                                            <input type="text" class="form-control text-center otp-box" maxlength="1" inputmode="numeric" style="width:2.2rem;height:2.6rem;font-size:1.1rem;font-weight:700;border-radius:var(--r-sm);padding:0">
-                                            <input type="text" class="form-control text-center otp-box" maxlength="1" inputmode="numeric" style="width:2.2rem;height:2.6rem;font-size:1.1rem;font-weight:700;border-radius:var(--r-sm);padding:0">
-                                            <input type="text" class="form-control text-center otp-box" maxlength="1" inputmode="numeric" style="width:2.2rem;height:2.6rem;font-size:1.1rem;font-weight:700;border-radius:var(--r-sm);padding:0">
-                                            <input type="text" class="form-control text-center otp-box" maxlength="1" inputmode="numeric" style="width:2.2rem;height:2.6rem;font-size:1.1rem;font-weight:700;border-radius:var(--r-sm);padding:0">
-                                            <input type="text" class="form-control text-center otp-box" maxlength="1" inputmode="numeric" style="width:2.2rem;height:2.6rem;font-size:1.1rem;font-weight:700;border-radius:var(--r-sm);padding:0">
-                                            <input type="hidden" name="otp" th:id="'hiddenOtp-' + ${s.id}">
-                                        </div>
-                                        <button type="button" class="btn btn-success fw-bold" th:onclick="'submitOtpForm(' + ${s.id} + ')'" style="margin-top:.5rem">
-                                            <i class="fa-solid fa-check-circle me-1"></i>Xác nhận giao hàng
-                                        </button>
-                                    </form>
-                                </div>
-                                <form th:if="${s.status.name() == 'DELIVERING'}"
-                                      th:action="@{/shipper/shipments/{id}/resend-otp(id=${s.id})}" method="post" class="mb-0">
-                                    <button class="btn btn-sm btn-outline-secondary w-100">Gửi lại OTP</button>
-                                </form>
-                                <form th:if="${s.status.name() == 'DELIVERING'}"
-                                      th:action="@{/shipper/shipments/{id}/fail(id=${s.id})}" method="post"
-                                      class="d-flex gap-1 mb-0">
-                                    <input class="form-control form-control-sm" name="note" placeholder="Lý do">
-                                    <button class="btn btn-sm btn-outline-danger">Thất bại</button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+    <!-- Empty State -->
+    <div th:if="${shipments == null or shipments.isEmpty()}" class="panel p-5 text-center fade-up">
+        <div class="drop-zone-icon mx-auto mb-3" style="width:64px;height:64px;font-size:1.8rem">
+            <i class="fa-solid fa-truck-ramp-box"></i>
+        </div>
+        <h3 class="h5 mb-2" style="color:var(--text)">Hiện Không Có Đơn Cần Giao</h3>
+        <p class="text-muted small mb-0" th:text="${isAdminView ? 'Tất cả các đơn vận chuyển hiện tại đều đã được hoàn tất.' : 'Bạn đã hoàn tất tất cả các đơn được giao. Hệ thống sẽ tự động thông báo khi có đơn mới.'}">
+            Hệ thống sẽ tự động thông báo khi có đơn mới.
+        </p>
+    </div>
+
+    <!-- Mobile Delivery Cards Loop -->
+    <div class="d-flex flex-column gap-3" th:unless="${shipments == null or shipments.isEmpty()}">
+        <div th:each="s : ${shipments}" 
+             class="shipper-card fade-up"
+             th:classappend="${'status-' + #strings.toLowerCase(#strings.replace(s.status.name(), '_', '-'))}">
+
+            <!-- Card Header -->
+            <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                <div>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="h5 mb-0" style="color:var(--gold);font-family:'Playfair Display',serif" th:text="${'#' + s.order.id}">#1001</span>
+                        <span class="badge text-bg-dark" style="font-size:0.65rem" th:text="${'Vận đơn #' + s.id}"></span>
+                    </div>
+                    <small class="text-muted" th:if="${s.order != null and s.order.orderDate != null}"
+                           th:text="${'Đặt lúc: ' + #temporals.format(s.order.orderDate, 'HH:mm dd/MM/yyyy')}"></small>
+                </div>
+                <div>
+                    <span class="badge"
+                          th:classappend="${s.status.name() == 'COMPLETED' ? ' text-bg-success' : (s.status.name() == 'FAILED' ? ' text-bg-danger' : (s.status.name() == 'DELIVERING' ? ' text-bg-warning' : (s.status.name() == 'PICKED_UP' ? ' text-bg-info' : ' text-bg-secondary')))}"
+                          th:text="${@enumDisplayService.shipmentStatus(s.status)}">
+                    </span>
+                </div>
+            </div>
+
+            <!-- Customer & Destination Details -->
+            <div class="shipper-customer-box">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <div style="font-weight:700;color:var(--text);font-size:1.05rem">
+                        <i class="fa-solid fa-user-check me-2 text-gold"></i>
+                        <span th:text="${s.shippingName}">Nguyễn Văn A</span>
+                    </div>
+                    <span class="badge text-bg-dark" th:if="${s.order != null and s.order.totalPrice != null}"
+                          th:text="${#numbers.formatDecimal(s.order.totalPrice, 0, 'COMMA', 0, 'POINT') + ' đ'}"></span>
+                </div>
+
+                <div class="text-muted small mt-2 d-flex align-items-start gap-2">
+                    <i class="fa-solid fa-location-dot text-danger mt-1"></i>
+                    <span style="color:var(--text-soft)" th:text="${s.shippingAddress}">Địa chỉ giao hàng</span>
+                </div>
+            </div>
+
+            <!-- 1-Tap Mobile Ergonomic Action Buttons -->
+            <div class="row g-2 mb-3">
+                <div class="col-6">
+                    <a th:href="${'tel:' + s.shippingPhone}" 
+                       class="btn btn-outline-success btn-lg w-100 py-2 d-flex align-items-center justify-content-center gap-2"
+                       style="font-size:0.9rem">
+                        <i class="fa-solid fa-phone fs-5"></i>
+                        <span>Gọi Điện</span>
+                    </a>
+                </div>
+                <div class="col-6">
+                    <a th:href="${'https://www.google.com/maps/search/?api=1&query=' + #strings.replace(s.shippingAddress, ' ', '+')}"
+                       target="_blank" 
+                       class="btn btn-outline-primary btn-lg w-100 py-2 d-flex align-items-center justify-content-center gap-2"
+                       style="font-size:0.9rem">
+                        <i class="fa-solid fa-location-arrow fs-5"></i>
+                        <span>Chỉ Đường</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Workflow State Actions -->
+            <div class="delivery-action-panel pt-2 border-top border-secondary border-opacity-25">
+                <!-- Case 1: ASSIGNED -> Confirm Pickup -->
+                <form th:if="${s.status.name() == 'ASSIGNED'}"
+                      th:action="@{/shipper/shipments/{id}/pickup(id=${s.id})}" method="post" class="mb-0">
+                    <button class="btn btn-outline-gold btn-lg w-100 py-3 fw-bold">
+                        <i class="fa-solid fa-boxes-packing me-2"></i>Xác Nhận Đã Lấy Hàng Tại Hầm Rượu
+                    </button>
+                </form>
+
+                <!-- Case 2: PICKED_UP -> Start Delivering -->
+                <form th:if="${s.status.name() == 'PICKED_UP'}"
+                      th:action="@{/shipper/shipments/{id}/start(id=${s.id})}" method="post" class="mb-0">
+                    <button class="btn btn-gold btn-lg w-100 py-3 fw-bold">
+                        <i class="fa-solid fa-motorcycle me-2"></i>Bắt Đầu Di Chuyển Đi Giao
+                    </button>
+                </form>
+
+                <!-- Case 3: DELIVERING -> OTP Verification Form -->
+                <div th:if="${s.status.name() == 'DELIVERING'}" class="p-3 rounded" style="background:rgba(20,16,12,0.85);border:1px solid var(--gold-border)">
+                    <div class="text-center mb-3">
+                        <span class="badge text-bg-warning mb-1"><i class="fa-solid fa-shield-halved me-1"></i>Bảo Mật Giao Nhận</span>
+                        <div class="small text-muted">Hỏi mã OTP 6 số từ khách hàng khi giao rượu:</div>
+                    </div>
+
+                    <form th:action="@{/shipper/shipments/{id}/complete(id=${s.id})}" method="post"
+                          class="mb-3" th:id="'otpForm-' + ${s.id}">
+                        <div class="d-flex gap-2 justify-content-center otp-container mb-3" th:data-shipment-id="${s.id}">
+                            <input type="text" class="form-control text-center otp-box-mobile" maxlength="1" inputmode="numeric" autocomplete="one-time-code">
+                            <input type="text" class="form-control text-center otp-box-mobile" maxlength="1" inputmode="numeric">
+                            <input type="text" class="form-control text-center otp-box-mobile" maxlength="1" inputmode="numeric">
+                            <input type="text" class="form-control text-center otp-box-mobile" maxlength="1" inputmode="numeric">
+                            <input type="text" class="form-control text-center otp-box-mobile" maxlength="1" inputmode="numeric">
+                            <input type="text" class="form-control text-center otp-box-mobile" maxlength="1" inputmode="numeric">
+                            <input type="hidden" name="otp" th:id="'hiddenOtp-' + ${s.id}">
+                        </div>
+
+                        <button type="button" class="btn btn-success btn-lg w-100 py-3 fw-bold" th:onclick="'submitOtpForm(' + ${s.id} + ')'">
+                            <i class="fa-solid fa-circle-check me-2"></i>Xác Nhận Đã Nhận Đủ OTP & Hoàn Tất
+                        </button>
+                    </form>
+
+                    <div class="d-flex justify-content-between align-items-center pt-2 border-top border-secondary border-opacity-25">
+                        <form th:action="@{/shipper/shipments/{id}/resend-otp(id=${s.id})}" method="post" class="mb-0">
+                            <button type="submit" class="btn btn-sm btn-outline-secondary">
+                                <i class="fa-solid fa-paper-plane me-1"></i>Gửi lại OTP cho khách
+                            </button>
+                        </form>
+                        <button class="btn btn-sm btn-outline-danger" type="button" data-bs-toggle="collapse" th:data-bs-target="'#failCollapse-' + ${s.id}">
+                            <i class="fa-solid fa-triangle-exclamation me-1"></i>Báo thất bại
+                        </button>
+                    </div>
+
+                    <!-- Fail note collapse -->
+                    <div class="collapse mt-3" th:id="'failCollapse-' + ${s.id}">
+                        <form th:action="@{/shipper/shipments/{id}/fail(id=${s.id})}" method="post" class="d-flex gap-2 mb-0">
+                            <input class="form-control form-control-sm" name="note" placeholder="Nhập lý do không giao được (khách vắng nhà...)" required>
+                            <button class="btn btn-sm btn-danger flex-shrink-0">Xác nhận</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Case 4: COMPLETED -->
+                <div th:if="${s.status.name() == 'COMPLETED'}" class="alert alert-success py-2 mb-0 text-center small">
+                    <i class="fa-solid fa-circle-check me-1"></i>Đơn hàng đã được giao thành công và xác thực OTP bảo mật.
+                </div>
+
+                <!-- Case 5: FAILED -->
+                <div th:if="${s.status.name() == 'FAILED'}" class="alert alert-danger py-2 mb-0 small">
+                    <i class="fa-solid fa-triangle-exclamation me-1"></i>Giao không thành công. Lý do: <span th:text="${s.failureNote != null ? s.failureNote : 'Chưa rõ'}"></span>
+                </div>
+            </div>
         </div>
     </div>
 </main>
 
 <footer class="site-footer text-center mt-5">
     <div class="container">
-        <p class="mb-0">© 2026 StrongWine. Tất cả quyền được bảo lưu.</p>
+        <p class="mb-0">© 2026 StrongWine Maison de Vins — Shipper Ergonomic Portal</p>
     </div>
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        const otpContainers = document.querySelectorAll('.otp-container');
-        otpContainers.forEach(container => {
-            const boxes = container.querySelectorAll('.otp-box');
-            boxes.forEach((box, index) => {
-                box.addEventListener('input', (e) => {
-                    const val = e.target.value;
-                    if (/[^0-9]/.test(val)) {
-                        e.target.value = '';
-                        return;
-                    }
-                    if (val && index < boxes.length - 1) {
-                        boxes[index + 1].focus();
-                    }
-                });
-                box.addEventListener('keydown', (e) => {
-                    if (e.key === 'Backspace' && !e.target.value && index > 0) {
-                        boxes[index - 1].focus();
-                        boxes[index - 1].value = '';
-                    }
-                });
-            });
-        });
-    });
-
-    function submitOtpForm(shipmentId) {
-        const container = document.querySelector(`.otp-container[data-shipment-id="${shipmentId}"]`);
-        if (!container) return;
-        
-        const boxes = container.querySelectorAll('.otp-box');
-        let otpValue = '';
-        boxes.forEach(box => otpValue += box.value);
-        
-        if (otpValue.length !== 6) {
-            alert('Vui lòng nhập đủ 6 số OTP.');
-            return;
-        }
-        
-        document.getElementById('hiddenOtp-' + shipmentId).value = otpValue;
-        document.getElementById('otpForm-' + shipmentId).submit();
-    }
-</script>
+<script src="/js/shipper-mobile-actions.js"></script>
 </body>
 </html>

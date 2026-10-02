@@ -1943,3 +1943,68 @@ a:hover { color: var(--gold); }
   }
 }
 
+/* ============================================================
+   SHIPPER MOBILE DELIVERY COCKPIT
+   ============================================================ */
+.shipper-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-xl);
+  padding: 1.25rem;
+  box-shadow: var(--shadow-sm);
+  position: relative;
+  overflow: hidden;
+  transition: transform var(--fast), border-color var(--fast);
+}
+
+.shipper-card.status-assigned {
+  border-left: 5px solid #8ab4e8;
+}
+
+.shipper-card.status-picked-up {
+  border-left: 5px solid var(--gold);
+}
+
+.shipper-card.status-delivering {
+  border-left: 5px solid #d4a040;
+  box-shadow: 0 4px 20px rgba(201, 168, 76, 0.15);
+}
+
+.shipper-card.status-completed {
+  border-left: 5px solid var(--ok-light);
+  opacity: 0.85;
+}
+
+.shipper-card.status-failed {
+  border-left: 5px solid #e07070;
+}
+
+.shipper-customer-box {
+  background: var(--surface-mid);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 1rem;
+  margin: 1rem 0;
+}
+
+.otp-box-mobile {
+  width: 2.85rem;
+  height: 3.5rem;
+  font-size: 1.6rem;
+  font-weight: 700;
+  text-align: center;
+  border-radius: var(--r-md);
+  background: var(--surface-hi);
+  color: var(--gold-light);
+  border: 2px solid var(--gold-border);
+  font-family: 'Playfair Display', monospace, serif;
+  transition: all var(--fast);
+}
+
+.otp-box-mobile:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 16px rgba(201, 168, 76, 0.4);
+  background: var(--noir);
+}
+
+
