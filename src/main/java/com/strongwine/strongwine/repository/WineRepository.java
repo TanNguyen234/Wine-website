@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Repository interface for Wine entity
@@ -19,6 +20,7 @@ public interface WineRepository extends JpaRepository<Wine, Long> {
     
     Page<Wine> findByDeletedFalse(Pageable pageable);
     List<Wine> findByDeletedFalse();
+    Optional<Wine> findByNameIgnoreCaseAndYearAndDeletedFalse(String name, Integer year);
 
     /**
      * Search wines by name (case-insensitive)
