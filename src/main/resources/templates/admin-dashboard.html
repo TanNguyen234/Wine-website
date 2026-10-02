@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bảng điều khiển quản trị - StrongWine</title>
+    <title>Bảng điều khiển quản trị - StrongWine Maison de Vins</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
@@ -21,14 +21,21 @@
             StrongWine Admin
         </a>
         <nav>
-            <div class="admin-sidebar-section">Điều hướng</div>
+            <div class="admin-sidebar-section">Tổng quan</div>
             <a class="admin-nav-link active" href="/admin"><i class="fa-solid fa-chart-line"></i>Bảng điều khiển</a>
+            
+            <div class="admin-sidebar-section">Kho rượu & Dữ liệu</div>
+            <a class="admin-nav-link" href="/admin/wines/import"><i class="fa-solid fa-file-excel text-success"></i>Nhập kho Excel</a>
+            <a class="admin-nav-link" href="/wines"><i class="fa-solid fa-wine-bottle"></i>Kho rượu & Giá</a>
+
+            <div class="admin-sidebar-section">Người dùng & Đội ngũ</div>
             <a class="admin-nav-link" href="/admin/users"><i class="fa-solid fa-users"></i>Người dùng</a>
-            <a class="admin-nav-link" href="/admin/shippers"><i class="fa-solid fa-truck"></i>Người giao hàng</a>
-            <a class="admin-nav-link" href="/admin/shipments"><i class="fa-solid fa-box-open"></i>Đơn giao hàng</a>
-            <div class="admin-sidebar-section">Vận hành</div>
-            <a class="admin-nav-link" href="/shipper/dashboard"><i class="fa-solid fa-map-location-dot"></i>Màn hình giao hàng</a>
-            <a class="admin-nav-link" href="/wines"><i class="fa-solid fa-store"></i>Cửa hàng</a>
+            <a class="admin-nav-link" href="/admin/shippers"><i class="fa-solid fa-truck-moving"></i>Người giao hàng</a>
+
+            <div class="admin-sidebar-section">Vận chuyển & Đơn hàng</div>
+            <a class="admin-nav-link" href="/admin/shipments"><i class="fa-solid fa-box-open"></i>Vận đơn giao hàng</a>
+            <a class="admin-nav-link" href="/shipper/dashboard"><i class="fa-solid fa-mobile-screen-button"></i>Giao diện Shipper</a>
+            <a class="admin-nav-link" href="/orders"><i class="fa-solid fa-receipt"></i>Danh sách đơn hàng</a>
         </nav>
         <div style="padding:1rem;border-top:1px solid var(--border);margin-top:auto">
             <form th:action="@{/logout}" method="post" class="mb-0">
@@ -43,22 +50,37 @@
     <div class="admin-main">
         <header class="admin-topbar">
             <div>
-                <h1>Bảng điều khiển</h1>
-                <small>Theo dõi vận hành, kho và thanh toán</small>
+                <h1>Executive Cellar Cockpit</h1>
+                <small>Hệ thống giám sát doanh thu, hầm rượu và chuỗi cung ứng</small>
             </div>
             <div class="d-flex align-items-center gap-2">
+                <span id="adminLiveBadge" class="sse-live-pill">
+                    <span class="sse-pulse-dot"></span> Live Cockpit
+                </span>
                 <span class="badge text-bg-warning" th:text="${lowStockCount} + ' sắp hết hàng'"></span>
-                <span class="badge text-bg-info" th:text="${pendingPayments} + ' thanh toán chờ xử lý'"></span>
+                <span class="badge text-bg-info" th:text="${pendingPayments} + ' thanh toán chờ'"></span>
             </div>
         </header>
 
         <main class="admin-content">
+            <!-- Live notification toast -->
+            <div id="adminLiveToast" class="alert alert-info alert-dismissible fade d-none mb-3" role="alert">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="fa-solid fa-bell fa-shake text-warning"></i>
+                    <div>
+                        <strong id="adminToastTitle">Thông báo mới:</strong>
+                        <span id="adminToastBody" class="ms-1"></span>
+                    </div>
+                </div>
+                <button type="button" class="btn-close" onclick="document.getElementById('adminLiveToast').classList.add('d-none')"></button>
+            </div>
+
             <div th:if="${success}" class="alert alert-success alert-dismissible fade show mb-3" role="alert">
-                <span th:text="${success}"></span>
+                <i class="fa-solid fa-circle-check me-2"></i><span th:text="${success}"></span>
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
             <div th:if="${error}" class="alert alert-danger alert-dismissible fade show mb-3" role="alert">
-                <span th:text="${error}"></span>
+                <i class="fa-solid fa-triangle-exclamation me-2"></i><span th:text="${error}"></span>
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
 
@@ -66,13 +88,13 @@
             <div class="row g-3 mb-4 fade-up">
                 <div class="col-lg-2 col-md-4 col-6">
                     <div class="stat-card h-100">
-                        <div class="stat-label">Sản phẩm</div>
+                        <div class="stat-label">Sản phẩm rượu</div>
                         <p class="stat-value" th:text="${totalWines}">0</p>
                     </div>
                 </div>
                 <div class="col-lg-2 col-md-4 col-6">
                     <div class="stat-card h-100">
-                        <div class="stat-label">Người dùng</div>
+                        <div class="stat-label">Khách hàng</div>
                         <p class="stat-value" th:text="${totalUsers}">0</p>
                     </div>
                 </div>
@@ -84,54 +106,116 @@
                 </div>
                 <div class="col-lg-2 col-md-4 col-6">
                     <div class="stat-card h-100">
-                        <div class="stat-label">Đơn giao hàng</div>
+                        <div class="stat-label">Đơn vận chuyển</div>
                         <p class="stat-value" th:text="${totalShipments}">0</p>
                     </div>
                 </div>
                 <div class="col-lg-2 col-md-4 col-6">
                     <div class="stat-card h-100">
                         <div class="stat-label">Shipper hoạt động</div>
-                        <p class="stat-value" th:text="${shipperStats['active']}">0</p>
+                        <p class="stat-value" th:text="${shipperStats != null ? shipperStats['active'] : 0}">0</p>
                     </div>
                 </div>
                 <div class="col-lg-2 col-md-4 col-6">
                     <div class="stat-card h-100">
-                        <div class="stat-label">Doanh thu</div>
-                        <p class="h6 mb-0" style="color:var(--gold);font-family:'Playfair Display',serif;font-size:1rem;margin-top:.25rem"
-                           th:text="${#numbers.formatDecimal(totalRevenue, 0, 'COMMA', 0, 'POINT') + ' đ'}">0</p>
+                        <div class="stat-label">Tổng doanh thu</div>
+                        <p class="stat-value text-gold" style="font-size:1.35rem;margin-top:.4rem"
+                           th:text="${totalRevenue != null ? #numbers.formatDecimal(totalRevenue, 0, 'COMMA', 0, 'POINT') + ' đ' : '0 đ'}">0 đ</p>
                     </div>
                 </div>
             </div>
 
-            <!-- Quick actions -->
-            <div class="panel panel-muted p-3 mb-3 fade-up">
-                <div class="d-flex flex-wrap gap-2 align-items-center">
-                    <span style="font-size:.72rem;color:var(--text-faint);font-weight:700;letter-spacing:.08em;text-transform:uppercase">Quản trị nhanh</span>
-                    <a href="/admin/users" class="btn btn-sm btn-outline-secondary">Người dùng</a>
-                    <a href="/admin/shippers" class="btn btn-sm btn-outline-secondary">Người giao hàng</a>
-                    <a href="/admin/shipments" class="btn btn-sm btn-outline-secondary">Đơn giao hàng</a>
-                    <a href="/shipper/dashboard" class="btn btn-sm btn-outline-secondary">Màn hình giao hàng</a>
+            <!-- Interactive Visualizations Row -->
+            <div class="row g-3 mb-4 fade-up">
+                <div class="col-lg-8">
+                    <div class="panel p-3 p-lg-4 h-100">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <div class="section-label mb-0">Biểu đồ doanh thu</div>
+                                <h3 class="h6 mb-0 text-gold-light">Xu hướng doanh thu 7 ngày gần nhất</h3>
+                            </div>
+                            <span class="badge text-bg-dark border border-gold-border"><i class="fa-solid fa-arrow-trend-up me-1 text-success"></i>Tăng trưởng ổn định</span>
+                        </div>
+                        <div style="position:relative;height:240px;width:100%">
+                            <canvas id="revenueChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="panel p-3 p-lg-4 h-100">
+                        <div class="section-label mb-1">Cơ cấu danh mục</div>
+                        <h3 class="h6 mb-3 text-gold-light">Tỷ trọng loại rượu tiêu thụ</h3>
+                        <div style="position:relative;height:220px;width:100%">
+                            <canvas id="categoryPieChart"></canvas>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <!-- Dashboard Alerts -->
+            <!-- Quick Actions Bar with Excel Bulk Tool -->
+            <div class="panel panel-muted p-3 mb-4 fade-up">
+                <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between">
+                    <div class="d-flex flex-wrap gap-2 align-items-center">
+                        <span style="font-size:.72rem;color:var(--text-faint);font-weight:700;letter-spacing:.08em;text-transform:uppercase">Tác vụ nhanh:</span>
+                        <a href="/admin/wines/import" class="btn btn-sm btn-gold">
+                            <i class="fa-solid fa-file-excel me-1"></i>Nhập hàng loạt bằng Excel (.xlsx)
+                        </a>
+                        <a href="/api/admin/excel/export/inventory" class="btn btn-sm btn-outline-secondary">
+                            <i class="fa-solid fa-download me-1"></i>Xuất báo cáo tồn kho
+                        </a>
+                        <a href="/admin/users" class="btn btn-sm btn-outline-secondary">Người dùng</a>
+                        <a href="/admin/shippers" class="btn btn-sm btn-outline-secondary">Shipper</a>
+                        <a href="/admin/shipments" class="btn btn-sm btn-outline-secondary">Vận đơn</a>
+                    </div>
+                    <div>
+                        <a href="/shipper/dashboard" class="btn btn-sm btn-outline-info">
+                            <i class="fa-solid fa-mobile-screen me-1"></i>Chế độ Mobile Shipper
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Low Stock Warnings -->
             <div class="panel p-3 p-lg-4 fade-up">
-                <h2 class="h6 mb-3" style="font-family:'Lato',sans-serif;text-transform:uppercase;letter-spacing:.06em;font-size:.8rem;color:var(--text-muted)">Cảnh báo tồn kho thấp</h2>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <div class="section-label mb-0" style="color:#d4a040">Cảnh báo tồn kho</div>
+                        <h3 class="h6 mb-0 text-gold-light">Sản phẩm sắp hết hàng trong hầm rượu</h3>
+                    </div>
+                    <a href="/admin/wines/import" class="btn btn-sm btn-outline-warning">
+                        <i class="fa-solid fa-plus me-1"></i>Bổ sung tồn kho qua Excel
+                    </a>
+                </div>
+
                 <div th:if="${lowStockItems == null || lowStockItems.isEmpty()}" class="alert alert-success mb-0">
-                    <i class="fa-solid fa-circle-check me-2"></i>Không có sản phẩm sắp hết hàng.
+                    <i class="fa-solid fa-circle-check me-2"></i>Tuyệt vời! Tất cả sản phẩm đều duy trì lượng tồn kho an toàn.
                 </div>
                 <div th:unless="${lowStockItems == null || lowStockItems.isEmpty()}" class="d-flex flex-column gap-2">
                     <div th:each="item : ${lowStockItems}"
                          style="display:flex;justify-content:space-between;align-items:center;background:var(--surface-mid);border:1px solid var(--border);border-radius:var(--r-md);padding:.9rem 1rem">
-                        <div>
-                            <div style="font-weight:600;color:var(--text)" th:text="${item.wine.name}"></div>
-                            <div style="font-size:.8rem;color:var(--text-muted)" th:text="${item.warehouse.name}"></div>
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="brand-logo" style="width:36px;height:36px;font-size:0.9rem">
+                                <i class="fa-solid fa-wine-bottle text-gold"></i>
+                            </div>
+                            <div>
+                                <div style="font-weight:600;color:var(--text)" th:text="${item.wine.name}"></div>
+                                <div style="font-size:.8rem;color:var(--text-muted)" 
+                                     th:text="${item.warehouse != null ? item.warehouse.name : 'Hầm rượu chính'}"></div>
+                            </div>
                         </div>
-                        <span class="stock-badge stock-low" th:text="${'Còn: ' + item.availableQuantity}"></span>
+                        <div class="d-flex align-items-center gap-3">
+                            <span class="stock-badge stock-low" th:text="${'Còn: ' + item.availableQuantity + ' chai'}"></span>
+                            <a th:href="@{/wines}" class="btn btn-sm btn-outline-secondary py-1 px-2" style="font-size:0.75rem">Xem</a>
+                        </div>
                     </div>
                 </div>
             </div>
+        </main>
+    </div>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="/js/admin-charts.js"></script>
 </body>
 </html>
