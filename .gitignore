@@ -40,3 +40,6 @@ build/
 ### Sensitive Files ###
 **/application-local.properties
 **/application-prod.properties
+
+### Agent Scratch Workspaces ###
+.superpowers/
