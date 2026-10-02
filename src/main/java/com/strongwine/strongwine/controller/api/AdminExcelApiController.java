@@ -20,11 +20,23 @@ public class AdminExcelApiController {
 
     private final ExcelWineImportStrategy excelImportStrategy;
     private final ExcelTemplateService excelTemplateService;
+    private final com.strongwine.strongwine.service.report.InventoryStockReportGenerator inventoryStockReportGenerator;
 
     public AdminExcelApiController(ExcelWineImportStrategy excelImportStrategy,
-                                   ExcelTemplateService excelTemplateService) {
+                                   ExcelTemplateService excelTemplateService,
+                                   com.strongwine.strongwine.service.report.InventoryStockReportGenerator inventoryStockReportGenerator) {
         this.excelImportStrategy = excelImportStrategy;
         this.excelTemplateService = excelTemplateService;
+        this.inventoryStockReportGenerator = inventoryStockReportGenerator;
+    }
+
+    @GetMapping("/export/inventory")
+    public ResponseEntity<byte[]> exportInventory() {
+        byte[] bytes = inventoryStockReportGenerator.generateReport(null);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"strongwine_inventory_report.xlsx\"")
+                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(bytes);
     }
 
     @GetMapping("/template")

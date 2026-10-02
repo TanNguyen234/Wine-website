@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bàn làm việc nhập dữ liệu Excel - StrongWine</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="/css/app.css">
+    <style>
+        .drop-zone {
+            border: 2px dashed var(--gold-border);
+            border-radius: var(--r-xl);
+            background: rgba(20, 16, 12, 0.6);
+            padding: 3.5rem 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all var(--slow) var(--ease);
+            position: relative;
+        }
+        .drop-zone:hover {
+            border-color: var(--gold);
+            background: rgba(201, 168, 76, 0.05);
+            transform: translateY(-2px);
+        }
+        .drop-zone-icon {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            background: rgba(201, 168, 76, 0.12);
+            color: var(--gold);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin-bottom: 1.25rem;
+            box-shadow: 0 0 20px rgba(201, 168, 76, 0.2);
+        }
+    </style>
+</head>
+<body class="admin-page">
+<div class="admin-layout">
+
+    <!-- Sidebar -->
+    <aside class="admin-sidebar">
+        <a class="admin-sidebar-brand" href="/admin">
+            <span class="brand-logo"><i class="fa-solid fa-wine-glass"></i></span>
+            StrongWine Admin
+        </a>
+        <nav>
+            <div class="admin-sidebar-section">Tổng quan</div>
+            <a class="admin-nav-link" href="/admin"><i class="fa-solid fa-chart-line"></i>Bảng điều khiển</a>
+            
+            <div class="admin-sidebar-section">Kho rượu & Dữ liệu</div>
+            <a class="admin-nav-link active" href="/admin/wines/import"><i class="fa-solid fa-file-excel text-success"></i>Nhập kho Excel</a>
+            <a class="admin-nav-link" href="/wines"><i class="fa-solid fa-wine-bottle"></i>Kho rượu & Giá</a>
+
+            <div class="admin-sidebar-section">Người dùng & Đội ngũ</div>
+            <a class="admin-nav-link" href="/admin/users"><i class="fa-solid fa-users"></i>Người dùng</a>
+            <a class="admin-nav-link" href="/admin/shippers"><i class="fa-solid fa-truck-moving"></i>Người giao hàng</a>
+
+            <div class="admin-sidebar-section">Vận chuyển & Đơn hàng</div>
+            <a class="admin-nav-link" href="/admin/shipments"><i class="fa-solid fa-box-open"></i>Vận đơn giao hàng</a>
+            <a class="admin-nav-link" href="/shipper/dashboard"><i class="fa-solid fa-mobile-screen-button"></i>Giao diện Shipper</a>
+            <a class="admin-nav-link" href="/orders"><i class="fa-solid fa-receipt"></i>Danh sách đơn hàng</a>
+        </nav>
+        <div style="padding:1rem;border-top:1px solid var(--border);margin-top:auto">
+            <form th:action="@{/logout}" method="post" class="mb-0">
+                <button class="btn btn-outline-secondary btn-sm w-100">
+                    <i class="fa-solid fa-right-from-bracket me-1"></i>Đăng xuất
+                </button>
+            </form>
+        </div>
+    </aside>
+
+    <!-- Main -->
+    <div class="admin-main">
+        <header class="admin-topbar">
+            <div>
+                <h1>Bàn Làm Việc Nhập Dữ Liệu Excel</h1>
+                <small>Nhập hàng loạt sản phẩm, cập nhật tồn kho & cơ chế xem trước thông minh (Dry-Run)</small>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <a href="/api/admin/excel/template" class="btn btn-gold btn-sm">
+                    <i class="fa-solid fa-download me-1"></i>Tải file mẫu chuẩn (.xlsx)
+                </a>
+                <a href="/api/admin/excel/export/inventory" class="btn btn-outline-secondary btn-sm">
+                    <i class="fa-solid fa-file-export me-1"></i>Xuất tồn kho hiện tại
+                </a>
+            </div>
+        </header>
+
+        <main class="admin-content">
+            <!-- Dynamic alerts -->
+            <div id="importSuccessAlert" class="alert alert-success d-none mb-4 d-flex align-items-center gap-3"></div>
+            <div id="importErrorAlert" class="alert alert-danger d-none mb-4"></div>
+
+            <!-- Upload Area Panel -->
+            <div class="panel p-4 mb-4 fade-up">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <div class="section-label mb-0">Tải tệp lên</div>
+                        <h2 class="h5 mb-0 text-gold-light">Kéo & Thả Bảng Tính Danh Mục Rượu Vang</h2>
+                    </div>
+                    <span class="badge text-bg-dark border border-gold-border">Định dạng hỗ trợ: .xlsx, .xls</span>
+                </div>
+
+                <div class="drop-zone mb-3" id="excelDropZone">
+                    <input type="file" id="excelFileInput" accept=".xlsx, .xls" class="d-none">
+                    <div class="drop-zone-icon">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                    </div>
+                    <h4 class="h5 mb-2" id="filePromptText">Kéo & thả file Excel vào đây hoặc <span style="color:var(--gold);text-decoration:underline">duyệt tìm file</span></h4>
+                    <p class="text-muted small mb-3">Hệ thống sẽ tự động phân tích và chạy kiểm tra trước (Dry-Run Preview) mà không làm thay đổi CSDL.</p>
+                    <span id="selectedFileBadge" class="badge text-bg-warning fs-6 px-3 py-2 d-none"></span>
+                </div>
+
+                <!-- Processing Spinner -->
+                <div id="dryRunSpinner" class="text-center py-4 d-none">
+                    <div class="spinner-border text-warning" role="status"></div>
+                    <div class="text-muted small mt-2">Đang phân tích cấu trúc file và xác thực từng dòng dữ liệu...</div>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 text-muted small">
+                    <div>
+                        <i class="fa-solid fa-circle-info me-1 text-gold"></i>
+                        <span>Nguyên tắc Upsert: Trùng cặp <strong>(Tên rượu + Năm Vintage)</strong> sẽ tự động cập nhật thông tin và tồn kho.</span>
+                    </div>
+                    <a href="/api/admin/excel/template" class="text-gold-light">
+                        <i class="fa-solid fa-circle-question me-1"></i>Xem cấu trúc cột chuẩn trong file mẫu
+                    </a>
+                </div>
+            </div>
+
+            <!-- Dry-Run Preview Container -->
+            <div id="previewContainer" class="d-none">
+                <!-- KPI Stats Row -->
+                <div class="row g-3 mb-4 fade-up">
+                    <div class="col-lg-2 col-md-4 col-6">
+                        <div class="stat-card h-100">
+                            <div class="stat-label">Tổng số dòng</div>
+                            <p class="stat-value" id="statTotalRows">0</p>
+                        </div>
+                    </div>
+                    <div class="col-lg-2 col-md-4 col-6">
+                        <div class="stat-card h-100" style="border-color:rgba(61,160,99,0.3)">
+                            <div class="stat-label" style="color:var(--ok-light)">Hợp lệ</div>
+                            <p class="stat-value text-success" id="statValidRows">0</p>
+                        </div>
+                    </div>
+                    <div class="col-lg-2 col-md-4 col-6">
+                        <div class="stat-card h-100" style="border-color:rgba(140,32,32,0.3)">
+                            <div class="stat-label" style="color:#e07070">Dòng lỗi</div>
+                            <p class="stat-value text-danger" id="statErrorRows">0</p>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6 col-6">
+                        <div class="stat-card h-100">
+                            <div class="stat-label">Sẽ thêm mới</div>
+                            <p class="stat-value text-info" id="statInsertCount">0</p>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6 col-6">
+                        <div class="stat-card h-100">
+                            <div class="stat-label">Sẽ cập nhật</div>
+                            <p class="stat-value text-warning" id="statUpdateCount">0</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Clean Status Notice -->
+                <div id="cleanSection" class="alert alert-success d-none mb-4">
+                    <i class="fa-solid fa-circle-check me-2"></i>Tất cả các dòng dữ liệu đều hợp lệ và sẵn sàng nhập vào hầm rượu!
+                </div>
+
+                <!-- Errors Detail Table -->
+                <div id="errorSection" class="panel p-4 mb-4 d-none">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <div class="section-label mb-0" style="color:#e07070">Chi tiết dữ liệu không hợp lệ</div>
+                            <h3 class="h6 mb-0 text-danger">Các dòng gặp lỗi sẽ bị bỏ qua khi nhập dữ liệu</h3>
+                        </div>
+                        <span class="badge text-bg-danger">Cần kiểm tra</span>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-modern align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Vị trí dòng</th>
+                                    <th>Cột / Thuộc tính</th>
+                                    <th>Chi tiết lỗi</th>
+                                    <th>Giá trị đọc được</th>
+                                </tr>
+                            </thead>
+                            <tbody id="previewTableBody">
+                                <!-- Populated dynamically by admin-excel-import.js -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Import Options & Execution Card -->
+                <div class="panel p-4 mb-4 fade-up">
+                    <div class="section-label mb-2">Cấu hình nhập dữ liệu</div>
+                    <h3 class="h5 mb-3 text-gold-light">Tùy Chọn Quản Lý Tồn Kho</h3>
+
+                    <div class="row g-4 align-items-center">
+                        <div class="col-md-7">
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="radio" name="inventoryMode" id="modeAdd" value="ADD" checked>
+                                <label class="form-check-label" for="modeAdd">
+                                    <strong>Cộng dồn số lượng tồn kho (ADD)</strong>
+                                    <div class="text-muted small">Cộng thêm số lượng trong file vào lượng tồn hiện tại của sản phẩm (Khuyên dùng khi nhập hàng định kỳ).</div>
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="inventoryMode" id="modeReplace" value="REPLACE">
+                                <label class="form-check-label" for="modeReplace">
+                                    <strong>Ghi đè số lượng tồn kho (REPLACE)</strong>
+                                    <div class="text-muted small">Thay thế hoàn toàn lượng tồn hiện tại bằng số lượng ghi trong file Excel (Khuyên dùng khi kiểm kê toàn diện).</div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="col-md-5">
+                            <label class="form-label" for="warehouseSelect">Kho hàng tiếp nhận</label>
+                            <select class="form-select mb-3" id="warehouseSelect">
+                                <option value="1" selected>Hầm Rượu Trung Tâm (Kho Chính)</option>
+                                <option value="2">Hầm Vang Bordeaux & Grand Cru</option>
+                            </select>
+
+                            <button type="button" class="btn btn-gold btn-lg w-100" id="btnExecuteImport">
+                                <i class="fa-solid fa-database me-2"></i>Xác Nhận Lưu Vào CSDL
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/js/admin-excel-import.js"></script>
+</body>
+</html>

@@ -80,6 +80,11 @@ public class AdminController {
         
         return "admin-dashboard";
     }
+
+    @GetMapping("/wines/import")
+    public String wineImportPage() {
+        return "admin-wine-import";
+    }
 }
 
 
