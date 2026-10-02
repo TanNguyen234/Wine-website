@@ -18,6 +18,7 @@ public class SseNotificationService {
     private static final Long DEFAULT_TIMEOUT = 30 * 60 * 1000L; // 30 phút
 
     private final Map<Long, List<SseEmitter>> orderEmitters = new ConcurrentHashMap<>();
+    private final Map<Long, List<SseEmitter>> shipperEmitters = new ConcurrentHashMap<>();
     private final List<SseEmitter> adminEmitters = new CopyOnWriteArrayList<>();
 
     public SseEmitter subscribeOrder(Long orderId) {
@@ -32,6 +33,22 @@ public class SseNotificationService {
             emitter.send(SseEmitter.event().name("init").data("connected"));
         } catch (IOException e) {
             removeOrderEmitter(orderId, emitter);
+        }
+        return emitter;
+    }
+
+    public SseEmitter subscribeShipper(Long shipperId) {
+        SseEmitter emitter = new SseEmitter(DEFAULT_TIMEOUT);
+        shipperEmitters.computeIfAbsent(shipperId, k -> new CopyOnWriteArrayList<>()).add(emitter);
+
+        emitter.onCompletion(() -> removeShipperEmitter(shipperId, emitter));
+        emitter.onTimeout(() -> removeShipperEmitter(shipperId, emitter));
+        emitter.onError(e -> removeShipperEmitter(shipperId, emitter));
+
+        try {
+            emitter.send(SseEmitter.event().name("init").data("shipper_connected"));
+        } catch (IOException e) {
+            removeShipperEmitter(shipperId, emitter);
         }
         return emitter;
     }
@@ -65,6 +82,19 @@ public class SseNotificationService {
         }
     }
 
+    public void broadcastToShipper(Long shipperId, String eventName, Object data) {
+        List<SseEmitter> emitters = shipperEmitters.get(shipperId);
+        if (emitters == null || emitters.isEmpty()) return;
+
+        for (SseEmitter emitter : emitters) {
+            try {
+                emitter.send(SseEmitter.event().name(eventName).data(data));
+            } catch (IOException e) {
+                removeShipperEmitter(shipperId, emitter);
+            }
+        }
+    }
+
     public void broadcastToAdmin(String eventName, Object data) {
         for (SseEmitter emitter : adminEmitters) {
             try {
@@ -85,8 +115,23 @@ public class SseNotificationService {
         }
     }
 
+    public void removeShipperEmitter(Long shipperId, SseEmitter emitter) {
+        List<SseEmitter> emitters = shipperEmitters.get(shipperId);
+        if (emitters != null) {
+            emitters.remove(emitter);
+            if (emitters.isEmpty()) {
+                shipperEmitters.remove(shipperId);
+            }
+        }
+    }
+
     public int getOrderSubscriberCount(Long orderId) {
         List<SseEmitter> emitters = orderEmitters.get(orderId);
+        return emitters != null ? emitters.size() : 0;
+    }
+
+    public int getShipperSubscriberCount(Long shipperId) {
+        List<SseEmitter> emitters = shipperEmitters.get(shipperId);
         return emitters != null ? emitters.size() : 0;
     }
 
@@ -98,6 +143,16 @@ public class SseNotificationService {
                     emitter.send(SseEmitter.event().name("ping").data("keep-alive"));
                 } catch (IOException e) {
                     removeOrderEmitter(orderId, emitter);
+                }
+            }
+        });
+
+        shipperEmitters.forEach((shipperId, emitters) -> {
+            for (SseEmitter emitter : emitters) {
+                try {
+                    emitter.send(SseEmitter.event().name("ping").data("keep-alive"));
+                } catch (IOException e) {
+                    removeShipperEmitter(shipperId, emitter);
                 }
             }
         });
