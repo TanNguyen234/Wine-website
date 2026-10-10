@@ -24,15 +24,10 @@ public class ExcelTemplateService {
             headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
             headerStyle.setAlignment(HorizontalAlignment.CENTER);
 
-            CellStyle sampleStyle = workbook.createCellStyle();
-            Font sampleFont = workbook.createFont();
-            sampleFont.setItalic(true);
-            sampleStyle.setFont(sampleFont);
-
             // Headers
             String[] headers = {
                 "Tên Sản Phẩm (*)", "Loại Rượu (*)", "Năm Sản Xuất (*)", "Giá Bán (VNĐ) (*)",
-                "Xuất Xứ", "Mô Tả", "Tên Danh Mục", "Số Lượng Kho Khởi Tạo"
+                "Xuất Xứ", "Mô Tả", "Tên Danh Mục", "Số Lượng Kho Khởi Tạo", "URL Hình Ảnh"
             };
 
             Row headerRow = sheet.createRow(0);
@@ -42,27 +37,34 @@ public class ExcelTemplateService {
                 cell.setCellStyle(headerStyle);
             }
 
-            // Dòng mẫu 1
-            Row r1 = sheet.createRow(1);
-            r1.createCell(0).setCellValue("Château Margaux Premier Grand Cru");
-            r1.createCell(1).setCellValue("Red");
-            r1.createCell(2).setCellValue(2018);
-            r1.createCell(3).setCellValue(12500000);
-            r1.createCell(4).setCellValue("Pháp");
-            r1.createCell(5).setCellValue("Hương quả mọng đen, da thuộc, gỗ sồi quý tộc.");
-            r1.createCell(6).setCellValue("Vang Đỏ Cao Cấp");
-            r1.createCell(7).setCellValue(12);
+            Object[][] sampleRows = {
+                {"Château Margaux Premier Grand Cru", "Red", 2018, 12500000, "France",
+                 "Hương quả mọng đen, hoa tím, da thuộc và gỗ tuyết tùng quý tộc.", "Vang đỏ", 18,
+                 "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?auto=format&fit=crop&w=900&q=80"},
+                {"Dom Pérignon Vintage Champagne", "Sparkling", 2013, 6800000, "France",
+                 "Bọt mịn tinh tế, hương hoa trắng, cam bergamot và bánh brioche nướng.", "Vang sủi", 24,
+                 "https://images.unsplash.com/photo-1594498653385-d5172c532c00?auto=format&fit=crop&w=900&q=80"},
+                {"Cloudy Bay Sauvignon Blanc Reserve", "White", 2022, 1180000, "New Zealand",
+                 "Hương chanh dây, bưởi hồng và khoáng chất sảng khoái cho tiệc hải sản.", "Vang trắng", 36,
+                 "https://images.unsplash.com/photo-1470337458703-46ad1756a187?auto=format&fit=crop&w=900&q=80"},
+                {"Whispering Angel Côtes de Provence Rosé", "Rose", 2022, 950000, "France",
+                 "Sắc hồng phấn sang trọng, hương dâu tây trắng và đào tiên thanh lịch.", "Vang hồng", 30,
+                 "https://images.unsplash.com/photo-1558001373-7b93ee48ffa0?auto=format&fit=crop&w=900&q=80"}
+            };
 
-            // Dòng mẫu 2
-            Row r2 = sheet.createRow(2);
-            r2.createCell(0).setCellValue("Dom Pérignon Vintage Champagne");
-            r2.createCell(1).setCellValue("Sparkling");
-            r2.createCell(2).setCellValue(2013);
-            r2.createCell(3).setCellValue(6800000);
-            r2.createCell(4).setCellValue("Pháp");
-            r2.createCell(5).setCellValue("Bọt mịn tinh tế, hương hoa trắng và bơ nướng.");
-            r2.createCell(6).setCellValue("Vang Sủi");
-            r2.createCell(7).setCellValue(24);
+            for (int r = 0; r < sampleRows.length; r++) {
+                Row row = sheet.createRow(r + 1);
+                Object[] data = sampleRows[r];
+                row.createCell(0).setCellValue((String) data[0]);
+                row.createCell(1).setCellValue((String) data[1]);
+                row.createCell(2).setCellValue((Integer) data[2]);
+                row.createCell(3).setCellValue((Integer) data[3]);
+                row.createCell(4).setCellValue((String) data[4]);
+                row.createCell(5).setCellValue((String) data[5]);
+                row.createCell(6).setCellValue((String) data[6]);
+                row.createCell(7).setCellValue((Integer) data[7]);
+                row.createCell(8).setCellValue((String) data[8]);
+            }
 
             for (int i = 0; i < headers.length; i++) {
                 sheet.autoSizeColumn(i);

@@ -21,6 +21,13 @@ public class ExcelWineImportStrategy implements DataImportStrategy<Wine> {
 
     private static final Set<String> ALLOWED_TYPES = new HashSet<>(Arrays.asList("Red", "White", "Rose", "Sparkling"));
 
+    private static final Map<String, String> DEFAULT_IMAGE_BY_TYPE = Map.of(
+            "Red", "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?auto=format&fit=crop&w=900&q=80",
+            "White", "https://images.unsplash.com/photo-1470337458703-46ad1756a187?auto=format&fit=crop&w=900&q=80",
+            "Rose", "https://images.unsplash.com/photo-1558001373-7b93ee48ffa0?auto=format&fit=crop&w=900&q=80",
+            "Sparkling", "https://images.unsplash.com/photo-1594498653385-d5172c532c00?auto=format&fit=crop&w=900&q=80"
+    );
+
     private final WineRepository wineRepository;
     private final CategoryRepository categoryRepository;
     private final InventoryRepository inventoryRepository;
@@ -67,6 +74,7 @@ public class ExcelWineImportStrategy implements DataImportStrategy<Wine> {
                     String description = getCellString(row.getCell(5));
                     String categoryName = getCellString(row.getCell(6));
                     Integer quantity = getCellInteger(row.getCell(7));
+                    String imageUrl = getCellString(row.getCell(8));
 
                     // Validation
                     if (name == null || name.isBlank()) {
@@ -104,6 +112,10 @@ public class ExcelWineImportStrategy implements DataImportStrategy<Wine> {
                                 });
                     }
 
+                    String resolvedImageUrl = (imageUrl != null && !imageUrl.isBlank())
+                            ? imageUrl.trim()
+                            : DEFAULT_IMAGE_BY_TYPE.getOrDefault(type, DEFAULT_IMAGE_BY_TYPE.get("Red"));
+
                     // Cơ chế Upsert theo (Tên + Năm)
                     Optional<Wine> existingOpt = wineRepository.findByNameIgnoreCaseAndYearAndDeletedFalse(name.trim(), year);
                     Wine wine;
@@ -114,6 +126,11 @@ public class ExcelWineImportStrategy implements DataImportStrategy<Wine> {
                         if (country != null) wine.setCountry(country);
                         if (description != null) wine.setDescription(description);
                         if (category != null) wine.setCategory(category);
+                        if (imageUrl != null && !imageUrl.isBlank()) {
+                            wine.setImageUrl(imageUrl.trim());
+                        } else if (wine.getImageUrl() == null || wine.getImageUrl().isBlank()) {
+                            wine.setImageUrl(resolvedImageUrl);
+                        }
                         result.setUpdatedCount(result.getUpdatedCount() + 1);
                     } else {
                         wine = new Wine();
@@ -124,6 +141,7 @@ public class ExcelWineImportStrategy implements DataImportStrategy<Wine> {
                         wine.setCountry(country);
                         wine.setDescription(description);
                         wine.setCategory(category);
+                        wine.setImageUrl(resolvedImageUrl);
                         wine.setDeleted(false);
                         result.setInsertedCount(result.getInsertedCount() + 1);
                     }
@@ -177,8 +195,8 @@ public class ExcelWineImportStrategy implements DataImportStrategy<Wine> {
         val = val.trim();
         if (val.equalsIgnoreCase("vang đỏ") || val.equalsIgnoreCase("red")) return "Red";
         if (val.equalsIgnoreCase("vang trắng") || val.equalsIgnoreCase("white")) return "White";
-        if (val.equalsIgnoreCase("vang hồng") || val.equalsIgnoreCase("rose")) return "Rose";
-        if (val.equalsIgnoreCase("vang sủi") || val.equalsIgnoreCase("sparkling")) return "Sparkling";
+        if (val.equalsIgnoreCase("vang hồng") || val.equalsIgnoreCase("rose") || val.equalsIgnoreCase("rosé")) return "Rose";
+        if (val.equalsIgnoreCase("vang sủi") || val.equalsIgnoreCase("sparkling") || val.equalsIgnoreCase("champagne")) return "Sparkling";
         return val;
     }
 
