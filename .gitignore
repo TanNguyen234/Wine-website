@@ -43,3 +43,5 @@ build/
 
 ### Agent Scratch Workspaces ###
 .superpowers/
+all_skills.txt
+
