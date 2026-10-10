@@ -5,8 +5,28 @@ BEGIN
     CREATE TABLE users (
         id BIGINT IDENTITY(1,1) PRIMARY KEY,
         username NVARCHAR(255) NOT NULL UNIQUE,
+        email NVARCHAR(255),
         password NVARCHAR(255) NOT NULL,
         role NVARCHAR(50) NOT NULL DEFAULT 'USER'
+    );
+END
+GO
+
+IF COL_LENGTH('users', 'email') IS NULL
+    ALTER TABLE users ADD email NVARCHAR(255);
+GO
+
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[categories]') AND type in (N'U'))
+BEGIN
+    CREATE TABLE categories (
+        id BIGINT IDENTITY(1,1) PRIMARY KEY,
+        name NVARCHAR(255) NOT NULL UNIQUE,
+        description NVARCHAR(500),
+        created_at DATETIME2 DEFAULT GETDATE(),
+        updated_at DATETIME2 DEFAULT GETDATE(),
+        created_by NVARCHAR(255),
+        updated_by NVARCHAR(255),
+        deleted BIT NOT NULL DEFAULT 0
     );
 END
 GO
@@ -21,9 +41,14 @@ BEGIN
         year INT NOT NULL,
         price DECIMAL(10,2) NOT NULL,
         description NVARCHAR(1000),
-        image_url NVARCHAR(500)
+        image_url NVARCHAR(500),
+        category_id BIGINT NULL REFERENCES categories(id)
     );
 END
+GO
+
+IF COL_LENGTH('wines', 'category_id') IS NULL
+    ALTER TABLE wines ADD category_id BIGINT NULL REFERENCES categories(id);
 GO
 
 IF COL_LENGTH('wines', 'country') IS NULL
@@ -162,7 +187,7 @@ BEGIN
         created_by NVARCHAR(255),
         created_at DATETIME2 NOT NULL DEFAULT GETDATE(),
         FOREIGN KEY (inventory_id) REFERENCES inventory(id) ON DELETE CASCADE,
-        FOREIGN KEY (product_id) REFERENCES wines(id) ON DELETE CASCADE,
+        FOREIGN KEY (product_id) REFERENCES wines(id),
         FOREIGN KEY (warehouse_id) REFERENCES warehouse(id)
     );
 END
