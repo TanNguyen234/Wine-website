@@ -1,374 +1,250 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Khám phá bộ sưu tập rượu vang cao cấp tại StrongWine - Lọc theo loại, quốc gia, năm và giá.">
-    <title>StrongWine | Sản phẩm rượu vang</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    <link rel="stylesheet" href="/css/app.css">
-</head>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="vi">
+<head th:replace="~{fragments/store-shell :: head('Bộ Sưu Tập Rượu Vang · StrongWine')}"></head>
 <body>
+<div th:replace="~{fragments/store-shell :: header('catalog')}"></div>
 
-<nav class="navbar navbar-expand-lg navbar-dark navbar-modern py-2">
-    <div class="container">
-        <a class="navbar-brand d-flex align-items-center gap-2" href="/home">
-            <span class="brand-logo"><i class="fa-solid fa-wine-glass"></i></span>
-            StrongWine
-        </a>
-        <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav me-auto ms-lg-4 gap-lg-1">
-                <li class="nav-item"><a class="nav-link" href="/home">Trang chủ</a></li>
-                <li class="nav-item"><a class="nav-link active" href="/wines">Sản phẩm</a></li>
-                <li class="nav-item" sec:authorize="isAuthenticated()"><a class="nav-link" href="/orders">Đơn hàng của tôi</a></li>
-            </ul>
-            <ul class="navbar-nav align-items-lg-center gap-lg-1">
-                <li class="nav-item">
-                    <a class="nav-link" href="/cart">
-                        <i class="fa-solid fa-wine-bottle me-1"></i>
-                        <span class="js-cart-count badge text-bg-light text-dark" th:text="${cartCount}">0</span>
-                    </a>
-                </li>
-                <li class="nav-item" sec:authorize="!isAuthenticated()"><a class="nav-link" href="/login">Đăng nhập</a></li>
-                <li class="nav-item" sec:authorize="!isAuthenticated()">
-                    <a class="btn btn-gold btn-sm ms-1" href="/register">Đăng ký</a>
-                </li>
-                <li class="nav-item" sec:authorize="hasRole('ADMIN')">
-                    <a class="nav-link" href="/admin"><i class="fa-solid fa-gauge me-1"></i>Quản trị</a>
-                </li>
-                <li class="nav-item" sec:authorize="isAuthenticated()">
-                    <form th:action="@{/logout}" method="post" class="mb-0">
-                        <button class="btn btn-sm btn-outline-secondary ms-1">Đăng xuất</button>
-                    </form>
-                </li>
-            </ul>
-        </div>
-    </div>
-</nav>
+<main class="section">
+    <div class="sw-container">
+        <!-- Flash Alerts -->
+        <div th:if="${message}" class="alert-sw success mb16" th:text="${message}"></div>
+        <div th:if="${error}" class="alert-sw danger mb16" th:text="${error}"></div>
 
-<main class="container site-main my-4">
-    <div th:if="${success}" class="alert alert-success alert-dismissible fade show mb-4" role="alert">
-        <i class="fa-solid fa-circle-check me-2"></i><span th:text="${success}"></span>
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
-        <i class="fa-solid fa-triangle-exclamation me-2"></i><span th:text="${error}"></span>
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-
-    <!-- Filter Panel -->
-    <div class="wine-filter-panel mb-4 fade-up">
-        <div class="filter-header">
+        <div class="section-head">
             <div>
-                <div class="section-label">Khám phá &amp; lọc</div>
-                <h1 class="h4 mb-0" style="font-size:1.25rem">Danh sách rượu vang</h1>
+                <div class="eyebrow">DANH MỤC HẦM RƯỢU STRONGWINE</div>
+                <h1 class="section-title">Bộ sưu tập rượu vang</h1>
             </div>
-            <div class="d-flex align-items-center gap-3">
-                <span class="filter-result-count" id="resultCount"
-                      th:text="${totalEntries} + ' sản phẩm'"></span>
-                <a href="/wines" class="filter-clear-btn"
-                   th:if="${name != null or type != null or country != null or year != null or minPrice != null or maxPrice != null or inStock != null}">
-                    <i class="fa-solid fa-xmark me-1"></i>Xóa bộ lọc
-                </a>
+            <div class="display-flex gap12" style="flex-wrap:wrap">
+                <a th:href="@{/wines/admin/create}" sec:authorize="hasRole('ADMIN')" class="btn btn-sm">+ Thêm rượu vang mới</a>
+                <a th:href="@{/admin/wines/import}" sec:authorize="hasRole('ADMIN')" class="btn btn-outline btn-sm">Nhập từ Excel</a>
             </div>
         </div>
 
-        <form method="get" action="/wines" id="filterForm">
-            <!-- Row 1: Search + Selects -->
-            <div class="filter-row">
-                <div class="filter-field filter-field-search">
-                    <label class="filter-label"><i class="fa-solid fa-magnifying-glass me-1"></i>Tìm kiếm</label>
-                    <input type="text" class="form-control" name="name" id="filterName"
-                           th:value="${name}" placeholder="Tên rượu vang..." autocomplete="off">
-                </div>
-                <div class="filter-field">
-                    <label class="filter-label"><i class="fa-solid fa-wine-bottle me-1"></i>Loại rượu</label>
-                    <select class="form-select filter-select auto-submit" name="type" id="filterType">
-                        <option value="">Tất cả loại</option>
-                        <option value="Red"       th:selected="${type == 'Red'}">🔴 Vang đỏ</option>
-                        <option value="White"     th:selected="${type == 'White'}">⚪ Vang trắng</option>
-                        <option value="Rose"      th:selected="${type == 'Rose'}">🌸 Vang hồng</option>
-                        <option value="Sparkling" th:selected="${type == 'Sparkling'}">✨ Vang sủi</option>
-                    </select>
-                </div>
-                <div class="filter-field">
-                    <label class="filter-label"><i class="fa-solid fa-earth-americas me-1"></i>Quốc gia</label>
-                    <select class="form-select filter-select auto-submit" name="country" id="filterCountry">
-                        <option value="">Tất cả quốc gia</option>
-                        <option th:each="c : ${countries}" th:value="${c}" th:text="${c}"
-                                th:selected="${country == c}"></option>
-                    </select>
-                </div>
-                <div class="filter-field filter-field-sm">
-                    <label class="filter-label"><i class="fa-solid fa-calendar me-1"></i>Năm</label>
-                    <input type="number" class="form-control" name="year" id="filterYear"
-                           th:value="${year}" placeholder="VD: 2019" min="1900" max="2030">
-                </div>
-            </div>
-
-            <!-- Row 2: Price + Stock + Sort + Submit -->
-            <div class="filter-row filter-row-2">
-                <div class="filter-price-group">
-                    <label class="filter-label"><i class="fa-solid fa-tag me-1"></i>Khoảng giá (đ)</label>
-                    <div class="price-range-inputs">
-                        <input type="number" class="form-control" name="minPrice" id="filterMinPrice"
-                               th:value="${minPrice}" placeholder="Từ" min="0">
-                        <span class="price-dash">—</span>
-                        <input type="number" class="form-control" name="maxPrice" id="filterMaxPrice"
-                               th:value="${maxPrice}" placeholder="Đến" min="0">
-                    </div>
-                </div>
-
-                <div class="filter-field">
-                    <label class="filter-label"><i class="fa-solid fa-arrow-up-wide-short me-1"></i>Sắp xếp</label>
-                    <select class="form-select filter-select auto-submit" name="sortBy" id="filterSortBy">
-                        <option value="createdAt" th:selected="${sortBy == 'createdAt'}">Mới nhất</option>
-                        <option value="price"     th:selected="${sortBy == 'price'}">Giá</option>
-                        <option value="name"      th:selected="${sortBy == 'name'}">Tên A→Z</option>
-                        <option value="year"      th:selected="${sortBy == 'year'}">Năm sản xuất</option>
-                    </select>
-                </div>
-
-                <div class="filter-field filter-field-sm">
-                    <label class="filter-label"><i class="fa-solid fa-sort me-1"></i>Thứ tự</label>
-                    <select class="form-select filter-select auto-submit" name="sortDir" id="filterSortDir">
-                        <option value="desc" th:selected="${sortDir == 'desc'}">Giảm dần</option>
-                        <option value="asc"  th:selected="${sortDir == 'asc'}">Tăng dần</option>
-                    </select>
-                </div>
-
-                <div class="filter-stock-toggle">
-                    <label class="filter-label d-block">Tình trạng</label>
-                    <label class="stock-toggle-label" for="inStock">
-                        <input class="stock-toggle-input auto-submit" type="checkbox"
-                               name="inStock" value="true" id="inStock" th:checked="${inStock}">
-                        <span class="stock-toggle-track"></span>
-                        <span class="stock-toggle-text">Còn hàng</span>
-                    </label>
-                </div>
-
-                <div class="filter-actions">
-                    <label class="filter-label d-block" style="opacity:0">-</label>
-                    <button class="btn btn-gold w-100" type="submit" id="filterSubmit">
-                        <i class="fa-solid fa-magnifying-glass me-1"></i>Tìm kiếm
-                    </button>
-                </div>
-            </div>
-
-            <!-- Preserve hidden fields for pagination -->
+        <form id="filterForm" th:action="@{/wines}" method="get">
             <input type="hidden" name="page" value="0">
-            <input type="hidden" name="size" th:value="${pageSize}">
-        </form>
+            <input type="hidden" name="size" th:value="${pageSize != null ? pageSize : 9}">
 
-        <!-- Active Filter Chips -->
-        <div class="active-filters" id="activeFilters"
-             th:if="${name != null or type != null or country != null or year != null or minPrice != null or maxPrice != null or (inStock != null and inStock)}">
-            <span class="active-filters-label">Đang lọc:</span>
-            <a th:if="${name != null and !name.isBlank()}"
-               th:href="@{/wines(type=${type},country=${country},year=${year},minPrice=${minPrice},maxPrice=${maxPrice},inStock=${inStock},sortBy=${sortBy},sortDir=${sortDir})}"
-               class="filter-chip">
-                <i class="fa-solid fa-font me-1"></i><span th:text="${name}"></span><i class="fa-solid fa-xmark ms-1"></i>
-            </a>
-            <a th:if="${type != null and !type.isBlank()}"
-               th:href="@{/wines(name=${name},country=${country},year=${year},minPrice=${minPrice},maxPrice=${maxPrice},inStock=${inStock},sortBy=${sortBy},sortDir=${sortDir})}"
-               class="filter-chip filter-chip-type">
-                <i class="fa-solid fa-wine-bottle me-1"></i>
-                <span th:text="${type == 'Red' ? 'Vang đỏ' : (type == 'White' ? 'Vang trắng' : (type == 'Rose' ? 'Vang hồng' : 'Vang sủi'))}"></span>
-                <i class="fa-solid fa-xmark ms-1"></i>
-            </a>
-            <a th:if="${country != null and !country.isBlank()}"
-               th:href="@{/wines(name=${name},type=${type},year=${year},minPrice=${minPrice},maxPrice=${maxPrice},inStock=${inStock},sortBy=${sortBy},sortDir=${sortDir})}"
-               class="filter-chip filter-chip-country">
-                <i class="fa-solid fa-earth-americas me-1"></i><span th:text="${country}"></span><i class="fa-solid fa-xmark ms-1"></i>
-            </a>
-            <a th:if="${year != null}"
-               th:href="@{/wines(name=${name},type=${type},country=${country},minPrice=${minPrice},maxPrice=${maxPrice},inStock=${inStock},sortBy=${sortBy},sortDir=${sortDir})}"
-               class="filter-chip filter-chip-year">
-                <i class="fa-solid fa-calendar me-1"></i><span th:text="${year}"></span><i class="fa-solid fa-xmark ms-1"></i>
-            </a>
-            <a th:if="${minPrice != null or maxPrice != null}"
-               th:href="@{/wines(name=${name},type=${type},country=${country},year=${year},inStock=${inStock},sortBy=${sortBy},sortDir=${sortDir})}"
-               class="filter-chip filter-chip-price">
-                <i class="fa-solid fa-tag me-1"></i>
-                <span th:text="${(minPrice != null ? #numbers.formatDecimal(minPrice,0,'COMMA',0,'POINT') + 'đ' : '') + (minPrice != null and maxPrice != null ? ' – ' : '') + (maxPrice != null ? #numbers.formatDecimal(maxPrice,0,'COMMA',0,'POINT') + 'đ' : '')}"></span>
-                <i class="fa-solid fa-xmark ms-1"></i>
-            </a>
-            <a th:if="${inStock != null and inStock}"
-               th:href="@{/wines(name=${name},type=${type},country=${country},year=${year},minPrice=${minPrice},maxPrice=${maxPrice},sortBy=${sortBy},sortDir=${sortDir})}"
-               class="filter-chip filter-chip-stock">
-                <i class="fa-solid fa-check me-1"></i>Còn hàng<i class="fa-solid fa-xmark ms-1"></i>
-            </a>
-        </div>
-    </div>
+            <div class="catalog-layout">
+                <!-- Left Filter Rail -->
+                <aside class="filter-panel" aria-label="Bộ lọc rượu vang">
+                    <div class="between mb12">
+                        <strong class="serif" style="font-size:1.15rem">Bộ lọc tinh chọn</strong>
+                        <a th:href="@{/wines}" class="small muted">Đặt lại</a>
+                    </div>
 
-    <!-- Product Grid -->
-    <div class="row g-4 fade-up" id="wineGrid">
-        <div th:if="${wines.isEmpty()}" class="col-12 text-center py-5">
-            <div class="empty-state">
-                <i class="fa-solid fa-wine-bottle fa-3x mb-3" style="color:var(--text-faint)"></i>
-                <p style="color:var(--text-muted);margin-bottom:1rem">Không tìm thấy sản phẩm phù hợp.</p>
-                <a href="/wines" class="btn btn-outline-secondary btn-sm"><i class="fa-solid fa-rotate-left me-1"></i>Xem tất cả</a>
-            </div>
-        </div>
-        <div class="col-sm-6 col-lg-4" th:each="wine : ${wines}">
-            <article class="product-card h-100">
-                <div class="product-card-img-wrap">
-                    <img th:if="${wine.imageUrl != null}" th:src="${wine.imageUrl}" class="media-cover-lg" alt="Rượu vang">
-                    <div th:unless="${wine.imageUrl != null}" class="media-placeholder-lg">
-                        <i class="fa-solid fa-wine-bottle"></i>
+                    <div class="filter-group">
+                        <h4>Tìm theo tên</h4>
+                        <input type="text" id="filterName" name="name" class="field"
+                               placeholder="Château, Merlot, Barolo..."
+                               th:value="${name}">
                     </div>
-                    <span class="wine-type-badge" th:text="${@enumDisplayService.wineType(wine.type)}"></span>
-                </div>
-                <div class="p-3 d-flex flex-column" style="flex:1">
-                    <div class="d-flex align-items-center justify-content-between mb-1">
-                        <span class="wine-year-badge" th:if="${wine.year != null}" th:text="${wine.year}"></span>
-                        <p class="small mb-0" style="color:var(--text-muted);font-size:.76rem"
-                           th:if="${wine.country != null and !wine.country.isBlank()}"
-                           th:text="${'🌍 ' + wine.country}"></p>
+
+                    <div class="filter-group">
+                        <h4>Dòng vang</h4>
+                        <select id="filterType" name="type" class="select">
+                            <option value="">Tất cả dòng vang</option>
+                            <option value="Red" th:selected="${selectedType == 'Red'}">Vang đỏ (Red)</option>
+                            <option value="White" th:selected="${selectedType == 'White'}">Vang trắng (White)</option>
+                            <option value="Rose" th:selected="${selectedType == 'Rose'}">Vang hồng (Rosé)</option>
+                            <option value="Sparkling" th:selected="${selectedType == 'Sparkling'}">Vang sủi (Sparkling)</option>
+                        </select>
                     </div>
-                    <h2 class="h6 mb-1 wine-name" th:text="${wine.name}">Tên rượu</h2>
-                    <p class="small mb-2 wine-desc"
-                       th:text="${wine.description != null ? (wine.description.length() > 90 ? wine.description.substring(0, 90) + '…' : wine.description) : ''}"></p>
-                    <p class="price-tag mb-2" th:text="${#numbers.formatDecimal(wine.price, 0, 'COMMA', 0, 'POINT') + ' đ'}">0 đ</p>
-                    <div class="mb-3" th:with="stock=${(availableStockByWineId != null and availableStockByWineId[wine.id] != null) ? availableStockByWineId[wine.id] : 0}">
-                        <span th:class="${stock > 20 ? 'stock-badge stock-ok' : (stock > 0 ? 'stock-badge stock-low' : 'stock-badge stock-out')}"
-                              th:text="${stock > 20 ? 'Còn hàng: ' + stock : (stock > 0 ? 'Sắp hết: ' + stock : 'Hết hàng')}"></span>
+
+                    <div class="filter-group">
+                        <h4>Quốc gia xuất xứ</h4>
+                        <select id="filterCountry" name="country" class="select">
+                            <option value="">Tất cả quốc gia</option>
+                            <option th:each="c : ${countries}"
+                                    th:value="${c}"
+                                    th:text="${c}"
+                                    th:selected="${selectedCountry != null and selectedCountry == c}">Pháp</option>
+                        </select>
                     </div>
-                    <div class="d-grid gap-2 mt-auto" th:with="stock=${(availableStockByWineId != null and availableStockByWineId[wine.id] != null) ? availableStockByWineId[wine.id] : 0}">
-                        <div class="d-flex gap-2">
-                            <a th:href="@{/wines/{id}(id=${wine.id})}" class="btn btn-outline-secondary btn-sm flex-fill">
-                                <i class="fa-solid fa-eye me-1"></i>Chi tiết
-                            </a>
-                            <button type="button" class="btn btn-outline-gold btn-sm flex-fill btn-quick-view"
-                                    th:attr="data-wine-id=${wine.id},data-wine-name=${wine.name},data-wine-price=${#numbers.formatDecimal(wine.price, 0, 'COMMA', 0, 'POINT') + ' đ'},data-wine-type=${@enumDisplayService.wineType(wine.type)},data-wine-year=${wine.year},data-wine-country=${wine.country},data-wine-desc=${wine.description},data-wine-img=${wine.imageUrl}">
-                                <i class="fa-solid fa-magnifying-glass-plus me-1"></i>Xem nhanh
-                            </button>
+
+                    <div class="filter-group">
+                        <h4>Niên vụ (Vintage)</h4>
+                        <input type="number" id="filterYear" name="year" class="field"
+                               min="1900" max="2030" placeholder="Ví dụ: 2018"
+                               th:value="${selectedYear}">
+                    </div>
+
+                    <div class="filter-group">
+                        <h4>Khoảng giá (VNĐ)</h4>
+                        <div class="grid-2 mb8">
+                            <input type="number" id="filterMinPrice" name="minPrice" class="field"
+                                   min="0" step="50000" placeholder="Từ"
+                                   th:value="${minPrice}">
+                            <input type="number" id="filterMaxPrice" name="maxPrice" class="field"
+                                   min="0" step="50000" placeholder="Đến"
+                                   th:value="${maxPrice}">
                         </div>
-                        <button type="button" class="btn btn-gold btn-sm" data-cart-add="true"
-                                th:disabled="${stock <= 0}"
-                                th:attr="data-cart-product-id=${wine.id},data-cart-name=${wine.name},data-cart-price=${wine.price},data-cart-image=${wine.imageUrl},data-cart-stock=${stock}">
-                            <i class="fa-solid fa-cart-plus me-1"></i>Thêm vào giỏ
-                        </button>
-                        <button type="button" class="btn btn-danger btn-sm" data-cart-add="true" data-cart-redirect="/cart/checkout"
-                                th:disabled="${stock <= 0}"
-                                th:attr="data-cart-product-id=${wine.id},data-cart-name=${wine.name},data-cart-price=${wine.price},data-cart-image=${wine.imageUrl},data-cart-stock=${stock}">
-                            <i class="fa-solid fa-bolt me-1"></i>Mua ngay
-                        </button>
+                        <input type="range" id="priceRangeSlider" min="0" max="25000000" step="250000"
+                               th:value="${maxPrice != null ? maxPrice : 25000000}"
+                               style="width:100%;accent-color:var(--sw-bordeaux)">
+                        <div class="between small muted mt8">
+                            <span>0 ₫</span>
+                            <span id="priceRangeOutput" th:text="${maxPrice != null ? #numbers.formatDecimal(maxPrice, 0, 'COMMA', 0, 'POINT') + ' ₫' : 'Tất cả mức giá'}">Tất cả mức giá</span>
+                        </div>
                     </div>
-                </div>
-            </article>
-        </div>
-    </div>
 
-    <!-- Pagination -->
-    <nav th:if="${totalPages > 1}" aria-label="Phân trang" class="mt-5 d-flex justify-content-center fade-up">
-        <ul class="pagination pagination-modern gap-1">
-            <li class="page-item" th:classappend="${!hasPrevious} ? 'disabled'">
-                <a class="page-link rounded"
-                   th:href="@{/wines(name=${name},type=${type},country=${country},year=${year},minPrice=${minPrice},maxPrice=${maxPrice},inStock=${inStock},sortBy=${sortBy},sortDir=${sortDir},page=${currentPage - 1},size=${pageSize})}">
-                    <i class="fa-solid fa-chevron-left"></i>
-                </a>
-            </li>
-            <li class="page-item" th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
-                th:classappend="${i == currentPage} ? 'active'">
-                <a class="page-link rounded"
-                   th:href="@{/wines(name=${name},type=${type},country=${country},year=${year},minPrice=${minPrice},maxPrice=${maxPrice},inStock=${inStock},sortBy=${sortBy},sortDir=${sortDir},page=${i},size=${pageSize})}"
-                   th:text="${i + 1}">1</a>
-            </li>
-            <li class="page-item" th:classappend="${!hasNext} ? 'disabled'">
-                <a class="page-link rounded"
-                   th:href="@{/wines(name=${name},type=${type},country=${country},year=${year},minPrice=${minPrice},maxPrice=${maxPrice},inStock=${inStock},sortBy=${sortBy},sortDir=${sortDir},page=${currentPage + 1},size=${pageSize})}">
-                    <i class="fa-solid fa-chevron-right"></i>
-                </a>
-            </li>
-        </ul>
-    </nav>
+                    <div class="filter-group">
+                        <label class="check-line">
+                            <input type="checkbox" id="inStock" name="inStock" value="true"
+                                   th:checked="${inStock != null and inStock}">
+                            <span>Chỉ hiển thị rượu còn tồn kho</span>
+                        </label>
+                    </div>
+
+                    <button type="submit" id="filterSubmit" class="btn w100">Áp dụng bộ lọc</button>
+                </aside>
+
+                <!-- Right Catalog Content -->
+                <div>
+                    <!-- Sort & Result Toolbar -->
+                    <div class="toolbar">
+                        <div class="muted small">
+                            Hiển thị <strong th:text="${wines != null ? #lists.size(wines) : 0}">0</strong>
+                            trên tổng <strong th:text="${totalItems != null ? totalItems : 0}">0</strong> chai vang
+                        </div>
+                        <div class="display-flex gap8" style="flex-wrap:wrap">
+                            <select id="filterSortBy" name="sortBy" class="select" style="width:auto;min-height:38px;padding:6px 12px" onchange="document.getElementById('filterForm').submit()">
+                                <option value="createdAt" th:selected="${sortBy == null or sortBy == 'createdAt'}">Mới cập nhật</option>
+                                <option value="price" th:selected="${sortBy == 'price'}">Theo mức giá</option>
+                                <option value="name" th:selected="${sortBy == 'name'}">Theo tên A-Z</option>
+                                <option value="year" th:selected="${sortBy == 'year'}">Theo niên vụ</option>
+                            </select>
+                            <select id="filterSortDir" name="sortDir" class="select" style="width:auto;min-height:38px;padding:6px 12px" onchange="document.getElementById('filterForm').submit()">
+                                <option value="desc" th:selected="${sortDir == null or sortDir == 'desc'}">Giảm dần</option>
+                                <option value="asc" th:selected="${sortDir == 'asc'}">Tăng dần</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Empty State -->
+                    <div th:if="${wines == null or wines.isEmpty()}" class="panel text-center">
+                        <h3 class="serif mb8">Không tìm thấy chai vang phù hợp</h3>
+                        <p class="muted mb16">Hãy thử nới rộng khoảng giá hoặc xoá bớt điều kiện lọc để khám phá thêm các dòng vang khác.</p>
+                        <a th:href="@{/wines}" class="btn btn-outline">Xem toàn bộ danh mục</a>
+                    </div>
+
+                    <!-- Wine Cards Grid -->
+                    <div class="wine-grid" th:if="${wines != null and !wines.isEmpty()}">
+                        <article class="wine-card" th:each="wine : ${wines}"
+                                 th:with="stock=${availableStockByWineId != null and availableStockByWineId.containsKey(wine.id) ? availableStockByWineId.get(wine.id) : 0}">
+                            <div class="wine-stage">
+                                <span class="wine-pill" th:text="${@enumDisplayService.wineType(wine.type)}">Vang đỏ</span>
+                                <span class="stock-pill"
+                                      th:classappend="${stock <= 0} ? 'out' : (${stock <= 5} ? 'low' : '')"
+                                      th:text="${stock > 0 ? 'Còn ' + stock + ' chai' : 'Hết hàng'}">Còn hàng</span>
+                                <a th:href="@{/wines/{id}(id=${wine.id})}" aria-label="Xem chi tiết rượu vang">
+                                    <img th:if="${wine.imageUrl != null and !#strings.isEmpty(wine.imageUrl)}"
+                                         th:src="${wine.imageUrl}"
+                                         th:alt="${wine.name}"
+                                         onerror="this.style.display='none';this.nextElementSibling.style.display='block';">
+                                    <div th:style="${wine.imageUrl != null and !#strings.isEmpty(wine.imageUrl)} ? 'display:none' : 'display:block'">
+                                        <div th:replace="~{fragments/store-shell :: bottleSvg('bottle-svg-sm')}"></div>
+                                    </div>
+                                </a>
+                            </div>
+
+                            <div class="wine-body">
+                                <div class="wine-meta">
+                                    <span th:text="${wine.country != null ? wine.country : 'Quốc tế'}">Pháp</span>
+                                    <span th:if="${wine.year != null}" th:text="'Niên vụ ' + ${wine.year}">2018</span>
+                                </div>
+                                <h2 class="wine-name">
+                                    <a th:href="@{/wines/{id}(id=${wine.id})}" th:text="${wine.name}">Tên rượu vang</a>
+                                </h2>
+                                <p class="wine-note" th:text="${wine.description != null and !#strings.isEmpty(wine.description) ? wine.description : 'Cấu trúc hài hoà, hương thơm tinh tế từ hầm rượu StrongWine.'}">Mô tả</p>
+
+                                <div class="wine-foot">
+                                    <div>
+                                        <div class="price" th:text="${#numbers.formatDecimal(wine.price, 0, 'COMMA', 0, 'POINT')} + ' ₫'">0 ₫</div>
+                                        <span class="price-sub">750ml · Đã gồm VAT</span>
+                                    </div>
+                                    <div class="display-flex gap8">
+                                        <button type="button"
+                                                class="btn btn-outline btn-sm btn-quick-view"
+                                                title="Xem nhanh"
+                                                th:attr="data-id=${wine.id},
+                                                         data-name=${wine.name},
+                                                         data-type=${@enumDisplayService.wineType(wine.type)},
+                                                         data-country=${wine.country},
+                                                         data-year=${wine.year},
+                                                         data-price=${wine.price},
+                                                         data-desc=${wine.description},
+                                                         data-img=${wine.imageUrl},
+                                                         data-stock=${stock}">
+                                            Xem nhanh
+                                        </button>
+                                        <button type="button"
+                                                class="btn btn-sm"
+                                                th:disabled="${stock <= 0}"
+                                                data-cart-add="true"
+                                                th:attr="data-cart-product-id=${wine.id},
+                                                         data-cart-name=${wine.name},
+                                                         data-cart-price=${wine.price},
+                                                         data-cart-image=${wine.imageUrl},
+                                                         data-cart-stock=${stock}">
+                                            <span th:text="${stock > 0 ? '+ Giỏ' : 'Hết'}">+ Giỏ</span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Admin Quick Actions -->
+                                <div class="display-flex gap8 mt12 pt12" style="border-top:1px dashed var(--sw-line)" sec:authorize="hasRole('ADMIN')">
+                                    <a th:href="@{/wines/admin/edit/{id}(id=${wine.id})}" class="btn btn-outline btn-sm">Sửa</a>
+                                    <form th:action="@{/wines/admin/delete/{id}(id=${wine.id})}" method="post" onsubmit="return confirm('Xác nhận xoá sản phẩm này?');" class="d-inline">
+                                        <button type="submit" class="btn btn-danger btn-sm">Xoá</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </article>
+                    </div>
+
+                    <!-- Pagination Fragment -->
+                    <div th:replace="~{fragments/pagination :: pagination('/wines')}"></div>
+                </div>
+            </div>
+        </form>
+    </div>
 </main>
 
-<button id="aiToggle" class="ai-fab" title="AI gợi ý"><i class="fa-solid fa-robot"></i></button>
-<section id="aiPanel" class="ai-panel p-3">
-    <div class="d-flex justify-content-between align-items-center mb-2 pb-2" style="border-bottom:1px solid var(--border)">
-        <h6><i class="fa-solid fa-sparkles me-1"></i>AI gợi ý</h6>
-        <button id="aiClose" class="btn-close" style="filter:invert(1) opacity(.5)"></button>
-    </div>
-    <div id="aiFeed" class="ai-feed mb-2"></div>
-    <form id="aiForm" class="d-flex gap-2">
-        <input id="aiPrompt" class="form-control form-control-sm" placeholder="Ví dụ: rượu dưới 500k">
-        <button class="btn btn-gold btn-sm" type="submit"><i class="fa-solid fa-paper-plane"></i></button>
-    </form>
-</section>
-
-<footer class="site-footer text-center">
-    <div class="container">
-        <p class="mb-0">© 2026 StrongWine. Tất cả quyền được bảo lưu.</p>
-    </div>
-</footer>
-
-<!-- Quick View Modal -->
-<div class="modal fade" id="quickViewModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content bg-dark text-light border-gold" style="border: 1px solid var(--gold-border); background-color: var(--surface) !important;">
-            <div class="modal-header border-bottom-0 pb-0">
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+<!-- Quick View Modal (Bootstrap compatible for wine-filter-drawer.js) -->
+<div class="modal fade" id="quickViewModal" tabindex="-1" aria-labelledby="qvName" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content" style="border-radius:var(--sw-radius-lg);border:1px solid var(--sw-line);background:var(--sw-paper)">
+            <div class="modal-header" style="border-bottom:1px solid var(--sw-line)">
+                <div>
+                    <span class="badge badge-wine" id="qvType">Vang đỏ</span>
+                    <h4 class="serif mt8 mb0" id="qvName">Tên rượu vang</h4>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
             </div>
-            <div class="modal-body p-4">
-                <div class="row g-4 align-items-center">
-                    <div class="col-md-5 text-center">
-                        <img class="modal-wine-img img-fluid rounded border-gold" src="" alt="Rượu vang" style="max-height: 320px; object-fit: cover; border: 1px solid var(--gold-border);">
+            <div class="modal-body">
+                <div class="grid-2" style="align-items:center">
+                    <div class="wine-stage" style="min-height:260px;border-radius:var(--sw-radius)">
+                        <img id="qvImg" src="" alt="Hình chai vang" style="max-height:230px;width:auto">
                     </div>
-                    <div class="col-md-7">
-                        <span class="badge text-bg-warning text-dark mb-2 modal-wine-type">Loại</span>
-                        <span class="badge text-bg-secondary mb-2 modal-wine-year">Năm</span>
-                        <h3 class="modal-wine-name font-serif mb-2" style="color: var(--gold-prime);">Tên Rượu</h3>
-                        <p class="text-muted small mb-2"><i class="fa-solid fa-earth-americas me-1"></i><span class="modal-wine-country">Xuất xứ</span></p>
-                        <h4 class="modal-wine-price text-danger mb-3">0 đ</h4>
-                        <p class="modal-wine-desc text-secondary small mb-4">Mô tả nếm thử...</p>
-                        <div class="d-flex gap-2">
-                            <button type="button" class="btn btn-gold btn-sm modal-add-to-cart-btn js-add-to-cart" data-wine-id="">
-                                <i class="fa-solid fa-cart-plus me-1"></i>Thêm vào giỏ
-                            </button>
-                            <button type="button" class="btn btn-outline-light btn-sm" data-bs-dismiss="modal">Đóng</button>
+                    <div>
+                        <div class="muted small mb8">
+                            <span id="qvCountry">Pháp</span> · Niên vụ <span id="qvYear">2019</span> · <span id="qvStockBadge">Còn hàng</span>
+                        </div>
+                        <div class="price mb12" id="qvPrice">0 ₫</div>
+                        <p class="muted mb20" id="qvDesc">Mô tả hương vị rượu vang.</p>
+                        <div class="display-flex gap10">
+                            <button type="button" class="btn modal-add-to-cart-btn">Thêm vào giỏ hàng</button>
+                            <a id="qvDetailLink" href="/wines" class="btn btn-outline">Xem trang chi tiết &rarr;</a>
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
-<!-- Cart Drawer (Offcanvas) -->
-<div class="offcanvas offcanvas-end bg-dark text-light" tabindex="-1" id="cartDrawer" style="background-color: var(--surface) !important; border-left: 1px solid var(--gold-border) !important;">
-    <div class="offcanvas-header border-bottom" style="border-color: var(--surface-border) !important;">
-        <h5 class="offcanvas-title font-serif" style="color: var(--gold-prime);"><i class="fa-solid fa-wine-bottle me-2"></i>Giỏ Hàng Quý Khách</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-    </div>
-    <div class="offcanvas-body d-flex flex-column">
-        <div id="cartDrawerItems" class="flex-grow-1 overflow-auto mb-3">
-            <p class="text-muted text-center py-4">Đang đồng bộ dữ liệu giỏ hàng...</p>
-        </div>
-        <div class="border-top pt-3" style="border-color: var(--surface-border) !important;">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <span class="text-muted">Tổng tạm tính:</span>
-                <span id="cartDrawerSubtotal" class="h5 mb-0 font-serif" style="color: var(--gold-light);">0 đ</span>
-            </div>
-            <div class="d-grid gap-2">
-                <a href="/cart" class="btn btn-outline-gold btn-sm"><i class="fa-solid fa-cart-shopping me-1"></i>Xem giỏ hàng đầy đủ</a>
-                <a href="/cart/checkout" class="btn btn-gold btn-sm"><i class="fa-solid fa-credit-card me-1"></i>Tiến hành thanh toán</a>
             </div>
         </div>
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="/js/cart-client.js"></script>
-<script src="/js/ai-assistant.js"></script>
-<script src="/js/wine-filters.js"></script>
-<script src="/js/wine-filter-drawer.js"></script>
-<script src="/js/cart-drawer.js"></script>
+<div th:replace="~{fragments/store-shell :: footer}"></div>
+<script th:src="@{/js/wine-filter-drawer.js}"></script>
 </body>
 </html>

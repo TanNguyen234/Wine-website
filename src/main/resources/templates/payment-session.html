@@ -1,106 +1,50 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Phiên thanh toán - StrongWine</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    <link rel="stylesheet" href="/css/app.css">
-</head>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head th:replace="~{fragments/store-shell :: head('Cổng Thanh Toán Bảo Mật · StrongWine')}"></head>
 <body>
+<div th:replace="~{fragments/store-shell :: header('orders')}"></div>
 
-<nav class="navbar navbar-dark navbar-modern py-2">
-    <div class="container">
-        <a class="navbar-brand d-flex align-items-center gap-2" href="/home">
-            <span class="brand-logo"><i class="fa-solid fa-wine-glass"></i></span>
-            StrongWine
-        </a>
-        <div class="d-flex align-items-center gap-2">
-            <i class="fa-solid fa-shield-halved" style="color:var(--ok-light)"></i>
-            <span style="font-size:.8rem;color:var(--text-muted)">Phiên an toàn</span>
-        </div>
-    </div>
-</nav>
+<main class="section">
+    <div class="sw-container" style="max-width:720px">
+        <div th:if="${error}" class="alert-sw danger mb16" th:text="${error}"></div>
 
-<main class="container site-main my-5">
-    <div class="row justify-content-center">
-        <div class="col-lg-6">
-            <div class="panel p-4 p-lg-5 fade-up">
-                <div class="text-center mb-4">
-                    <div class="spinner-border mb-3" style="color:var(--gold);width:3rem;height:3rem" role="status">
-                        <span class="visually-hidden">Loading...</span>
-                    </div>
-                    <h1 class="h4 mb-1">Đang xử lý thanh toán</h1>
-                    <p style="color:var(--text-muted);font-size:.9rem">
-                        Hệ thống đang kết nối an toàn bảo mật để hoàn tất đơn hàng <strong style="color:var(--gold)" th:text="'#' + ${order.id}"></strong>. Vui lòng không đóng trình duyệt.
-                    </p>
+        <div class="panel" style="padding:36px">
+            <div class="between mb16">
+                <div>
+                    <div class="eyebrow">CỔNG THANH TOÁN TRỰC TUYẾN</div>
+                    <h1 class="serif mt8 mb0" style="font-size:2rem">Xác nhận giao dịch</h1>
                 </div>
+                <span class="badge badge-gold" th:if="${payment != null}" th:text="${@enumDisplayService.paymentMethod(payment.method)}">ONLINE</span>
+            </div>
 
-                <div style="background:var(--surface-mid);border:1px solid var(--border);border-radius:var(--r-md);padding:1.25rem;margin-bottom:1.5rem">
-                    <div class="d-flex justify-content-between mb-2 align-items-center">
-                        <span style="color:var(--text-muted);font-size:.82rem">Mã giao dịch</span>
-                        <strong style="font-family:monospace;font-size:.85rem;color:var(--text)" th:text="${payment.paymentReference}"></strong>
-                    </div>
-                    <div class="d-flex justify-content-between mb-2 align-items-center">
-                        <span style="color:var(--text-muted);font-size:.82rem">Phương thức</span>
-                        <strong style="color:var(--text-soft)" th:text="${@enumDisplayService.paymentMethod(payment.method)}"></strong>
-                    </div>
-                    <div style="height:1px;background:var(--border);margin:.75rem 0"></div>
-                    <div class="d-flex justify-content-between align-items-center">
-                        <span style="color:var(--text-muted);font-size:.82rem">Số tiền</span>
-                        <span class="price-tag" style="font-size:1.3rem"
-                              th:text="${#numbers.formatDecimal(payment.amount, 0, 'COMMA', 0, 'POINT') + ' đ'}"></span>
-                    </div>
+            <div class="panel-soft mb24" th:if="${order != null}">
+                <div class="between mb10">
+                    <span class="muted">Mã đơn hàng</span>
+                    <strong th:text="'#' + ${order.id}">#1</strong>
                 </div>
-
-                <div class="alert alert-warning" th:if="${error != null and !error.isEmpty()}" th:text="${error}"></div>
-
-                <!-- Sandbox / Test Mode Controls -->
-                <div class="accordion" id="sandboxControls" style="--bs-accordion-bg: transparent; --bs-accordion-border-color: var(--border);">
-                    <div class="accordion-item" style="border-radius: var(--r-md); overflow: hidden;">
-                        <h2 class="accordion-header">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSandbox" aria-expanded="false" aria-controls="collapseSandbox" style="background:var(--surface-mid); color:var(--text-muted); font-size: .85rem; font-weight: 600; padding: .75rem 1rem;">
-                                <i class="fa-solid fa-flask me-2"></i>Chế độ thử nghiệm (Sandbox Mode)
-                            </button>
-                        </h2>
-                        <div id="collapseSandbox" class="accordion-collapse collapse" data-bs-parent="#sandboxControls">
-                            <div class="accordion-body" style="background:var(--surface-light); padding: 1rem;">
-                                <p style="font-size: .8rem; color: var(--text-faint); margin-bottom: 1rem;">
-                                    Do API Key của Stripe chưa được cấu hình, hệ thống đang ở rẽ nhánh fallback. Bạn có thể tự mô phỏng kết quả giao dịch bằng các nút dưới đây:
-                                </p>
-                                <div class="d-grid gap-2">
-                                    <a class="btn btn-sm btn-outline-success" th:href="${successUrl}">
-                                        <i class="fa-solid fa-check me-1"></i>Thành công
-                                    </a>
-                                    <a class="btn btn-sm btn-outline-danger" th:href="${failedUrl}">
-                                        <i class="fa-solid fa-xmark me-1"></i>Thất bại
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                <div class="between mb10" th:if="${payment != null}">
+                    <span class="muted">Mã phiên giao dịch</span>
+                    <code th:text="${payment.paymentReference != null ? payment.paymentReference : payment.id}">TXN</code>
                 </div>
-                
-                <div class="text-center mt-3">
-                    <a class="btn btn-link text-decoration-none" style="color:var(--text-muted);font-size:.85rem;transition:color .2s ease" onmouseover="this.style.color='var(--critical)'" onmouseout="this.style.color='var(--text-muted)'" th:href="${cancelUrl}">
-                        <i class="fa-solid fa-ban me-1"></i>Hủy thanh toán
-                    </a>
+                <div class="between pt12" style="border-top:1px solid var(--sw-line)">
+                    <strong>Số tiền thanh toán</strong>
+                    <strong class="price" th:text="${#numbers.formatDecimal(order.totalPrice, 0, 'COMMA', 0, 'POINT')} + ' ₫'">0 ₫</strong>
+                </div>
+            </div>
+
+            <p class="muted small mb20">Chọn thao tác xác nhận thanh toán bên dưới để hoàn tất phiên giao dịch cho đơn hàng của bạn:</p>
+
+            <div class="stack">
+                <a th:if="${successUrl != null}" th:href="${successUrl}" class="btn w100">Xác nhận thanh toán thành công &rarr;</a>
+                <div class="grid-2">
+                    <a th:if="${failedUrl != null}" th:href="${failedUrl}" class="btn btn-danger w100">Giả lập lỗi thanh toán</a>
+                    <a th:if="${cancelUrl != null}" th:href="${cancelUrl}" class="btn btn-outline w100">Huỷ và quay lại</a>
                 </div>
             </div>
         </div>
     </div>
 </main>
 
-<footer class="site-footer text-center">
-    <div class="container">
-        <p class="mb-0">© 2026 StrongWine. Tất cả quyền được bảo lưu.</p>
-    </div>
-</footer>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<div th:replace="~{fragments/store-shell :: footer}"></div>
 </body>
 </html>

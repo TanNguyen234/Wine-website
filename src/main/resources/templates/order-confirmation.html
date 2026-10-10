@@ -1,104 +1,52 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Xác nhận đơn hàng - StrongWine</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    <link rel="stylesheet" href="/css/app.css">
-    <style>
-        @keyframes popIn {
-            from { transform: scale(0.5); opacity: 0; }
-            to   { transform: scale(1);   opacity: 1; }
-        }
-        .check-anim { animation: popIn 0.5s cubic-bezier(.22,.68,0,1.4) 0.3s both; display: inline-block; }
-    </style>
-</head>
-<body>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head th:replace="~{fragments/store-shell :: head('Đặt Hàng Thành Công · StrongWine')}"></head>
+<body data-order-confirmation="true">
+<div th:replace="~{fragments/store-shell :: header('orders')}"></div>
 
-<nav class="navbar navbar-expand-lg navbar-dark navbar-modern py-2">
-    <div class="container">
-        <a class="navbar-brand d-flex align-items-center gap-2" href="/home">
-            <span class="brand-logo"><i class="fa-solid fa-wine-glass"></i></span>
-            StrongWine
-        </a>
-        <div class="ms-auto d-flex gap-2 align-items-center">
-            <a class="nav-link text-white" href="/home">Trang chủ</a>
-            <a class="nav-link text-white" href="/wines">Sản phẩm</a>
-            <a class="nav-link text-white" sec:authorize="isAuthenticated()" href="/orders">Đơn hàng của tôi</a>
-            <a class="nav-link text-white" href="/cart">
-                <i class="fa-solid fa-wine-bottle me-1"></i>
-                <span class="js-cart-count badge text-bg-light text-dark" th:text="${cartCount}">0</span>
-            </a>
-        </div>
-    </div>
-</nav>
+<main class="section">
+    <div class="sw-container" style="max-width:760px">
+        <div class="panel text-center" style="padding:44px 32px">
+            <span class="badge badge-ok mb12">ĐẶT HÀNG THÀNH CÔNG</span>
+            <h1 class="serif mb12" style="font-size:2.3rem">Cảm ơn bạn đã tin chọn StrongWine</h1>
+            <p class="muted mb24">Đơn đặt hàng của bạn đã được ghi nhận vào hệ thống hầm rượu và khởi tạo vận đơn bảo mật OTP.</p>
 
-<main class="container site-main my-5 d-flex align-items-center justify-content-center" data-order-confirmation="true">
-    <div class="confirmation-card fade-up" style="max-width:540px;width:100%">
-        <div class="text-center mb-4">
-            <span class="check-anim" style="font-size:5rem;color:var(--ok-light)">
-                <i class="fa-solid fa-circle-check"></i>
-            </span>
-        </div>
-        <h2 class="text-center mb-1">Đặt hàng thành công!</h2>
-        <p class="text-center mb-4" style="color:var(--text-muted)">Cảm ơn bạn đã tin tưởng StrongWine</p>
-
-        <div style="background:var(--surface-mid);border:1px solid var(--border);border-radius:var(--r-md);padding:1.25rem">
-            <div class="section-label mb-2">Thông tin đơn hàng</div>
-            <div class="row g-2">
-                <div class="col-6">
-                    <div style="font-size:.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em">Mã đơn hàng</div>
-                    <div style="font-family:'Playfair Display',serif;font-size:1.2rem;color:var(--gold)" th:text="${'#' + orderId}"></div>
+            <div class="panel-soft text-start mb24" style="text-align:left">
+                <div class="between mb12">
+                    <span class="muted">Mã đơn hàng</span>
+                    <strong class="serif" style="font-size:1.2rem" th:text="'#' + ${orderId}">#1</strong>
                 </div>
-                <div class="col-6">
-                    <div style="font-size:.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em">Trạng thái đơn</div>
-                    <span class="badge text-bg-secondary" th:text="${@enumDisplayService.orderStatus(orderStatus)}"></span>
+                <div class="between mb12" th:if="${fullName != null}">
+                    <span class="muted">Người nhận</span>
+                    <strong th:text="${fullName}">Khách hàng</strong>
                 </div>
-                <div class="col-6">
-                    <div style="font-size:.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em">Thanh toán</div>
-                    <span class="badge text-bg-info" th:text="${@enumDisplayService.paymentStatus(paymentStatus)}"></span>
+                <div class="between mb12" th:if="${phone != null}">
+                    <span class="muted">Số điện thoại</span>
+                    <strong th:text="${phone}">0900000000</strong>
                 </div>
-                <div class="col-6">
-                    <div style="font-size:.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em">Người nhận</div>
-                    <div style="color:var(--text-soft);font-size:.9rem" th:text="${fullName}"></div>
+                <div class="between mb12" th:if="${address != null}">
+                    <span class="muted">Địa chỉ giao nhận</span>
+                    <strong th:text="${address}">Địa chỉ</strong>
                 </div>
-                <div class="col-6">
-                    <div style="font-size:.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em">Số điện thoại</div>
-                    <div style="color:var(--text-soft);font-size:.9rem" th:text="${phone}"></div>
+                <div class="between mb12" th:if="${orderStatus != null}">
+                    <span class="muted">Trạng thái đơn hàng</span>
+                    <span class="badge badge-wine" th:text="${@enumDisplayService.orderStatus(orderStatus)}">Chờ xử lý</span>
                 </div>
-                <div class="col-12">
-                    <div style="font-size:.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em">Địa chỉ giao hàng</div>
-                    <div style="color:var(--text-soft);font-size:.9rem" th:text="${address}"></div>
+                <div class="between" th:if="${paymentStatus != null}">
+                    <span class="muted">Trạng thái thanh toán</span>
+                    <span class="badge badge-gold" th:text="${@enumDisplayService.paymentStatus(paymentStatus)}">Thanh toán</span>
                 </div>
             </div>
-        </div>
 
-        <div class="d-flex flex-wrap gap-2 mt-4 justify-content-center">
-            <a href="/home" class="btn btn-gold">
-                <i class="fa-solid fa-house me-1"></i>Trang chủ
-            </a>
-            <a href="/orders" class="btn btn-outline-secondary">
-                <i class="fa-solid fa-box me-1"></i>Đơn hàng của tôi
-            </a>
-            <a href="/wines" class="btn btn-outline-secondary">
-                <i class="fa-solid fa-wine-bottle me-1"></i>Tiếp tục mua sắm
-            </a>
+            <div class="display-flex gap12" style="justify-content:center;flex-wrap:wrap">
+                <a th:if="${orderId != null}" th:href="@{/orders/{id}(id=${orderId})}" class="btn">Theo dõi đơn &amp; Xem mã OTP &rarr;</a>
+                <a th:href="@{/orders}" class="btn btn-outline">Danh sách đơn hàng</a>
+                <a th:href="@{/wines}" class="btn btn-outline">Tiếp tục mua sắm</a>
+            </div>
         </div>
     </div>
 </main>
 
-<footer class="site-footer text-center mt-5">
-    <div class="container">
-        <p class="mb-0">© 2026 StrongWine. Tất cả quyền được bảo lưu.</p>
-    </div>
-</footer>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="/js/cart-client.js"></script>
+<div th:replace="~{fragments/store-shell :: footer}"></div>
 </body>
 </html>
