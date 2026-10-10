@@ -1,5 +1,29 @@
 -- V13: Enrich realistic Vietnamese fine wine e-commerce and cold-chain logistics data
--- 100% idempotent: safe to run on existing databases where V1..V12 have already been applied.
+-- 100% idempotent: ensures base tables/columns exist and seeds 24 fine wines (with 24 unique images),
+-- 4 warehouses, multi-warehouse inventory, shippers, 6-month orders, payments, shipments, and reviews.
+
+/* =========================================================================
+   0. ENSURE BASE TABLES & COLUMNS EXIST (SAFE FOR EMPTY OR EXISTING DB)
+   ========================================================================= */
+IF OBJECT_ID(N'[dbo].[categories]', N'U') IS NULL
+BEGIN
+    CREATE TABLE [dbo].[categories] (
+        [id] BIGINT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+        [name] NVARCHAR(255) NOT NULL UNIQUE,
+        [description] NVARCHAR(500) NULL,
+        [created_at] DATETIME2 NULL CONSTRAINT [DF_v13_categories_created_at] DEFAULT GETDATE(),
+        [updated_at] DATETIME2 NULL CONSTRAINT [DF_v13_categories_updated_at] DEFAULT GETDATE(),
+        [created_by] NVARCHAR(255) NULL,
+        [updated_by] NVARCHAR(255) NULL,
+        [deleted] BIT NOT NULL CONSTRAINT [DF_v13_categories_deleted] DEFAULT 0
+    );
+END;
+
+IF OBJECT_ID(N'[dbo].[wines]', N'U') IS NOT NULL
+BEGIN
+    IF COL_LENGTH('dbo.wines', 'category_id') IS NULL
+        ALTER TABLE [dbo].[wines] ADD [category_id] BIGINT NULL;
+END;
 
 /* =========================================================================
    1. CATEGORIES
@@ -83,7 +107,7 @@ BEGIN
 END;
 
 /* =========================================================================
-   4. WINES (24 REALISTIC FINE WINE LABELS)
+   4. WINES (24 REALISTIC FINE WINE LABELS WITH 24 DISTINCT BOTTLE IMAGES)
    ========================================================================= */
 IF OBJECT_ID(N'[dbo].[wines]', N'U') IS NOT NULL
 BEGIN
@@ -92,19 +116,18 @@ BEGIN
     DECLARE @CatRose BIGINT      = (SELECT TOP 1 [id] FROM [dbo].[categories] WHERE [name] = N'Vang hồng');
     DECLARE @CatSparkling BIGINT = (SELECT TOP 1 [id] FROM [dbo].[categories] WHERE [name] = N'Vang sủi');
 
-    INSERT INTO [dbo].[wines]
-        ([name], [type], [year], [price], [description], [country], [image_url], [category_id], [created_at], [updated_at], [created_by], [updated_by], [deleted])
-    SELECT
-        v.[name], v.[type], v.[year], v.[price], v.[description], v.[country], v.[image_url],
-        CASE v.[type]
-            WHEN N'Red'       THEN @CatRed
-            WHEN N'White'     THEN @CatWhite
-            WHEN N'Rose'      THEN @CatRose
-            WHEN N'Sparkling' THEN @CatSparkling
-            ELSE @CatRed
-        END,
-        DATEADD(DAY, -30, GETDATE()), GETDATE(), N'system', N'system', 0
-    FROM (VALUES
+    DECLARE @WineSeed TABLE (
+        [name] NVARCHAR(255),
+        [type] NVARCHAR(50),
+        [year] INT,
+        [price] DECIMAL(10,2),
+        [description] NVARCHAR(1000),
+        [country] NVARCHAR(100),
+        [image_url] NVARCHAR(500)
+    );
+
+    INSERT INTO @WineSeed ([name], [type], [year], [price], [description], [country], [image_url])
+    VALUES
         (N'Château Margaux Premier Grand Cru Classé', N'Red', 2018, CAST(8990000.00 AS DECIMAL(10,2)),
          N'Biểu tượng Premier Grand Cru Classé vùng Margaux với hương lý chua đen, hoa tím, gỗ tuyết tùng và hậu vị nhung lụa kéo dài.',
          N'France', N'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?auto=format&fit=crop&w=900&q=80'),
@@ -125,60 +148,79 @@ BEGIN
          N'Italy', N'https://images.unsplash.com/photo-1568213816046-0ee1c42bd559?auto=format&fit=crop&w=900&q=80'),
         (N'Almaviva Puente Alto Maipo Valley', N'Red', 2020, CAST(4650000.00 AS DECIMAL(10,2)),
          N'Dòng vang Primer Orden cao cấp nhất Chile; sự kết hợp Bordeaux blend cổ điển với thổ nhưỡng chân núi Andes, đậm vị dâu rừng và vani.',
-         N'Chile', N'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?auto=format&fit=crop&w=900&q=80'),
+         N'Chile', N'https://images.unsplash.com/photo-1578911373434-0cb395d2cbfb?auto=format&fit=crop&w=900&q=80'),
         (N'Cabernet Reserva Colchagua', N'Red', 2020, CAST(980000.00 AS DECIMAL(10,2)),
          N'Vang đỏ đậm vị từ thung lũng Colchagua với hương lý chua đen, ớt chuông nướng và hậu vị êm mượt, lý tưởng cho tiệc tối và bít tết.',
-         N'Chile', N'https://images.unsplash.com/photo-1516594915697-87eb3b1c14ea?auto=format&fit=crop&w=900&q=80'),
+         N'Chile', N'https://images.unsplash.com/photo-1586370434639-0fe43b2d32e6?auto=format&fit=crop&w=900&q=80'),
         (N'Montes Alpha M Santa Cruz', N'Red', 2019, CAST(2950000.00 AS DECIMAL(10,2)),
          N'Dòng vang biểu tượng của nhà Montes; cấu trúc dày dặn, hương quả mọng đen chín mọng, hạt nhục đậu khấu, thuốc lá nhẹ và hậu vị sâu.',
-         N'Chile', N'https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?auto=format&fit=crop&w=900&q=80'),
+         N'Chile', N'https://images.unsplash.com/photo-1560148218-1a83060f7b32?auto=format&fit=crop&w=900&q=80'),
         (N'Catena Zapata Malbec Argentino', N'Red', 2020, CAST(2790000.00 AS DECIMAL(10,2)),
          N'Malbec từ các vườn nho độ cao trên 1.400m tại dãy Andes; sắc tím đậm, hương hoa violet, mận chín, mocha và vị chát mượt như nhung.',
-         N'Argentina', N'https://images.unsplash.com/photo-1553361371-9b22f78e8b1d?auto=format&fit=crop&w=900&q=80'),
+         N'Argentina', N'https://images.unsplash.com/photo-1513618827672-0d7c5ad591b1?auto=format&fit=crop&w=900&q=80'),
         (N'Marqués de Riscal Gran Reserva Rioja', N'Red', 2016, CAST(1890000.00 AS DECIMAL(10,2)),
          N'Vang đỏ Tây Ban Nha ủ 30 tháng trong thùng sồi; hương mận khô, quế, đinh hương, da thuộc mềm và cấu trúc cân bằng cổ điển.',
-         N'Spain', N'https://images.unsplash.com/photo-1584916201218-f4242ceb4809?auto=format&fit=crop&w=900&q=80'),
+         N'Spain', N'https://images.unsplash.com/photo-1547595628-c61a29f496f0?auto=format&fit=crop&w=900&q=80'),
         (N'Pinot Noir Reserve Willamette Valley', N'Red', 2020, CAST(1350000.00 AS DECIMAL(10,2)),
          N'Pinot Noir tinh tế với hương anh đào đỏ, dâu rừng, nấm rừng ẩm và độ chua thanh thoát, kết hợp hoàn hảo cùng vịt quay hoặc cá hồi.',
-         N'USA', N'https://images.unsplash.com/photo-1568213816046-0ee1c42bd559?auto=format&fit=crop&w=900&q=80'),
+         N'USA', N'https://images.unsplash.com/photo-1528823872057-9c018a7a7553?auto=format&fit=crop&w=900&q=80'),
         (N'Louis Jadot Puligny-Montrachet Blanc', N'White', 2020, CAST(3150000.00 AS DECIMAL(10,2)),
          N'Chardonnay thượng hạng vùng Côte de Beaune; hương hoa keo, táo nướng bơ, hạt dẻ cười và độ khoáng sắc sảo đặc trưng đá vôi.',
          N'France', N'https://images.unsplash.com/photo-1470337458703-46ad1756a187?auto=format&fit=crop&w=900&q=80'),
         (N'Sancerre Blanc Les Monts Damnés', N'White', 2021, CAST(1190000.00 AS DECIMAL(10,2)),
          N'Sauvignon Blanc từ sườn đồi đá phấn Kimmeridgian; hương bưởi hồng, chanh vàng, cỏ mới cắt và vị khoáng đá lửa sống động.',
-         N'France', N'https://images.unsplash.com/photo-1470337458703-46ad1756a187?auto=format&fit=crop&w=900&q=80'),
+         N'France', N'https://images.unsplash.com/photo-1566754436893-98224ee05be4?auto=format&fit=crop&w=900&q=80'),
         (N'Cloudy Bay Sauvignon Blanc', N'White', 2022, CAST(1120000.00 AS DECIMAL(10,2)),
          N'Chuẩn mực Sauvignon Blanc vùng Marlborough với hương chanh dây, lá lý chua, ổi hồng và vị chua giòn sảng khoái cho tiệc hải sản.',
-         N'New Zealand', N'https://images.unsplash.com/photo-1470337458703-46ad1756a187?auto=format&fit=crop&w=900&q=80'),
+         N'New Zealand', N'https://images.unsplash.com/photo-1569919659476-f0852f6834b7?auto=format&fit=crop&w=900&q=80'),
         (N'Sauvignon Blanc Marlborough', N'White', 2021, CAST(760000.00 AS DECIMAL(10,2)),
          N'Vang trắng tươi mát hương trái cây nhiệt đới, bưởi xanh và thảo mộc nhẹ, dùng tuyệt vời với hàu sống, tôm hùm và gỏi hải sản.',
-         N'New Zealand', N'https://images.unsplash.com/photo-1470337458703-46ad1756a187?auto=format&fit=crop&w=900&q=80'),
+         N'New Zealand', N'https://images.unsplash.com/photo-1585553616435-2dc0a54e271d?auto=format&fit=crop&w=900&q=80'),
         (N'Chardonnay Barrel Aged Margaret River', N'White', 2021, CAST(950000.00 AS DECIMAL(10,2)),
          N'Chardonnay ủ sồi Pháp mang hương đào trắng, kem bơ, vani và hạt phỉ nướng, hậu vị tròn đầy quyến rũ.',
-         N'Australia', N'https://images.unsplash.com/photo-1470337458703-46ad1756a187?auto=format&fit=crop&w=900&q=80'),
+         N'Australia', N'https://images.unsplash.com/photo-1519671482749-fd09be7ccebf?auto=format&fit=crop&w=900&q=80'),
         (N'Dr. Loosen Wehlener Sonnenuhr Riesling Spätlese', N'White', 2021, CAST(1080000.00 AS DECIMAL(10,2)),
          N'Riesling thu hoạch muộn từ vườn nho đồng hồ mặt trời Mosel; vị ngọt thanh tao cân bằng cùng độ chua sắc nét, hương đào chín và mật ong.',
-         N'Germany', N'https://images.unsplash.com/photo-1470337458703-46ad1756a187?auto=format&fit=crop&w=900&q=80'),
+         N'Germany', N'https://images.unsplash.com/photo-1562601579-599dec564e06?auto=format&fit=crop&w=900&q=80'),
         (N'Whispering Angel Caves d''Esclans Rosé', N'Rose', 2022, CAST(920000.00 AS DECIMAL(10,2)),
          N'Vang hồng Provence nổi tiếng thế giới với sắc hồng phấn sang trọng, hương dâu tây trắng, đào tiên, vỏ bưởi và hậu vị khô ráo thanh lịch.',
          N'France', N'https://images.unsplash.com/photo-1558001373-7b93ee48ffa0?auto=format&fit=crop&w=900&q=80'),
         (N'Miraval Côtes de Provence Rosé', N'Rose', 2022, CAST(890000.00 AS DECIMAL(10,2)),
          N'Vang hồng thanh lịch từ điền trang Château Miraval; hương hoa trắng, quả mâm xôi tươi, thảo mộc garrigue và vị khoáng mặn mà.',
-         N'France', N'https://images.unsplash.com/photo-1558001373-7b93ee48ffa0?auto=format&fit=crop&w=900&q=80'),
+         N'France', N'https://images.unsplash.com/photo-1551024709-8f23befc6f87?auto=format&fit=crop&w=900&q=80'),
         (N'Dom Pérignon Vintage Brut', N'Sparkling', 2013, CAST(5490000.00 AS DECIMAL(10,2)),
          N'Champagne niên vụ huyền thoại với bọt sủi mịn như tơ, hương bánh mì nướng brioche, hạnh nhân rang, cam bergamot và khoáng chất tinh tế.',
          N'France', N'https://images.unsplash.com/photo-1594498653385-d5172c532c00?auto=format&fit=crop&w=900&q=80'),
         (N'Moët & Chandon Impérial Brut Champagne', N'Sparkling', 2020, CAST(1790000.00 AS DECIMAL(10,2)),
          N'Dòng Champagne biểu tượng của Moët & Chandon từ năm 1869; hương táo xanh, cam chanh, hoa trắng và bánh quy bơ thanh lịch.',
-         N'France', N'https://images.unsplash.com/photo-1594498653385-d5172c532c00?auto=format&fit=crop&w=900&q=80'),
+         N'France', N'https://images.unsplash.com/photo-1571613316887-6f8d5cbf7ef7?auto=format&fit=crop&w=900&q=80'),
         (N'Veuve Clicquot Yellow Label Brut', N'Sparkling', 2019, CAST(1950000.00 AS DECIMAL(10,2)),
          N'Champagne giàu cấu trúc với tỷ lệ Pinot Noir chủ đạo; hương lê chín, mận vàng, vani và bánh nướng brioche quyến rũ.',
-         N'France', N'https://images.unsplash.com/photo-1594498653385-d5172c532c00?auto=format&fit=crop&w=900&q=80'),
+         N'France', N'https://images.unsplash.com/photo-1546171753-97d7676e4602?auto=format&fit=crop&w=900&q=80'),
         (N'Valdo Marca Oro Valdobbiadene Prosecco Superiore DOCG', N'Sparkling', 2022, CAST(680000.00 AS DECIMAL(10,2)),
          N'Prosecco Superiore DOCG sủi bọt tươi tắn, hương táo vàng Golden, hoa tử đằng và mật ong rừng nhẹ nhàng, hoàn hảo cho khai vị tiệc.',
-         N'Italy', N'https://images.unsplash.com/photo-1594498653385-d5172c532c00?auto=format&fit=crop&w=900&q=80')
-    ) AS v([name], [type], [year], [price], [description], [country], [image_url])
+         N'Italy', N'https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&w=900&q=80');
+
+    INSERT INTO [dbo].[wines]
+        ([name], [type], [year], [price], [description], [country], [image_url], [category_id], [created_at], [updated_at], [created_by], [updated_by], [deleted])
+    SELECT
+        v.[name], v.[type], v.[year], v.[price], v.[description], v.[country], v.[image_url],
+        CASE v.[type]
+            WHEN N'Red'       THEN @CatRed
+            WHEN N'White'     THEN @CatWhite
+            WHEN N'Rose'      THEN @CatRose
+            WHEN N'Sparkling' THEN @CatSparkling
+            ELSE @CatRed
+        END,
+        DATEADD(DAY, -30, GETDATE()), GETDATE(), N'system', N'system', 0
+    FROM @WineSeed v
     WHERE NOT EXISTS (SELECT 1 FROM [dbo].[wines] w WHERE w.[name] = v.[name]);
+
+    -- Ensure all 24 wines have their own distinct 1-to-1 bottle image URL
+    UPDATE w
+    SET w.[image_url] = v.[image_url]
+    FROM [dbo].[wines] w
+    INNER JOIN @WineSeed v ON v.[name] = w.[name];
 
     -- Backfill category_id for any existing wines missing category mapping
     UPDATE w SET w.[category_id] = @CatRed       FROM [dbo].[wines] w WHERE w.[category_id] IS NULL AND w.[type] = N'Red'       AND @CatRed IS NOT NULL;
@@ -317,7 +359,6 @@ BEGIN
             (@UserShipperHn, N'Ngô Quốc Tuấn', N'0912666839', N'Xe máy bảo ôn chuyên dụng', N'ACTIVE', 1, 21.0245, 105.8532, GETDATE(), 5, 1, GETDATE(), GETDATE());
     END;
 
-    -- Ensure all active shippers have generous capacity and realistic GPS coordinates
     UPDATE [dbo].[shippers]
     SET [max_concurrent_shipments] = CASE WHEN [max_concurrent_shipments] < 5 THEN 5 ELSE [max_concurrent_shipments] END,
         [current_latitude]  = ISNULL([current_latitude], 10.7756),

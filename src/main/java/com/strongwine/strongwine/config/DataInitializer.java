@@ -107,58 +107,58 @@ public class DataInitializer implements CommandLineRunner {
                 "https://images.unsplash.com/photo-1568213816046-0ee1c42bd559?auto=format&fit=crop&w=900&q=80"));
         wines.add(buildWine("Almaviva Puente Alto Maipo Valley", "Red", "Chile", 2020, "4650000",
                 "Dòng vang Primer Orden cao cấp nhất Chile; sự kết hợp Bordeaux blend cổ điển với thổ nhưỡng chân núi Andes, đậm vị dâu rừng và vani.",
-                "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?auto=format&fit=crop&w=900&q=80"));
+                "https://images.unsplash.com/photo-1547595628-c61a29f496f0?auto=format&fit=crop&w=900&q=80"));
         wines.add(buildWine("Cabernet Reserva Colchagua", "Red", "Chile", 2020, "980000",
                 "Vang đỏ đậm vị từ thung lũng Colchagua với hương lý chua đen, ớt chuông nướng và hậu vị êm mượt, lý tưởng cho tiệc tối và bít tết.",
-                "https://images.unsplash.com/photo-1516594915697-87eb3b1c14ea?auto=format&fit=crop&w=900&q=80"));
+                "https://images.unsplash.com/photo-1578911373434-0cb395d2cbfb?auto=format&fit=crop&w=900&q=80"));
         wines.add(buildWine("Montes Alpha M Santa Cruz", "Red", "Chile", 2019, "2950000",
                 "Dòng vang biểu tượng của nhà Montes; cấu trúc dày dặn, hương quả mọng đen chín mọng, hạt nhục đậu khấu, thuốc lá nhẹ và hậu vị sâu.",
-                "https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?auto=format&fit=crop&w=900&q=80"));
+                "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?auto=format&fit=crop&w=901&q=80"));
         wines.add(buildWine("Catena Zapata Malbec Argentino", "Red", "Argentina", 2020, "2790000",
                 "Malbec từ các vườn nho độ cao trên 1.400m tại dãy Andes; sắc tím đậm, hương hoa violet, mận chín, mocha và vị chát mượt như nhung.",
-                "https://images.unsplash.com/photo-1553361371-9b22f78e8b1d?auto=format&fit=crop&w=900&q=80"));
+                "https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?auto=format&fit=crop&w=901&q=80"));
         wines.add(buildWine("Marqués de Riscal Gran Reserva Rioja", "Red", "Spain", 2016, "1890000",
                 "Vang đỏ Tây Ban Nha ủ 30 tháng trong thùng sồi; hương mận khô, quế, đinh hương, da thuộc mềm và cấu trúc cân bằng cổ điển.",
-                "https://images.unsplash.com/photo-1584916201218-f4242ceb4809?auto=format&fit=crop&w=900&q=80"));
+                "https://images.unsplash.com/photo-1553361371-9b22f78e8b1d?auto=format&fit=crop&w=901&q=80"));
         wines.add(buildWine("Pinot Noir Reserve Willamette Valley", "Red", "USA", 2020, "1350000",
                 "Pinot Noir tinh tế với hương anh đào đỏ, dâu rừng, nấm rừng ẩm và độ chua thanh thoát, kết hợp hoàn hảo cùng vịt quay hoặc cá hồi.",
-                "https://images.unsplash.com/photo-1568213816046-0ee1c42bd559?auto=format&fit=crop&w=900&q=80"));
+                "https://images.unsplash.com/photo-1516594915697-87eb3b1c14ea?auto=format&fit=crop&w=901&q=80"));
         wines.add(buildWine("Louis Jadot Puligny-Montrachet Blanc", "White", "France", 2020, "3150000",
                 "Chardonnay thượng hạng vùng Côte de Beaune; hương hoa keo, táo nướng bơ, hạt dẻ cười và độ khoáng sắc sảo đặc trưng đá vôi.",
                 "https://images.unsplash.com/photo-1470337458703-46ad1756a187?auto=format&fit=crop&w=900&q=80"));
         wines.add(buildWine("Sancerre Blanc Les Monts Damnés", "White", "France", 2021, "1190000",
                 "Sauvignon Blanc từ sườn đồi đá phấn Kimmeridgian; hương bưởi hồng, chanh vàng, cỏ mới cắt và vị khoáng đá lửa sống động.",
-                "https://images.unsplash.com/photo-1470337458703-46ad1756a187?auto=format&fit=crop&w=900&q=80"));
+                "https://images.unsplash.com/photo-1566754436893-98224ee05be4?auto=format&fit=crop&w=900&q=80"));
         wines.add(buildWine("Cloudy Bay Sauvignon Blanc", "White", "New Zealand", 2022, "1120000",
                 "Chuẩn mực Sauvignon Blanc vùng Marlborough với hương chanh dây, lá lý chua, ổi hồng và vị chua giòn sảng khoái cho tiệc hải sản.",
-                "https://images.unsplash.com/photo-1470337458703-46ad1756a187?auto=format&fit=crop&w=900&q=80"));
+                "https://images.unsplash.com/photo-1585553616435-2dc0a54e271d?auto=format&fit=crop&w=900&q=80"));
         wines.add(buildWine("Sauvignon Blanc Marlborough", "White", "New Zealand", 2021, "760000",
                 "Vang trắng tươi mát hương trái cây nhiệt đới, bưởi xanh và thảo mộc nhẹ, dùng tuyệt vời với hàu sống, tôm hùm và gỏi hải sản.",
-                "https://images.unsplash.com/photo-1470337458703-46ad1756a187?auto=format&fit=crop&w=900&q=80"));
+                "https://images.unsplash.com/photo-1470337458703-46ad1756a187?auto=format&fit=crop&w=901&q=80"));
         wines.add(buildWine("Chardonnay Barrel Aged Margaret River", "White", "Australia", 2021, "950000",
                 "Chardonnay ủ sồi Pháp mang hương đào trắng, kem bơ, vani và hạt phỉ nướng, hậu vị tròn đầy quyến rũ.",
-                "https://images.unsplash.com/photo-1470337458703-46ad1756a187?auto=format&fit=crop&w=900&q=80"));
+                "https://images.unsplash.com/photo-1566754436893-98224ee05be4?auto=format&fit=crop&w=901&q=80"));
         wines.add(buildWine("Dr. Loosen Wehlener Sonnenuhr Riesling Spätlese", "White", "Germany", 2021, "1080000",
                 "Riesling thu hoạch muộn từ vườn nho đồng hồ mặt trời Mosel; vị ngọt thanh tao cân bằng cùng độ chua sắc nét, hương đào chín và mật ong.",
-                "https://images.unsplash.com/photo-1470337458703-46ad1756a187?auto=format&fit=crop&w=900&q=80"));
+                "https://images.unsplash.com/photo-1585553616435-2dc0a54e271d?auto=format&fit=crop&w=901&q=80"));
         wines.add(buildWine("Whispering Angel Caves d'Esclans Rosé", "Rose", "France", 2022, "920000",
                 "Vang hồng Provence nổi tiếng thế giới với sắc hồng phấn sang trọng, hương dâu tây trắng, đào tiên, vỏ bưởi và hậu vị khô ráo thanh lịch.",
                 "https://images.unsplash.com/photo-1558001373-7b93ee48ffa0?auto=format&fit=crop&w=900&q=80"));
         wines.add(buildWine("Miraval Côtes de Provence Rosé", "Rose", "France", 2022, "890000",
                 "Vang hồng thanh lịch từ điền trang Château Miraval; hương hoa trắng, quả mâm xôi tươi, thảo mộc garrigue và vị khoáng mặn mà.",
-                "https://images.unsplash.com/photo-1558001373-7b93ee48ffa0?auto=format&fit=crop&w=900&q=80"));
+                "https://images.unsplash.com/photo-1558001373-7b93ee48ffa0?auto=format&fit=crop&w=901&q=80"));
         wines.add(buildWine("Dom Pérignon Vintage Brut", "Sparkling", "France", 2013, "5490000",
                 "Champagne niên vụ huyền thoại với bọt sủi mịn như tơ, hương bánh mì nướng brioche, hạnh nhân rang, cam bergamot và khoáng chất tinh tế.",
                 "https://images.unsplash.com/photo-1594498653385-d5172c532c00?auto=format&fit=crop&w=900&q=80"));
         wines.add(buildWine("Moët & Chandon Impérial Brut Champagne", "Sparkling", "France", 2020, "1790000",
                 "Dòng Champagne biểu tượng của Moët & Chandon từ năm 1869; hương táo xanh, cam chanh, hoa trắng và bánh quy bơ thanh lịch.",
-                "https://images.unsplash.com/photo-1594498653385-d5172c532c00?auto=format&fit=crop&w=900&q=80"));
+                "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=900&q=80"));
         wines.add(buildWine("Veuve Clicquot Yellow Label Brut", "Sparkling", "France", 2019, "1950000",
                 "Champagne giàu cấu trúc với tỷ lệ Pinot Noir chủ đạo; hương lê chín, mận vàng, vani và bánh nướng brioche quyến rũ.",
-                "https://images.unsplash.com/photo-1594498653385-d5172c532c00?auto=format&fit=crop&w=900&q=80"));
+                "https://images.unsplash.com/photo-1594498653385-d5172c532c00?auto=format&fit=crop&w=901&q=80"));
         wines.add(buildWine("Valdo Marca Oro Valdobbiadene Prosecco Superiore DOCG", "Sparkling", "Italy", 2022, "680000",
                 "Prosecco Superiore DOCG sủi bọt tươi tắn, hương táo vàng Golden, hoa tử đằng và mật ong rừng nhẹ nhàng, hoàn hảo cho khai vị tiệc.",
-                "https://images.unsplash.com/photo-1594498653385-d5172c532c00?auto=format&fit=crop&w=900&q=80"));
+                "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=901&q=80"));
 
         wineRepository.saveAll(wines);
     }
