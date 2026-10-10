@@ -1,0 +1,40 @@
+﻿{
+  "task": "Integrity Forensics Audit for StrongWine E2E CDP Browser Verification",
+  "auditor": "Forensic Auditor 1",
+  "verdict": "CLEAN",
+  "timestamp": "2026-10-10T06:37:30Z",
+  "evidence": {
+    "database_schema": {
+      "ddl_auto": "validate",
+      "ddl_operations_executed": 0,
+      "schema_intact": true,
+      "backend_compilation": "BUILD SUCCESS (mvnw compile -DskipTests)"
+    },
+    "authenticity": {
+      "dummy_facades_or_mocks": 0,
+      "hardcoded_test_passes": 0,
+      "sse_controller_git_diff": "Legitimate Spring MVC mappings delegating directly to SseNotificationService",
+      "real_cdp_tests": true,
+      "real_browser_page_renders": true
+    },
+    "excel_openxml": {
+      "template_endpoint": "/api/admin/excel/template (HTTP 200, 4050 bytes, PK0304 header, openpyxl sheets: ['Danh Sách Sản Phẩm'])",
+      "inventory_export_endpoint": "/api/admin/excel/export/inventory (HTTP 200, 4659 bytes, PK0304 header, openpyxl sheets: ['Báo Cáo Tồn Kho'], 26 rows)"
+    },
+    "cdp_pytest_suite": {
+      "command": "pytest e2e_cdp/ -v --tb=short",
+      "total_tests": 21,
+      "passed": 21,
+      "failed": 0,
+      "execution_time_seconds": 126.34,
+      "console_errors_trapped": 0,
+      "runtime_exceptions_trapped": 0
+    },
+    "screenshot_forensics": {
+      "total_screenshots": 23,
+      "valid_png_headers": 23,
+      "desktop_dimensions": "(1440, 900+)",
+      "mobile_cockpit_dimensions": "(1170, 2532) corresponding to 390x844 @3x scale factor"
+    }
+  }
+}

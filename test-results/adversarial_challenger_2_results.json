@@ -1,0 +1,110 @@
+{
+  "console_trap_stress": {
+    "console_error_captured": true,
+    "runtime_exception_captured": true,
+    "assert_clean_properly_rejection": true
+  },
+  "route_zero_errors": {
+    "/home": {
+      "status": 200,
+      "console_errors": 0,
+      "runtime_exceptions": 0
+    },
+    "/wines": {
+      "status": 200,
+      "console_errors": 0,
+      "runtime_exceptions": 0
+    },
+    "/cart": {
+      "status": 200,
+      "console_errors": 0,
+      "runtime_exceptions": 0
+    },
+    "/login": {
+      "status": 200,
+      "console_errors": 0,
+      "runtime_exceptions": 0
+    },
+    "/register": {
+      "status": 200,
+      "console_errors": 0,
+      "runtime_exceptions": 0
+    },
+    "/forgot-password": {
+      "status": 200,
+      "console_errors": 0,
+      "runtime_exceptions": 0
+    },
+    "/wines/1": {
+      "status": 200,
+      "console_errors": 0,
+      "runtime_exceptions": 0
+    }
+  },
+  "excel_integrity_stress": {
+    "template": {
+      "valid": true,
+      "sheet_names": [
+        "Danh S\u00e1ch S\u1ea3n Ph\u1ea9m"
+      ],
+      "row_count": 3,
+      "headers": [
+        "T\u00ean S\u1ea3n Ph\u1ea9m (*)",
+        "Lo\u1ea1i R\u01b0\u1ee3u (*)",
+        "N\u0103m S\u1ea3n Xu\u1ea5t (*)",
+        "Gi\u00e1 B\u00e1n (VN\u0110) (*)",
+        "Xu\u1ea5t X\u1ee9",
+        "M\u00f4 T\u1ea3",
+        "T\u00ean Danh M\u1ee5c",
+        "S\u1ed1 L\u01b0\u1ee3ng Kho Kh\u1edfi T\u1ea1o"
+      ]
+    },
+    "inventory": {
+      "valid": true,
+      "sheet_names": [
+        "B\u00e1o C\u00e1o T\u1ed3n Kho"
+      ],
+      "row_count": 26,
+      "headers": [
+        "T\u00ean R\u01b0\u1ee3u",
+        "Kho H\u00e0ng",
+        "T\u1ed3n Th\u1ef1c T\u1ebf",
+        "\u0110\u00e3 Gi\u1eef (Reserved)",
+        "Kh\u1ea3 D\u1ee5ng",
+        "Ng\u01b0\u1ee1ng C\u1ea3nh B\u00e1o",
+        "Tr\u1ea1ng Th\u00e1i"
+      ]
+    },
+    "magic_corruption_rejected": true,
+    "truncation_rejected": true,
+    "body_corruption_rejected": true
+  },
+  "mobile_ergonomics_stress": {
+    "horizontal_overflow": {
+      "scroll_width": 390,
+      "viewport_width": 390,
+      "has_overflow": false
+    },
+    "action_targets": [
+      {
+        "type": "tel_link",
+        "index": 0,
+        "x": 37,
+        "y": 373.0625,
+        "width": 156,
+        "height": 61.21875,
+        "meets_44px_target": true
+      },
+      {
+        "type": "map_link",
+        "index": 0,
+        "x": 201,
+        "y": 373.0625,
+        "width": 156,
+        "height": 61.21875,
+        "meets_44px_target": true
+      }
+    ],
+    "otp_boxes": []
+  }
+}
