@@ -1,39 +1,37 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
 <body>
-<div th:fragment="pagination(baseUrl)" class="d-flex justify-content-between align-items-center mt-4">
-    <div class="text-muted small">
-        Hiển thị <span th:text="${totalEntries == 0 ? 0 : (currentPage * pageSize) + 1}"></span> - 
-        <span th:text="${(currentPage * pageSize) + pageSize > totalEntries ? totalEntries : (currentPage * pageSize) + pageSize}"></span>
-        trong <span th:text="${totalEntries}"></span> kết quả
+<div th:fragment="pagination(baseUrl)" class="sw-pagination"
+     th:with="curPage=${currentPage != null ? currentPage : 0},
+              pgSize=${pageSize != null ? pageSize : 12},
+              totEntries=${totalEntries != null ? totalEntries : 0},
+              totPages=${totalPages != null ? totalPages : 1},
+              hasPrev=${hasPrevious != null ? hasPrevious : (curPage > 0)},
+              hasNxt=${hasNext != null ? hasNext : (curPage + 1 < totPages)}">
+    <div class="muted small">
+        Hiển thị <strong th:text="${totEntries == 0 ? 0 : (curPage * pgSize) + 1}">0</strong> &ndash;
+        <strong th:text="${(curPage * pgSize) + pgSize > totEntries ? totEntries : (curPage * pgSize) + pgSize}">0</strong>
+        trong tổng số <strong th:text="${totEntries}">0</strong> kết quả
     </div>
 
-    <!-- Keep existing query parameters when paginating by adding them using th:href -->
-    <nav aria-label="Page navigation" th:if="${totalPages > 1}">
-        <ul class="pagination pagination-sm mb-0">
-            <li class="page-item" th:classappend="${!hasPrevious} ? 'disabled'">
-                <!-- using string appending for base url doesn't preserver other params easily but we can build relative query string -->
-                <a class="page-link" 
-                   th:href="@{${baseUrl}(page=${currentPage - 1},size=${pageSize},sortBy=${sortBy},sortDir=${sortDir})}" 
-                   aria-label="Previous">
-                    <span aria-hidden="true">&laquo;</span>
-                </a>
+    <nav aria-label="Phân trang danh sách" th:if="${totPages > 1}">
+        <ul class="sw-page-list">
+            <li class="sw-page-item" th:classappend="${!hasPrev} ? 'disabled'">
+                <a class="sw-page-link"
+                   th:href="@{${baseUrl}(page=${curPage - 1},size=${pgSize},sortBy=${sortBy},sortDir=${sortDir})}"
+                   aria-label="Trang trước">&larr;</a>
             </li>
-            
-            <li class="page-item" 
-                th:each="i : ${#numbers.sequence(0, totalPages - 1)}" 
-                th:classappend="${currentPage == i} ? 'active'">
-                <a class="page-link" 
-                   th:href="@{${baseUrl}(page=${i},size=${pageSize},sortBy=${sortBy},sortDir=${sortDir})}" 
+            <li class="sw-page-item"
+                th:each="i : ${#numbers.sequence(0, totPages - 1)}"
+                th:classappend="${curPage == i} ? 'active'">
+                <a class="sw-page-link"
+                   th:href="@{${baseUrl}(page=${i},size=${pgSize},sortBy=${sortBy},sortDir=${sortDir})}"
                    th:text="${i + 1}">1</a>
             </li>
-            
-            <li class="page-item" th:classappend="${!hasNext} ? 'disabled'">
-                <a class="page-link" 
-                   th:href="@{${baseUrl}(page=${currentPage + 1},size=${pageSize},sortBy=${sortBy},sortDir=${sortDir})}" 
-                   aria-label="Next">
-                    <span aria-hidden="true">&raquo;</span>
-                </a>
+            <li class="sw-page-item" th:classappend="${!hasNxt} ? 'disabled'">
+                <a class="sw-page-link"
+                   th:href="@{${baseUrl}(page=${curPage + 1},size=${pgSize},sortBy=${sortBy},sortDir=${sortDir})}"
+                   aria-label="Trang kế tiếp">&rarr;</a>
             </li>
         </ul>
     </nav>
