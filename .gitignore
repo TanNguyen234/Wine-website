@@ -45,3 +45,6 @@ build/
 .superpowers/
 all_skills.txt
 
+
+__pycache__/
+*.pyc
