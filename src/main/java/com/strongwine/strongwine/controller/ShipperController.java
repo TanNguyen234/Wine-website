@@ -24,8 +24,8 @@ public class ShipperController {
         boolean isAdmin = authentication.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
 
+        model.addAttribute("isAdminView", isAdmin);
         if (isAdmin) {
-            model.addAttribute("isAdminView", true);
             model.addAttribute("shipments", shipmentService.getActiveShipmentsForAdminView());
         } else {
             String username = authentication.getName();
