@@ -1,234 +1,164 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quản lý đơn giao hàng - StrongWine</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    <link rel="stylesheet" href="/css/app.css">
-</head>
-<body class="admin-page">
-<div class="admin-layout">
-
-    <aside class="admin-sidebar">
-        <a class="admin-sidebar-brand" href="/admin">
-            <span class="brand-logo"><i class="fa-solid fa-wine-glass"></i></span>
-            StrongWine Admin
-        </a>
-        <nav>
-            <div class="admin-sidebar-section">Điều hướng</div>
-            <a class="admin-nav-link" href="/admin"><i class="fa-solid fa-chart-line"></i>Bảng điều khiển</a>
-            <a class="admin-nav-link" href="/admin/users"><i class="fa-solid fa-users"></i>Người dùng</a>
-            <a class="admin-nav-link" href="/admin/shippers"><i class="fa-solid fa-truck"></i>Người giao hàng</a>
-            <a class="admin-nav-link active" href="/admin/shipments"><i class="fa-solid fa-box-open"></i>Đơn giao hàng</a>
-            <div class="admin-sidebar-section">Vận hành</div>
-            <a class="admin-nav-link" href="/shipper/dashboard"><i class="fa-solid fa-map-location-dot"></i>Màn hình giao hàng</a>
-            <a class="admin-nav-link" href="/wines"><i class="fa-solid fa-store"></i>Cửa hàng</a>
-        </nav>
-        <div style="padding:1rem;border-top:1px solid var(--border);margin-top:auto">
-            <form th:action="@{/logout}" method="post" class="mb-0">
-                <button class="btn btn-outline-secondary btn-sm w-100"><i class="fa-solid fa-right-from-bracket me-1"></i>Đăng xuất</button>
-            </form>
-        </div>
-    </aside>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head th:replace="~{fragments/admin-shell :: head('Điều Phối Vận Đơn & OTP · StrongWine Control Center')}"></head>
+<body>
+<div class="admin-shell">
+    <aside th:replace="~{fragments/admin-shell :: sidebar('shipments')}"></aside>
 
     <div class="admin-main">
-        <header class="admin-topbar">
-            <div>
-                <h1>Quản lý đơn giao hàng</h1>
-                <small>Theo dõi vòng đời giao nhận và xác thực OTP</small>
-            </div>
-            <a class="btn btn-sm btn-outline-secondary" href="/admin/shippers">Người giao hàng</a>
-        </header>
+        <header th:replace="~{fragments/admin-shell :: topbar}"></header>
 
         <main class="admin-content">
-            <div th:if="${success}" class="alert alert-success alert-dismissible fade show mb-3">
-                <span th:text="${success}"></span>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-            <div th:if="${error}" class="alert alert-danger alert-dismissible fade show mb-3">
-                <span th:text="${error}"></span>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <div th:if="${message}" class="alert-sw success mb16" th:text="${message}"></div>
+            <div th:if="${error}" class="alert-sw danger mb16" th:text="${error}"></div>
+
+            <div class="admin-head">
+                <div>
+                    <div class="eyebrow">LOGISTICS &amp; BẢO MẬT GIAO NHẬN OTP</div>
+                    <h1>Điều phối vận đơn thời gian thực</h1>
+                    <p>Quản lý trạng thái giao hàng, cấp lại mã xác thực OTP và giám sát đội ngũ tài xế.</p>
+                </div>
+                <a th:href="@{/admin/shippers}" class="btn btn-outline btn-sm">Quản lý đội ngũ Shipper &rarr;</a>
             </div>
 
-            <!-- Stats -->
-            <div class="row g-3 mb-3 fade-up">
-                <div class="col-md-2 col-4">
-                    <div class="stat-card h-100">
-                        <div class="stat-label">Chờ phân công</div>
-                        <p class="stat-value" th:text="${shipmentStats[T(com.strongwine.strongwine.entity.ShipmentStatus).PENDING_ASSIGNMENT]}">0</p>
-                    </div>
+            <!-- Shipment KPIs -->
+            <div class="kpi-grid mb20" th:if="${shipmentStats != null}">
+                <div class="kpi-card">
+                    <span>CHỜ PHÂN CÔNG</span>
+                    <strong th:text="${shipmentStats[T(com.strongwine.strongwine.entity.ShipmentStatus).PENDING_ASSIGNMENT] ?: 0}">0</strong>
+                    <small class="warn">Chưa gán tài xế</small>
                 </div>
-                <div class="col-md-2 col-4">
-                    <div class="stat-card h-100">
-                        <div class="stat-label">Đã phân công</div>
-                        <p class="stat-value" th:text="${shipmentStats[T(com.strongwine.strongwine.entity.ShipmentStatus).ASSIGNED]}">0</p>
-                    </div>
+                <div class="kpi-card">
+                    <span>ĐANG VẬN CHUYỂN</span>
+                    <strong th:text="${(shipmentStats[T(com.strongwine.strongwine.entity.ShipmentStatus).ASSIGNED] ?: 0) + (shipmentStats[T(com.strongwine.strongwine.entity.ShipmentStatus).PICKED_UP] ?: 0) + (shipmentStats[T(com.strongwine.strongwine.entity.ShipmentStatus).DELIVERING] ?: 0)}">0</strong>
+                    <small class="info" th:text="'Đang giao: ' + (${shipmentStats[T(com.strongwine.strongwine.entity.ShipmentStatus).DELIVERING] ?: 0})">0</small>
                 </div>
-                <div class="col-md-2 col-4">
-                    <div class="stat-card h-100">
-                        <div class="stat-label">Đã lấy hàng</div>
-                        <p class="stat-value" th:text="${shipmentStats[T(com.strongwine.strongwine.entity.ShipmentStatus).PICKED_UP]}">0</p>
-                    </div>
+                <div class="kpi-card">
+                    <span>ĐÃ GIAO THÀNH CÔNG</span>
+                    <strong th:text="${shipmentStats[T(com.strongwine.strongwine.entity.ShipmentStatus).COMPLETED] ?: 0}">0</strong>
+                    <small class="up">Đã xác thực OTP hợp lệ</small>
                 </div>
-                <div class="col-md-2 col-4">
-                    <div class="stat-card h-100">
-                        <div class="stat-label">Đang giao</div>
-                        <p class="stat-value" th:text="${shipmentStats[T(com.strongwine.strongwine.entity.ShipmentStatus).DELIVERING]}">0</p>
-                    </div>
-                </div>
-                <div class="col-md-2 col-4">
-                    <div class="stat-card h-100">
-                        <div class="stat-label">Hoàn tất</div>
-                        <p class="stat-value" style="color:var(--ok-light)" th:text="${shipmentStats[T(com.strongwine.strongwine.entity.ShipmentStatus).COMPLETED]}">0</p>
-                    </div>
-                </div>
-                <div class="col-md-2 col-4">
-                    <div class="stat-card h-100">
-                        <div class="stat-label">Thất bại</div>
-                        <p class="stat-value" style="color:#e07070" th:text="${shipmentStats[T(com.strongwine.strongwine.entity.ShipmentStatus).FAILED]}">0</p>
-                    </div>
+                <div class="kpi-card">
+                    <span>GIAO THẤT BẠI</span>
+                    <strong th:text="${shipmentStats[T(com.strongwine.strongwine.entity.ShipmentStatus).FAILED] ?: 0}">0</strong>
+                    <small class="warn">Cần điều phối lại</small>
                 </div>
             </div>
 
-            <!-- Filter panel -->
-            <div class="panel panel-muted p-3 mb-3 fade-up">
-                <form class="row g-2" method="get" action="/admin/shipments">
-                    <div class="col-md-2">
-                        <label class="form-label">Mã đơn hàng</label>
-                        <input class="form-control form-control-sm" type="number" min="1" name="orderId" th:value="${filterOrderId}">
+            <!-- Filter Bar -->
+            <section class="admin-card mb20">
+                <form th:action="@{/admin/shipments}" method="get" class="grid-3" style="align-items:end">
+                    <div>
+                        <label class="label">Từ khoá (Mã vận đơn / Người nhận / SĐT)</label>
+                        <input type="text" name="keyword" class="field" placeholder="Nhập tên, SĐT hoặc địa chỉ..." th:value="${filterKeyword}">
                     </div>
-                    <div class="col-md-3">
-                        <label class="form-label">Người giao hàng</label>
-                        <select class="form-select form-select-sm" name="shipperId">
-                            <option value="">Tất cả</option>
-                            <option th:each="sp : ${shippers}" th:value="${sp.id}"
-                                    th:text="${sp.name + ' (' + sp.user.username + ')'}"
-                                    th:selected="${filterShipperId != null and filterShipperId == sp.id}"></option>
-                        </select>
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label">Trạng thái</label>
-                        <select class="form-select form-select-sm" name="status">
-                            <option value="">Tất cả</option>
-                            <option th:each="st : ${statuses}" th:value="${st}"
+                    <div>
+                        <label class="label">Trạng thái vận đơn</label>
+                        <select name="status" class="select">
+                            <option value="">Tất cả trạng thái</option>
+                            <option th:each="st : ${statuses}"
+                                    th:value="${st.name()}"
                                     th:text="${@enumDisplayService.shipmentStatus(st)}"
-                                    th:selected="${filterStatus != null and filterStatus == st}"></option>
+                                    th:selected="${filterStatus != null and filterStatus == st}">Trạng thái</option>
                         </select>
                     </div>
-                    <div class="col-md-3">
-                        <label class="form-label">Từ khóa</label>
-                        <input class="form-control form-control-sm" name="keyword" th:value="${filterKeyword}" placeholder="Tên nhận, SĐT, tên tài khoản...">
-                    </div>
-                    <div class="col-md-2 d-flex align-items-end gap-2">
-                        <button class="btn btn-gold btn-sm w-100" type="submit">Lọc</button>
-                        <a class="btn btn-outline-secondary btn-sm w-100" href="/admin/shipments">Đặt lại</a>
+                    <div class="display-flex gap8">
+                        <div style="flex:1">
+                            <label class="label">Nhân viên giao hàng</label>
+                            <select name="shipperId" class="select">
+                                <option value="">Tất cả tài xế</option>
+                                <option th:each="sh : ${shippers}"
+                                        th:value="${sh.id}"
+                                        th:text="${sh.name + ' (' + sh.phone + ')'}"
+                                        th:selected="${filterShipperId != null and filterShipperId == sh.id}">Shipper</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-sm" style="min-height:44px">Lọc</button>
+                        <a th:href="@{/admin/shipments}" class="btn btn-outline btn-sm" style="min-height:44px">Xoá lọc</a>
                     </div>
                 </form>
-            </div>
+            </section>
 
-            <!-- Table -->
-            <div class="panel p-3 p-lg-4 fade-up">
-                <div class="table-responsive">
-                    <table class="table table-modern align-middle">
+            <!-- Shipments Table -->
+            <section class="admin-card">
+                <div class="table-scroll">
+                    <table class="sw-table">
                         <thead>
-                            <tr>
-                                <th><span class="th-sort">ID <i class="fa-solid fa-sort"></i></span></th>
-                                <th><span class="th-sort">Đơn hàng <i class="fa-solid fa-sort"></i></span></th>
-                                <th><span class="th-sort">Người nhận <i class="fa-solid fa-sort"></i></span></th>
-                                <th>SĐT</th>
-                                <th>Người giao hàng</th>
-                                <th>Trạng thái</th>
-                                <th>OTP</th>
-                                <th>Cập nhật</th>
-                                <th>Hành động</th>
-                            </tr>
+                        <tr>
+                            <th>Vận đơn</th>
+                            <th>Đơn hàng</th>
+                            <th>Khách nhận &amp; Địa chỉ</th>
+                            <th>Shipper phụ trách</th>
+                            <th>Mã OTP</th>
+                            <th>Trạng thái</th>
+                            <th>Chuyển trạng thái nhanh</th>
+                            <th>Thao tác</th>
+                        </tr>
                         </thead>
                         <tbody>
-                            <tr th:if="${shipments.isEmpty()}">
-                                <td colspan="9" class="text-center py-4">
-                                    <i class="fa-solid fa-box-open fa-2x mb-2 d-block" style="color:var(--text-faint)"></i>
-                                    <span style="color:var(--text-muted)">Không có đơn giao hàng phù hợp bộ lọc.</span>
-                                </td>
-                            </tr>
-                            <tr th:each="s : ${shipments}">
-                                <td style="color:var(--gold);font-weight:700" th:text="${s.id}"></td>
-                                <td>
-                                    <div style="color:var(--gold)"><span>#</span><span th:text="${s.order.id}"></span></div>
-                                    <div style="font-size:.78rem;color:var(--text-muted)" th:text="${s.order.user.username}"></div>
-                                </td>
-                                <td>
-                                    <div style="color:var(--text)" th:text="${s.shippingName}"></div>
-                                    <div style="font-size:.78rem;color:var(--text-muted)" th:text="${s.shippingAddress}"></div>
-                                </td>
-                                <td th:text="${s.shippingPhone}"></td>
-                                <td>
-                                    <span th:if="${s.shipper != null}" th:text="${s.shipper.name + ' (' + s.shipper.user.username + ')'}"></span>
-                                    <span th:unless="${s.shipper != null}" style="color:var(--text-faint);font-size:.8rem">Chưa gán</span>
-                                </td>
-                                <td>
-                                    <span class="badge"
-                                          th:classappend="${s.status.name() == 'COMPLETED' ? ' text-bg-success' : (s.status.name() == 'FAILED' ? ' text-bg-danger' : (s.status.name() == 'PENDING_ASSIGNMENT' ? ' text-bg-warning' : ' text-bg-primary'))}"
-                                          th:text="${@enumDisplayService.shipmentStatus(s.status)}"></span>
-                                </td>
-                                <td>
-                                    <span style="font-size:.8rem;color:var(--text-muted)" th:text="${s.otpCode != null ? 'Đã tạo OTP' : '—'}"></span>
-                                    <span class="badge text-bg-success ms-1" th:if="${s.otpVerified}">Đã xác thực</span>
-                                </td>
-                                <td style="font-size:.8rem" th:text="${#temporals.format(s.updatedAt, 'dd/MM/yyyy HH:mm')}"></td>
-                                <td>
-                                    <div class="d-flex flex-column gap-1 action-stack">
-                                        <a class="btn btn-sm btn-outline-secondary" th:href="@{/admin/shipments/edit/{id}(id=${s.id})}">
-                                            <i class="fa-solid fa-pen me-1"></i>Sửa
-                                        </a>
-                                        <form th:if="${s.status.name() == 'ASSIGNED'}" class="mb-0"
-                                              th:action="@{/admin/shipments/{id}/status(id=${s.id})}" method="post">
-                                            <input type="hidden" name="targetStatus" value="PICKED_UP">
-                                            <button class="btn btn-sm btn-outline-warning w-100">Đã lấy hàng</button>
-                                        </form>
-                                        <form th:if="${s.status.name() == 'PICKED_UP'}" class="mb-0"
-                                              th:action="@{/admin/shipments/{id}/status(id=${s.id})}" method="post">
-                                            <input type="hidden" name="targetStatus" value="DELIVERING">
-                                            <button class="btn btn-sm btn-outline-warning w-100">Đang giao</button>
-                                        </form>
-                                        <form th:if="${s.status.name() == 'DELIVERING'}" class="d-flex gap-1 mb-0"
-                                              th:action="@{/admin/shipments/{id}/status(id=${s.id})}" method="post">
-                                            <input type="hidden" name="targetStatus" value="COMPLETED">
-                                            <input class="form-control form-control-sm" name="overrideReason" placeholder="Lý do override OTP" required>
-                                            <button class="btn btn-sm btn-outline-success" type="submit">Hoàn tất</button>
-                                        </form>
-                                        <form th:if="${s.status.name() == 'ASSIGNED' or s.status.name() == 'PICKED_UP' or s.status.name() == 'DELIVERING'}"
-                                              class="d-flex gap-1 mb-0"
-                                              th:action="@{/admin/shipments/{id}/status(id=${s.id})}" method="post">
-                                            <input type="hidden" name="targetStatus" value="FAILED">
-                                            <input class="form-control form-control-sm" name="failureNote" placeholder="Lý do thất bại">
-                                            <button class="btn btn-sm btn-outline-danger" type="submit">Thất bại</button>
-                                        </form>
-                                        <form th:if="${s.status.name() != 'COMPLETED'}" class="mb-0"
-                                              th:action="@{/admin/shipments/{id}/resend-otp(id=${s.id})}" method="post">
-                                            <button class="btn btn-sm btn-outline-secondary w-100">Gửi lại OTP</button>
-                                        </form>
-                                        <form th:if="${s.status.name() == 'PENDING_ASSIGNMENT'}" class="mb-0"
-                                              th:action="@{/admin/shipments/{id}/delete(id=${s.id})}" method="post"
-                                              onsubmit="return confirm('Chỉ đơn giao hàng chờ phân công mới được xóa. Bạn có chắc muốn xóa?');">
-                                            <button class="btn btn-sm btn-outline-danger w-100">Xóa</button>
-                                        </form>
-                                    </div>
-                                </td>
-                            </tr>
+                        <tr th:if="${shipments == null or shipments.isEmpty()}">
+                            <td colspan="8" class="text-center muted">Không có vận đơn phù hợp điều kiện lọc.</td>
+                        </tr>
+                        <tr th:each="s : ${shipments}"
+                            th:with="transitions=${allowedTransitionsByShipmentId != null ? allowedTransitionsByShipmentId.get(s.id) : null}">
+                            <td><strong th:text="'#' + ${s.id}">#1</strong></td>
+                            <td>
+                                <a th:if="${s.order != null}" th:href="@{/orders/{id}(id=${s.order.id})}">
+                                    <strong th:text="'Đơn #' + ${s.order.id}">Đơn #1</strong>
+                                </a>
+                            </td>
+                            <td>
+                                <strong th:text="${s.shippingName}">Khách</strong>
+                                <div class="small muted" th:text="${s.shippingPhone}">0900</div>
+                                <div class="small muted" th:text="${s.shippingAddress}">Địa chỉ</div>
+                            </td>
+                            <td>
+                                <span th:if="${s.shipper != null}" th:text="${s.shipper.name}">Tài xế</span>
+                                <span th:if="${s.shipper == null}" class="status warn">Chưa phân công</span>
+                            </td>
+                            <td>
+                                <code th:text="${s.otpCode != null ? s.otpCode : '------'}">123456</code>
+                                <div class="small muted" th:if="${s.otpAttemptCount != null and s.otpAttemptCount > 0}"
+                                     th:text="'Sai OTP: ' + ${s.otpAttemptCount} + ' lần'"></div>
+                            </td>
+                            <td>
+                                <span class="status"
+                                      th:classappend="${s.status != null and s.status.name() == 'COMPLETED'} ? 'ok' : (${s.status != null and (s.status.name() == 'FAILED' or s.status.name() == 'CANCELLED')} ? 'bad' : 'info')"
+                                      th:text="${@enumDisplayService.shipmentStatus(s.status)}">Trạng thái</span>
+                            </td>
+                            <td>
+                                <form th:if="${transitions != null and !transitions.isEmpty()}"
+                                      th:action="@{/admin/shipments/{id}/status(id=${s.id})}" method="post" class="display-flex gap8">
+                                    <select name="targetStatus" class="select" style="min-height:34px;padding:4px 8px;width:auto">
+                                        <option th:each="tr : ${transitions}"
+                                                th:value="${tr.name()}"
+                                                th:text="${@enumDisplayService.shipmentStatus(tr)}">Next</option>
+                                    </select>
+                                    <input type="hidden" name="overrideReason" value="Admin điều phối từ bảng vận đơn">
+                                    <input type="hidden" name="failureNote" value="Cập nhật bởi quản trị viên">
+                                    <button type="submit" class="btn btn-sm">Cập nhật</button>
+                                </form>
+                                <span th:if="${transitions == null or transitions.isEmpty()}" class="small muted">Đã kết thúc</span>
+                            </td>
+                            <td>
+                                <div class="display-flex gap8">
+                                    <a th:href="@{/admin/shipments/edit/{id}(id=${s.id})}" class="btn btn-outline btn-sm">Sửa</a>
+                                    <form th:if="${s.status == null or (s.status.name() != 'COMPLETED' and s.status.name() != 'CANCELLED')}"
+                                          th:action="@{/admin/shipments/{id}/resend-otp(id=${s.id})}" method="post" class="d-inline">
+                                        <button type="submit" class="btn btn-gold btn-sm" title="Cấp mã OTP mới">OTP mới</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
                         </tbody>
                     </table>
                 </div>
+
                 <div th:replace="~{fragments/pagination :: pagination('/admin/shipments')}"></div>
-            </div>
+            </section>
         </main>
     </div>
 </div>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<div th:replace="~{fragments/admin-shell :: scripts}"></div>
 </body>
 </html>

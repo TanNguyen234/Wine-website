@@ -1,134 +1,110 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quản lý người giao hàng - StrongWine</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    <link rel="stylesheet" href="/css/app.css">
-</head>
-<body class="admin-page">
-<div class="admin-layout">
-    <aside class="admin-sidebar">
-        <a class="admin-sidebar-brand" href="/admin">
-            <span class="brand-logo"><i class="fa-solid fa-wine-glass"></i></span>
-            StrongWine Admin
-        </a>
-        <nav>
-            <div class="admin-sidebar-section">Điều hướng</div>
-            <a class="admin-nav-link" href="/admin"><i class="fa-solid fa-chart-line"></i>Bảng điều khiển</a>
-            <a class="admin-nav-link" href="/admin/users"><i class="fa-solid fa-users"></i>Người dùng</a>
-            <a class="admin-nav-link active" href="/admin/shippers"><i class="fa-solid fa-truck"></i>Người giao hàng</a>
-            <a class="admin-nav-link" href="/admin/shipments"><i class="fa-solid fa-box-open"></i>Đơn giao hàng</a>
-            <div class="admin-sidebar-section">Vận hành</div>
-            <a class="admin-nav-link" href="/shipper/dashboard"><i class="fa-solid fa-map-location-dot"></i>Màn hình giao hàng</a>
-            <a class="admin-nav-link" href="/wines"><i class="fa-solid fa-store"></i>Cửa hàng</a>
-        </nav>
-        <div style="padding:1rem;border-top:1px solid var(--border);margin-top:auto">
-            <form th:action="@{/logout}" method="post" class="mb-0">
-                <button class="btn btn-outline-secondary btn-sm w-100"><i class="fa-solid fa-right-from-bracket me-1"></i>Đăng xuất</button>
-            </form>
-        </div>
-    </aside>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head th:replace="~{fragments/admin-shell :: head('Đội Ngũ Giao Hàng (Shippers) · StrongWine Control Center')}"></head>
+<body>
+<div class="admin-shell">
+    <aside th:replace="~{fragments/admin-shell :: sidebar('shippers')}"></aside>
 
     <div class="admin-main">
-        <header class="admin-topbar">
-            <div>
-                <h1>Quản lý người giao hàng</h1>
-                <small>Theo dõi hiệu suất và trạng thái giao nhận</small>
-            </div>
-            <div class="d-flex gap-2">
-                <a class="btn btn-sm btn-outline-secondary" href="/admin/shipments">Đơn giao hàng</a>
-                <a class="btn btn-gold btn-sm" href="/admin/shippers/create"><i class="fa-solid fa-plus me-1"></i>Thêm người giao hàng</a>
-            </div>
-        </header>
+        <header th:replace="~{fragments/admin-shell :: topbar}"></header>
 
         <main class="admin-content">
-            <div th:if="${success}" class="alert alert-success alert-dismissible fade show mb-3">
-                <span th:text="${success}"></span>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-            <div th:if="${error}" class="alert alert-danger alert-dismissible fade show mb-3">
-                <span th:text="${error}"></span>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <div th:if="${message}" class="alert-sw success mb16" th:text="${message}"></div>
+            <div th:if="${error}" class="alert-sw danger mb16" th:text="${error}"></div>
+
+            <div class="admin-head">
+                <div>
+                    <div class="eyebrow">ĐỘI NGŨ GIAO NHẬN CHUYÊN NGHIỆP</div>
+                    <h1>Quản lý nhân viên giao hàng</h1>
+                    <p>Phân bổ tải công việc, trạng thái sẵn sàng nhận chuyến và thông tin phương tiện.</p>
+                </div>
+                <a th:href="@{/admin/shippers/create}" class="btn btn-sm">+ Thêm nhân viên giao hàng</a>
             </div>
 
-            <!-- Stats -->
-            <div class="row g-3 mb-3 fade-up">
-                <div class="col-md-4">
-                    <div class="stat-card h-100">
-                        <div class="stat-label">Tổng số người giao hàng</div>
-                        <p class="stat-value" th:text="${shipperStats['total']}">0</p>
-                    </div>
+            <div class="kpi-grid mb20" th:if="${shipperStats != null}">
+                <div class="kpi-card">
+                    <span>TỔNG NHÂN SỰ</span>
+                    <strong th:text="${shipperStats['total'] ?: 0}">0</strong>
+                    <small class="up">Đội ngũ vận chuyển nội bộ</small>
                 </div>
-                <div class="col-md-4">
-                    <div class="stat-card h-100">
-                        <div class="stat-label">Đang hoạt động</div>
-                        <p class="stat-value" style="color:var(--ok-light)" th:text="${shipperStats['active']}">0</p>
-                    </div>
+                <div class="kpi-card">
+                    <span>ĐANG HOẠT ĐỘNG</span>
+                    <strong th:text="${shipperStats['active'] ?: 0}">0</strong>
+                    <small class="up">Tài khoản kích hoạt</small>
                 </div>
-                <div class="col-md-4">
-                    <div class="stat-card h-100">
-                        <div class="stat-label">Sẵn sàng nhận đơn</div>
-                        <p class="stat-value" th:text="${shipperStats['available']}">0</p>
-                    </div>
+                <div class="kpi-card">
+                    <span>SẴN SÀNG NHẬN ĐƠN</span>
+                    <strong th:text="${shipperStats['available'] ?: 0}">0</strong>
+                    <small class="up">Đang bật trực tuyến</small>
+                </div>
+                <div class="kpi-card">
+                    <span>TRẠNG THÁI ĐỘI XE</span>
+                    <strong th:text="${shippers != null ? #lists.size(shippers) : 0}">0</strong>
+                    <small class="muted">Hiển thị trên trang hiện tại</small>
                 </div>
             </div>
 
-            <div class="panel p-3 p-lg-4 fade-up">
-                <div class="table-responsive">
-                    <table class="table table-modern align-middle">
+            <section class="admin-card">
+                <div class="table-scroll">
+                    <table class="sw-table">
                         <thead>
-                            <tr>
-                                <th><span class="th-sort">ID <i class="fa-solid fa-sort"></i></span></th>
-                                <th><span class="th-sort">Tài khoản <i class="fa-solid fa-sort"></i></span></th>
-                                <th><span class="th-sort">Tên <i class="fa-solid fa-sort"></i></span></th>
-                                <th>Điện thoại</th>
-                                <th>Phương tiện</th>
-                                <th>Trạng thái</th>
-                                <th>Sẵn sàng</th>
-                                <th>Cập nhật</th>
-                                <th>Thao tác</th>
-                            </tr>
+                        <tr>
+                            <th>ID</th>
+                            <th>Họ và tên</th>
+                            <th>Số điện thoại</th>
+                            <th>Phương tiện</th>
+                            <th>Trạng thái</th>
+                            <th>Tải đơn hiện tại</th>
+                            <th>Sẵn sàng nhận đơn</th>
+                            <th>Thao tác</th>
+                        </tr>
                         </thead>
                         <tbody>
-                            <tr th:each="s : ${shippers}">
-                                <td style="color:var(--gold);font-weight:700" th:text="${s.id}"></td>
-                                <td th:text="${s.user.username}"></td>
-                                <td style="font-weight:600;color:var(--text)" th:text="${s.name}"></td>
-                                <td th:text="${s.phone}"></td>
-                                <td th:text="${s.vehicleType}"></td>
-                                <td><span class="badge text-bg-secondary" th:text="${@enumDisplayService.shipperStatus(s.status)}"></span></td>
-                                <td>
-                                    <span th:class="${s.isAvailable ? 'badge text-bg-success' : 'badge text-bg-warning'}"
-                                          th:text="${s.isAvailable ? 'Sẵn sàng' : 'Tạm nghỉ'}"></span>
-                                </td>
-                                <td style="font-size:.8rem" th:text="${#temporals.format(s.updatedAt, 'dd/MM/yyyy HH:mm')}"></td>
-                                <td>
-                                    <div class="d-flex gap-2">
-                                        <a class="btn btn-sm btn-outline-secondary" th:href="@{/admin/shippers/edit/{id}(id=${s.id})}">
-                                            <i class="fa-solid fa-pen me-1"></i>Sửa
-                                        </a>
-                                        <form th:action="@{/admin/shippers/delete/{id}(id=${s.id})}" method="post" class="mb-0"
-                                              onsubmit="return confirm('Bạn có chắc muốn xóa người giao hàng này?');">
-                                            <button class="btn btn-sm btn-outline-danger"><i class="fa-solid fa-trash"></i></button>
-                                        </form>
-                                    </div>
-                                </td>
-                            </tr>
+                        <tr th:if="${shippers == null or shippers.isEmpty()}">
+                            <td colspan="8" class="text-center muted">Chưa có nhân viên giao hàng nào.</td>
+                        </tr>
+                        <tr th:each="sh : ${shippers}"
+                            th:with="load=${activeLoadByShipperId != null and activeLoadByShipperId.containsKey(sh.id) ? activeLoadByShipperId.get(sh.id) : 0}">
+                            <td th:text="'#' + ${sh.id}">#1</td>
+                            <td>
+                                <strong th:text="${sh.name}">Tên Shipper</strong>
+                                <div class="small muted" th:if="${sh.user != null}" th:text="'@' + ${sh.user.username}">@shipper</div>
+                            </td>
+                            <td th:text="${sh.phone}">0900</td>
+                            <td th:text="${sh.vehicleType != null ? sh.vehicleType : 'Xe máy chuyên dụng'}">Xe máy</td>
+                            <td>
+                                <span class="status"
+                                      th:classappend="${sh.status != null and sh.status.name() == 'ACTIVE'} ? 'ok' : (${sh.status != null and sh.status.name() == 'BUSY'} ? 'warn' : 'neutral')"
+                                      th:text="${@enumDisplayService.shipperStatus(sh.status)}">Active</span>
+                            </td>
+                            <td><strong th:text="${load} + ' đơn đang giao'">0 đơn</strong></td>
+                            <td>
+                                <form th:action="@{/admin/shippers/{id}/availability(id=${sh.id})}" method="post" class="d-inline">
+                                    <input type="hidden" name="available" th:value="${!sh.isAvailable}">
+                                    <button type="submit" class="btn btn-sm"
+                                            th:classappend="${sh.isAvailable} ? 'btn-outline' : ''"
+                                            th:text="${sh.isAvailable ? 'Đang nhận đơn (Tắt)' : 'Đang nghỉ (Bật)'}">Toggle</button>
+                                </form>
+                            </td>
+                            <td>
+                                <div class="display-flex gap8">
+                                    <a th:href="@{/admin/shippers/edit/{id}(id=${sh.id})}" class="btn btn-outline btn-sm">Sửa</a>
+                                    <form th:action="@{/admin/shippers/delete/{id}(id=${sh.id})}" method="post"
+                                          onsubmit="return confirm('Xác nhận xoá nhân viên giao hàng này?');" class="d-inline">
+                                        <button type="submit" class="btn btn-danger btn-sm">Xoá</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
                         </tbody>
                     </table>
                 </div>
+
                 <div th:replace="~{fragments/pagination :: pagination('/admin/shippers')}"></div>
-            </div>
+            </section>
         </main>
     </div>
 </div>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<div th:replace="~{fragments/admin-shell :: scripts}"></div>
 </body>
 </html>
