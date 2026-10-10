@@ -1,0 +1,659 @@
+[
+  {
+    "id": "T1.1",
+    "category": "Customer Privacy",
+    "name": "Unauthenticated probe to /orders",
+    "expected": "302 -> /login",
+    "actual": "302 -> http://localhost:8080/login",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "id": "T1.2",
+    "category": "Customer Privacy",
+    "name": "Unauthenticated probe to /orders/1",
+    "expected": "302 -> /login",
+    "actual": "302 -> http://localhost:8080/login",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "id": "T1.3",
+    "category": "Customer Privacy",
+    "name": "Unauthenticated probe to /orders/22",
+    "expected": "302 -> /login",
+    "actual": "302 -> http://localhost:8080/login",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "id": "T1.4",
+    "category": "Customer Privacy",
+    "name": "Unauthenticated probe to /orders/99999",
+    "expected": "302 -> /login",
+    "actual": "302 -> http://localhost:8080/login",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "id": "T1.5",
+    "category": "Customer Privacy",
+    "name": "Unauthenticated probe to /order-confirmation",
+    "expected": "302 -> /login",
+    "actual": "302 -> http://localhost:8080/login",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "id": "T1.6",
+    "category": "Customer Privacy",
+    "name": "Unauthenticated probe to /order-confirmation?orderId=1",
+    "expected": "302 -> /login",
+    "actual": "302 -> http://localhost:8080/login",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "id": "T1.7",
+    "category": "Customer Privacy",
+    "name": "Customer access own order #22",
+    "expected": "200 OK",
+    "actual": "200",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "id": "T1.8-id-1",
+    "category": "Customer Privacy",
+    "name": "Customer probe foreign/invalid order #1",
+    "expected": "302 -> /orders",
+    "actual": "302 -> http://localhost:8080/orders",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "id": "T1.8-id-2",
+    "category": "Customer Privacy",
+    "name": "Customer probe foreign/invalid order #2",
+    "expected": "302 -> /orders",
+    "actual": "302 -> http://localhost:8080/orders",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "id": "T1.8-id-99999",
+    "category": "Customer Privacy",
+    "name": "Customer probe foreign/invalid order #99999",
+    "expected": "302 -> /orders",
+    "actual": "302 -> http://localhost:8080/orders",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "id": "T1.8-id--1",
+    "category": "Customer Privacy",
+    "name": "Customer probe foreign/invalid order #-1",
+    "expected": "302 -> /orders",
+    "actual": "302 -> http://localhost:8080/orders",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "id": "T1.8-id-0",
+    "category": "Customer Privacy",
+    "name": "Customer probe foreign/invalid order #0",
+    "expected": "302 -> /orders",
+    "actual": "302 -> http://localhost:8080/orders",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "id": "T1.9",
+    "category": "Customer Privacy",
+    "name": "Customer probe non-numeric order ID /orders/nonnumeric",
+    "expected": "302/400/404 (No 500 leak)",
+    "actual": "400",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "id": "T1.10",
+    "category": "Customer Privacy",
+    "name": "Customer probe foreign order-confirmation?orderId=99999",
+    "expected": "302 -> /orders",
+    "actual": "302 -> http://localhost:8080/orders",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "id": "T2.1",
+    "category": "RBAC Enforcement",
+    "name": "Customer demo GET /admin",
+    "expected": "403 Forbidden",
+    "actual": "403",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "id": "T2.2",
+    "category": "RBAC Enforcement",
+    "name": "Customer demo GET /admin/dashboard",
+    "expected": "403 Forbidden",
+    "actual": "403",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "id": "T2.3",
+    "category": "RBAC Enforcement",
+    "name": "Customer demo GET /admin/wines",
+    "expected": "403 Forbidden",
+    "actual": "403",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "id": "T2.4",
+    "category": "RBAC Enforcement",
+    "name": "Customer demo GET /admin/orders",
+    "expected": "403 Forbidden",
+    "actual": "403",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "id": "T2.5",
+    "category": "RBAC Enforcement",
+    "name": "Customer demo GET /admin/wines/import",
+    "expected": "403 Forbidden",
+    "actual": "403",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "id": "T2.6",
+    "category": "RBAC Enforcement",
+    "name": "Customer demo GET /api/admin/excel/export/inventory",
+    "expected": "403 Forbidden",
+    "actual": "403",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "id": "T2.7",
+    "category": "RBAC Enforcement",
+    "name": "Customer demo GET /api/admin/excel/template",
+    "expected": "403 Forbidden",
+    "actual": "403",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "id": "T2.8",
+    "category": "RBAC Enforcement",
+    "name": "Customer demo POST /api/admin/excel/import",
+    "expected": "403 Forbidden",
+    "actual": "403",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "id": "T2.9",
+    "category": "RBAC Enforcement",
+    "name": "Customer demo POST /api/admin/excel/preview",
+    "expected": "403 Forbidden",
+    "actual": "403",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "id": "T2.10",
+    "category": "RBAC Enforcement",
+    "name": "Customer demo GET /shipper/dashboard",
+    "expected": "403 Forbidden",
+    "actual": "403",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "id": "T2.11",
+    "category": "RBAC Enforcement",
+    "name": "Customer demo GET /shipper/shipments",
+    "expected": "403 Forbidden",
+    "actual": "403",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "id": "T2.12",
+    "category": "RBAC Enforcement",
+    "name": "Customer demo POST /shipper/shipments/1/pickup",
+    "expected": "403 Forbidden",
+    "actual": "403",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "id": "T2.13",
+    "category": "RBAC Enforcement",
+    "name": "Customer demo POST /shipper/shipments/1/start",
+    "expected": "403 Forbidden",
+    "actual": "403",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "id": "T2.14",
+    "category": "RBAC Enforcement",
+    "name": "Customer demo POST /api/wines",
+    "expected": "403 Forbidden",
+    "actual": "403",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "id": "T2.15",
+    "category": "RBAC Enforcement",
+    "name": "Customer demo GET /api/users",
+    "expected": "403 Forbidden",
+    "actual": "403",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "id": "T2.16",
+    "category": "RBAC Enforcement",
+    "name": "Shipper GET /admin",
+    "expected": "403 Forbidden",
+    "actual": "403",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "id": "T2.17",
+    "category": "RBAC Enforcement",
+    "name": "Shipper GET /admin/dashboard",
+    "expected": "403 Forbidden",
+    "actual": "403",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "id": "T2.18",
+    "category": "RBAC Enforcement",
+    "name": "Shipper GET /admin/wines",
+    "expected": "403 Forbidden",
+    "actual": "403",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "id": "T2.19",
+    "category": "RBAC Enforcement",
+    "name": "Shipper GET /admin/orders",
+    "expected": "403 Forbidden",
+    "actual": "403",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "id": "T2.20",
+    "category": "RBAC Enforcement",
+    "name": "Shipper GET /admin/wines/import",
+    "expected": "403 Forbidden",
+    "actual": "403",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "id": "T2.21",
+    "category": "RBAC Enforcement",
+    "name": "Shipper GET /api/admin/excel/export/inventory",
+    "expected": "403 Forbidden",
+    "actual": "403",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "id": "T2.22",
+    "category": "RBAC Enforcement",
+    "name": "Shipper GET /api/admin/excel/template",
+    "expected": "403 Forbidden",
+    "actual": "403",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "id": "T2.23",
+    "category": "RBAC Enforcement",
+    "name": "Shipper POST /api/admin/excel/import",
+    "expected": "403 Forbidden",
+    "actual": "403",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "id": "T2.24",
+    "category": "RBAC Enforcement",
+    "name": "Shipper POST /api/admin/excel/preview",
+    "expected": "403 Forbidden",
+    "actual": "403",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "id": "T2.25",
+    "category": "RBAC Enforcement",
+    "name": "Shipper POST /api/wines",
+    "expected": "403 Forbidden",
+    "actual": "403",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "id": "T2.26",
+    "category": "RBAC Enforcement",
+    "name": "Shipper GET /api/users",
+    "expected": "403 Forbidden",
+    "actual": "403",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "id": "T2.27",
+    "category": "RBAC Enforcement",
+    "name": "Shipper GET /shipper/dashboard",
+    "expected": "200 OK",
+    "actual": "200",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "id": "T2.28",
+    "category": "RBAC Enforcement",
+    "name": "Admin GET /admin",
+    "expected": "200 OK",
+    "actual": "200",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "id": "T2.29",
+    "category": "RBAC Enforcement",
+    "name": "Admin GET /api/admin/excel/template",
+    "expected": "200 OK (XLSX)",
+    "actual": "200 (application/vnd.openxmlformats-officedocument.spreadsheetml.sheet)",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "id": "T2.30",
+    "category": "RBAC Enforcement",
+    "name": "Admin GET /api/admin/excel/export/inventory",
+    "expected": "200 OK (XLSX)",
+    "actual": "200 (application/vnd.openxmlformats-officedocument.spreadsheetml.sheet)",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "id": "T2.31",
+    "category": "RBAC Enforcement",
+    "name": "Admin GET /shipper/dashboard",
+    "expected": "200 OK (hasAnyRole)",
+    "actual": "200",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "id": "T3.1-_orders",
+    "category": "Session Tampering",
+    "name": "Cookie [RANDOM_HEX_64] on Customer Orders (/orders)",
+    "expected": "302 -> /login",
+    "actual": "302 -> http://localhost:8080/login",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "id": "T3.1-_orders_1",
+    "category": "Session Tampering",
+    "name": "Cookie [RANDOM_HEX_64] on Order Detail (/orders/1)",
+    "expected": "302 -> /login",
+    "actual": "302 -> http://localhost:8080/login",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "id": "T3.1-_admin",
+    "category": "Session Tampering",
+    "name": "Cookie [RANDOM_HEX_64] on Admin Root (/admin)",
+    "expected": "302 -> /login",
+    "actual": "302 -> http://localhost:8080/login",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "id": "T3.1-_shipper_dashboard",
+    "category": "Session Tampering",
+    "name": "Cookie [RANDOM_HEX_64] on Shipper Cockpit (/shipper/dashboard)",
+    "expected": "302 -> /login",
+    "actual": "302 -> http://localhost:8080/login",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "id": "T3.2-_orders",
+    "category": "Session Tampering",
+    "name": "Cookie [EMPTY_COOKIE] on Customer Orders (/orders)",
+    "expected": "302 -> /login",
+    "actual": "302 -> http://localhost:8080/login",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "id": "T3.2-_orders_1",
+    "category": "Session Tampering",
+    "name": "Cookie [EMPTY_COOKIE] on Order Detail (/orders/1)",
+    "expected": "302 -> /login",
+    "actual": "302 -> http://localhost:8080/login",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "id": "T3.2-_admin",
+    "category": "Session Tampering",
+    "name": "Cookie [EMPTY_COOKIE] on Admin Root (/admin)",
+    "expected": "302 -> /login",
+    "actual": "302 -> http://localhost:8080/login",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "id": "T3.2-_shipper_dashboard",
+    "category": "Session Tampering",
+    "name": "Cookie [EMPTY_COOKIE] on Shipper Cockpit (/shipper/dashboard)",
+    "expected": "302 -> /login",
+    "actual": "302 -> http://localhost:8080/login",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "id": "T3.3-_orders",
+    "category": "Session Tampering",
+    "name": "Cookie [SQLI_INJECTION] on Customer Orders (/orders)",
+    "expected": "302 -> /login",
+    "actual": "302 -> http://localhost:8080/login",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "id": "T3.3-_orders_1",
+    "category": "Session Tampering",
+    "name": "Cookie [SQLI_INJECTION] on Order Detail (/orders/1)",
+    "expected": "302 -> /login",
+    "actual": "302 -> http://localhost:8080/login",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "id": "T3.3-_admin",
+    "category": "Session Tampering",
+    "name": "Cookie [SQLI_INJECTION] on Admin Root (/admin)",
+    "expected": "302 -> /login",
+    "actual": "302 -> http://localhost:8080/login",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "id": "T3.3-_shipper_dashboard",
+    "category": "Session Tampering",
+    "name": "Cookie [SQLI_INJECTION] on Shipper Cockpit (/shipper/dashboard)",
+    "expected": "302 -> /login",
+    "actual": "302 -> http://localhost:8080/login",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "id": "T3.4-_orders",
+    "category": "Session Tampering",
+    "name": "Cookie [PATH_TRAVERSAL] on Customer Orders (/orders)",
+    "expected": "302 -> /login",
+    "actual": "302 -> http://localhost:8080/login",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "id": "T3.4-_orders_1",
+    "category": "Session Tampering",
+    "name": "Cookie [PATH_TRAVERSAL] on Order Detail (/orders/1)",
+    "expected": "302 -> /login",
+    "actual": "302 -> http://localhost:8080/login",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "id": "T3.4-_admin",
+    "category": "Session Tampering",
+    "name": "Cookie [PATH_TRAVERSAL] on Admin Root (/admin)",
+    "expected": "302 -> /login",
+    "actual": "302 -> http://localhost:8080/login",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "id": "T3.4-_shipper_dashboard",
+    "category": "Session Tampering",
+    "name": "Cookie [PATH_TRAVERSAL] on Shipper Cockpit (/shipper/dashboard)",
+    "expected": "302 -> /login",
+    "actual": "302 -> http://localhost:8080/login",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "id": "T3.5-_orders",
+    "category": "Session Tampering",
+    "name": "Cookie [BOGUS_CHARS] on Customer Orders (/orders)",
+    "expected": "302 -> /login",
+    "actual": "302 -> http://localhost:8080/login",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "id": "T3.5-_orders_1",
+    "category": "Session Tampering",
+    "name": "Cookie [BOGUS_CHARS] on Order Detail (/orders/1)",
+    "expected": "302 -> /login",
+    "actual": "302 -> http://localhost:8080/login",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "id": "T3.5-_admin",
+    "category": "Session Tampering",
+    "name": "Cookie [BOGUS_CHARS] on Admin Root (/admin)",
+    "expected": "302 -> /login",
+    "actual": "302 -> http://localhost:8080/login",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "id": "T3.5-_shipper_dashboard",
+    "category": "Session Tampering",
+    "name": "Cookie [BOGUS_CHARS] on Shipper Cockpit (/shipper/dashboard)",
+    "expected": "302 -> /login",
+    "actual": "302 -> http://localhost:8080/login",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "id": "T3.6-admin",
+    "category": "Session Tampering",
+    "name": "Malformed JWT header on /admin",
+    "expected": "302/401/403 (No 500)",
+    "actual": "302 -> http://localhost:8080/login",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "id": "T3.6-orders",
+    "category": "Session Tampering",
+    "name": "Malformed JWT header on /orders",
+    "expected": "302/401/403 (No 500)",
+    "actual": "302 -> http://localhost:8080/login",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "id": "T4.1-anon",
+    "category": "SSE Security",
+    "name": "Unauthenticated probe to Admin SSE Stream (/api/live/admin/stream)",
+    "expected": "302 -> /login",
+    "actual": "302 -> http://localhost:8080/login",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "id": "T4.2-anon",
+    "category": "SSE Security",
+    "name": "Unauthenticated probe to Shipper SSE Stream (/api/live/shipper/1/stream)",
+    "expected": "302 -> /login",
+    "actual": "302 -> http://localhost:8080/login",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "id": "T4.3-anon",
+    "category": "SSE Security",
+    "name": "Unauthenticated probe to Order SSE Stream (/api/live/orders/1/stream)",
+    "expected": "302 -> /login",
+    "actual": "302 -> http://localhost:8080/login",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "id": "T4.4-demo-admin-sse",
+    "category": "SSE Security",
+    "name": "Customer demo probe /api/live/admin/stream",
+    "expected": "403 Forbidden",
+    "actual": "200 (text/event-stream)",
+    "passed": false,
+    "details": "[SECURITY GAP: Non-admin user can subscribe to admin SSE event stream]"
+  },
+  {
+    "id": "T4.5-shipper-admin-sse",
+    "category": "SSE Security",
+    "name": "Shipper probe /api/live/admin/stream",
+    "expected": "403 Forbidden",
+    "actual": "200 (text/event-stream)",
+    "passed": false,
+    "details": "[SECURITY GAP: Shipper user can subscribe to admin SSE event stream]"
+  },
+  {
+    "id": "T4.6-admin-sse",
+    "category": "SSE Security",
+    "name": "Admin GET /api/live/admin/stream",
+    "expected": "200 OK (text/event-stream)",
+    "actual": "200 (text/event-stream)",
+    "passed": true,
+    "details": ""
+  }
+]
