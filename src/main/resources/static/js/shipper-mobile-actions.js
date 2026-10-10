@@ -1,19 +1,17 @@
 /**
  * StrongWine — Shipper Mobile Ergonomics Controller
- * Xử lý: Tự động nhảy ô OTP 6 số, Dán chuỗi OTP, và SSE nhận đơn giao mới.
+ * Xử lý: OTP 6 số (.otp-box & .otp-box-mobile), lọc tab trạng thái, và SSE trực tuyến.
  */
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. Tự động nhảy ô OTP 6 số & paste chuỗi
+    const OTP_SELECTOR = '.otp-box, .otp-box-mobile';
+
     document.querySelectorAll('.otp-container').forEach(container => {
-        const inputs = container.querySelectorAll('.otp-box');
+        const inputs = container.querySelectorAll(OTP_SELECTOR);
 
         inputs.forEach((input, index) => {
-            input.addEventListener('input', (e) => {
-                const val = input.value;
-                if (/[^0-9]/.test(val)) {
-                    input.value = '';
-                    return;
-                }
+            input.addEventListener('input', () => {
+                const val = input.value.replace(/\D/g, '').slice(0, 1);
+                input.value = val;
                 if (val && index < inputs.length - 1) {
                     inputs[index + 1].focus();
                 }
@@ -29,13 +27,14 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             input.addEventListener('paste', (e) => {
-                e.preventDefault();
-                const pasteData = (e.clipboardData || window.clipboardData).getData('text').trim();
-                if (/^\d{6}$/.test(pasteData)) {
-                    pasteData.split('').forEach((char, i) => {
-                        if (inputs[i]) inputs[i].value = char;
+                const pasteData = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').slice(0, 6);
+                if (pasteData.length > 0) {
+                    e.preventDefault();
+                    inputs.forEach((inp, i) => {
+                        inp.value = pasteData[i] || '';
                     });
-                    inputs[inputs.length - 1].focus();
+                    const focusIdx = Math.min(pasteData.length, inputs.length) - 1;
+                    if (focusIdx >= 0 && inputs[focusIdx]) inputs[focusIdx].focus();
                     updateHiddenOtp(container);
                 }
             });
@@ -43,7 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     function updateHiddenOtp(container) {
-        const inputs = container.querySelectorAll('.otp-box');
+        const inputs = container.querySelectorAll(OTP_SELECTOR);
         let fullOtp = '';
         inputs.forEach(inp => fullOtp += inp.value);
         const shipmentId = container.getAttribute('data-shipment-id');
@@ -51,7 +50,23 @@ document.addEventListener('DOMContentLoaded', () => {
         if (hiddenInput) hiddenInput.value = fullOtp;
     }
 
-    // 2. Chime thông báo đơn mới bằng Web Audio API
+    // Tab filtering on mobile shipper cockpit
+    const tabButtons = document.querySelectorAll('[data-shipper-tab]');
+    const cards = document.querySelectorAll('[data-shipment-group]');
+    if (tabButtons.length > 0) {
+        tabButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const targetGroup = btn.getAttribute('data-shipper-tab');
+                tabButtons.forEach(b => b.classList.toggle('active', b.getAttribute('data-shipper-tab') === targetGroup));
+                cards.forEach(card => {
+                    const group = card.getAttribute('data-shipment-group');
+                    const visible = (targetGroup === 'all') || (group === targetGroup);
+                    card.classList.toggle('d-none', !visible);
+                });
+            });
+        });
+    }
+
     function playShipperChime() {
         try {
             const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -71,44 +86,50 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (e) {}
     }
 
-    // 3. Kết nối kênh thông báo SSE cho Shipper (nếu có shipperId)
     const shipperIdMeta = document.querySelector('meta[name="shipper-id"]')?.getAttribute('content');
-    if (shipperIdMeta) {
+    const badge = document.getElementById('shipperOnlineBadge');
+    if (shipperIdMeta && shipperIdMeta.trim() !== '') {
         try {
             const sse = new EventSource(`/api/live/shipper/${shipperIdMeta}/stream`);
             sse.addEventListener('init', () => {
-                const badge = document.getElementById('shipperOnlineBadge');
                 if (badge) {
-                    badge.innerHTML = '<span class="sse-pulse-dot"></span> Đang trực tuyến';
-                    badge.className = 'sse-live-pill';
+                    badge.textContent = '● Trực tuyến';
+                    badge.className = 'status good';
                 }
             });
-
-            sse.addEventListener('new_shipment_assigned', (e) => {
+            sse.addEventListener('new_shipment_assigned', () => {
                 playShipperChime();
                 const alertEl = document.getElementById('shipperLiveAlert');
                 if (alertEl) {
-                    alertEl.innerHTML = '<i class="fa-solid fa-bell fa-shake me-2 text-warning"></i>Bạn có đơn giao hàng mới được phân công! Đang làm mới...';
+                    alertEl.textContent = 'Bạn có đơn giao hàng mới được phân công! Đang làm mới...';
                     alertEl.classList.remove('d-none');
                 }
                 setTimeout(() => window.location.reload(), 2000);
             });
+            sse.onerror = () => {
+                if (badge) {
+                    badge.textContent = '○ Ngoại tuyến';
+                    badge.className = 'status neutral';
+                }
+            };
         } catch (e) {
-            console.debug('SSE shipper stream error or unavailable');
+            if (badge) {
+                badge.textContent = '○ Ngoại tuyến';
+                badge.className = 'status neutral';
+            }
         }
     }
 });
 
-// Helper submit form OTP
 function submitOtpForm(shipmentId) {
     const container = document.querySelector(`.otp-container[data-shipment-id="${shipmentId}"]`);
     if (!container) return;
 
-    const boxes = container.querySelectorAll('.otp-box');
+    const boxes = container.querySelectorAll('.otp-box, .otp-box-mobile');
     let otpVal = '';
-    boxes.forEach(b => otpVal += b.value);
+    boxes.forEach(b => otpVal += (b.value || '').trim());
 
-    if (otpVal.length !== 6) {
+    if (!/^\d{6}$/.test(otpVal)) {
         alert('Vui lòng nhập đủ 6 chữ số mã OTP nhận hàng.');
         return;
     }
@@ -117,5 +138,11 @@ function submitOtpForm(shipmentId) {
     if (hiddenInp) hiddenInp.value = otpVal;
 
     const form = document.getElementById('otpForm-' + shipmentId);
-    if (form) form.submit();
+    if (form) {
+        if (form.dataset.submitting === 'true') return;
+        form.dataset.submitting = 'true';
+        const btn = container.querySelector('button[data-otp-submit]');
+        if (btn) btn.disabled = true;
+        form.submit();
+    }
 }

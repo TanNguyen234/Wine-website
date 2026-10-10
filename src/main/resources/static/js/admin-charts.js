@@ -1,146 +1,152 @@
-/**
- * StrongWine — Executive Cellar Dashboard Visualizations & Live SSE Monitor
- */
-document.addEventListener('DOMContentLoaded', () => {
-    // 1. Biểu Đồ Doanh Thu 7 Ngày Gần Nhất
-    const revenueCtx = document.getElementById('revenueChart');
-    if (revenueCtx && typeof Chart !== 'undefined') {
-        const gradient = revenueCtx.getContext('2d').createLinearGradient(0, 0, 0, 240);
-        gradient.addColorStop(0, 'rgba(201, 168, 76, 0.35)');
-        gradient.addColorStop(1, 'rgba(201, 168, 76, 0.0)');
+(function () {
+    "use strict";
 
-        new Chart(revenueCtx, {
-            type: 'line',
-            data: {
-                labels: ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'],
-                datasets: [{
-                    label: 'Doanh thu (triệu VNĐ)',
-                    data: [12.5, 18.2, 15.4, 24.8, 31.5, 48.0, 39.2],
-                    borderColor: '#c9a84c',
-                    borderWidth: 2.5,
-                    backgroundColor: gradient,
-                    fill: true,
-                    tension: 0.38,
-                    pointBackgroundColor: '#c9a84c',
-                    pointBorderColor: '#18120d',
-                    pointBorderWidth: 2,
-                    pointRadius: 5,
-                    pointHoverRadius: 7
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        backgroundColor: '#1f1610',
-                        titleColor: '#e4c67d',
-                        bodyColor: '#f5f0e8',
-                        borderColor: '#c9a84c',
-                        borderWidth: 1,
-                        padding: 10,
-                        callbacks: {
-                            label: (ctx) => `${ctx.raw} triệu VNĐ`
-                        }
-                    }
-                },
-                scales: {
-                    x: {
-                        grid: { color: 'rgba(201, 168, 76, 0.06)' },
-                        ticks: { color: '#a09280', font: { family: 'Lato' } }
-                    },
-                    y: {
-                        grid: { color: 'rgba(201, 168, 76, 0.06)' },
-                        ticks: {
-                            color: '#a09280',
-                            font: { family: 'Lato' },
-                            callback: (val) => val + ' tr'
-                        }
-                    }
-                }
-            }
-        });
-    }
+    function drawFallbackBarChart(canvas, labels, values) {
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return;
+        const w = (canvas.width = canvas.parentElement ? canvas.parentElement.clientWidth || 640 : 640);
+        const h = (canvas.height = 240);
+        ctx.clearRect(0, 0, w, h);
 
-    // 2. Biểu Đồ Cơ Cấu Danh Mục Rượu Vang
-    const categoryCtx = document.getElementById('categoryPieChart');
-    if (categoryCtx && typeof Chart !== 'undefined') {
-        new Chart(categoryCtx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Vang Đỏ', 'Vang Trắng', 'Vang Sủi Champagne', 'Vang Hồng'],
-                datasets: [{
-                    data: [52, 28, 14, 6],
-                    backgroundColor: [
-                        '#8b1a1a', // Crimson Bordeaux
-                        '#e4c67d', // Champagne Gold
-                        '#4a7c59', // Emerald Cellar
-                        '#d47385'  // Rose Blush
-                    ],
-                    borderColor: '#18120d',
-                    borderWidth: 2,
-                    hoverOffset: 4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: {
-                            color: '#c7b9a3',
-                            font: { family: 'Lato', size: 11 },
-                            padding: 12
-                        }
-                    },
-                    tooltip: {
-                        backgroundColor: '#1f1610',
-                        titleColor: '#e4c67d',
-                        bodyColor: '#f5f0e8',
-                        borderColor: '#c9a84c',
-                        borderWidth: 1
-                    }
-                },
-                cutout: '68%'
-            }
-        });
-    }
+        const maxVal = Math.max(1, ...values.map((v) => Number(v) || 0));
+        const padLeft = 56;
+        const padBottom = 34;
+        const padTop = 20;
+        const chartW = w - padLeft - 20;
+        const chartH = h - padTop - padBottom;
 
-    // 3. Lắng nghe SSE Live Channel cho Admin
-    try {
-        const adminSse = new EventSource('/api/live/admin/stream');
-        const alertBadge = document.getElementById('adminLiveBadge');
-
-        adminSse.addEventListener('init', () => {
-            if (alertBadge) {
-                alertBadge.innerHTML = '<span class="sse-pulse-dot"></span> Live Cockpit';
-                alertBadge.className = 'sse-live-pill';
-            }
-        });
-
-        adminSse.addEventListener('order_status_updated', (e) => {
-            const data = JSON.parse(e.data);
-            showAdminToast(`Đơn hàng #${data.orderId}`, data.message || `Trạng thái: ${data.status}`);
-        });
-
-        adminSse.addEventListener('shipment_step_updated', (e) => {
-            const data = JSON.parse(e.data);
-            showAdminToast(`Vận chuyển #${data.shipmentId}`, `Đơn #${data.orderId} chuyển sang: ${data.status}`);
-        });
-    } catch (e) {
-        console.debug('SSE admin channel not active or unsupported');
-    }
-
-    function showAdminToast(title, msg) {
-        const toast = document.getElementById('adminLiveToast');
-        if (toast) {
-            document.getElementById('adminToastTitle').textContent = title;
-            document.getElementById('adminToastBody').textContent = msg;
-            toast.classList.remove('d-none');
-            toast.classList.add('show');
-            setTimeout(() => { toast.classList.add('d-none'); }, 6000);
+        ctx.strokeStyle = "#e8e2d8";
+        ctx.lineWidth = 1;
+        for (let i = 0; i <= 4; i++) {
+            const y = padTop + (chartH / 4) * i;
+            ctx.beginPath();
+            ctx.moveTo(padLeft, y);
+            ctx.lineTo(w - 20, y);
+            ctx.stroke();
         }
+
+        const step = chartW / Math.max(1, labels.length);
+        const barW = Math.min(44, step * 0.56);
+        labels.forEach((lbl, idx) => {
+            const val = Number(values[idx]) || 0;
+            const bh = (val / maxVal) * (chartH - 10);
+            const x = padLeft + idx * step + (step - barW) / 2;
+            const y = padTop + chartH - bh;
+
+            ctx.fillStyle = "#742c3d";
+            ctx.beginPath();
+            ctx.roundRect(x, y, barW, bh, [6, 6, 0, 0]);
+            ctx.fill();
+
+            ctx.fillStyle = "#79717a";
+            ctx.font = "11px sans-serif";
+            ctx.textAlign = "center";
+            ctx.fillText(String(lbl), x + barW / 2, h - 12);
+        });
     }
-});
+
+    function drawFallbackDoughnut(canvas, labels, values) {
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return;
+        const w = (canvas.width = canvas.parentElement ? canvas.parentElement.clientWidth || 340 : 340);
+        const h = (canvas.height = 220);
+        ctx.clearRect(0, 0, w, h);
+
+        const colors = ["#742c3d", "#b08c59", "#356a54", "#ae793d", "#3b1825", "#8f5b66"];
+        const total = Math.max(1, values.reduce((acc, v) => acc + (Number(v) || 0), 0));
+        const cx = w * 0.36;
+        const cy = h * 0.5;
+        const r = Math.min(cx, cy) - 22;
+        let angle = -Math.PI / 2;
+
+        values.forEach((v, idx) => {
+            const slice = ((Number(v) || 0) / total) * Math.PI * 2;
+            ctx.beginPath();
+            ctx.moveTo(cx, cy);
+            ctx.arc(cx, cy, r, angle, angle + slice);
+            ctx.closePath();
+            ctx.fillStyle = colors[idx % colors.length];
+            ctx.fill();
+            angle += slice;
+        });
+
+        ctx.beginPath();
+        ctx.arc(cx, cy, r * 0.58, 0, Math.PI * 2);
+        ctx.fillStyle = "#fffdf8";
+        ctx.fill();
+
+        labels.forEach((lbl, idx) => {
+            const lx = w * 0.66;
+            const ly = 44 + idx * 26;
+            ctx.fillStyle = colors[idx % colors.length];
+            ctx.fillRect(lx, ly - 9, 12, 12);
+            ctx.fillStyle = "#272128";
+            ctx.font = "12px sans-serif";
+            ctx.textAlign = "left";
+            ctx.fillText(`${lbl} (${values[idx] || 0})`, lx + 18, ly + 1);
+        });
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const revCanvas = document.getElementById("revenueChart");
+        if (revCanvas) {
+            let labels = ["T5", "T6", "T7", "T8", "T9", "T10"];
+            let values = [0, 0, 0, 0, 0, 0];
+            try {
+                if (revCanvas.dataset.labels) labels = JSON.parse(revCanvas.dataset.labels);
+                if (revCanvas.dataset.values) values = JSON.parse(revCanvas.dataset.values);
+            } catch (_) {}
+
+            if (typeof Chart !== "undefined") {
+                new Chart(revCanvas, {
+                    type: "bar",
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: "Doanh thu (VNĐ)",
+                            data: values,
+                            backgroundColor: "#742c3d",
+                            borderRadius: 6
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } }
+                    }
+                });
+            } else {
+                drawFallbackBarChart(revCanvas, labels, values);
+            }
+        }
+
+        const typeCanvas = document.getElementById("wineTypeChart");
+        if (typeCanvas) {
+            let labels = ["Vang đỏ", "Vang trắng", "Sparkling"];
+            let values = [1, 1, 1];
+            try {
+                if (typeCanvas.dataset.labels) labels = JSON.parse(typeCanvas.dataset.labels);
+                if (typeCanvas.dataset.values) values = JSON.parse(typeCanvas.dataset.values);
+            } catch (_) {}
+
+            if (typeof Chart !== "undefined") {
+                new Chart(typeCanvas, {
+                    type: "doughnut",
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            data: values,
+                            backgroundColor: ["#742c3d", "#b08c59", "#356a54", "#ae793d", "#3b1825"]
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false
+                    }
+                });
+            } else {
+                drawFallbackDoughnut(typeCanvas, labels, values);
+            }
+        }
+    });
+})();

@@ -1,5 +1,7 @@
 package com.strongwine.strongwine.controller;
 
+import com.strongwine.strongwine.entity.Shipment;
+import com.strongwine.strongwine.entity.ShipmentStatus;
 import com.strongwine.strongwine.service.ShipmentService;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -7,6 +9,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.util.List;
 
 @Controller
 @RequestMapping("/shipper")
@@ -25,12 +29,36 @@ public class ShipperController {
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
 
         model.addAttribute("isAdminView", isAdmin);
+        List<Shipment> shipments;
         if (isAdmin) {
-            model.addAttribute("shipments", shipmentService.getActiveShipmentsForAdminView());
+            shipments = shipmentService.getActiveShipmentsForAdminView();
+            model.addAttribute("currentShipperName", "Quản trị viên (Giám sát)");
+            model.addAttribute("currentShipperId", "");
         } else {
             String username = authentication.getName();
-            model.addAttribute("shipments", shipmentService.getMyShipments(username));
+            shipments = shipmentService.getMyShipments(username);
+            String shipperName = username;
+            Long shipperId = null;
+            if (shipments != null && !shipments.isEmpty() && shipments.get(0).getShipper() != null) {
+                shipperName = shipments.get(0).getShipper().getName();
+                shipperId = shipments.get(0).getShipper().getId();
+            }
+            model.addAttribute("currentShipperName", shipperName);
+            model.addAttribute("currentShipperId", shipperId != null ? String.valueOf(shipperId) : "");
         }
+        model.addAttribute("shipments", shipments);
+        long deliveringCount = shipments == null ? 0 : shipments.stream()
+                .filter(s -> s.getStatus() == ShipmentStatus.PICKED_UP || s.getStatus() == ShipmentStatus.DELIVERING)
+                .count();
+        long assignedCount = shipments == null ? 0 : shipments.stream()
+                .filter(s -> s.getStatus() == ShipmentStatus.ASSIGNED || s.getStatus() == ShipmentStatus.PENDING_ASSIGNMENT)
+                .count();
+        long doneCount = shipments == null ? 0 : shipments.stream()
+                .filter(s -> s.getStatus() == ShipmentStatus.COMPLETED || s.getStatus() == ShipmentStatus.FAILED)
+                .count();
+        model.addAttribute("deliveringCount", deliveringCount);
+        model.addAttribute("assignedCount", assignedCount);
+        model.addAttribute("doneCount", doneCount);
         return "shipper-dashboard";
     }
 
