@@ -23,8 +23,13 @@ public class SseNotificationApiController {
         return sseService.subscribeOrder(orderId);
     }
 
-    @GetMapping(value = "/admin/notifications", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @GetMapping(value = {"/admin/notifications", "/admin/stream"}, produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter streamAdminNotifications() {
         return sseService.subscribeAdmin();
+    }
+
+    @GetMapping(value = "/shipper/{shipperId}/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public SseEmitter streamShipperEvents(@PathVariable Long shipperId) {
+        return sseService.subscribeShipper(shipperId);
     }
 }
