@@ -47,13 +47,34 @@ public class PaymentService {
     @Lazy
     private PaymentService self;
 
+    @Autowired(required = false)
+    @Lazy
+    private ShipmentService shipmentService;
+
     @Value("${stripe.webhookSecret:}")
     private String stripeWebhookSecret;
 
     public String createPaymentSession(Order order, String method, String baseUrl) {
         PaymentMethod paymentMethod = parseMethod(method);
+        if (paymentMethod == PaymentMethod.COD) {
+            Payment payment = self.createInitialPayment(order, paymentMethod);
+            payment.setGatewayResponse("COD_PENDING");
+            payment.setUpdatedAt(LocalDateTime.now());
+            paymentRepository.save(payment);
+            saveTransaction(payment, "COD_ORDER", "PENDING", "Cash on delivery placed for order " + order.getId());
+
+            try {
+                if (shipmentService != null) {
+                    shipmentService.createAutoShipmentForPaidOrder(order);
+                }
+            } catch (Exception ex) {
+                // Ignore if fleet is busy; auto-dispatch or admin will assign
+            }
+            return baseUrl + "/orders/" + order.getId();
+        }
+
         if (paymentMethod != PaymentMethod.STRIPE) {
-            throw new IllegalArgumentException("Hiện tại chỉ hỗ trợ thanh toán STRIPE");
+            throw new IllegalArgumentException("Phương thức thanh toán chưa được hỗ trợ: " + method);
         }
 
         Payment payment = self.createInitialPayment(order, paymentMethod);

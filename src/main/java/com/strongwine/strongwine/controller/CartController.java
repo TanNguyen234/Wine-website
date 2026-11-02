@@ -41,7 +41,7 @@ public class CartController {
     private static final Logger log = LoggerFactory.getLogger(CartController.class);
 
     private static final String CHECKOUT_TOKEN_SESSION_KEY = "checkout:token";
-    private static final List<String> SUPPORTED_PAYMENT_METHODS = List.of("STRIPE");
+    private static final List<String> SUPPORTED_PAYMENT_METHODS = List.of("COD", "STRIPE");
     private static final Set<String> ALLOWED_PAYMENT_METHODS = Set.copyOf(SUPPORTED_PAYMENT_METHODS);
     private static final Pattern EMAIL_PATTERN = Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$");
     

@@ -45,6 +45,23 @@
         return inside;
     }
 
+    function parseCoordinateQuery(value) {
+        const match = String(value || "").trim().match(/^([+-]?(?:\d+(?:\.\d*)?|\.\d+))\s*[,;]\s*([+-]?(?:\d+(?:\.\d*)?|\.\d+))$/);
+        if (!match) {
+            return null;
+        }
+
+        const lat = Number(match[1]);
+        const lng = Number(match[2]);
+        return {
+            lat,
+            lng,
+            valid: Number.isFinite(lat) && Number.isFinite(lng)
+                && lat >= -90 && lat <= 90
+                && lng >= -180 && lng <= 180
+        };
+    }
+
     function initCheckoutMap() {
         const checkoutPage = document.querySelector("[data-checkout-page='true']");
         if (!checkoutPage || typeof L === "undefined") {
@@ -108,8 +125,15 @@
             lngInput.value = String(lng.toFixed(6));
             setLocationLabel(buildDisplayLabel(placeName, lat, lng));
 
-            if (addressInput && !addressInput.value.trim()) {
-                addressInput.value = placeName || "Vị trí được chọn trên bản đồ";
+            if (addressInput) {
+                const currentAddress = addressInput.value.trim();
+                const addressIsMapFallback = currentAddress === "Vị trí được chọn trên bản đồ";
+
+                if ((!currentAddress || addressIsMapFallback) && placeName) {
+                    addressInput.value = placeName;
+                } else if (!currentAddress) {
+                    addressInput.value = "Vị trí được chọn trên bản đồ";
+                }
             }
         }
 
@@ -231,6 +255,22 @@
             const keyword = searchInput.value || "";
             if (!keyword.trim()) {
                 setSearchResultText("Nhập tên địa điểm để tìm", false);
+                return;
+            }
+
+            const coordinates = parseCoordinateQuery(keyword);
+            if (coordinates) {
+                if (!coordinates.valid) {
+                    setSearchResultText("Tọa độ không hợp lệ. Vui lòng nhập theo dạng vĩ độ, kinh độ.", true);
+                    return;
+                }
+                if (!setMarkerAt(coordinates.lat, coordinates.lng)) {
+                    setSearchResultText("Địa điểm nằm ngoài phạm vi giao hàng đất liền Việt Nam", true);
+                    return;
+                }
+
+                map.setView([coordinates.lat, coordinates.lng], 14);
+                setSearchResultText("Đã chọn vị trí theo tọa độ", false);
                 return;
             }
 

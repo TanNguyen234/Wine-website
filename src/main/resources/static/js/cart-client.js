@@ -361,7 +361,9 @@
                         method: "POST",
                         headers: {
                             "Content-Type": "application/json",
-                            "Accept": "application/json"
+                            "Accept": "application/json",
+                            [document.querySelector('meta[name="_csrf_header"]')?.content || "X-CSRF-TOKEN"]:
+                                document.querySelector('meta[name="_csrf"]')?.content || ""
                         },
                         body: JSON.stringify(requestBody)
                     });
@@ -386,6 +388,7 @@
 
                     const result = await response.json();
                     if (result && result.redirectUrl) {
+                        clearCart();
                         window.location.href = result.redirectUrl;
                         return;
                     }
