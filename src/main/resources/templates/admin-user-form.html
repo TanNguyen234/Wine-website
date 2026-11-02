@@ -49,7 +49,7 @@
                                 <option th:each="r : ${roles}"
                                         th:value="${r}"
                                         th:text="${@enumDisplayService.userRole(r)}"
-                                        th:selected="${editingUser != null and editingUser.role == r}">USER</option>
+                                        th:selected="${editingUser != null ? editingUser.role == r : r == 'USER'}">USER</option>
                             </select>
                         </div>
                     </div>

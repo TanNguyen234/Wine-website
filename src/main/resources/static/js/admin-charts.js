@@ -87,7 +87,18 @@
         });
     }
 
-    document.addEventListener("DOMContentLoaded", function () {
+    function showEmptyState(canvas, message) {
+        const holder = canvas.parentElement;
+        if (!holder) return;
+        canvas.hidden = true;
+        const note = document.createElement("p");
+        note.className = "chart-empty-note";
+        note.setAttribute("role", "status");
+        note.textContent = message;
+        holder.appendChild(note);
+    }
+
+    function initializeCharts() {
         const revCanvas = document.getElementById("revenueChart");
         if (revCanvas) {
             let labels = ["T5", "T6", "T7", "T8", "T9", "T10"];
@@ -97,7 +108,10 @@
                 if (revCanvas.dataset.values) values = JSON.parse(revCanvas.dataset.values);
             } catch (_) {}
 
-            if (typeof Chart !== "undefined") {
+            const hasRevenue = values.some((value) => Number(value) > 0);
+            if (!hasRevenue) {
+                showEmptyState(revCanvas, "Chưa có doanh thu trong 7 ngày gần nhất.");
+            } else if (typeof Chart !== "undefined") {
                 new Chart(revCanvas, {
                     type: "bar",
                     data: {
@@ -120,7 +134,7 @@
             }
         }
 
-        const typeCanvas = document.getElementById("wineTypeChart");
+        const typeCanvas = document.getElementById("categoryPieChart");
         if (typeCanvas) {
             let labels = ["Vang đỏ", "Vang trắng", "Sparkling"];
             let values = [1, 1, 1];
@@ -148,5 +162,11 @@
                 drawFallbackDoughnut(typeCanvas, labels, values);
             }
         }
-    });
+    }
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", initializeCharts, { once: true });
+    } else {
+        initializeCharts();
+    }
 })();

@@ -1,6 +1,7 @@
 package com.strongwine.strongwine.controller.api;
 
 import com.strongwine.strongwine.dto.StockOperationRequest;
+import com.strongwine.strongwine.dto.AdminInventoryDto;
 import com.strongwine.strongwine.entity.Inventory;
 import com.strongwine.strongwine.entity.User;
 import com.strongwine.strongwine.repository.UserRepository;
@@ -25,37 +26,41 @@ public class AdminInventoryApiController {
     private UserRepository userRepository;
 
     @GetMapping
-    public ResponseEntity<List<Inventory>> getInventoryOverview() {
-        return ResponseEntity.ok(inventoryService.getInventoryOverview());
+    public ResponseEntity<List<AdminInventoryDto>> getInventoryOverview() {
+        return ResponseEntity.ok(inventoryService.getInventoryOverview().stream()
+                .map(AdminInventoryDto::from)
+                .toList());
     }
 
     @GetMapping("/low-stock")
-    public ResponseEntity<List<Inventory>> getLowStock() {
-        return ResponseEntity.ok(inventoryService.getLowStockInventories());
+    public ResponseEntity<List<AdminInventoryDto>> getLowStock() {
+        return ResponseEntity.ok(inventoryService.getLowStockInventories().stream()
+                .map(AdminInventoryDto::from)
+                .toList());
     }
 
     @PostMapping("/import/{wineId}")
-    public ResponseEntity<Inventory> importStock(@PathVariable Long wineId,
-                                                 @Valid @RequestBody StockOperationRequest request,
-                                                 Authentication authentication) {
+    public ResponseEntity<AdminInventoryDto> importStock(@PathVariable Long wineId,
+                                                          @Valid @RequestBody StockOperationRequest request,
+                                                          Authentication authentication) {
         if (request.getWineId() != null && !wineId.equals(request.getWineId())) {
             throw new IllegalArgumentException("wineId in path and body do not match");
         }
         String actor = extractUsername(authentication);
         Inventory updated = inventoryService.importStock(wineId, request.getWarehouseId(), request.getQuantity(), actor, request.getNote());
-        return ResponseEntity.ok(updated);
+        return ResponseEntity.ok(AdminInventoryDto.from(updated));
     }
 
     @PostMapping("/export/{wineId}")
-    public ResponseEntity<Inventory> exportStock(@PathVariable Long wineId,
-                                                 @Valid @RequestBody StockOperationRequest request,
-                                                 Authentication authentication) {
+    public ResponseEntity<AdminInventoryDto> exportStock(@PathVariable Long wineId,
+                                                          @Valid @RequestBody StockOperationRequest request,
+                                                          Authentication authentication) {
         if (request.getWineId() != null && !wineId.equals(request.getWineId())) {
             throw new IllegalArgumentException("wineId in path and body do not match");
         }
         String actor = extractUsername(authentication);
         Inventory updated = inventoryService.exportStock(wineId, request.getWarehouseId(), request.getQuantity(), actor, request.getNote());
-        return ResponseEntity.ok(updated);
+        return ResponseEntity.ok(AdminInventoryDto.from(updated));
     }
 
     private String extractUsername(Authentication authentication) {

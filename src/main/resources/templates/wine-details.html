@@ -6,6 +6,7 @@
 
 <main class="section">
     <div class="sw-container">
+        <div th:if="${success}" class="alert-sw success mb16" th:text="${success}"></div>
         <div th:if="${message}" class="alert-sw success mb16" th:text="${message}"></div>
         <div th:if="${error}" class="alert-sw danger mb16" th:text="${error}"></div>
 

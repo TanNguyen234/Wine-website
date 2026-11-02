@@ -21,6 +21,7 @@ public interface WineRepository extends JpaRepository<Wine, Long>, JpaSpecificat
     
     Page<Wine> findByDeletedFalse(Pageable pageable);
     List<Wine> findByDeletedFalse();
+    long countByDeletedFalse();
     Optional<Wine> findByNameIgnoreCaseAndYearAndDeletedFalse(String name, Integer year);
 
     /**

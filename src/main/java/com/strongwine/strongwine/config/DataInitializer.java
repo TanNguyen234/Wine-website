@@ -12,6 +12,7 @@ import com.strongwine.strongwine.repository.UserRepository;
 import com.strongwine.strongwine.repository.WarehouseRepository;
 import com.strongwine.strongwine.repository.WineRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -46,8 +47,15 @@ public class DataInitializer implements CommandLineRunner {
     @Autowired
     private ShipperRepository shipperRepository;
 
+    @Value("${strongwine.startup.initializers-enabled:true}")
+    private boolean startupInitializersEnabled;
+
     @Override
     public void run(String... args) throws Exception {
+        if (!startupInitializersEnabled) {
+            return;
+        }
+
         ensureDefaultUsers();
         ensureDefaultWines();
         ensureWarehouseAndInventory();

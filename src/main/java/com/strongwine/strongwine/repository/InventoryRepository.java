@@ -1,6 +1,8 @@
 package com.strongwine.strongwine.repository;
 
 import com.strongwine.strongwine.entity.Inventory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
@@ -11,6 +13,12 @@ import java.util.List;
 import java.util.Optional;
 
 public interface InventoryRepository extends JpaRepository<Inventory, Long> {
+    @Query("SELECT i FROM Inventory i WHERE i.wine.deleted = false")
+    List<Inventory> findAllForActiveWines();
+
+    @Query("SELECT i FROM Inventory i WHERE i.wine.deleted = false")
+    Page<Inventory> findAllForActiveWines(Pageable pageable);
+
     Optional<Inventory> findByWineId(Long wineId);
     
     Optional<Inventory> findByWineIdAndWarehouseId(Long wineId, Long warehouseId);

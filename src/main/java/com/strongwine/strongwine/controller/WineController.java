@@ -20,6 +20,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import static org.springframework.http.HttpStatus.NOT_FOUND;
@@ -148,7 +149,9 @@ public class WineController {
      */
     @GetMapping("/admin/create")
     public String showCreateForm(Model model) {
-        model.addAttribute("wine", new Wine());
+        if (!model.containsAttribute("wine")) {
+            model.addAttribute("wine", new Wine());
+        }
         return "wine-form";
     }
     
@@ -177,9 +180,9 @@ public class WineController {
             @RequestParam(required = false) String imageUrl,
             @RequestParam(required = false) MultipartFile imageFile,
             RedirectAttributes redirectAttributes) {
-        
+
+        Wine wine = new Wine();
         try {
-            Wine wine = new Wine();
             wine.setName(name);
             wine.setType(type);
             wine.setCountry(country);
@@ -193,10 +196,12 @@ public class WineController {
                 // Validate file
                 if (!fileStorageService.isValidImageFile(imageFile)) {
                     redirectAttributes.addFlashAttribute("error", "Tệp không hợp lệ. Chỉ hỗ trợ JPG và PNG.");
+                    redirectAttributes.addFlashAttribute("wine", wine);
                     return "redirect:/wines/admin/create";
                 }
                 if (!fileStorageService.isValidFileSize(imageFile)) {
                     redirectAttributes.addFlashAttribute("error", "Kích thước tệp quá lớn. Tối đa 5MB.");
+                    redirectAttributes.addFlashAttribute("wine", wine);
                     return "redirect:/wines/admin/create";
                 }
                 // Save uploaded file
@@ -209,6 +214,7 @@ public class WineController {
             // Validate that at least image URL or file is provided
             if (finalImageUrl == null || finalImageUrl.isEmpty()) {
                 redirectAttributes.addFlashAttribute("error", "Vui lòng tải ảnh lên hoặc nhập URL ảnh.");
+                redirectAttributes.addFlashAttribute("wine", wine);
                 return "redirect:/wines/admin/create";
             }
             
@@ -218,6 +224,7 @@ public class WineController {
             return "redirect:/admin";
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Không thể tạo sản phẩm: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("wine", wine);
             return "redirect:/wines/admin/create";
         }
     }
@@ -271,7 +278,8 @@ public class WineController {
                 // Use provided URL
                 finalImageUrl = imageUrl.trim();
                 // Delete old file if it was an uploaded file
-                if (oldImageUrl != null && oldImageUrl.startsWith("/uploads/")) {
+                if (!Objects.equals(finalImageUrl, oldImageUrl)
+                        && oldImageUrl != null && oldImageUrl.startsWith("/uploads/")) {
                     fileStorageService.deleteFile(oldImageUrl);
                 }
             }

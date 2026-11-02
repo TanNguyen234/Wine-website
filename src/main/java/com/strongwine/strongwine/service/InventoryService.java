@@ -75,12 +75,12 @@ public class InventoryService {
 
     public List<Inventory> getInventoryOverview() {
         ensureInventoryForAllWines();
-        return inventoryRepository.findAll();
+        return inventoryRepository.findAllForActiveWines();
     }
     
     public org.springframework.data.domain.Page<Inventory> getInventoryOverviewPage(org.springframework.data.domain.Pageable pageable) {
         ensureInventoryForAllWines();
-        return inventoryRepository.findAll(pageable);
+        return inventoryRepository.findAllForActiveWines(pageable);
     }
     
     public long countLowStockInventories() {

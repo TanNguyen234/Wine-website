@@ -28,7 +28,7 @@
             <section class="admin-card mb20">
                 <div class="admin-card-head mb12">
                     <h3>Danh sách tồn kho hiện tại</h3>
-                    <span class="status info" th:text="'Tổng ' + (${totalItems != null ? totalItems : 0}) + ' bản ghi kho'">0 bản ghi</span>
+                    <span class="status info" th:text="'Tổng ' + (${totalEntries != null ? totalEntries : 0}) + ' bản ghi kho'">0 bản ghi</span>
                 </div>
 
                 <div class="table-scroll">
@@ -116,7 +116,7 @@
                                 <span class="status info" th:text="${@enumDisplayService.inventoryOperation(tx.operationType)}">Nhập kho</span>
                             </td>
                             <td><strong th:text="${tx.quantity}">0</strong></td>
-                            <td class="small muted" th:text="${@enumDisplayService.inventoryReferenceType(tx.referenceType) + (tx.referenceId != null ? (' #' + tx.referenceId) : '')}">Ghi chú</td>
+                            <td class="small muted" th:text="${!#strings.isEmpty(tx.note) ? tx.note : @enumDisplayService.inventoryReferenceType(tx.referenceType) + (tx.referenceId != null ? (' #' + tx.referenceId) : '')}">Ghi chú</td>
                             <td class="small" th:text="${tx.createdAt != null ? #temporals.format(tx.createdAt, 'dd/MM/yyyy HH:mm') : '-'}">10/10/2026</td>
                         </tr>
                         </tbody>
@@ -131,7 +131,7 @@
 <div class="modal fade" id="inventoryModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content" style="border-radius:12px">
-            <form id="inventoryForm" method="post" action="/admin/inventory/import/1">
+            <form id="inventoryForm" method="post" th:action="@{/admin/inventory/import/1}">
                 <div class="modal-header">
                     <h5 class="modal-title serif" id="inventoryModalTitle">Điều chỉnh tồn kho</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>

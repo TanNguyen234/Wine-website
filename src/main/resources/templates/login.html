@@ -21,22 +21,22 @@
             <div class="eyebrow">TÀI KHOẢN THÀNH VIÊN</div>
             <h2 class="serif mt8 mb16" style="font-size:2rem">Đăng nhập</h2>
 
-            <div th:if="${param != null and param.containsKey('error')}" class="alert-sw danger mb16">Tên đăng nhập hoặc mật khẩu không chính xác.</div>
-            <div th:if="${param != null and param.containsKey('logout')}" class="alert-sw success mb16">Bạn đã đăng xuất thành công.</div>
+            <div th:if="${loginError}" class="alert-sw danger mb16">Tên đăng nhập hoặc mật khẩu không chính xác.</div>
+            <div th:if="${logoutSuccess}" class="alert-sw success mb16">Bạn đã đăng xuất thành công.</div>
+            <div th:if="${success}" class="alert-sw success mb16" th:text="${success}"></div>
             <div th:if="${message}" class="alert-sw success mb16" th:text="${message}"></div>
-            <div th:if="${error}" class="alert-sw danger mb16" th:text="${error}"></div>
 
             <form th:action="@{/login}" method="post" class="stack">
                 <div>
                     <label class="label" for="username">Tên đăng nhập hoặc Email</label>
-                    <input type="text" id="username" name="username" class="field" required autofocus placeholder="Nhập username hoặc email">
+                    <input type="text" id="username" name="username" class="field" required autofocus autocomplete="username" placeholder="Nhập username hoặc email">
                 </div>
                 <div>
                     <div class="between">
                         <label class="label" for="password">Mật khẩu</label>
                         <a th:href="@{/forgot-password}" class="small muted">Quên mật khẩu?</a>
                     </div>
-                    <input type="password" id="password" name="password" class="field" required placeholder="••••••••">
+                    <input type="password" id="password" name="password" class="field" required autocomplete="current-password" placeholder="••••••••">
                 </div>
                 <button type="submit" class="btn w100 mt8">Đăng nhập vào hệ thống &rarr;</button>
             </form>

@@ -21,17 +21,23 @@
             </div>
         </div>
 
-        <form id="filterForm" th:action="@{/wines}" method="get">
-            <input type="hidden" name="page" value="0">
-            <input type="hidden" name="size" th:value="${pageSize != null ? pageSize : 9}">
-
-            <div class="catalog-layout">
+        <div class="catalog-layout">
                 <!-- Left Filter Rail -->
                 <aside class="filter-panel" aria-label="Bộ lọc rượu vang">
-                    <div class="between mb12">
-                        <strong class="serif" style="font-size:1.15rem">Bộ lọc tinh chọn</strong>
-                        <a th:href="@{/wines}" class="small muted">Đặt lại</a>
-                    </div>
+                    <form id="filterForm" th:action="@{/wines}" method="get">
+                        <input type="hidden" name="page" value="0">
+                        <input type="hidden" name="size" th:value="${pageSize != null ? pageSize : 9}">
+
+                    <details id="catalogFilters" class="filter-details" open>
+                        <summary class="filter-summary">
+                            <strong class="serif">Bộ lọc tinh chọn</strong>
+                            <span class="filter-summary-icon" aria-hidden="true">⌄</span>
+                        </summary>
+                        <div class="filter-fields">
+                            <div class="between mb12">
+                                <span class="small muted">Chọn tiêu chí cho bộ sưu tập</span>
+                                <a th:href="@{/wines}" class="small muted">Đặt lại</a>
+                            </div>
 
                     <div class="filter-group">
                         <h4>Tìm theo tên</h4>
@@ -44,10 +50,10 @@
                         <h4>Dòng vang</h4>
                         <select id="filterType" name="type" class="select">
                             <option value="">Tất cả dòng vang</option>
-                            <option value="Red" th:selected="${selectedType == 'Red'}">Vang đỏ (Red)</option>
-                            <option value="White" th:selected="${selectedType == 'White'}">Vang trắng (White)</option>
-                            <option value="Rose" th:selected="${selectedType == 'Rose'}">Vang hồng (Rosé)</option>
-                            <option value="Sparkling" th:selected="${selectedType == 'Sparkling'}">Vang sủi (Sparkling)</option>
+                            <option value="Red" th:selected="${type == 'Red'}">Vang đỏ (Red)</option>
+                            <option value="White" th:selected="${type == 'White'}">Vang trắng (White)</option>
+                            <option value="Rose" th:selected="${type == 'Rose'}">Vang hồng (Rosé)</option>
+                            <option value="Sparkling" th:selected="${type == 'Sparkling'}">Vang sủi (Sparkling)</option>
                         </select>
                     </div>
 
@@ -58,7 +64,7 @@
                             <option th:each="c : ${countries}"
                                     th:value="${c}"
                                     th:text="${c}"
-                                    th:selected="${selectedCountry != null and selectedCountry == c}">Pháp</option>
+                                    th:selected="${country != null and country == c}">Pháp</option>
                         </select>
                     </div>
 
@@ -66,7 +72,7 @@
                         <h4>Niên vụ (Vintage)</h4>
                         <input type="number" id="filterYear" name="year" class="field"
                                min="1900" max="2030" placeholder="Ví dụ: 2018"
-                               th:value="${selectedYear}">
+                               th:value="${year}">
                     </div>
 
                     <div class="filter-group">
@@ -97,6 +103,9 @@
                     </div>
 
                     <button type="submit" id="filterSubmit" class="btn w100">Áp dụng bộ lọc</button>
+                        </div>
+                    </details>
+                    </form>
                 </aside>
 
                 <!-- Right Catalog Content -->
@@ -105,16 +114,16 @@
                     <div class="toolbar">
                         <div class="muted small">
                             Hiển thị <strong th:text="${wines != null ? #lists.size(wines) : 0}">0</strong>
-                            trên tổng <strong th:text="${totalItems != null ? totalItems : 0}">0</strong> chai vang
+                            trên tổng <strong th:text="${totalEntries != null ? totalEntries : 0}">0</strong> chai vang
                         </div>
                         <div class="display-flex gap8" style="flex-wrap:wrap">
-                            <select id="filterSortBy" name="sortBy" class="select" style="width:auto;min-height:38px;padding:6px 12px" onchange="document.getElementById('filterForm').submit()">
+                            <select id="filterSortBy" name="sortBy" form="filterForm" class="select" style="width:auto;min-height:38px;padding:6px 12px" onchange="document.getElementById('filterForm').submit()">
                                 <option value="createdAt" th:selected="${sortBy == null or sortBy == 'createdAt'}">Mới cập nhật</option>
                                 <option value="price" th:selected="${sortBy == 'price'}">Theo mức giá</option>
                                 <option value="name" th:selected="${sortBy == 'name'}">Theo tên A-Z</option>
                                 <option value="year" th:selected="${sortBy == 'year'}">Theo niên vụ</option>
                             </select>
-                            <select id="filterSortDir" name="sortDir" class="select" style="width:auto;min-height:38px;padding:6px 12px" onchange="document.getElementById('filterForm').submit()">
+                            <select id="filterSortDir" name="sortDir" form="filterForm" class="select" style="width:auto;min-height:38px;padding:6px 12px" onchange="document.getElementById('filterForm').submit()">
                                 <option value="desc" th:selected="${sortDir == null or sortDir == 'desc'}">Giảm dần</option>
                                 <option value="asc" th:selected="${sortDir == 'asc'}">Tăng dần</option>
                             </select>
@@ -207,7 +216,6 @@
                     <div th:replace="~{fragments/pagination :: pagination('/wines')}"></div>
                 </div>
             </div>
-        </form>
     </div>
 </main>
 
@@ -225,7 +233,10 @@
             <div class="modal-body">
                 <div class="grid-2" style="align-items:center">
                     <div class="wine-stage" style="min-height:260px;border-radius:var(--sw-radius)">
-                        <img id="qvImg" src="" alt="Hình chai vang" style="max-height:230px;width:auto">
+                        <img id="qvImg" class="d-none" alt="Hình chai vang" style="max-height:230px;width:auto">
+                        <div id="qvFallback">
+                            <div th:replace="~{fragments/store-shell :: bottleSvg('bottle-svg-sm')}"></div>
+                        </div>
                     </div>
                     <div>
                         <div class="muted small mb8">

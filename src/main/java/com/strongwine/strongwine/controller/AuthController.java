@@ -28,9 +28,14 @@ public class AuthController {
      * Login page
      */
     @GetMapping("/login")
-    public String login(@RequestParam(required = false) String error, Model model) {
+    public String login(@RequestParam(required = false) String error,
+                        @RequestParam(required = false) String logout,
+                        Model model) {
         if (error != null) {
-            model.addAttribute("error", "Sai tên đăng nhập hoặc mật khẩu");
+            model.addAttribute("loginError", true);
+        }
+        if (logout != null) {
+            model.addAttribute("logoutSuccess", true);
         }
         return "login";
     }

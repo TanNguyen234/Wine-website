@@ -58,6 +58,12 @@ public class SecurityConfig {
                 .requestMatchers("/admin/**", "/api/admin/**", "/wines/admin/**").hasRole("ADMIN")
                 // Shipper pages for SHIPPER and ADMIN
                 .requestMatchers("/shipper/**").hasAnyRole("SHIPPER", "ADMIN")
+                // Real-time streams are restricted by role; controllers also enforce resource ownership.
+                .requestMatchers("/api/live/admin/**").hasRole("ADMIN")
+                .requestMatchers("/api/live/shipper/**").hasAnyRole("SHIPPER", "ADMIN")
+                .requestMatchers("/api/live/orders/**").authenticated()
+                // Inventory mutations are restricted to administrators
+                .requestMatchers("/inventory/**", "/api/inventory/**").hasRole("ADMIN")
                 // Public pages
                 .requestMatchers("/", "/home", "/wines", "/wines/**", "/cart/**", "/register", "/login", "/forgot-password", "/reset-password", "/css/**", "/js/**", "/images/**", "/uploads/**", "/payment/webhook").permitAll()
                 // API Auth endpoint
@@ -85,8 +91,6 @@ public class SecurityConfig {
                 .logoutSuccessUrl("/home")
                 .permitAll()
             )
-            .csrf(csrf -> csrf.disable()) // Disable CSRF for API endpoints (enable in production for web forms)
-            // Note: form login works so we aren't completely disabling session
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         
         return http.build();

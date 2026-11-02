@@ -1,7 +1,9 @@
 package com.strongwine.strongwine.controller.api;
 
 import com.strongwine.strongwine.dto.ProductDto;
+import com.strongwine.strongwine.entity.Category;
 import com.strongwine.strongwine.entity.Wine;
+import com.strongwine.strongwine.repository.CategoryRepository;
 import com.strongwine.strongwine.service.InventoryService;
 import com.strongwine.strongwine.service.WineService;
 import jakarta.validation.Valid;
@@ -10,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -28,6 +31,9 @@ public class WineApiController {
 
     @Autowired
     private InventoryService inventoryService;
+
+    @Autowired
+    private CategoryRepository categoryRepository;
 
     /**
      * Get all wines
@@ -130,7 +136,16 @@ public class WineApiController {
         wine.setDescription(dto.getDescription());
         wine.setCountry(dto.getCountry());
         wine.setImageUrl(dto.getImageUrl());
+        wine.setCategory(resolveCategory(dto.getCategoryId()));
         return wine;
+    }
+
+    private Category resolveCategory(Long categoryId) {
+        if (categoryId == null) {
+            return null;
+        }
+        return categoryRepository.findByIdAndDeletedFalse(categoryId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Category not found"));
     }
 }
 

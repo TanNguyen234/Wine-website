@@ -6,6 +6,7 @@ import com.strongwine.strongwine.service.EnumDisplayService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.support.StaticApplicationContext;
+import org.springframework.security.web.csrf.DefaultCsrfToken;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.context.IExpressionContext;
 import org.thymeleaf.linkbuilder.StandardLinkBuilder;
@@ -58,6 +59,17 @@ class ThymeleafTemplateRedesignVerificationTest {
         );
         ctx.setVariables(vars);
         return ctx;
+    }
+
+    private boolean hasSelectedOption(String html, String value) {
+        var optionTags = java.util.regex.Pattern.compile("<option\\b[^>]*>").matcher(html);
+        while (optionTags.find()) {
+            String optionTag = optionTags.group();
+            if (optionTag.contains("value=\"" + value + "\"") && optionTag.contains("selected")) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Test
@@ -201,6 +213,8 @@ class ThymeleafTemplateRedesignVerificationTest {
         cartItem.setLineTotal(wine1.getPrice());
 
         Map<String, Object> common = new HashMap<>();
+        common.put("_csrf", new DefaultCsrfToken("X-CSRF-TOKEN", "_csrf", "test-token"));
+        common.put("isAdmin", false);
         common.put("cartCount", 2);
         common.put("cartItems", List.of(cartItem));
         common.put("cartTotal", wine1.getPrice());
@@ -296,7 +310,7 @@ class ThymeleafTemplateRedesignVerificationTest {
         templateExpectedLandmarks.put("admin-orders", "admin-shell");
         templateExpectedLandmarks.put("admin-inventory", "inventoryModal");
         templateExpectedLandmarks.put("admin-payments", "pi_test_98765");
-        templateExpectedLandmarks.put("admin-shipments", "482910");
+        templateExpectedLandmarks.put("admin-shipments", "Trạng thái OTP");
         templateExpectedLandmarks.put("admin-shipment-form", "Vận đơn #50");
         templateExpectedLandmarks.put("admin-shippers", "Trần Minh Giao");
         templateExpectedLandmarks.put("admin-shipper-form", "Xe máy thùng bảo ôn");
@@ -317,7 +331,32 @@ class ThymeleafTemplateRedesignVerificationTest {
             if (tpl.equals("admin-shipper-form")) {
                 vars.put("statuses", Arrays.asList(ShipperStatus.values()));
             }
-
+            if (tpl.equals("admin-users")) {
+                vars.put("success", "Tạo người dùng thành công");
+            }
+            if (tpl.equals("admin-dashboard")) {
+                vars.put("success", "Nhập kho thành công");
+            }
+            if (tpl.equals("login")) {
+                vars.put("success", "Đăng ký thành công. Vui lòng đăng nhập.");
+            }
+            if (tpl.equals("forgot-password")) {
+                vars.put("success", "Nếu email tồn tại, liên kết đặt lại mật khẩu đã được gửi.");
+            }
+            if (tpl.equals("wine-details")) {
+                vars.put("success", "Gửi đánh giá thành công!");
+            }
+            if (tpl.equals("admin-shippers")) {
+                vars.put("success", "Tạo shipper thành công");
+            }
+            if (tpl.equals("admin-shipments")) {
+                vars.put("success", "Cập nhật đơn giao hàng thành công");
+                vars.put("error", "Cập nhật trạng thái thất bại: dữ liệu không hợp lệ");
+            }
+            if (tpl.equals("shipper-dashboard")) {
+                vars.put("success", "Đã cập nhật trạng thái: Đã lấy hàng");
+                vars.put("error", "Không thể bắt đầu giao: trạng thái không hợp lệ");
+            }
             String html = assertDoesNotThrow(
                     () -> templateEngine.process(tpl, createContext(vars)),
                     "Failed rendering template: " + tpl
@@ -325,6 +364,98 @@ class ThymeleafTemplateRedesignVerificationTest {
             assertNotNull(html);
             assertTrue(html.contains(expected),
                     "Template " + tpl + " did not contain expected landmark: " + expected);
+
+            if (tpl.equals("admin-dashboard")) {
+                assertTrue(html.contains("/js/admin-live-notifications.js"),
+                        "Admin dashboard must load its live notification stream client");
+            }
+
+            if (tpl.equals("admin-dashboard") || tpl.equals("wine-list") || tpl.equals("shipper-dashboard")) {
+                assertTrue(html.contains("rel=\"icon\"") && html.contains("/favicon.svg"),
+                        "Admin, storefront, and shipper pages must provide the branded favicon resource");
+            }
+
+            if (tpl.equals("order-detail")) {
+                assertTrue(html.contains("/js/order-tracking-page.js"),
+                        "Order detail must initialize the live tracking client");
+            }
+
+            if (tpl.equals("shipper-dashboard")) {
+                assertTrue(html.contains("Địa chỉ giao hàng"), "Shipper dashboard must label the delivery address");
+                assertTrue(html.contains("Sản phẩm trong đơn"), "Shipper dashboard must show the order contents");
+                assertTrue(html.contains("Château Margaux Grand Cru"), "Shipper dashboard must render the ordered wine name");
+                assertTrue(html.contains("SL: 1 chai"), "Shipper dashboard must render the ordered quantity");
+                assertTrue(html.contains("Đã cập nhật trạng thái: Đã lấy hàng"),
+                        "Shipper dashboard should display the success flash used by its controller");
+                assertTrue(html.contains("Không thể bắt đầu giao: trạng thái không hợp lệ"),
+                        "Shipper dashboard should display the error flash used by its controller");
+            }
+
+            if (tpl.equals("admin-shipments")) {
+                assertFalse(html.contains("482910"), "Admin shipment list must not expose the delivery OTP");
+                assertTrue(html.contains("Cập nhật đơn giao hàng thành công"),
+                        "Admin shipment list should display the success flash used by its controller");
+                assertTrue(html.contains("Cập nhật trạng thái thất bại: dữ liệu không hợp lệ"),
+                        "Admin shipment list should display the error flash used by its controller");
+            }
+
+            if (tpl.equals("admin-users")) {
+                assertTrue(html.contains("Tạo người dùng thành công"),
+                        "Admin user list should display the success flash used by its controller");
+            }
+
+            if (tpl.equals("admin-dashboard")) {
+                assertTrue(html.contains("Nhập kho thành công"),
+                        "Admin dashboard should display the success flash used by inventory and wine actions");
+            }
+
+            if (tpl.equals("login")) {
+                assertTrue(html.contains("Đăng ký thành công. Vui lòng đăng nhập."),
+                        "Login page should display the registration success flash used by its controller");
+                assertTrue(html.contains("id=\"username\"") && html.contains("autocomplete=\"username\""),
+                        "Login username should expose the standard autocomplete purpose");
+                assertTrue(html.contains("id=\"password\"") && html.contains("autocomplete=\"current-password\""),
+                        "Login password should expose the current-password autocomplete purpose");
+            }
+
+            if (tpl.equals("forgot-password")) {
+                assertTrue(html.contains("Nếu email tồn tại, liên kết đặt lại mật khẩu đã được gửi."),
+                        "Forgot-password page should display the generic success flash used by its controller");
+            }
+
+            if (tpl.equals("wine-details")) {
+                assertTrue(html.contains("Gửi đánh giá thành công!"),
+                        "Wine detail page should display the review success flash used by its controller");
+            }
+
+            if (tpl.equals("admin-shippers")) {
+                assertTrue(html.contains("Tạo shipper thành công"),
+                        "Admin shipper list should display the success flash used by its controller");
+            }
+
+            if (tpl.equals("admin-user-form")) {
+                Map<String, Object> createVars = new HashMap<>(vars);
+                createVars.remove("editingUser");
+                String createHtml = templateEngine.process(tpl, createContext(createVars));
+                assertTrue(hasSelectedOption(createHtml, "USER"),
+                        "New accounts should default to the least-privileged customer role");
+                assertFalse(hasSelectedOption(createHtml, "ADMIN"),
+                        "New accounts must not default to an administrator role");
+            }
+
+            if (tpl.equals("wine-list")) {
+                int filterPanelStart = html.indexOf("<aside class=\"filter-panel\"");
+                int filterStart = html.indexOf("<form id=\"filterForm\"");
+                int filterEnd = html.indexOf("</form>", filterStart);
+                int filterPanelEnd = html.indexOf("</aside>", filterPanelStart);
+                int adminDeleteForm = html.indexOf("<form th:action=\"@{/wines/admin/delete/");
+                assertTrue(filterStart >= 0 && filterEnd > filterStart, "Wine filters should render as a form");
+                assertTrue(filterPanelStart >= 0 && filterPanelStart < filterStart
+                                && filterEnd < filterPanelEnd,
+                        "Wine filter form should stay inside the filter rail");
+                assertTrue(adminDeleteForm < 0 || adminDeleteForm > filterPanelEnd,
+                        "Admin delete form must not be nested inside the wine filter form");
+            }
 
             Files.writeString(outDir.resolve(tpl + ".html"), html, StandardCharsets.UTF_8);
         }

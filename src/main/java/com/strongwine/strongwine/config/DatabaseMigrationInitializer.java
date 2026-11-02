@@ -1,6 +1,7 @@
 package com.strongwine.strongwine.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.core.annotation.Order;
@@ -16,8 +17,15 @@ public class DatabaseMigrationInitializer implements ApplicationRunner {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
+    @Value("${strongwine.startup.initializers-enabled:true}")
+    private boolean startupInitializersEnabled;
+
     @Override
     public void run(ApplicationArguments args) {
+        if (!startupInitializersEnabled) {
+            return;
+        }
+
         createMigrationHistoryTableIfNeeded();
 
         Integer existing = jdbcTemplate.queryForObject(

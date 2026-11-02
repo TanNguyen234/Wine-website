@@ -9,6 +9,7 @@
         <header th:replace="~{fragments/admin-shell :: topbar}"></header>
 
         <main class="admin-content">
+            <div th:if="${success}" class="alert-sw success mb16" th:text="${success}"></div>
             <div th:if="${message}" class="alert-sw success mb16" th:text="${message}"></div>
             <div th:if="${error}" class="alert-sw danger mb16" th:text="${error}"></div>
 
@@ -54,8 +55,8 @@
                 <section class="admin-card">
                     <div class="admin-card-head">
                         <div>
-                            <h3>Biểu đồ doanh thu theo tháng</h3>
-                            <span class="muted small">Tổng hợp doanh thu thực tế từ cơ sở dữ liệu đơn hàng</span>
+                            <h3>Doanh thu 7 ngày gần nhất</h3>
+                            <span class="muted small">Tổng hợp các đơn đã thanh toán thành công</span>
                         </div>
                         <span class="status ok">Dữ liệu thực</span>
                     </div>
@@ -153,7 +154,6 @@
 </div>
 
 <div th:replace="~{fragments/admin-shell :: scripts}"></div>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script th:src="@{/js/admin-charts.js}"></script>
 </body>
 </html>

@@ -43,7 +43,7 @@ public class WineService {
     }
     
     public long countWines() {
-        return wineRepository.count();
+        return wineRepository.countByDeletedFalse();
     }
     
     /**

@@ -55,7 +55,7 @@ public class ReviewController {
         review.setComment(comment);
         
         try {
-            reviewService.createReview(wineId, userOpt.get().getId(), review);
+            reviewService.createReview(wineId, userOpt.get().getId(), userOpt.get().getId(), review);
             redirectAttributes.addFlashAttribute("success", "Gửi đánh giá thành công!");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Không thể gửi đánh giá: " + e.getMessage());

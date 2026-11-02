@@ -64,7 +64,9 @@ document.addEventListener('DOMContentLoaded', () => {
             fetch('/api/assistant/chat', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    [document.querySelector('meta[name="_csrf_header"]')?.content || 'X-CSRF-TOKEN']:
+                        document.querySelector('meta[name="_csrf"]')?.content || ''
                 },
                 body: JSON.stringify({
                     prompt: question,

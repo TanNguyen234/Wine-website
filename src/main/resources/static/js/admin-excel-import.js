@@ -2,6 +2,9 @@
  * StrongWine — Admin Excel Bulk Import & Dry-Run Preview Controller
  */
 document.addEventListener('DOMContentLoaded', () => {
+    const csrfHeaderName = document.querySelector('meta[name="_csrf_header"]')?.content || 'X-CSRF-TOKEN';
+    const csrfToken = document.querySelector('meta[name="_csrf"]')?.content || '';
+    const csrfHeaders = csrfToken ? { [csrfHeaderName]: csrfToken } : {};
     const dropZone = document.getElementById('excelDropZone');
     const fileInput = document.getElementById('excelFileInput');
     const previewContainer = document.getElementById('previewContainer');
@@ -90,6 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const res = await fetch('/api/admin/excel/preview', {
                 method: 'POST',
+                headers: csrfHeaders,
                 body: formData
             });
 
@@ -174,6 +178,7 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 const res = await fetch('/api/admin/excel/import', {
                     method: 'POST',
+                    headers: csrfHeaders,
                     body: formData
                 });
 

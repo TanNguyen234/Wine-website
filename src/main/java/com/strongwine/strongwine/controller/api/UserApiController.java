@@ -1,5 +1,6 @@
 package com.strongwine.strongwine.controller.api;
 
+import com.strongwine.strongwine.dto.UserDto;
 import com.strongwine.strongwine.entity.User;
 import com.strongwine.strongwine.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,17 +25,17 @@ public class UserApiController {
      * Get all users
      */
     @GetMapping
-    public ResponseEntity<List<User>> getAllUsers() {
-        return ResponseEntity.ok(userService.getAllUsers());
+    public ResponseEntity<List<UserDto>> getAllUsers() {
+        return ResponseEntity.ok(userService.getAllUsers().stream().map(UserDto::from).toList());
     }
     
     /**
      * Get user by ID
      */
     @GetMapping("/{id}")
-    public ResponseEntity<User> getUserById(@PathVariable Long id) {
+    public ResponseEntity<UserDto> getUserById(@PathVariable Long id) {
         Optional<User> user = userService.getUserById(id);
-        return user.map(ResponseEntity::ok)
+        return user.map(UserDto::from).map(ResponseEntity::ok)
                    .orElse(ResponseEntity.notFound().build());
     }
     
@@ -42,10 +43,10 @@ public class UserApiController {
      * Create a new user
      */
     @PostMapping
-    public ResponseEntity<User> createUser(@RequestBody User user) {
+    public ResponseEntity<UserDto> createUser(@RequestBody User user) {
         try {
             User createdUser = userService.createUser(user);
-            return ResponseEntity.status(HttpStatus.CREATED).body(createdUser);
+            return ResponseEntity.status(HttpStatus.CREATED).body(UserDto.from(createdUser));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().build();
         }
@@ -55,10 +56,10 @@ public class UserApiController {
      * Update a user
      */
     @PutMapping("/{id}")
-    public ResponseEntity<User> updateUser(@PathVariable Long id, @RequestBody User user) {
+    public ResponseEntity<UserDto> updateUser(@PathVariable Long id, @RequestBody User user) {
         try {
             User updatedUser = userService.updateUser(id, user);
-            return ResponseEntity.ok(updatedUser);
+            return ResponseEntity.ok(UserDto.from(updatedUser));
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }
