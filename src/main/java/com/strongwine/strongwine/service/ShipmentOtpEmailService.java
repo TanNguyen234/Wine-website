@@ -7,6 +7,7 @@ import com.strongwine.strongwine.exception.InvalidOtpRecipientException;
 import com.strongwine.strongwine.exception.OtpDeliveryException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.mail.MailAuthenticationException;
 import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -76,7 +77,7 @@ public class ShipmentOtpEmailService {
                 mailSender.send(message);
                 return OtpDeliveryResult.sent(attempt, recipient);
             } catch (MailException ex) {
-                if (attempt >= retryMaxAttempts) {
+                if (attempt >= retryMaxAttempts || !shouldRetryMailException(ex)) {
                     return OtpDeliveryResult.failed(attempt, recipient, ex.getMessage());
                 }
                 sleepBackoff(backoff);
@@ -85,6 +86,10 @@ public class ShipmentOtpEmailService {
         }
 
         return OtpDeliveryResult.failed(retryMaxAttempts, recipient, "Lỗi không xác định");
+    }
+
+    static boolean shouldRetryMailException(MailException exception) {
+        return !(exception instanceof MailAuthenticationException);
     }
 
     private String resolveRecipient(Shipment shipment) {

@@ -117,7 +117,7 @@ public class ShipperController {
 
     @PostMapping("/shipments/{id}/fail")
     public String fail(@PathVariable Long id,
-                       @RequestParam(required = false) String note,
+                       @RequestParam(name = "reason", required = false) String note,
                        Authentication authentication,
                        RedirectAttributes redirectAttributes) {
         try {

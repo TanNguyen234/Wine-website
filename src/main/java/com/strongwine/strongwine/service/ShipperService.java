@@ -106,7 +106,7 @@ public class ShipperService {
         shipper.setUpdatedAt(LocalDateTime.now());
 
         Shipper saved = shipperRepository.save(shipper);
-        shipmentService.onShipperProfileUpdated(saved.getId());
+        shipmentService.onShipperProfileUpdated(saved.getId(), Boolean.TRUE.equals(isAvailable));
         return saved;
     }
 
@@ -133,8 +133,12 @@ public class ShipperService {
         shipper.setUpdatedAt(LocalDateTime.now());
 
         Shipper saved = shipperRepository.save(shipper);
-        shipmentService.onShipperProfileUpdated(saved.getId());
+        shipmentService.onShipperProfileUpdated(saved.getId(), Boolean.TRUE.equals(isAvailable));
         return saved;
+    }
+
+    public void updateAvailability(Long id, boolean available) {
+        shipmentService.setShipperAvailability(id, available);
     }
 
     public void deleteShipper(Long id) {

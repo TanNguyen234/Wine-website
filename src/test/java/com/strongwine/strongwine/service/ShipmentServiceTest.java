@@ -19,6 +19,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.annotation.AnnotationTransactionAttributeSource;
+import org.springframework.transaction.interceptor.TransactionAttribute;
 
 import java.util.List;
 import java.time.LocalDateTime;
@@ -64,6 +67,37 @@ class ShipmentServiceTest {
 
     @InjectMocks
     private ShipmentService shipmentService;
+
+    @Test
+    void paidOrderEventHandlerStartsANewTransactionAfterCommit() throws NoSuchMethodException {
+        AnnotationTransactionAttributeSource attributeSource = new AnnotationTransactionAttributeSource();
+        TransactionAttribute attribute = attributeSource.getTransactionAttribute(
+                ShipmentService.class.getMethod("handleOrderPaidEvent", Long.class, String.class),
+                ShipmentService.class);
+
+        assertThat(attribute).isNotNull();
+        assertThat(attribute.getPropagationBehavior()).isEqualTo(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+    }
+
+    @Test
+    void otpDeliveryFailuresCommitFailureStateForEverySendEntryPoint() throws NoSuchMethodException {
+        AnnotationTransactionAttributeSource attributeSource = new AnnotationTransactionAttributeSource();
+        List<java.lang.reflect.Method> sendMethods = List.of(
+                ShipmentService.class.getMethod("handleOrderPaidEvent", Long.class, String.class),
+                ShipmentService.class.getMethod("sendOtpForShipment", Long.class, String.class, String.class),
+                ShipmentService.class.getMethod("resendOtpForShipmentByAdmin", Long.class, String.class, String.class),
+                ShipmentService.class.getMethod("resendOtpForShipmentByShipper", Long.class, String.class, String.class),
+                ShipmentService.class.getMethod("regenerateOtpForShipment", Long.class));
+
+        for (java.lang.reflect.Method method : sendMethods) {
+            TransactionAttribute attribute = attributeSource.getTransactionAttribute(method, ShipmentService.class);
+
+            assertThat(attribute).as(method.getName()).isNotNull();
+            assertThat(attribute.rollbackOn(new OtpDeliveryException("SMTP unavailable")))
+                    .as(method.getName())
+                    .isFalse();
+        }
+    }
 
     @Test
     void completeDeliveryByAdminOverride_setsOverrideFlagsAndClearsOtp() {

@@ -6,6 +6,8 @@ import com.strongwine.strongwine.entity.User;
 import com.strongwine.strongwine.exception.InvalidOtpRecipientException;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.springframework.mail.MailAuthenticationException;
+import org.springframework.mail.MailSendException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 
@@ -15,6 +17,16 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 class ShipmentOtpEmailServiceTest {
+
+    @Test
+    void mailAuthenticationFailuresAreNotRetriedButTransportFailuresAre() {
+        assertThat(ShipmentOtpEmailService.shouldRetryMailException(
+                new MailAuthenticationException("Authentication failed")))
+                .isFalse();
+        assertThat(ShipmentOtpEmailService.shouldRetryMailException(
+                new MailSendException("Temporary SMTP transport failure")))
+                .isTrue();
+    }
 
     @Test
     void sendShipmentOtp_prioritizesCheckoutShippingEmailOverUserEmail() {

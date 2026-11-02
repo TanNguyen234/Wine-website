@@ -4,6 +4,7 @@ import com.strongwine.strongwine.entity.Order;
 import com.strongwine.strongwine.entity.OrderStatus;
 import com.strongwine.strongwine.entity.OtpDeliveryStatus;
 import com.strongwine.strongwine.entity.PaymentStatus;
+import com.strongwine.strongwine.entity.PaymentMethod;
 import com.strongwine.strongwine.entity.Shipment;
 import com.strongwine.strongwine.entity.ShipmentStatus;
 import com.strongwine.strongwine.entity.Shipper;
@@ -19,6 +20,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
@@ -98,7 +100,9 @@ public class ShipmentService {
         if (order == null || order.getId() == null) {
             throw new IllegalArgumentException("Đơn hàng không hợp lệ để tạo đơn giao hàng");
         }
-        if (order.getStatus() != OrderStatus.PAID) {
+        boolean isPaid = order.getStatus() == OrderStatus.PAID;
+        boolean isCod = order.getPaymentMethod() == PaymentMethod.COD && (order.getStatus() == OrderStatus.PENDING || order.getStatus() == OrderStatus.PAID);
+        if (!isPaid && !isCod) {
             return EnsureShipmentResult.SKIPPED_NOT_PAID;
         }
 
@@ -146,6 +150,7 @@ public class ShipmentService {
         return new BackfillSummary(created, existed, skipped, failed);
     }
 
+    @Transactional(propagation = Propagation.REQUIRES_NEW, noRollbackFor = OtpDeliveryException.class)
     public void handleOrderPaidEvent(Long orderId, String paymentReference) {
         if (orderId == null) {
             return;
@@ -206,8 +211,23 @@ public class ShipmentService {
         return processed;
     }
 
-    public void onShipperProfileUpdated(Long shipperId) {
+    public void onShipperProfileUpdated(Long shipperId, boolean requestedAvailability) {
         refreshShipperAvailability(shipperId);
+        if (!requestedAvailability) {
+            setShipperUnavailable(shipperId);
+        }
+        dispatchAutoShipmentQueue();
+    }
+
+    public void setShipperAvailability(Long shipperId, boolean requestedAvailability) {
+        boolean capacityAvailable = refreshShipperAvailability(shipperId);
+        if (!requestedAvailability) {
+            setShipperUnavailable(shipperId);
+            return;
+        }
+        if (!capacityAvailable) {
+            throw new IllegalStateException("Shipper không hoạt động hoặc đã đạt giới hạn đơn đang giao");
+        }
         dispatchAutoShipmentQueue();
     }
 
@@ -469,6 +489,16 @@ public class ShipmentService {
         shipment.setUpdatedAt(LocalDateTime.now());
 
         Shipment savedShipment = shipmentRepository.save(shipment);
+        if (savedShipment.getOrder() != null) {
+            Order order = savedShipment.getOrder();
+            if (order.getPaymentMethod() == PaymentMethod.COD && order.getPaymentStatus() != PaymentStatus.SUCCESS) {
+                order.setPaymentStatus(PaymentStatus.SUCCESS);
+                order.setStatus(OrderStatus.PAID);
+                order.setPaidAt(LocalDateTime.now());
+                order.setUpdatedAt(LocalDateTime.now());
+                orderRepository.save(order);
+            }
+        }
         recordStatusTransition(savedShipment, previousStatus, savedShipment.getAdminOverrideReason(), "source=admin-override", actorUsername);
         shipmentOtpAuditService.log(savedShipment, "ADMIN_OVERRIDE_COMPLETED", "SUCCESS",
                 savedShipment.getAdminOverrideReason(), "source=admin-status", actorUsername);
@@ -476,6 +506,7 @@ public class ShipmentService {
         return savedShipment;
     }
 
+    @Transactional(noRollbackFor = OtpDeliveryException.class)
     public Shipment sendOtpForShipment(Long shipmentId, String actorUsername, String reason) {
         Shipment shipment = shipmentRepository.findByIdForUpdate(shipmentId)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đơn giao hàng: " + shipmentId));
@@ -493,16 +524,19 @@ public class ShipmentService {
         return sendOtpForShipmentInternal(shipment, actorUsername, reason, false);
     }
 
+    @Transactional(noRollbackFor = OtpDeliveryException.class)
     public Shipment regenerateOtpForShipment(Long shipmentId) {
         return resendOtpForShipmentByAdmin(shipmentId, null, "LEGACY_REGENERATE");
     }
 
+    @Transactional(noRollbackFor = OtpDeliveryException.class)
     public Shipment resendOtpForShipmentByAdmin(Long shipmentId, String actorUsername, String reason) {
         Shipment shipment = shipmentRepository.findByIdForUpdate(shipmentId)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đơn giao hàng: " + shipmentId));
         return resendOtpInternal(shipment, actorUsername, reason, false);
     }
 
+    @Transactional(noRollbackFor = OtpDeliveryException.class)
     public Shipment resendOtpForShipmentByShipper(Long shipmentId, String username, String reason) {
         Shipment shipment = getShipmentForShipper(shipmentId, username);
         return resendOtpInternal(shipment, username, reason, true);
@@ -635,6 +669,16 @@ public class ShipmentService {
         shipment.setUpdatedAt(now);
 
         Shipment savedShipment = shipmentRepository.save(shipment);
+        if (savedShipment.getOrder() != null) {
+            Order order = savedShipment.getOrder();
+            if (order.getPaymentMethod() == PaymentMethod.COD && order.getPaymentStatus() != PaymentStatus.SUCCESS) {
+                order.setPaymentStatus(PaymentStatus.SUCCESS);
+                order.setStatus(OrderStatus.PAID);
+                order.setPaidAt(now);
+                order.setUpdatedAt(now);
+                orderRepository.save(order);
+            }
+        }
         recordStatusTransition(savedShipment, previousStatus, null, "source=shipper-complete", username);
         shipmentOtpAuditService.log(savedShipment, "OTP_VERIFIED_COMPLETED", "SUCCESS", "SHIPPER_COMPLETE", null, username);
         reconcileShipperAvailabilityAfterMutation(savedShipment, previousStatus, previousShipperId, true);
@@ -725,8 +769,10 @@ public class ShipmentService {
     }
 
     private void ensureOrderReadyForShipment(Order order) {
-        if (order.getStatus() != OrderStatus.PAID) {
-            throw new IllegalStateException("Chỉ đơn đã thanh toán mới được tạo đơn giao hàng");
+        boolean isPaid = order.getStatus() == OrderStatus.PAID;
+        boolean isCod = order.getPaymentMethod() == PaymentMethod.COD && (order.getStatus() == OrderStatus.PENDING || order.getStatus() == OrderStatus.PAID);
+        if (!isPaid && !isCod) {
+            throw new IllegalStateException("Chỉ đơn đã thanh toán hoặc đơn COD hợp lệ mới được tạo đơn giao hàng");
         }
     }
 
@@ -919,7 +965,8 @@ public class ShipmentService {
         }
 
         Shipper lockedShipper = shipperRepository.findByIdForUpdate(shipperId).orElse(null);
-        if (lockedShipper == null || lockedShipper.getStatus() != ShipperStatus.ACTIVE) {
+        if (lockedShipper == null
+                || lockedShipper.getStatus() != ShipperStatus.ACTIVE) {
             return Optional.empty();
         }
 
@@ -942,14 +989,14 @@ public class ShipmentService {
         return Optional.of(lockedShipper);
     }
 
-    private void refreshShipperAvailability(Long shipperId) {
+    private boolean refreshShipperAvailability(Long shipperId) {
         if (shipperId == null) {
-            return;
+            return false;
         }
         Shipper shipper = shipperRepository.findByIdForUpdate(shipperId)
                 .orElse(null);
         if (shipper == null) {
-            return;
+            return false;
         }
 
         long inProgressShipmentCount = shipmentRepository.countByShipperIdAndStatusIn(shipperId, IN_PROGRESS_STATUSES);
@@ -961,6 +1008,18 @@ public class ShipmentService {
         shipper.setIsAvailable(shouldBeAvailable);
         shipper.setUpdatedAt(LocalDateTime.now());
         shipperRepository.save(shipper);
+        return shouldBeAvailable;
+    }
+
+    private void setShipperUnavailable(Long shipperId) {
+        if (shipperId == null) {
+            return;
+        }
+        shipperRepository.findByIdForUpdate(shipperId).ifPresent(shipper -> {
+            shipper.setIsAvailable(false);
+            shipper.setUpdatedAt(LocalDateTime.now());
+            shipperRepository.save(shipper);
+        });
     }
 
     private Shipper getActiveShipper(Long shipperId) {

@@ -9,6 +9,7 @@
         <header th:replace="~{fragments/admin-shell :: topbar}"></header>
 
         <main class="admin-content">
+            <div th:if="${success}" class="alert-sw success mb16" th:text="${success}"></div>
             <div th:if="${message}" class="alert-sw success mb16" th:text="${message}"></div>
             <div th:if="${error}" class="alert-sw danger mb16" th:text="${error}"></div>
 
@@ -89,7 +90,7 @@
                             <th>Đơn hàng</th>
                             <th>Khách nhận &amp; Địa chỉ</th>
                             <th>Shipper phụ trách</th>
-                            <th>Mã OTP</th>
+                            <th>Trạng thái OTP</th>
                             <th>Trạng thái</th>
                             <th>Chuyển trạng thái nhanh</th>
                             <th>Thao tác</th>
@@ -117,7 +118,13 @@
                                 <span th:if="${s.shipper == null}" class="status warn">Chưa phân công</span>
                             </td>
                             <td>
-                                <code th:text="${s.otpCode != null ? s.otpCode : '------'}">123456</code>
+                                <span class="small muted"
+                                      th:if="${s.status != null and s.status.name() == 'COMPLETED' and s.otpVerified}">Đã xác thực</span>
+                                <span class="small muted"
+                                      th:if="${s.status != null and s.status.name() == 'COMPLETED' and !s.otpVerified}">Hoàn tất thủ công</span>
+                                <span class="small muted"
+                                      th:if="${s.status == null or s.status.name() != 'COMPLETED'}"
+                                      th:text="${s.otpDeliveryStatus == null ? 'Chưa gửi' : (s.otpDeliveryStatus.name() == 'SENT' ? 'Đã gửi' : (s.otpDeliveryStatus.name() == 'FAILED' ? 'Gửi thất bại' : 'Đang chờ gửi'))}">Chưa gửi</span>
                                 <div class="small muted" th:if="${s.otpAttemptCount != null and s.otpAttemptCount > 0}"
                                      th:text="'Sai OTP: ' + ${s.otpAttemptCount} + ' lần'"></div>
                             </td>

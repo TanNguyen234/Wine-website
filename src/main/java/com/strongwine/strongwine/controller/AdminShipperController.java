@@ -116,4 +116,19 @@ public class AdminShipperController {
         }
         return "redirect:/admin/shippers";
     }
+
+    @PostMapping("/{id}/availability")
+    public String updateAvailability(@PathVariable Long id,
+                                     @RequestParam(defaultValue = "false") boolean available,
+                                     RedirectAttributes redirectAttributes) {
+        try {
+            shipperService.updateAvailability(id, available);
+            redirectAttributes.addFlashAttribute("success", available
+                    ? "Đã bật nhận phân công cho shipper"
+                    : "Đã tắt nhận phân công cho shipper");
+        } catch (RuntimeException ex) {
+            redirectAttributes.addFlashAttribute("error", "Không thể cập nhật trạng thái sẵn sàng: " + ex.getMessage());
+        }
+        return "redirect:/admin/shippers";
+    }
 }
