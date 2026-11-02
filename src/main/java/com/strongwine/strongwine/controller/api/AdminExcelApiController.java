@@ -21,13 +21,32 @@ public class AdminExcelApiController {
     private final ExcelWineImportStrategy excelImportStrategy;
     private final ExcelTemplateService excelTemplateService;
     private final com.strongwine.strongwine.service.report.InventoryStockReportGenerator inventoryStockReportGenerator;
+    private final com.strongwine.strongwine.service.report.OrderReportGenerator orderReportGenerator;
 
     public AdminExcelApiController(ExcelWineImportStrategy excelImportStrategy,
                                    ExcelTemplateService excelTemplateService,
                                    com.strongwine.strongwine.service.report.InventoryStockReportGenerator inventoryStockReportGenerator) {
+        this(excelImportStrategy, excelTemplateService, inventoryStockReportGenerator, null);
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public AdminExcelApiController(ExcelWineImportStrategy excelImportStrategy,
+                                   ExcelTemplateService excelTemplateService,
+                                   com.strongwine.strongwine.service.report.InventoryStockReportGenerator inventoryStockReportGenerator,
+                                   com.strongwine.strongwine.service.report.OrderReportGenerator orderReportGenerator) {
         this.excelImportStrategy = excelImportStrategy;
         this.excelTemplateService = excelTemplateService;
         this.inventoryStockReportGenerator = inventoryStockReportGenerator;
+        this.orderReportGenerator = orderReportGenerator;
+    }
+
+    @GetMapping("/export/orders")
+    public ResponseEntity<byte[]> exportOrders() {
+        byte[] bytes = orderReportGenerator.generateReport(null);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"strongwine_orders_report.xlsx\"")
+                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(bytes);
     }
 
     @GetMapping("/export/inventory")

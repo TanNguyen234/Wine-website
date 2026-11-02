@@ -22,11 +22,12 @@ class AdminExcelApiControllerTest {
     @Mock private ExcelWineImportStrategy excelStrategy;
     @Mock private ExcelTemplateService templateService;
     @Mock private com.strongwine.strongwine.service.report.InventoryStockReportGenerator inventoryStockReportGenerator;
+    @Mock private com.strongwine.strongwine.service.report.OrderReportGenerator orderReportGenerator;
 
     @Test
     void testDownloadTemplateReturnsFileBytes() {
         when(templateService.generateProductImportTemplate()).thenReturn(new byte[]{1, 2, 3});
-        AdminExcelApiController controller = new AdminExcelApiController(excelStrategy, templateService, inventoryStockReportGenerator);
+        AdminExcelApiController controller = new AdminExcelApiController(excelStrategy, templateService, inventoryStockReportGenerator, orderReportGenerator);
 
         ResponseEntity<byte[]> response = controller.downloadTemplate();
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -37,7 +38,7 @@ class AdminExcelApiControllerTest {
     @Test
     void testPreviewUploadReturnsValidSummary() {
         when(excelStrategy.importData(any(), any())).thenReturn(new ImportResult<>());
-        AdminExcelApiController controller = new AdminExcelApiController(excelStrategy, templateService, inventoryStockReportGenerator);
+        AdminExcelApiController controller = new AdminExcelApiController(excelStrategy, templateService, inventoryStockReportGenerator, orderReportGenerator);
 
         MockMultipartFile file = new MockMultipartFile("file", "test.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", new byte[]{1, 2, 3});
         ResponseEntity<ExcelPreviewResponseDto> response = controller.previewExcel(file);
@@ -49,9 +50,20 @@ class AdminExcelApiControllerTest {
     @Test
     void testExportInventoryReturnsValidExcelBytes() {
         when(inventoryStockReportGenerator.generateReport(any())).thenReturn(new byte[]{4, 5, 6});
-        AdminExcelApiController controller = new AdminExcelApiController(excelStrategy, templateService, inventoryStockReportGenerator);
+        AdminExcelApiController controller = new AdminExcelApiController(excelStrategy, templateService, inventoryStockReportGenerator, orderReportGenerator);
 
         ResponseEntity<byte[]> response = controller.exportInventory();
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertTrue(response.getHeaders().getContentDisposition().isAttachment());
+    }
+
+    @Test
+    void testExportOrdersReturnsValidExcelBytes() {
+        when(orderReportGenerator.generateReport(any())).thenReturn(new byte[]{7, 8, 9});
+        AdminExcelApiController controller = new AdminExcelApiController(excelStrategy, templateService, inventoryStockReportGenerator, orderReportGenerator);
+
+        ResponseEntity<byte[]> response = controller.exportOrders();
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
         assertTrue(response.getHeaders().getContentDisposition().isAttachment());

@@ -66,7 +66,7 @@ public class AdminController {
     /**
      * Admin dashboard
      */
-    @GetMapping
+    @GetMapping({"", "/dashboard"})
     public String dashboard(Model model) {
         long totalWines = wineService.countWines();
         long totalUsers = userService.countUsers();

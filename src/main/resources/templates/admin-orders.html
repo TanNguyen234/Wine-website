@@ -18,7 +18,10 @@
                     <h1>Danh sách đơn đặt hàng</h1>
                     <p>Theo dõi trạng thái đơn, thông tin người nhận và điều phối vận đơn tương ứng.</p>
                 </div>
-                <a th:href="@{/admin/shipments}" class="btn btn-outline btn-sm">Điều phối vận đơn &rarr;</a>
+                <div class="display-flex gap8">
+                    <a th:href="@{/api/admin/excel/export/orders}" class="btn btn-outline btn-sm">📊 Xuất Excel Đơn hàng</a>
+                    <a th:href="@{/admin/shipments}" class="btn btn-outline btn-sm">Điều phối vận đơn &rarr;</a>
+                </div>
             </div>
 
             <section class="admin-card">
@@ -59,8 +62,16 @@
                                       th:text="${@enumDisplayService.paymentStatus(order.paymentStatus)}">Thanh toán</span>
                             </td>
                             <td>
-                                <div class="display-flex gap8">
-                                    <a th:href="@{/orders/{id}(id=${order.id})}" class="btn btn-outline btn-sm">Chi tiết</a>
+                                <div class="display-flex gap8" style="flex-wrap:wrap">
+                                    <a th:href="@{/orders/{id}(id=${order.id})}" class="btn btn-outline btn-sm" target="_blank">Chi tiết</a>
+                                    <form th:if="${order.paymentStatus != null and order.paymentStatus.name() != 'SUCCESS' and order.status != null and order.status.name() != 'CANCELLED'}"
+                                          th:action="@{/admin/orders/{id}/mark-paid(id=${order.id})}" method="post" style="display:inline">
+                                        <button type="submit" class="btn btn-gold btn-sm" onclick="return confirm('Xác nhận đã nhận thanh toán cho đơn hàng #' + [[${order.id}]] + '?')">Duyệt TT</button>
+                                    </form>
+                                    <form th:if="${order.status != null and order.status.name() != 'CANCELLED' and (order.paymentStatus == null or order.paymentStatus.name() != 'SUCCESS')}"
+                                          th:action="@{/admin/orders/{id}/cancel(id=${order.id})}" method="post" style="display:inline">
+                                        <button type="submit" class="btn btn-outline btn-sm" style="color:var(--sw-crimson);border-color:var(--sw-crimson)" onclick="return confirm('Bạn có chắc chắn muốn hủy đơn hàng #' + [[${order.id}]] + '?')">Hủy đơn</button>
+                                    </form>
                                     <a th:href="@{/admin/shipments(orderId=${order.id})}" class="btn btn-sm">Vận đơn</a>
                                 </div>
                             </td>
