@@ -130,7 +130,7 @@
             <!-- Right Column: Security OTP Vault -->
             <aside class="stack">
                 <div class="otp-vault" id="otpVaultCard"
-                     th:if="${shipment != null and shipment.otpCode != null and (shipment.status == null or shipment.status.name() != 'COMPLETED')}">
+                     th:if="${!isAdmin and shipment != null and shipment.otpCode != null and (shipment.status == null or shipment.status.name() != 'COMPLETED')}">
                     <div class="eyebrow" style="color:var(--sw-champagne)">MÃ XÁC THỰC BÀN GIAO (OTP 6 SỐ)</div>
                     <h3 class="serif mt8 mb8">Mã nhận rượu bảo mật</h3>
                     <p class="small" style="color:#dfd3c3;margin:0">Chỉ đọc mã này cho tài xế khi bạn đã kiểm tra đúng chủng loại và tem niêm phong chai vang.</p>
@@ -173,5 +173,6 @@
 
 <div th:replace="~{fragments/store-shell :: footer}"></div>
 <script th:src="@{/js/order-tracking-realtime.js}"></script>
+<script th:src="@{/js/order-tracking-page.js}"></script>
 </body>
 </html>

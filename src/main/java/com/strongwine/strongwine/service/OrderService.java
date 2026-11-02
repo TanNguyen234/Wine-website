@@ -9,6 +9,7 @@ import com.strongwine.strongwine.entity.User;
 import com.strongwine.strongwine.entity.Wine;
 import com.strongwine.strongwine.event.OrderPaidEvent;
 import com.strongwine.strongwine.repository.OrderRepository;
+import com.strongwine.strongwine.repository.ShipmentRepository;
 import com.strongwine.strongwine.repository.UserRepository;
 import com.strongwine.strongwine.repository.WineRepository;
 
@@ -42,6 +43,9 @@ public class OrderService {
     
     @Autowired
     private WineRepository wineRepository;
+
+    @Autowired
+    private ShipmentRepository shipmentRepository;
 
     @Autowired
     private InventoryService inventoryService;
@@ -91,8 +95,17 @@ public class OrderService {
      * @param userId The user placing the order
      * @param cartItems Map of wineId -> quantity
      */
-    public Order createOrder(Long userId, Map<Long, Integer> cartItems) {
-        return createPendingOrder(userId, cartItems, null, null, null, null, null, null, null, PaymentMethod.STRIPE.name());
+    public Optional<Order> createOrder(Long userId, Map<Long, Integer> cartItems) {
+        if (userId == null || cartItems == null || cartItems.isEmpty() || !userRepository.existsById(userId)) {
+            return Optional.empty();
+        }
+        for (Map.Entry<Long, Integer> item : cartItems.entrySet()) {
+            if (item.getKey() == null || item.getValue() == null || item.getValue() <= 0
+                    || !wineRepository.existsById(item.getKey())) {
+                return Optional.empty();
+            }
+        }
+        return Optional.of(createPendingOrder(userId, cartItems, null, null, null, null, null, null, null, PaymentMethod.STRIPE.name()));
     }
 
     public Order createPendingOrder(Long userId,
@@ -151,25 +164,41 @@ public class OrderService {
     /**
      * Update an existing order
      */
-    public Order updateOrder(Long id, Order orderDetails) {
-        Order order = orderRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Order not found with id: " + id));
+    public Optional<Order> updateOrder(Long id, Order orderDetails) {
+        Optional<Order> existingOrder = orderRepository.findById(id);
+        if (existingOrder.isEmpty()) {
+            return Optional.empty();
+        }
+        Order order = existingOrder.get();
         
         order.setTotalPrice(orderDetails.getTotalPrice());
         order.setUpdatedAt(LocalDateTime.now());
         // Note: Order items are typically not updated after order creation
         
-        return orderRepository.save(order);
+        return Optional.of(orderRepository.save(order));
     }
-    
+
     /**
      * Delete an order
      */
-    public void deleteOrder(Long id) {
-        if (!orderRepository.existsById(id)) {
-            throw new RuntimeException("Order not found with id: " + id);
+    public OrderDeletionResult deleteOrder(Long id) {
+        Optional<Order> existingOrder = orderRepository.findById(id);
+        if (existingOrder.isEmpty()) {
+            return OrderDeletionResult.NOT_FOUND;
         }
-        orderRepository.deleteById(id);
+
+        Order order = existingOrder.get();
+        if (order.getStatus() != OrderStatus.PENDING
+                || order.getPaymentStatus() != PaymentStatus.PENDING
+                || order.getPaymentReference() != null
+                || !order.getPayments().isEmpty()
+                || shipmentRepository.existsByOrderId(id)) {
+            return OrderDeletionResult.CONFLICT;
+        }
+
+        inventoryService.releaseOrderReservation(order);
+        orderRepository.delete(order);
+        return OrderDeletionResult.DELETED;
     }
     
     /**

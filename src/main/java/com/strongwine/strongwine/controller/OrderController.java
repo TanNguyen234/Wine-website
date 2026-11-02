@@ -77,6 +77,7 @@ public class OrderController {
         }
 
         Order order = orderOpt.get();
+        model.addAttribute("isAdmin", isAdmin(currentUser));
         model.addAttribute("shipment", shipmentService.getShipmentByOrderId(orderId).orElse(null));
         model.addAttribute("order", order);
         return "order-detail";
