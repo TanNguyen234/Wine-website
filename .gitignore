@@ -48,3 +48,11 @@ all_skills.txt
 
 __pycache__/
 *.pyc
+*.log
+
+### Coursework & Local Report Binaries ###
+docs/*.docx
+docs/*.pdf
+docs/*.wa-evidence.json
+docs/*-pages/
+docs/report-assets/
