@@ -15,13 +15,16 @@ import com.strongwine.strongwine.service.UserService;
 import com.strongwine.strongwine.service.WineService;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -64,10 +67,14 @@ public class AdminController {
     }
     
     /**
-     * Admin dashboard
+     * Admin dashboard with configurable daily revenue range
      */
     @GetMapping({"", "/dashboard"})
-    public String dashboard(Model model) {
+    public String dashboard(
+            @RequestParam(defaultValue = "7") int days,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate,
+            Model model) {
         long totalWines = wineService.countWines();
         long totalUsers = userService.countUsers();
         long totalOrders = orderService.countOrders();
@@ -83,23 +90,50 @@ public class AdminController {
                 PageRequest.of(0, 5, Sort.by(Sort.Direction.DESC, "orderDate"))
         ).getContent();
 
-        // Real 7-day revenue series (in million VND) from paid orders
+        // Calculate dynamic date range: defaults to today and 7 days prior (today - 6 days through today)
         List<Order> allOrders = orderService.getAllOrders();
         LocalDate today = LocalDate.now();
+        LocalDate start;
+        LocalDate end;
+
+        if (fromDate != null && toDate != null) {
+            if (fromDate.isAfter(toDate)) {
+                LocalDate temp = fromDate;
+                fromDate = toDate;
+                toDate = temp;
+            }
+            // Safeguard against extreme ranges to maintain chart readability
+            if (ChronoUnit.DAYS.between(fromDate, toDate) > 90) {
+                fromDate = toDate.minusDays(89);
+            }
+            start = fromDate;
+            end = toDate;
+        } else {
+            int effectiveDays = (days < 1 || days > 90) ? 7 : days;
+            end = today;
+            start = end.minusDays(effectiveDays - 1);
+        }
+
+        long daysSpan = ChronoUnit.DAYS.between(start, end) + 1;
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM");
+        DateTimeFormatter fullFmt = DateTimeFormatter.ofPattern("dd/MM/yyyy");
         List<String> revLabels = new ArrayList<>();
         List<Double> revValues = new ArrayList<>();
-        for (int i = 6; i >= 0; i--) {
-            LocalDate day = today.minusDays(i);
-            revLabels.add("\"" + day.format(fmt) + "\"");
+        double rangeRevenue = 0.0;
+
+        for (LocalDate d = start; !d.isAfter(end); d = d.plusDays(1)) {
+            final LocalDate currentDay = d;
+            revLabels.add("\"" + currentDay.format(fmt) + "\"");
             double daySum = allOrders.stream()
                     .filter(o -> o.getPaymentStatus() == PaymentStatus.SUCCESS
                             && o.getOrderDate() != null
-                            && o.getOrderDate().toLocalDate().equals(day)
+                            && o.getOrderDate().toLocalDate().equals(currentDay)
                             && o.getTotalPrice() != null)
                     .mapToDouble(o -> o.getTotalPrice().doubleValue() / 1_000_000.0)
                     .sum();
-            revValues.add(Math.round(daySum * 100.0) / 100.0);
+            double rounded = Math.round(daySum * 100.0) / 100.0;
+            revValues.add(rounded);
+            rangeRevenue += daySum * 1_000_000.0;
         }
 
         // Real category breakdown from Wine table
@@ -133,6 +167,11 @@ public class AdminController {
         model.addAttribute("shipperStats", shipperStats);
         model.addAttribute("shipmentStats", shipmentStats);
         model.addAttribute("totalShipments", totalShipments);
+        model.addAttribute("selectedDays", daysSpan);
+        model.addAttribute("startDate", start.toString());
+        model.addAttribute("endDate", end.toString());
+        model.addAttribute("rangeDateText", start.format(fullFmt) + " - " + end.format(fullFmt));
+        model.addAttribute("rangeRevenue", rangeRevenue);
         model.addAttribute("revenueLabelsJson", "[" + String.join(",", revLabels) + "]");
         model.addAttribute("revenueValuesJson", revValues.toString());
         model.addAttribute("categoryLabelsJson", "[\"Vang đỏ\",\"Vang trắng\",\"Vang hồng\",\"Vang sủi\"]");

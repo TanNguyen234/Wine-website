@@ -42,6 +42,22 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     @Query("SELECT COALESCE(SUM(o.totalPrice), 0) FROM Order o WHERE o.status = com.strongwine.strongwine.entity.OrderStatus.PAID")
     Double getTotalRevenue();
 
+    /**
+     * Find paid orders in a date range with order items and wines fetched
+     */
+    @Query("""
+            SELECT DISTINCT o FROM Order o
+            LEFT JOIN FETCH o.orderItems oi
+            LEFT JOIN FETCH oi.wine
+            WHERE o.paymentStatus = com.strongwine.strongwine.entity.PaymentStatus.SUCCESS
+              AND o.orderDate >= :startDateTime AND o.orderDate <= :endDateTime
+            ORDER BY o.orderDate DESC
+            """)
+    List<Order> findPaidOrdersWithItemsBetween(
+            @org.springframework.data.repository.query.Param("startDateTime") java.time.LocalDateTime startDateTime,
+            @org.springframework.data.repository.query.Param("endDateTime") java.time.LocalDateTime endDateTime
+    );
+
         /**
          * Orders that are ready for shipment creation in admin screen.
          */

@@ -14,6 +14,7 @@ import java.util.Optional;
 
 public interface PaymentRepository extends JpaRepository<Payment, Long> {
     Optional<Payment> findByPaymentReference(String paymentReference);
+    boolean existsByPaymentReference(String paymentReference);
     Optional<Payment> findByGatewaySessionId(String gatewaySessionId);
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select p from Payment p where p.id = :paymentId")

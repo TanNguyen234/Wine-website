@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 450" width="100%" height="100%">
+  <defs>
+    <linearGradient id="ceramicClay" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#1f1816"/>
+      <stop offset="25%" stop-color="#4a3731"/>
+      <stop offset="55%" stop-color="#2a201c"/>
+      <stop offset="85%" stop-color="#543e37"/>
+      <stop offset="100%" stop-color="#1f1816"/>
+    </linearGradient>
+    <linearGradient id="corkSeal" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#73281a"/>
+      <stop offset="40%" stop-color="#ba4b38"/>
+      <stop offset="80%" stop-color="#8a3020"/>
+      <stop offset="100%" stop-color="#591c11"/>
+    </linearGradient>
+    <filter id="ceramicShadow" x="-20%" y="-10%" width="140%" height="130%">
+      <feDropShadow dx="0" dy="18" stdDeviation="14" flood-color="#000" flood-opacity="0.45"/>
+    </filter>
+  </defs>
+  <g filter="url(#ceramicShadow)">
+    <!-- Traditional ceramic vase/flask silhouette -->
+    <path d="M62 30 Q60 22 66 22 H94 Q100 22 98 30 L96 95 Q95 125 116 148 Q138 172 140 225 L140 395 Q140 428 114 430 H46 Q20 428 20 395 L20 225 Q22 172 44 148 Q65 125 64 95 Z" fill="url(#ceramicClay)" stroke="#1a120f" stroke-width="2"/>
+    <!-- Red sealing wax top -->
+    <path d="M62 22 H98 V75 Q80 82 62 75 Z" fill="url(#corkSeal)"/>
+    <!-- Golden cord tied around neck -->
+    <path d="M58 84 Q80 88 102 84 M58 89 Q80 93 102 89" stroke="#d4af37" stroke-width="2.2" fill="none"/>
+    <circle cx="80" cy="94" r="5" fill="#c9a46e"/>
+    <!-- Ceramic texture & light sheen -->
+    <path d="M30 225 Q32 175 48 155" stroke="#ffffff" stroke-width="6" stroke-linecap="round" opacity="0.09" fill="none"/>
+    <path d="M28 260 L28 385" stroke="#ffffff" stroke-width="4" stroke-linecap="round" opacity="0.06" fill="none"/>
+    <!-- Artisanal Label -->
+    <rect x="36" y="215" width="88" height="135" rx="4" fill="#faf5eb" stroke="#a68c76" stroke-width="1.2"/>
+    <rect x="40" y="219" width="80" height="127" fill="none" stroke="#ba4b38" stroke-width="0.8"/>
+    <text x="80" y="238" text-anchor="middle" font-family="'Playfair Display', Georgia, serif" font-size="8.5" font-weight="700" letter-spacing="1.5" fill="#ba4b38">TINH HOA ĐẠI NGÀN</text>
+    <text x="80" y="255" text-anchor="middle" font-family="'Playfair Display', Georgia, serif" font-size="12" font-weight="700" letter-spacing="1.2" fill="#2d1217">RƯỢU MƠ YÊN TỬ</text>
+    <path d="M52 263 H108" stroke="#ba4b38" stroke-width="1"/>
+    <circle cx="80" cy="276" r="9" fill="#ba4b38"/>
+    <text x="80" y="280" text-anchor="middle" font-family="'Playfair Display', Georgia, serif" font-size="8" font-weight="700" fill="#faf5eb">Ủ</text>
+    <text x="80" y="296" text-anchor="middle" font-family="Lato, sans-serif" font-size="7" font-weight="700" letter-spacing="1" fill="#704e55">CHUM SÀNH HẠ THỔ</text>
+    <text x="80" y="313" text-anchor="middle" font-family="Lato, sans-serif" font-size="8" font-weight="700" fill="#23171d">5 NĂM TUỔI</text>
+    <text x="80" y="329" text-anchor="middle" font-family="Lato, sans-serif" font-size="6" letter-spacing="1.5" fill="#8c777a">ĐẶC SẢN QUẢNG NINH</text>
+  </g>
+</svg>

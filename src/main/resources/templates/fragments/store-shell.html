@@ -40,8 +40,10 @@
                 <a class="nav-link" th:href="@{/wines(type='Red')}">Vang đỏ</a>
                 <a class="nav-link" th:href="@{/wines(type='White')}">Vang trắng</a>
                 <a class="nav-link" th:classappend="${activePage == 'orders'} ? 'active'" th:href="@{/orders}" sec:authorize="isAuthenticated()">Đơn hàng</a>
+                <a class="nav-link" th:classappend="${activePage == 'profile'} ? 'active'" th:href="@{/profile}" sec:authorize="isAuthenticated()">Tài khoản</a>
                 <a class="nav-link" th:href="@{/admin}" sec:authorize="hasRole('ADMIN')">Quản trị</a>
                 <a class="nav-link" th:href="@{/shipper/dashboard}" sec:authorize="hasRole('SHIPPER')">Giao hàng</a>
+                <a class="nav-link mobile-nav-account" th:href="@{/profile}" sec:authorize="isAuthenticated()">Tài khoản của tôi</a>
                 <a class="nav-link mobile-nav-account" th:href="@{/login}" sec:authorize="!isAuthenticated()">Đăng nhập</a>
                 <a class="nav-link mobile-nav-account" th:href="@{/register}" sec:authorize="!isAuthenticated()">Tạo tài khoản</a>
                 <form th:action="@{/logout}" method="post" class="mobile-nav-logout" sec:authorize="isAuthenticated()">
@@ -59,9 +61,10 @@
                 </a>
 
                 <div class="display-flex gap8" sec:authorize="isAuthenticated()">
-                    <a class="icon-btn" th:href="@{/orders}" title="Đơn hàng của tôi" aria-label="Đơn hàng của tôi">
+                    <a class="icon-btn" th:href="@{/profile}" title="Tài khoản của tôi" aria-label="Tài khoản của tôi">
                         <svg class="mini-icon" viewBox="0 0 24 24"><circle cx="12" cy="7.5" r="4"/><path d="M4.5 21c0-5 3-7 7.5-7s7.5 2 7.5 7"/></svg>
                     </a>
+                    <a class="btn btn-outline btn-sm" th:href="@{/orders}" title="Đơn hàng">Đơn hàng</a>
                     <form th:action="@{/logout}" method="post" class="d-inline">
                         <button type="submit" class="btn btn-outline btn-sm" title="Đăng xuất">Đăng xuất</button>
                     </form>

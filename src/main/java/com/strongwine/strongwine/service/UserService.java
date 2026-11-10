@@ -117,6 +117,35 @@ public class UserService {
     }
     
     /**
+     * Update profile (email and/or password) for the authenticated user
+     */
+    public User updateProfile(Long userId, String email, String currentPassword, String newPassword) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy thông tin tài khoản"));
+
+        String normalizedEmail = normalizeOptionalEmail(email);
+        if (normalizedEmail != null && userRepository.existsByEmailAndIdNot(normalizedEmail, userId)) {
+            throw new RuntimeException("Email này đã được sử dụng bởi một tài khoản khác");
+        }
+        user.setEmail(normalizedEmail);
+
+        if (newPassword != null && !newPassword.trim().isEmpty()) {
+            if (currentPassword == null || currentPassword.trim().isEmpty()) {
+                throw new RuntimeException("Vui lòng nhập mật khẩu hiện tại để đổi mật khẩu mới");
+            }
+            if (!passwordEncoder.matches(currentPassword.trim(), user.getPassword())) {
+                throw new RuntimeException("Mật khẩu hiện tại không chính xác");
+            }
+            if (newPassword.trim().length() < 6) {
+                throw new RuntimeException("Mật khẩu mới phải có độ dài tối thiểu 6 ký tự");
+            }
+            user.setPassword(passwordEncoder.encode(newPassword.trim()));
+        }
+
+        return userRepository.save(user);
+    }
+
+    /**
      * Delete a user
      */
     public void deleteUser(Long id) {

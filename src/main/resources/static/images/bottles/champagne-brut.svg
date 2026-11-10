@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 450" width="100%" height="100%">
+  <defs>
+    <linearGradient id="champagneGlass" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#070c08"/>
+      <stop offset="20%" stop-color="#182e1e"/>
+      <stop offset="50%" stop-color="#0c1910"/>
+      <stop offset="80%" stop-color="#1f3d27"/>
+      <stop offset="100%" stop-color="#070c08"/>
+    </linearGradient>
+    <linearGradient id="champHood" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#7a5c24"/>
+      <stop offset="35%" stop-color="#e8c76b"/>
+      <stop offset="70%" stop-color="#b08b35"/>
+      <stop offset="100%" stop-color="#594114"/>
+    </linearGradient>
+    <filter id="champShadow" x="-20%" y="-10%" width="140%" height="130%">
+      <feDropShadow dx="0" dy="18" stdDeviation="14" flood-color="#000" flood-opacity="0.45"/>
+    </filter>
+  </defs>
+  <g filter="url(#champShadow)">
+    <path d="M56 22 Q54 16 62 15 H98 Q106 16 104 22 L101 104 Q100 130 114 148 Q135 168 138 205 L140 405 Q140 428 116 430 H44 Q20 428 20 405 L22 205 Q25 168 46 148 Q60 130 59 104 Z" fill="url(#champagneGlass)" stroke="#0e1710" stroke-width="2"/>
+    <!-- Champagne foil hood with wire-collar effect -->
+    <path d="M57 18 H103 V112 Q80 120 57 112 Z" fill="url(#champHood)"/>
+    <ellipse cx="80" cy="18" rx="23" ry="5" fill="#f5dc8c"/>
+    <path d="M57 32 H103 M57 48 H103 M57 64 H103" stroke="#fff" stroke-opacity="0.3" stroke-width="1.2"/>
+    <circle cx="80" cy="85" r="7" fill="#2d1217"/>
+    <text x="80" y="88" text-anchor="middle" font-family="'Playfair Display', Georgia, serif" font-size="6.5" font-weight="700" fill="#f5dc8c">DP</text>
+    <path d="M36 200 Q40 160 56 142" stroke="#ffffff" stroke-width="8" stroke-linecap="round" opacity="0.12" fill="none"/>
+    <path d="M34 240 L34 390" stroke="#ffffff" stroke-width="5" stroke-linecap="round" opacity="0.08" fill="none"/>
+    <!-- Shield label -->
+    <path d="M42 225 Q80 215 118 225 L120 310 Q80 345 40 310 Z" fill="#201c18" stroke="#d4af37" stroke-width="1.4"/>
+    <text x="80" y="246" text-anchor="middle" font-family="'Playfair Display', Georgia, serif" font-size="8" font-weight="700" letter-spacing="1.5" fill="#f5dc8c">CHAMPAGNE</text>
+    <text x="80" y="266" text-anchor="middle" font-family="'Playfair Display', Georgia, serif" font-size="12" font-weight="700" letter-spacing="1.2" fill="#fff">DOM PÉRIGNON</text>
+    <path d="M54 274 H106" stroke="#d4af37" stroke-width="1"/>
+    <text x="80" y="290" text-anchor="middle" font-family="Lato, sans-serif" font-size="7.5" font-weight="700" letter-spacing="1.5" fill="#d4af37">VINTAGE BRUT</text>
+    <text x="80" y="306" text-anchor="middle" font-family="Lato, sans-serif" font-size="8" font-weight="700" fill="#f5dc8c">2013</text>
+  </g>
+</svg>

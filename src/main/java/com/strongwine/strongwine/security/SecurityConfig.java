@@ -65,12 +65,12 @@ public class SecurityConfig {
                 // Inventory mutations are restricted to administrators
                 .requestMatchers("/inventory/**", "/api/inventory/**").hasRole("ADMIN")
                 // Public pages
-                .requestMatchers("/", "/home", "/wines", "/wines/**", "/cart/**", "/register", "/login", "/forgot-password", "/reset-password", "/css/**", "/js/**", "/images/**", "/uploads/**", "/payment/webhook").permitAll()
+                .requestMatchers("/", "/home", "/wines", "/wines/**", "/cart/**", "/register", "/login", "/forgot-password", "/reset-password", "/css/**", "/js/**", "/images/**", "/uploads/**", "/payment/webhook", "/api/payments/vnpay/**").permitAll()
                 // API Auth endpoint
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/assistant/**").permitAll()
                 // User pages (authenticated users)
-                .requestMatchers("/order-confirmation", "/orders/**", "/reviews/create").authenticated()
+                .requestMatchers("/order-confirmation", "/orders/**", "/reviews/create", "/profile", "/profile/**").authenticated()
                 // REST API endpoints
                 .requestMatchers(HttpMethod.GET, "/api/wines/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/wines/**").hasRole("ADMIN")

@@ -62,6 +62,9 @@
     </a>
 
     <div class="admin-nav-heading">KHÁC</div>
+    <a class="admin-link" th:classappend="${activeMenu == 'profile'} ? 'active'" th:href="@{/admin/profile}">
+        <b>&#9733;</b><span>Hồ sơ Admin</span>
+    </a>
     <a class="admin-link" th:classappend="${activeMenu == 'shipper-view'} ? 'active'" th:href="@{/shipper/dashboard}">
         <b>&#8674;</b><span>Xem giao diện Shipper</span>
     </a>
@@ -89,7 +92,7 @@
 
     <div class="display-flex gap16">
         <span class="status neutral" id="adminLiveBadge">&#9679; Đang kết nối SSE...</span>
-        <span class="avatar" sec:authentication="name" title="Tài khoản quản trị">AD</span>
+        <a th:href="@{/admin/profile}" class="avatar text-decoration-none" style="display:inline-flex;align-items:center;justify-content:center;cursor:pointer" sec:authentication="name" title="Hồ sơ quản trị viên">AD</a>
     </div>
 </header>
 

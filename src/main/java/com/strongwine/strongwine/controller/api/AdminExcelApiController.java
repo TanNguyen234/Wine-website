@@ -1,11 +1,16 @@
 package com.strongwine.strongwine.controller.api;
 
 import com.strongwine.strongwine.dto.ExcelPreviewResponseDto;
+import com.strongwine.strongwine.dto.RevenueReportCriteria;
 import com.strongwine.strongwine.entity.Wine;
 import com.strongwine.strongwine.service.report.ExcelTemplateService;
+import com.strongwine.strongwine.service.report.InventoryStockReportGenerator;
+import com.strongwine.strongwine.service.report.OrderReportGenerator;
+import com.strongwine.strongwine.service.report.RevenueReportGenerator;
 import com.strongwine.strongwine.service.strategy.ExcelWineImportStrategy;
 import com.strongwine.strongwine.service.strategy.ImportOptions;
 import com.strongwine.strongwine.service.strategy.ImportResult;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +18,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 @RestController
 @RequestMapping("/api/admin/excel")
@@ -20,24 +27,42 @@ public class AdminExcelApiController {
 
     private final ExcelWineImportStrategy excelImportStrategy;
     private final ExcelTemplateService excelTemplateService;
-    private final com.strongwine.strongwine.service.report.InventoryStockReportGenerator inventoryStockReportGenerator;
-    private final com.strongwine.strongwine.service.report.OrderReportGenerator orderReportGenerator;
+    private final InventoryStockReportGenerator inventoryStockReportGenerator;
+    private final OrderReportGenerator orderReportGenerator;
+    private final RevenueReportGenerator revenueReportGenerator;
 
     public AdminExcelApiController(ExcelWineImportStrategy excelImportStrategy,
                                    ExcelTemplateService excelTemplateService,
-                                   com.strongwine.strongwine.service.report.InventoryStockReportGenerator inventoryStockReportGenerator) {
-        this(excelImportStrategy, excelTemplateService, inventoryStockReportGenerator, null);
+                                   InventoryStockReportGenerator inventoryStockReportGenerator) {
+        this(excelImportStrategy, excelTemplateService, inventoryStockReportGenerator, null, null);
     }
 
     @org.springframework.beans.factory.annotation.Autowired
     public AdminExcelApiController(ExcelWineImportStrategy excelImportStrategy,
                                    ExcelTemplateService excelTemplateService,
-                                   com.strongwine.strongwine.service.report.InventoryStockReportGenerator inventoryStockReportGenerator,
-                                   com.strongwine.strongwine.service.report.OrderReportGenerator orderReportGenerator) {
+                                   InventoryStockReportGenerator inventoryStockReportGenerator,
+                                   OrderReportGenerator orderReportGenerator,
+                                   RevenueReportGenerator revenueReportGenerator) {
         this.excelImportStrategy = excelImportStrategy;
         this.excelTemplateService = excelTemplateService;
         this.inventoryStockReportGenerator = inventoryStockReportGenerator;
         this.orderReportGenerator = orderReportGenerator;
+        this.revenueReportGenerator = revenueReportGenerator;
+    }
+
+    @GetMapping("/export/revenue")
+    public ResponseEntity<byte[]> exportRevenue(
+            @RequestParam(required = false) Integer days,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate) {
+        RevenueReportCriteria criteria = new RevenueReportCriteria(days, fromDate, toDate);
+        byte[] bytes = revenueReportGenerator.generateReport(criteria);
+        String filename = String.format("Bao_Cao_Doanh_Thu_StrongWine_%s.xlsx",
+                LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")));
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
+                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(bytes);
     }
 
     @GetMapping("/export/orders")

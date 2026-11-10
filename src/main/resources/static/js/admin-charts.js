@@ -26,7 +26,8 @@
         }
 
         const step = chartW / Math.max(1, labels.length);
-        const barW = Math.min(44, step * 0.56);
+        const barW = Math.min(44, Math.max(6, step * 0.58));
+        const skipStep = labels.length > 21 ? 3 : (labels.length > 12 ? 2 : 1);
         labels.forEach((lbl, idx) => {
             const val = Number(values[idx]) || 0;
             const bh = (val / maxVal) * (chartH - 10);
@@ -35,13 +36,15 @@
 
             ctx.fillStyle = "#742c3d";
             ctx.beginPath();
-            ctx.roundRect(x, y, barW, bh, [6, 6, 0, 0]);
+            ctx.roundRect(x, y, barW, bh, [4, 4, 0, 0]);
             ctx.fill();
 
-            ctx.fillStyle = "#79717a";
-            ctx.font = "11px sans-serif";
-            ctx.textAlign = "center";
-            ctx.fillText(String(lbl), x + barW / 2, h - 12);
+            if (idx % skipStep === 0 || idx === labels.length - 1) {
+                ctx.fillStyle = "#79717a";
+                ctx.font = labels.length > 14 ? "9px sans-serif" : "11px sans-serif";
+                ctx.textAlign = "center";
+                ctx.fillText(String(lbl), x + barW / 2, h - 12);
+            }
         });
     }
 
@@ -110,23 +113,44 @@
 
             const hasRevenue = values.some((value) => Number(value) > 0);
             if (!hasRevenue) {
-                showEmptyState(revCanvas, "Chưa có doanh thu trong 7 ngày gần nhất.");
+                showEmptyState(revCanvas, "Chưa có doanh thu trong giai đoạn đã chọn.");
             } else if (typeof Chart !== "undefined") {
                 new Chart(revCanvas, {
                     type: "bar",
                     data: {
                         labels: labels,
                         datasets: [{
-                            label: "Doanh thu (VNĐ)",
+                            label: "Doanh thu (triệu VNĐ)",
                             data: values,
                             backgroundColor: "#742c3d",
+                            hoverBackgroundColor: "#8b1a1a",
                             borderRadius: 6
                         }]
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        plugins: { legend: { display: false } }
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const v = context.parsed.y || 0;
+                                        return "Doanh thu: " + (v * 1000000).toLocaleString("vi-VN") + " ₫";
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(v) {
+                                        return v + " tr";
+                                    }
+                                }
+                            }
+                        }
                     }
                 });
             } else {

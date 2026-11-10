@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 450" width="100%" height="100%">
+  <defs>
+    <linearGradient id="margauxGlass" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#0a0507"/>
+      <stop offset="20%" stop-color="#3d141e"/>
+      <stop offset="50%" stop-color="#12080a"/>
+      <stop offset="80%" stop-color="#4a1924"/>
+      <stop offset="100%" stop-color="#0a0507"/>
+    </linearGradient>
+    <linearGradient id="goldCap" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#8a6731"/>
+      <stop offset="35%" stop-color="#f5e0a0"/>
+      <stop offset="70%" stop-color="#c99f48"/>
+      <stop offset="100%" stop-color="#6e5022"/>
+    </linearGradient>
+    <filter id="bottleShadow" x="-20%" y="-10%" width="140%" height="130%">
+      <feDropShadow dx="0" dy="18" stdDeviation="14" flood-color="#000" flood-opacity="0.45"/>
+    </filter>
+  </defs>
+  <g filter="url(#bottleShadow)">
+    <!-- Bottle silhouette -->
+    <path d="M60 22 Q58 17 64 16 H96 Q102 17 100 22 L98 108 Q97 132 110 146 Q130 164 133 200 L137 410 Q137 428 116 430 H44 Q23 428 23 410 L27 200 Q30 164 50 146 Q63 132 62 108 Z" fill="url(#margauxGlass)" stroke="#1a0c10" stroke-width="2"/>
+    <!-- Neck foil capsule -->
+    <path d="M62 24 H98 V105 H62 Z" fill="url(#goldCap)"/>
+    <path d="M61 32 H99 M61 44 H99 M61 56 H99" stroke="#fff" stroke-opacity="0.35" stroke-width="1.2"/>
+    <!-- Glass reflection highlight -->
+    <path d="M36 200 Q40 160 56 142" stroke="#ffffff" stroke-width="8" stroke-linecap="round" opacity="0.12" fill="none"/>
+    <path d="M34 240 L34 390" stroke="#ffffff" stroke-width="5" stroke-linecap="round" opacity="0.08" fill="none"/>
+    <!-- Luxury Label -->
+    <rect x="36" y="215" width="88" height="135" rx="3" fill="#fcf7ec" stroke="#bfaa88" stroke-width="1.2"/>
+    <rect x="40" y="219" width="80" height="127" fill="none" stroke="#d5c4a5" stroke-width="0.8"/>
+    <text x="80" y="238" text-anchor="middle" font-family="'Playfair Display', Georgia, serif" font-size="8.5" font-weight="700" letter-spacing="2" fill="#581a24">CHÂTEAU</text>
+    <text x="80" y="254" text-anchor="middle" font-family="'Playfair Display', Georgia, serif" font-size="12" font-weight="700" letter-spacing="1.5" fill="#2d1217">MARGAUX</text>
+    <path d="M52 262 H108" stroke="#c9a46e" stroke-width="1"/>
+    <circle cx="80" cy="275" r="9" fill="#742c3d" opacity="0.85"/>
+    <text x="80" y="278" text-anchor="middle" font-family="'Playfair Display', Georgia, serif" font-size="7.5" font-weight="700" fill="#f5e0a0">1er</text>
+    <text x="80" y="295" text-anchor="middle" font-family="Lato, sans-serif" font-size="7" font-weight="700" letter-spacing="1" fill="#704e55">GRAND CRU CLASSÉ</text>
+    <text x="80" y="312" text-anchor="middle" font-family="Lato, sans-serif" font-size="8" font-weight="700" fill="#23171d">2018</text>
+    <text x="80" y="328" text-anchor="middle" font-family="Lato, sans-serif" font-size="6" letter-spacing="1.5" fill="#8c777a">APPELLATION MARGAUX</text>
+  </g>
+</svg>

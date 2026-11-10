@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head th:replace="~{fragments/store-shell :: head('Tài Khoản Của Tôi · StrongWine')}"></head>
+<body>
+<div th:replace="~{fragments/store-shell :: header('profile')}"></div>
+
+<main class="section">
+    <div class="sw-container">
+        <!-- Flash alerts -->
+        <div th:if="${successMessage}" class="alert-sw success mb16" th:text="${successMessage}"></div>
+        <div th:if="${errorMessage}" class="alert-sw danger mb16" th:text="${errorMessage}"></div>
+
+        <!-- Section Header -->
+        <div class="section-head">
+            <div>
+                <div class="eyebrow">HỒ SƠ KHÁCH HÀNG · MAISON DE VINS</div>
+                <h1 class="section-title">Tài khoản của tôi</h1>
+            </div>
+            <div class="display-flex gap10">
+                <a th:href="@{/orders}" class="btn btn-outline btn-sm">Xem lịch sử đơn hàng &rarr;</a>
+                <a th:href="@{/wines}" class="btn btn-sm">Mua sắm bộ sưu tập</a>
+            </div>
+        </div>
+
+        <!-- KPI / Summary Grid -->
+        <div class="kpi-grid mb24">
+            <div class="kpi-card">
+                <div class="small muted">TÀI KHOẢN</div>
+                <strong class="serif mt8 d-block" style="font-size:1.35rem;color:var(--sw-bordeaux)" th:text="${user.username}">user_demo</strong>
+                <span class="badge badge-gold mt8">Thành viên Connoisseur</span>
+            </div>
+            <div class="kpi-card">
+                <div class="small muted">EMAIL LIÊN HỆ</div>
+                <strong class="mt8 d-block" style="font-size:1.05rem" th:text="${user.email != null and !#strings.isEmpty(user.email) ? user.email : 'Chưa cập nhật email'}">email@example.com</strong>
+                <span class="small muted mt8 d-block">Dùng nhận thông báo mã OTP giao hàng</span>
+            </div>
+            <div class="kpi-card">
+                <div class="small muted">TỔNG ĐƠN ĐÃ ĐẶT</div>
+                <strong class="serif mt8 d-block" style="font-size:1.6rem" th:text="${totalOrders}">0</strong>
+                <span class="small muted mt8 d-block">Đơn hàng thành công &amp; đang xử lý</span>
+            </div>
+            <div class="kpi-card">
+                <div class="small muted">TỔNG CHI TIÊU TÍCH LŨY</div>
+                <strong class="serif mt8 d-block" style="font-size:1.35rem;color:var(--sw-bordeaux)" th:text="${#numbers.formatDecimal(totalSpent, 0, 'COMMA', 0, 'POINT')} + ' ₫'">0 ₫</strong>
+                <span class="small muted mt8 d-block">Ưu đãi giảm giá thành viên VIP</span>
+            </div>
+        </div>
+
+        <!-- Main Profile Layout -->
+        <div class="grid-2 gap24">
+            <!-- Left: Edit Profile Form -->
+            <div class="panel">
+                <h3 class="serif mb16" style="font-size:1.3rem;padding-bottom:12px;border-bottom:1px solid var(--sw-line)">
+                    Thông tin tài khoản &amp; Bảo mật
+                </h3>
+                
+                <form th:action="@{/profile}" method="post" class="stack">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+
+                    <div>
+                        <label class="label mb8">Tên đăng nhập (Username)</label>
+                        <input type="text" class="field w100" th:value="${user.username}" readonly style="background:#f4efe8;cursor:not-allowed">
+                        <span class="small muted mt4 d-block">Tên đăng nhập được cố định trên hệ thống</span>
+                    </div>
+
+                    <div>
+                        <label class="label mb8" for="profileEmail">Địa chỉ Email</label>
+                        <input type="email" id="profileEmail" name="email" class="field w100" th:value="${user.email}" placeholder="nhap.email@domain.com" required>
+                        <span class="small muted mt4 d-block">Email dùng để nhận hóa đơn và thông báo vận đơn</span>
+                    </div>
+
+                    <div class="pt12" style="border-top:1px dashed var(--sw-line)">
+                        <div class="eyebrow mb12" style="color:var(--sw-bordeaux)">THAY ĐỔI MẬT KHẨU (BỎ TRỐNG NẾU KHÔNG ĐỔI)</div>
+                        
+                        <div class="mb12">
+                            <label class="label mb8" for="currentPassword">Mật khẩu hiện tại</label>
+                            <input type="password" id="currentPassword" name="currentPassword" class="field w100" placeholder="••••••••">
+                        </div>
+
+                        <div class="mb12">
+                            <label class="label mb8" for="newPassword">Mật khẩu mới</label>
+                            <input type="password" id="newPassword" name="newPassword" class="field w100" placeholder="Tối thiểu 6 ký tự">
+                        </div>
+
+                        <div>
+                            <label class="label mb8" for="confirmPassword">Xác nhận mật khẩu mới</label>
+                            <input type="password" id="confirmPassword" name="confirmPassword" class="field w100" placeholder="Nhập lại mật khẩu mới">
+                        </div>
+                    </div>
+
+                    <div class="pt16">
+                        <button type="submit" class="btn w100">Cập nhật hồ sơ tài khoản</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Right: Shipping Info & Recent Orders -->
+            <div class="stack">
+                <!-- Shipping Address Card -->
+                <div class="panel">
+                    <h3 class="serif mb12" style="font-size:1.2rem;padding-bottom:10px;border-bottom:1px solid var(--sw-line)">
+                        Địa chỉ nhận hàng gần nhất
+                    </h3>
+                    <div th:if="${!#strings.isEmpty(latestAddress)}">
+                        <div class="display-flex gap8 align-items-center mb8">
+                            <strong style="font-size:1.05rem" th:text="${latestFullName}">Nguyễn Văn A</strong>
+                            <span class="badge badge-wine" th:text="${latestPhone}">0900000000</span>
+                        </div>
+                        <p class="muted mb12" th:text="${latestAddress}">123 Nguyễn Huệ, Quận 1, TP. Hồ Chí Minh</p>
+                        <span class="small muted">Tự động điền cho các đơn hàng tiếp theo khi thanh toán</span>
+                    </div>
+                    <div th:if="${#strings.isEmpty(latestAddress)}" class="text-center py16">
+                        <p class="muted mb8">Bạn chưa lưu địa chỉ nhận hàng nào.</p>
+                        <span class="small muted">Địa chỉ sẽ tự động được ghi nhận sau lần đặt hàng đầu tiên của bạn.</span>
+                    </div>
+                </div>
+
+                <!-- Recent Orders -->
+                <div class="panel">
+                    <div class="between mb12" style="padding-bottom:10px;border-bottom:1px solid var(--sw-line)">
+                        <h3 class="serif m-0" style="font-size:1.2rem">Đơn hàng gần đây</h3>
+                        <a th:href="@{/orders}" class="small" style="color:var(--sw-bordeaux);font-weight:700">Xem tất cả &rarr;</a>
+                    </div>
+
+                    <div th:if="${orders == null or orders.isEmpty()}" class="text-center py16">
+                        <p class="muted mb8">Chưa có lịch sử đơn hàng nào.</p>
+                        <a th:href="@{/wines}" class="btn btn-outline btn-sm">Khám phá rượu ngay</a>
+                    </div>
+
+                    <div class="stack" th:if="${orders != null and !orders.isEmpty()}">
+                        <div th:each="order, stat : ${orders}" th:if="${stat.index < 3}"
+                             class="between p10" style="background:#fcf9f5;border:1px solid var(--sw-line);border-radius:6px;gap:10px;flex-wrap:wrap">
+                            <div>
+                                <strong th:text="'#' + ${order.id}">#1</strong>
+                                <span class="small muted" th:if="${order.orderDate != null}" th:text="' · ' + ${#temporals.format(order.orderDate, 'dd/MM/yyyy')}"> · 10/10/2026</span>
+                                <div class="mt4">
+                                    <span class="badge badge-wine" th:text="${@enumDisplayService.orderStatus(order.status)}">Chờ xử lý</span>
+                                </div>
+                            </div>
+                            <div style="text-align:right">
+                                <strong style="color:var(--sw-bordeaux)" th:text="${#numbers.formatDecimal(order.totalPrice, 0, 'COMMA', 0, 'POINT')} + ' ₫'">0 ₫</strong>
+                                <div class="mt4">
+                                    <a th:href="@{/orders/{id}(id=${order.id})}" class="btn btn-outline btn-sm" style="padding:4px 8px;min-height:26px;font-size:10px">Chi tiết</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<div th:replace="~{fragments/store-shell :: footer}"></div>
+</body>
+</html>

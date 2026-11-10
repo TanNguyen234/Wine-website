@@ -20,7 +20,14 @@
                     <p>Giám sát chỉ số kinh doanh, tồn kho hầm rượu và tiến độ giao nhận theo thời gian thực.</p>
                 </div>
                 <div class="display-flex gap10" style="flex-wrap:wrap">
-                    <a th:href="@{/admin/wines/import}" class="btn btn-outline btn-sm">&#8679; Nhập rượu từ Excel</a>
+                    <a th:href="@{/admin/wines/import}" class="btn btn-outline btn-sm" style="display:inline-flex;align-items:center;gap:6px">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="17 8 12 3 7 8"></polyline>
+                            <line x1="12" y1="3" x2="12" y2="15"></line>
+                        </svg>
+                        <span>Nhập rượu từ Excel</span>
+                    </a>
                     <a th:href="@{/wines/admin/create}" class="btn btn-sm">+ Thêm sản phẩm mới</a>
                 </div>
             </div>
@@ -53,12 +60,55 @@
             <!-- Charts Row -->
             <div class="chart-grid mb20">
                 <section class="admin-card">
-                    <div class="admin-card-head">
+                    <div class="admin-card-head" style="flex-wrap: wrap; gap: 12px; align-items: flex-start;">
                         <div>
-                            <h3>Doanh thu 7 ngày gần nhất</h3>
-                            <span class="muted small">Tổng hợp các đơn đã thanh toán thành công</span>
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <h3 style="margin:0;">Doanh thu theo ngày (<span th:text="${selectedDays}">7</span> ngày)</h3>
+                                <span class="status ok" style="font-size:11px;">Dữ liệu thực</span>
+                            </div>
+                            <span class="muted small" style="display:block; margin-top:4px;">
+                                Giai đoạn: <strong th:text="${rangeDateText}">04/11/2026 - 10/11/2026</strong> &bull; Tổng thu: <strong style="color:var(--sw-bordeaux, #742c3d);" th:text="${#numbers.formatDecimal(rangeRevenue, 0, 'COMMA', 0, 'POINT')} + ' ₫'">0 ₫</strong>
+                            </span>
                         </div>
-                        <span class="status ok">Dữ liệu thực</span>
+
+                        <!-- Filter Controls -->
+                        <div style="display:flex; flex-wrap:wrap; align-items:center; gap:8px;">
+                            <!-- Quick Buttons -->
+                            <div style="display:inline-flex; border:1px solid var(--sw-line, #e8e2d8); border-radius:6px; overflow:hidden; background:#fff;">
+                                <a th:href="@{/admin(days=7)}"
+                                   class="btn btn-sm"
+                                   th:style="${selectedDays == 7 and param.fromDate == null} ? 'background:var(--sw-bordeaux, #742c3d); color:#ffffff; font-weight:600; padding:4px 10px; border-radius:0;' : 'background:transparent; color:var(--sw-ink, #272128); padding:4px 10px; border-radius:0; border-right:1px solid var(--sw-line, #e8e2d8);'">7 ngày</a>
+                                <a th:href="@{/admin(days=14)}"
+                                   class="btn btn-sm"
+                                   th:style="${selectedDays == 14 and param.fromDate == null} ? 'background:var(--sw-bordeaux, #742c3d); color:#ffffff; font-weight:600; padding:4px 10px; border-radius:0;' : 'background:transparent; color:var(--sw-ink, #272128); padding:4px 10px; border-radius:0; border-right:1px solid var(--sw-line, #e8e2d8);'">14 ngày</a>
+                                <a th:href="@{/admin(days=30)}"
+                                   class="btn btn-sm"
+                                   th:style="${selectedDays == 30 and param.fromDate == null} ? 'background:var(--sw-bordeaux, #742c3d); color:#ffffff; font-weight:600; padding:4px 10px; border-radius:0;' : 'background:transparent; color:var(--sw-ink, #272128); padding:4px 10px; border-radius:0;'">30 ngày</a>
+                            </div>
+
+                            <!-- Custom Date Range Form -->
+                            <form th:action="@{/admin}" method="get" style="display:inline-flex; align-items:center; gap:4px;">
+                                <input type="date" name="fromDate" th:value="${startDate}" required
+                                       style="padding:4px 8px; font-size:12px; background:#fff; border:1px solid var(--sw-line, #e8e2d8); border-radius:6px; color:var(--sw-ink, #272128);" />
+                                <span class="muted small">&rarr;</span>
+                                <input type="date" name="toDate" th:value="${endDate}" required
+                                       style="padding:4px 8px; font-size:12px; background:#fff; border:1px solid var(--sw-line, #e8e2d8); border-radius:6px; color:var(--sw-ink, #272128);" />
+                                <button type="submit" class="btn btn-sm btn-outline" style="padding:4px 10px; font-size:12px; font-weight:600;">Lọc</button>
+                            </form>
+
+                            <!-- Export Excel Button -->
+                            <a th:href="@{/api/admin/excel/export/revenue(days=${selectedDays}, fromDate=${startDate}, toDate=${endDate})}"
+                               class="btn btn-sm btn-gold"
+                               style="display:inline-flex; align-items:center; gap:6px; font-weight:600; padding:5px 12px;"
+                               title="Xuất báo cáo doanh thu Excel theo khoảng ngày đang xem">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="7 10 12 15 17 10"></polyline>
+                                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                                </svg>
+                                Xuất Excel
+                            </a>
+                        </div>
                     </div>
                     <div style="height:260px;padding-top:12px">
                         <canvas id="revenueChart"

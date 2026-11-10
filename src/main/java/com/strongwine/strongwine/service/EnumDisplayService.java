@@ -65,11 +65,11 @@ public class EnumDisplayService {
             return "Không xác định";
         }
         return switch (method) {
-            case STRIPE -> "Stripe";
+            case STRIPE -> "Thẻ quốc tế Stripe (Visa, Mastercard)";
             case PAYPAL -> "PayPal";
-            case VNPAY -> "VNPay";
-            case MOMO -> "MoMo";
-            case COD -> "Thanh toán khi nhận hàng";
+            case VNPAY -> "Cổng thanh toán VNPay (VNPAY-QR, Thẻ ATM, Visa)";
+            case MOMO -> "Ví điện tử MoMo";
+            case COD -> "Thanh toán khi nhận hàng (COD)";
         };
     }
 

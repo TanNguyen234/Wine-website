@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 450" width="100%" height="100%">
+  <defs>
+    <linearGradient id="dalatGlass" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#0a0507"/>
+      <stop offset="20%" stop-color="#4d1622"/>
+      <stop offset="50%" stop-color="#140609"/>
+      <stop offset="80%" stop-color="#5a1828"/>
+      <stop offset="100%" stop-color="#0a0507"/>
+    </linearGradient>
+    <linearGradient id="rubyCap" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#581622"/>
+      <stop offset="35%" stop-color="#9a3044"/>
+      <stop offset="70%" stop-color="#691929"/>
+      <stop offset="100%" stop-color="#420f17"/>
+    </linearGradient>
+    <filter id="dalatShadow" x="-20%" y="-10%" width="140%" height="130%">
+      <feDropShadow dx="0" dy="18" stdDeviation="14" flood-color="#000" flood-opacity="0.45"/>
+    </filter>
+  </defs>
+  <g filter="url(#dalatShadow)">
+    <path d="M60 22 Q58 17 64 16 H96 Q102 17 100 22 L98 108 Q97 132 110 146 Q130 164 133 200 L137 410 Q137 428 116 430 H44 Q23 428 23 410 L27 200 Q30 164 50 146 Q63 132 62 108 Z" fill="url(#dalatGlass)" stroke="#1a0c10" stroke-width="2"/>
+    <path d="M62 24 H98 V105 H62 Z" fill="url(#rubyCap)"/>
+    <path d="M61 32 H99 M61 44 H99 M61 56 H99" stroke="#e6b87d" stroke-opacity="0.4" stroke-width="1.2"/>
+    <path d="M36 200 Q40 160 56 142" stroke="#ffffff" stroke-width="8" stroke-linecap="round" opacity="0.12" fill="none"/>
+    <path d="M34 240 L34 390" stroke="#ffffff" stroke-width="5" stroke-linecap="round" opacity="0.08" fill="none"/>
+    <!-- Label -->
+    <rect x="36" y="215" width="88" height="135" rx="3" fill="#f8f4ec" stroke="#bfaa88" stroke-width="1.2"/>
+    <rect x="40" y="219" width="80" height="127" fill="none" stroke="#c9a46e" stroke-width="0.8"/>
+    <text x="80" y="238" text-anchor="middle" font-family="'Playfair Display', Georgia, serif" font-size="9" font-weight="700" letter-spacing="2" fill="#742c3d">CHÂTEAU</text>
+    <text x="80" y="254" text-anchor="middle" font-family="'Playfair Display', Georgia, serif" font-size="12" font-weight="700" letter-spacing="1.5" fill="#2d1217">DALAT</text>
+    <path d="M52 262 H108" stroke="#742c3d" stroke-width="1"/>
+    <circle cx="80" cy="275" r="9" fill="#c9a46e"/>
+    <text x="80" y="278" text-anchor="middle" font-family="'Playfair Display', Georgia, serif" font-size="7" font-weight="700" fill="#2d1217">SIGN</text>
+    <text x="80" y="295" text-anchor="middle" font-family="Lato, sans-serif" font-size="7" font-weight="700" letter-spacing="1" fill="#704e55">SIGNATURE CABERNET</text>
+    <text x="80" y="312" text-anchor="middle" font-family="Lato, sans-serif" font-size="8" font-weight="700" fill="#23171d">2021</text>
+    <text x="80" y="328" text-anchor="middle" font-family="Lato, sans-serif" font-size="6" letter-spacing="1.5" fill="#8c777a">CAO NGUYÊN LÂM ĐỒNG</text>
+  </g>
+</svg>
