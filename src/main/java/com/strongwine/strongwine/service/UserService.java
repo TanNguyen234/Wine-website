@@ -69,6 +69,20 @@ public class UserService {
         String password = normalizeRequired(user.getPassword(), "Password is required");
         String email = normalizeOptionalEmail(user.getEmail());
 
+        // Lockdown: Shipper or Admin accounts can only be created by an authenticated Administrator
+        if ("SHIPPER".equalsIgnoreCase(role) || "ADMIN".equalsIgnoreCase(role)) {
+            org.springframework.security.core.Authentication auth =
+                    org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+            if (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getPrincipal())) {
+                boolean isAdmin = auth.getAuthorities().stream().anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
+                if (!isAdmin) {
+                    throw new SecurityException("Không được phép tự tạo tài khoản " + role + ". Tài khoản này chỉ được cấp bởi Quản trị viên (ADMIN).");
+                }
+            } else if (auth != null && "anonymousUser".equals(auth.getPrincipal())) {
+                throw new SecurityException("Không được phép tự tạo tài khoản " + role + ". Tài khoản này chỉ được cấp bởi Quản trị viên (ADMIN).");
+            }
+        }
+
         if (userRepository.existsByUsername(username)) {
             throw new RuntimeException("Username already exists");
         }

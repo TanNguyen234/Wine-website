@@ -57,7 +57,18 @@ public class AuthController {
             @RequestParam String email,
             @RequestParam String password,
             @RequestParam String confirmPassword,
+            @RequestParam(required = false) String role,
             RedirectAttributes redirectAttributes) {
+
+        if (role != null && "SHIPPER".equalsIgnoreCase(role.trim())) {
+            redirectAttributes.addFlashAttribute("error", "Không được phép tự đăng ký tài khoản Shipper. Tài khoản Shipper chỉ được cấp bởi Quản trị viên.");
+            return "redirect:/register";
+        }
+
+        if (role != null && "ADMIN".equalsIgnoreCase(role.trim())) {
+            redirectAttributes.addFlashAttribute("error", "Không được phép tự đăng ký tài khoản Quản trị viên.");
+            return "redirect:/register";
+        }
 
         if (!userService.isValidEmailFormat(email)) {
             redirectAttributes.addFlashAttribute("error", "Email không hợp lệ");
