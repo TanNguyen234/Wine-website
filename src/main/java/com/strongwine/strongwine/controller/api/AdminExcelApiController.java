@@ -37,6 +37,13 @@ public class AdminExcelApiController {
         this(excelImportStrategy, excelTemplateService, inventoryStockReportGenerator, null, null);
     }
 
+    public AdminExcelApiController(ExcelWineImportStrategy excelImportStrategy,
+                                   ExcelTemplateService excelTemplateService,
+                                   InventoryStockReportGenerator inventoryStockReportGenerator,
+                                   OrderReportGenerator orderReportGenerator) {
+        this(excelImportStrategy, excelTemplateService, inventoryStockReportGenerator, orderReportGenerator, null);
+    }
+
     @org.springframework.beans.factory.annotation.Autowired
     public AdminExcelApiController(ExcelWineImportStrategy excelImportStrategy,
                                    ExcelTemplateService excelTemplateService,
