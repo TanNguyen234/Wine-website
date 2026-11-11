@@ -57,6 +57,13 @@
                                 <strong th:text="${order.shippingFullName}">Người nhận</strong>
                                 <div class="small muted" th:text="${order.shippingPhone}">0900</div>
                                 <div class="small muted" th:text="${order.shippingAddress}">Địa chỉ</div>
+                                <div class="mt4" th:if="${order.shippingAddress != null and !#strings.isEmpty(#strings.trim(order.shippingAddress))}">
+                                    <a class="small" style="color:var(--sw-bordeaux);font-weight:600"
+                                       target="_blank" rel="noopener noreferrer"
+                                       th:href="${@enumDisplayService.googleMapsUrl(order.shippingLatitude, order.shippingLongitude, order.shippingAddress)}">
+                                        &#9873; Maps
+                                    </a>
+                                </div>
                             </td>
                             <td class="small" th:text="${order.orderDate != null ? #temporals.format(order.orderDate, 'dd/MM/yyyy HH:mm') : '-'}">10/10/2026</td>
                             <td><strong th:text="${#numbers.formatDecimal(order.totalPrice, 0, 'COMMA', 0, 'POINT')} + ' ₫'">0 ₫</strong></td>

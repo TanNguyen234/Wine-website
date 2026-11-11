@@ -125,8 +125,8 @@
                     </a>
                     <a class="btn btn-outline btn-sm"
                        th:if="${(s.shippingLatitude != null and s.shippingLongitude != null) or (s.shippingAddress != null and !#strings.isEmpty(#strings.trim(s.shippingAddress)) and #strings.trim(s.shippingAddress) != '.')}"
-                       target="_blank" rel="noopener"
-                       th:href="${s.shippingLatitude != null and s.shippingLongitude != null ? 'https://www.google.com/maps/dir/?api=1&destination=' + s.shippingLatitude + ',' + s.shippingLongitude : 'https://www.google.com/maps/dir/?api=1&destination=' + #uris.escapeQueryParam(s.shippingAddress)}">
+                       target="_blank" rel="noopener noreferrer"
+                       th:href="${@enumDisplayService.googleMapsUrl(s.shippingLatitude, s.shippingLongitude, s.shippingAddress)}">
                         &#9873; Chỉ đường Maps
                     </a>
                     <span class="small muted"

@@ -112,6 +112,13 @@
                                 <strong th:text="${s.shippingName}">Khách</strong>
                                 <div class="small muted" th:text="${s.shippingPhone}">0900</div>
                                 <div class="small muted" th:text="${s.shippingAddress}">Địa chỉ</div>
+                                <div class="mt4" th:if="${s.shippingAddress != null and !#strings.isEmpty(#strings.trim(s.shippingAddress))}">
+                                    <a class="small" style="color:var(--sw-bordeaux);font-weight:600"
+                                       target="_blank" rel="noopener noreferrer"
+                                       th:href="${@enumDisplayService.googleMapsUrl(s.shippingLatitude, s.shippingLongitude, s.shippingAddress)}">
+                                        &#9873; Maps
+                                    </a>
+                                </div>
                             </td>
                             <td>
                                 <span th:if="${s.shipper != null}" th:text="${s.shipper.name}">Tài xế</span>

@@ -6,10 +6,20 @@ import com.strongwine.strongwine.entity.PaymentMethod;
 import com.strongwine.strongwine.entity.PaymentStatus;
 import com.strongwine.strongwine.entity.ShipmentStatus;
 import com.strongwine.strongwine.entity.ShipperStatus;
+import com.strongwine.strongwine.util.AddressTextUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.Locale;
+import java.util.Optional;
 
 @Service
 public class EnumDisplayService {
+
+    @Autowired(required = false)
+    private VietnamGeoValidationService geoValidationService;
 
     public String orderStatus(OrderStatus status) {
         if (status == null) {
@@ -46,6 +56,43 @@ public class EnumDisplayService {
             case COMPLETED -> "Hoàn tất";
             case FAILED -> "Thất bại";
         };
+    }
+
+    /**
+     * Generates a valid, robust Google Maps navigation URL.
+     * Strips legacy [GPS: ...] tags and ensures driving navigation opens cleanly.
+     */
+    public String googleMapsUrl(Double lat, Double lng, String rawAddress) {
+        // 1. If valid coordinates are provided, prioritize direct GPS coordinates
+        if (lat != null && lng != null && Math.abs(lat) > 0.0001 && Math.abs(lng) > 0.0001) {
+            return String.format(Locale.US, "https://www.google.com/maps/dir/?api=1&destination=%.6f,%.6f&travelmode=driving", lat, lng);
+        }
+
+        // 2. Check if address contains legacy GPS format [GPS: lat, lng]
+        if (rawAddress != null && !rawAddress.isBlank()) {
+            Optional<AddressTextUtils.Coordinates> coords =
+                    AddressTextUtils.extractLegacyCoordinates(rawAddress);
+            if (coords.isPresent()) {
+                return String.format(Locale.US, "https://www.google.com/maps/dir/?api=1&destination=%.6f,%.6f&travelmode=driving",
+                        coords.get().latitude(), coords.get().longitude());
+            }
+
+            // 3. Clean address by stripping [GPS: ...] suffix
+            String cleanAddress = AddressTextUtils.stripLegacyGpsSuffix(rawAddress);
+            if (cleanAddress != null && !cleanAddress.trim().isEmpty() && !cleanAddress.trim().equals(".")) {
+                if (geoValidationService != null) {
+                    double[] resolved = geoValidationService.resolveDefaultCoordinates(cleanAddress);
+                    if (resolved != null && resolved.length == 2 && Math.abs(resolved[0]) > 0.0001) {
+                        return String.format(Locale.US, "https://www.google.com/maps/dir/?api=1&destination=%.6f,%.6f&travelmode=driving", resolved[0], resolved[1]);
+                    }
+                }
+                String encoded = URLEncoder.encode(cleanAddress.trim(), StandardCharsets.UTF_8).replace("+", "%20");
+                return "https://www.google.com/maps/dir/?api=1&destination=" + encoded + "&travelmode=driving";
+            }
+        }
+
+        // Default to Ho Chi Minh City center
+        return "https://www.google.com/maps/dir/?api=1&destination=10.776900,106.700900&travelmode=driving";
     }
 
     public String shipperStatus(ShipperStatus status) {

@@ -112,6 +112,13 @@
                             <strong th:text="${order.shippingFullName}">Nguyễn Văn A</strong>
                             <div class="muted small mt8" th:text="${order.shippingPhone}">0900000000</div>
                             <div class="muted small mt8" th:text="${order.shippingAddress}">Địa chỉ</div>
+                            <div class="mt12" th:if="${order.shippingAddress != null and !#strings.isEmpty(#strings.trim(order.shippingAddress))}">
+                                <a class="btn btn-outline btn-sm"
+                                   target="_blank" rel="noopener noreferrer"
+                                   th:href="${@enumDisplayService.googleMapsUrl(order.shippingLatitude, order.shippingLongitude, order.shippingAddress)}">
+                                    &#9873; Xem chỉ đường Maps
+                                </a>
+                            </div>
                         </div>
                         <div>
                             <div class="small muted">Tài xế phụ trách</div>
