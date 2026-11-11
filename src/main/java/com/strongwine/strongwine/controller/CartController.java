@@ -6,9 +6,12 @@ import com.strongwine.strongwine.dto.CartItemDto;
 import com.strongwine.strongwine.dto.CheckoutRequest;
 import com.strongwine.strongwine.entity.User;
 import com.strongwine.strongwine.repository.UserRepository;
+import com.strongwine.strongwine.exception.DeliveryAddressNotSupportedException;
 import com.strongwine.strongwine.service.CartService;
 import com.strongwine.strongwine.service.OrderService;
 import com.strongwine.strongwine.service.PaymentService;
+import com.strongwine.strongwine.service.UserShippingProfileService;
+import com.strongwine.strongwine.service.UserShippingProfileService.ShippingProfileData;
 import com.strongwine.strongwine.service.VietnamGeoValidationService;
 import com.strongwine.strongwine.entity.Order;
 import org.springframework.http.MediaType;
@@ -60,6 +63,9 @@ public class CartController {
     @Autowired
     private VietnamGeoValidationService vietnamGeoValidationService;
 
+    @Autowired
+    private UserShippingProfileService userShippingProfileService;
+
     private Long getUserId(Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getPrincipal())) {
             return null;
@@ -91,8 +97,17 @@ public class CartController {
             return "redirect:/login";
         }
         
+        // Load default shipping profile saved by customer
+        ShippingProfileData profile = userShippingProfileService.getProfile(userId);
         CheckoutForm checkoutForm = new CheckoutForm();
-        userRepository.findById(userId).ifPresent(user -> checkoutForm.setEmail(user.getEmail()));
+        String userEmail = userRepository.findById(userId).map(User::getEmail).orElse("");
+        checkoutForm.setEmail(profile.email() != null && !profile.email().isBlank() ? profile.email() : userEmail);
+        checkoutForm.setFullName(profile.fullName() != null ? profile.fullName() : "");
+        checkoutForm.setPhone(profile.phone() != null ? profile.phone() : "");
+        checkoutForm.setAddress(profile.address() != null ? profile.address() : "");
+        checkoutForm.setDeliveryLat(profile.deliveryLat());
+        checkoutForm.setDeliveryLng(profile.deliveryLng());
+
         model.addAttribute("checkoutForm", checkoutForm);
         model.addAttribute("paymentMethods", SUPPORTED_PAYMENT_METHODS);
 
@@ -153,15 +168,26 @@ public class CartController {
         }
         
         if (checkoutRequest.getAddress() == null || checkoutRequest.getAddress().trim().isEmpty()) {
-            return badRequest("Vui lòng nhập địa chỉ");
+            return badRequest("Vui lòng nhập địa chỉ giao hàng chi tiết");
         }
 
-        if (!hasValidGeoPair(checkoutRequest.getDeliveryLat(), checkoutRequest.getDeliveryLng())) {
-            return badRequest("Vui lòng chọn vị trí giao hàng hợp lệ trên bản đồ Việt Nam");
+        Double deliveryLat = checkoutRequest.getDeliveryLat();
+        Double deliveryLng = checkoutRequest.getDeliveryLng();
+
+        // If coordinates weren't set on interactive map, auto-resolve default coordinates from address text
+        if (deliveryLat == null || deliveryLng == null) {
+            double[] resolvedCoords = vietnamGeoValidationService.resolveDefaultCoordinates(checkoutRequest.getAddress());
+            deliveryLat = resolvedCoords[0];
+            deliveryLng = resolvedCoords[1];
+            checkoutRequest.setDeliveryLat(deliveryLat);
+            checkoutRequest.setDeliveryLng(deliveryLng);
         }
 
-        if (!vietnamGeoValidationService.isWithinMainlandVietnam(checkoutRequest.getDeliveryLat(), checkoutRequest.getDeliveryLng())) {
-            return badRequest("Vị trí giao hàng phải nằm trong phạm vi đất liền Việt Nam");
+        // Strictly validate: mainland Vietnam delivery only, rejecting remote islands (Hoàng Sa, Trường Sa, Côn Đảo, v.v.)
+        try {
+            vietnamGeoValidationService.validateMainlandDeliveryAddress(checkoutRequest.getAddress(), deliveryLat, deliveryLng);
+        } catch (DeliveryAddressNotSupportedException | IllegalArgumentException ex) {
+            return badRequest(ex.getMessage());
         }
 
         if (checkoutRequest.getPaymentMethod() == null || checkoutRequest.getPaymentMethod().trim().isEmpty()) {
@@ -200,10 +226,23 @@ public class CartController {
                     checkoutRequest.getPhone(),
                     normalizedEmail,
                     normalizedAddress,
-                    checkoutRequest.getDeliveryLat(),
-                    checkoutRequest.getDeliveryLng(),
+                    deliveryLat,
+                    deliveryLng,
                     checkoutRequest.getNote(),
                     normalizedPaymentMethod);
+
+            // Persist the customer's verified shipping details into their profile for subsequent checkouts
+            try {
+                userShippingProfileService.saveProfile(
+                        userId,
+                        checkoutRequest.getFullName(),
+                        checkoutRequest.getPhone(),
+                        normalizedAddress,
+                        deliveryLat,
+                        deliveryLng);
+            } catch (Exception ex) {
+                log.warn("Could not save shipping profile for user {}: {}", userId, ex.getMessage());
+            }
 
             String baseUrl = request.getScheme() + "://" + request.getServerName() + (request.getServerPort() == 80 || request.getServerPort() == 443 ? "" : ":" + request.getServerPort());
             String paymentRedirectUrl = paymentService.createPaymentSession(order, normalizedPaymentMethod, baseUrl, request.getRemoteAddr());

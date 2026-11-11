@@ -41,7 +41,9 @@ build/
 **/application-local.properties
 **/application-prod.properties
 
-### Agent Scratch Workspaces ###
+### Uploads & Runtime Storage ###
+uploads/
+quality-gate-receipt.json
 .superpowers/
 all_skills.txt
 

@@ -2,8 +2,12 @@ package com.strongwine.strongwine.controller;
 
 import com.strongwine.strongwine.entity.Order;
 import com.strongwine.strongwine.entity.User;
+import com.strongwine.strongwine.exception.DeliveryAddressNotSupportedException;
 import com.strongwine.strongwine.service.OrderService;
 import com.strongwine.strongwine.service.UserService;
+import com.strongwine.strongwine.service.UserShippingProfileService;
+import com.strongwine.strongwine.service.UserShippingProfileService.ShippingProfileData;
+import com.strongwine.strongwine.service.VietnamGeoValidationService;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
@@ -23,10 +27,17 @@ public class ProfileController {
 
     private final UserService userService;
     private final OrderService orderService;
+    private final UserShippingProfileService userShippingProfileService;
+    private final VietnamGeoValidationService geoValidationService;
 
-    public ProfileController(UserService userService, OrderService orderService) {
+    public ProfileController(UserService userService,
+                             OrderService orderService,
+                             UserShippingProfileService userShippingProfileService,
+                             VietnamGeoValidationService geoValidationService) {
         this.userService = userService;
         this.orderService = orderService;
+        this.userShippingProfileService = userShippingProfileService;
+        this.geoValidationService = geoValidationService;
     }
 
     @GetMapping
@@ -42,15 +53,24 @@ public class ProfileController {
                 .map(Order::getTotalPrice)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        // Extract latest shipping information for prefill / display
-        String latestFullName = "";
-        String latestPhone = "";
-        String latestAddress = "";
-        if (!orders.isEmpty()) {
+        // Extract latest shipping information from persistent shipping profile service
+        ShippingProfileData shippingProfile = userShippingProfileService.getProfile(currentUser.getId());
+        String latestFullName = shippingProfile.fullName() != null ? shippingProfile.fullName() : "";
+        String latestPhone = shippingProfile.phone() != null ? shippingProfile.phone() : "";
+        String latestAddress = shippingProfile.address() != null ? shippingProfile.address() : "";
+
+        // Fallback to most recent order if profile fields are empty
+        if ((latestAddress.isBlank() || latestFullName.isBlank()) && !orders.isEmpty()) {
             Order latest = orders.get(0);
-            latestFullName = latest.getShippingFullName() != null ? latest.getShippingFullName() : "";
-            latestPhone = latest.getShippingPhone() != null ? latest.getShippingPhone() : "";
-            latestAddress = latest.getShippingAddress() != null ? latest.getShippingAddress() : "";
+            if (latestFullName.isBlank() && latest.getShippingFullName() != null) {
+                latestFullName = latest.getShippingFullName();
+            }
+            if (latestPhone.isBlank() && latest.getShippingPhone() != null) {
+                latestPhone = latest.getShippingPhone();
+            }
+            if (latestAddress.isBlank() && latest.getShippingAddress() != null) {
+                latestAddress = latest.getShippingAddress();
+            }
         }
 
         model.addAttribute("user", currentUser);
@@ -68,6 +88,9 @@ public class ProfileController {
     public String updateProfile(
             Authentication authentication,
             @RequestParam(required = false) String email,
+            @RequestParam(required = false) String fullName,
+            @RequestParam(required = false) String phone,
+            @RequestParam(required = false) String address,
             @RequestParam(required = false) String currentPassword,
             @RequestParam(required = false) String newPassword,
             @RequestParam(required = false) String confirmPassword,
@@ -86,10 +109,52 @@ public class ProfileController {
                 }
             }
 
-            userService.updateProfile(currentUser.getId(), email, currentPassword, newPassword);
+            if (email != null && !email.trim().isEmpty()) {
+                userService.updateProfile(currentUser.getId(), email, currentPassword, newPassword);
+            }
+
+            if ((fullName != null && !fullName.trim().isEmpty()) || (phone != null && !phone.trim().isEmpty()) || (address != null && !address.trim().isEmpty())) {
+                if (address != null && !address.trim().isEmpty()) {
+                    geoValidationService.validateMainlandDeliveryAddress(address, null, null);
+                }
+                userShippingProfileService.saveProfile(currentUser.getId(), fullName, phone, address, null, null);
+            }
+
             redirectAttributes.addFlashAttribute("successMessage", "Cập nhật hồ sơ tài khoản thành công!");
+        } catch (DeliveryAddressNotSupportedException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
         } catch (Exception ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+        }
+
+        return "redirect:/profile";
+    }
+
+    @PostMapping("/shipping")
+    public String updateShippingAddress(
+            Authentication authentication,
+            @RequestParam(required = false) String fullName,
+            @RequestParam(required = false) String phone,
+            @RequestParam String address,
+            RedirectAttributes redirectAttributes) {
+
+        User currentUser = requireCurrentUser(authentication);
+        if (currentUser == null) {
+            return "redirect:/login";
+        }
+
+        try {
+            if (address == null || address.trim().isEmpty()) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Vui lòng nhập địa chỉ giao hàng chi tiết");
+                return "redirect:/profile";
+            }
+            geoValidationService.validateMainlandDeliveryAddress(address, null, null);
+            userShippingProfileService.saveProfile(currentUser.getId(), fullName, phone, address, null, null);
+            redirectAttributes.addFlashAttribute("successMessage", "Đã lưu địa chỉ giao hàng mặc định thành công!");
+        } catch (DeliveryAddressNotSupportedException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+        } catch (Exception ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Không thể lưu địa chỉ: " + ex.getMessage());
         }
 
         return "redirect:/profile";

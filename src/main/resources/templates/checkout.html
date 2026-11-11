@@ -20,8 +20,8 @@
 
         <form id="checkoutForm" th:action="@{/cart/checkout/process}" method="post">
             <input type="hidden" name="checkoutToken" th:value="${checkoutToken}">
-            <input type="hidden" id="deliveryLat" name="deliveryLat" value="">
-            <input type="hidden" id="deliveryLng" name="deliveryLng" value="">
+            <input type="hidden" id="deliveryLat" name="deliveryLat" th:value="${checkoutForm != null and checkoutForm.deliveryLat != null ? checkoutForm.deliveryLat : ''}">
+            <input type="hidden" id="deliveryLng" name="deliveryLng" th:value="${checkoutForm != null and checkoutForm.deliveryLng != null ? checkoutForm.deliveryLng : ''}">
 
             <div class="checkout-grid">
                 <!-- Left Column: Recipient Info + Interactive Map -->
@@ -35,13 +35,13 @@
                                 <label class="label" for="fullName">Họ và tên người nhận *</label>
                                 <input type="text" id="fullName" name="fullName" class="field" required
                                        placeholder="Nguyễn Văn A"
-                                       value="">
+                                       th:value="${checkoutForm != null ? checkoutForm.fullName : ''}">
                             </div>
                             <div>
                                 <label class="label" for="phone">Số điện thoại liên hệ *</label>
                                 <input type="tel" id="phone" name="phone" class="field" required
                                        placeholder="0901234567"
-                                       value="">
+                                       th:value="${checkoutForm != null ? checkoutForm.phone : ''}">
                             </div>
                         </div>
 
@@ -56,7 +56,10 @@
                             <label class="label" for="address">Địa chỉ nhận hàng chi tiết *</label>
                             <input type="text" id="address" name="address" class="field" required
                                    placeholder="Số nhà, tên đường, phường/xã, quận/huyện, tỉnh/thành phố"
-                                   value="">
+                                   th:value="${checkoutForm != null ? checkoutForm.address : ''}">
+                            <span class="small muted mt4 d-block">
+                                Giao hàng bảo ôn hầm rượu 14&deg;C trên toàn đất liền Việt Nam (không hỗ trợ đảo xa). Bạn có thể chỉnh sửa địa chỉ trực tiếp tại đây.
+                            </span>
                         </div>
 
                         <div class="mt12">

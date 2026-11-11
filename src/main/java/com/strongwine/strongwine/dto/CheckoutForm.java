@@ -12,6 +12,8 @@ public class CheckoutForm {
     private String address;
     private String note;
     private String paymentMethod;
+    private Double deliveryLat;
+    private Double deliveryLng;
     
     public CheckoutForm() {
     }
@@ -62,6 +64,22 @@ public class CheckoutForm {
 
     public void setPaymentMethod(String paymentMethod) {
         this.paymentMethod = paymentMethod;
+    }
+
+    public Double getDeliveryLat() {
+        return deliveryLat;
+    }
+
+    public void setDeliveryLat(Double deliveryLat) {
+        this.deliveryLat = deliveryLat;
+    }
+
+    public Double getDeliveryLng() {
+        return deliveryLng;
+    }
+
+    public void setDeliveryLng(Double deliveryLng) {
+        this.deliveryLng = deliveryLng;
     }
 }
 

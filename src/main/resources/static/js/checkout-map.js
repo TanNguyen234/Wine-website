@@ -10,13 +10,15 @@
         [20.50, 108.10],
         [19.20, 107.70],
         [18.00, 107.50],
-        [16.80, 108.20],
-        [15.50, 108.10],
-        [14.00, 109.10],
-        [12.30, 109.30],
-        [10.80, 106.80],
+        [16.80, 108.40],
+        [16.00, 108.40],
+        [15.00, 109.10],
+        [14.00, 109.30],
+        [12.30, 109.50],
+        [10.80, 107.50],
+        [10.30, 107.30],
         [9.40, 105.80],
-        [8.70, 104.90],
+        [8.50, 104.80],
         [9.70, 104.00],
         [10.90, 103.30],
         [12.20, 104.60],
@@ -314,6 +316,28 @@
                 }
             });
         }
+
+        // Auto-center and place pin for prefilled profile coordinates or address
+        setTimeout(function () {
+            map.invalidateSize();
+            const initLat = parseFloat(latInput.value);
+            const initLng = parseFloat(lngInput.value);
+            if (!isNaN(initLat) && !isNaN(initLng) && Math.abs(initLat) > 0.001 && Math.abs(initLng) > 0.001) {
+                if (setMarkerAt(initLat, initLng)) {
+                    map.setView([initLat, initLng], 15);
+                }
+            } else if (addressInput && addressInput.value.trim() && addressInput.value.trim() !== "Vị trí được chọn trên bản đồ") {
+                searchLocationByName(addressInput.value.trim()).then(function (items) {
+                    if (items && items.length > 0) {
+                        const lat = Number(items[0].lat);
+                        const lng = Number(items[0].lon);
+                        if (!isNaN(lat) && !isNaN(lng) && setMarkerAt(lat, lng)) {
+                            map.setView([lat, lng], 15);
+                        }
+                    }
+                }).catch(function () {});
+            }
+        }, 250);
     }
 
     document.addEventListener("DOMContentLoaded", initCheckoutMap);
