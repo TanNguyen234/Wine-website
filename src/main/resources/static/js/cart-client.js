@@ -388,7 +388,11 @@
 
                     const result = await response.json();
                     if (result && result.redirectUrl) {
-                        clearCart();
+                        // Only COD is final at this point. Online payments keep the cart until the order-confirmation
+                        // page (clearCartOnOrderConfirmation), so a cancelled or failed VNPay/Stripe payment leaves the cart intact.
+                        if (String(requestBody.paymentMethod).toUpperCase() === "COD") {
+                            clearCart();
+                        }
                         window.location.href = result.redirectUrl;
                         return;
                     }

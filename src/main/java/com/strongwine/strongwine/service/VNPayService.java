@@ -66,7 +66,8 @@ public class VNPayService {
         params.put("vnp_CurrCode", "VND");
         params.put("vnp_IpAddr", normalizeClientIp(clientIp));
         params.put("vnp_Locale", trimOrDefault(locale, "vn"));
-        params.put("vnp_OrderInfo", "Thanh toan don hang #" + payment.getOrder().getId());
+        // VNPay accepts plain text only for vnp_OrderInfo: no '#' or other special characters.
+        params.put("vnp_OrderInfo", "Thanh toan don hang " + payment.getOrder().getId());
         params.put("vnp_OrderType", trimOrDefault(orderType, "other"));
         params.put("vnp_ReturnUrl", resolveReturnUrl(baseUrl));
         params.put("vnp_TxnRef", payment.getPaymentReference());

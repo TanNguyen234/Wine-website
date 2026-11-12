@@ -217,6 +217,12 @@ public class OrderService {
             return;
         }
 
+        if (order.getStatus() == OrderStatus.CANCELLED) {
+            // Payment arrived after the order was cancelled and its stock released. Reserve the stock again so
+            // confirmOrderPayment never deducts a reservation that does not exist. Throws when stock is gone.
+            inventoryService.reserveForOrder(order);
+        }
+
         order.setStatus(OrderStatus.PAID);
         order.setPaymentStatus(PaymentStatus.SUCCESS);
         order.setPaymentReference(paymentReference);
@@ -234,7 +240,8 @@ public class OrderService {
     public void cancelPendingOrder(Long orderId) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found with id: " + orderId));
-        if (order.getStatus() == OrderStatus.PAID) {
+        // Cancelling twice (VNPay return and IPN both report a failure) must not release the reservation twice.
+        if (order.getStatus() == OrderStatus.PAID || order.getStatus() == OrderStatus.CANCELLED) {
             return;
         }
         order.setStatus(OrderStatus.CANCELLED);

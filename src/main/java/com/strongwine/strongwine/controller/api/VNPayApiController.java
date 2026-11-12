@@ -6,6 +6,8 @@ import com.strongwine.strongwine.entity.User;
 import com.strongwine.strongwine.repository.UserRepository;
 import com.strongwine.strongwine.service.OrderService;
 import com.strongwine.strongwine.service.PaymentService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -26,6 +28,8 @@ import java.util.Map;
 @RequestMapping("/api/payments/vnpay")
 public class VNPayApiController {
 
+    private static final Logger log = LoggerFactory.getLogger(VNPayApiController.class);
+
     @Autowired
     private PaymentService paymentService;
 
@@ -40,7 +44,7 @@ public class VNPayApiController {
                                Authentication authentication,
                                RedirectAttributes redirectAttributes) {
         Long userId = getUserId(authentication);
-        PaymentCallbackResult result = paymentService.handleVnPayReturn(callbackParams, userId);
+        PaymentCallbackResult result = processReturn(callbackParams, userId);
 
         if (!result.isSuccess()) {
             redirectAttributes.addFlashAttribute("error", result.getMessage());
@@ -69,7 +73,23 @@ public class VNPayApiController {
     @GetMapping("/ipn")
     @ResponseBody
     public ResponseEntity<Map<String, String>> handleIpn(@RequestParam Map<String, String> callbackParams) {
-        return ResponseEntity.ok(paymentService.handleVnPayIpn(callbackParams));
+        try {
+            return ResponseEntity.ok(paymentService.handleVnPayIpn(callbackParams));
+        } catch (RuntimeException ex) {
+            // The service transaction was rolled back, so VNPay retries this notification until it gets 00 or 02.
+            log.error("VNPay IPN processing failed", ex);
+            return ResponseEntity.ok(Map.of("RspCode", "99", "Message", "Unknown error"));
+        }
+    }
+
+    private PaymentCallbackResult processReturn(Map<String, String> callbackParams, Long userId) {
+        try {
+            return paymentService.handleVnPayReturn(callbackParams, userId);
+        } catch (RuntimeException ex) {
+            log.error("VNPay return processing failed", ex);
+            String detail = ex.getMessage() != null ? ex.getMessage() : ex.getClass().getSimpleName();
+            return new PaymentCallbackResult(false, "Xác thực VNPay thất bại: " + detail, null);
+        }
     }
 
     private Long getUserId(Authentication authentication) {

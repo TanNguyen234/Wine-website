@@ -2,15 +2,19 @@ package com.strongwine.strongwine.service;
 
 import com.strongwine.strongwine.dto.PaymentCallbackResult;
 import com.strongwine.strongwine.entity.*;
+import com.strongwine.strongwine.exception.VnPayCallbackException;
 import com.stripe.model.Event;
 import com.stripe.model.StripeObject;
 import com.stripe.model.checkout.Session;
 import com.stripe.net.Webhook;
 import com.strongwine.strongwine.repository.PaymentRepository;
 import com.strongwine.strongwine.repository.PaymentTransactionRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +31,8 @@ import java.util.UUID;
 @Service
 public class PaymentService {
 
+    private static final Logger log = LoggerFactory.getLogger(PaymentService.class);
+    private static final int MAX_EXPIRY_BATCH_SIZE = 200;
     private static final int MAX_GATEWAY_RESPONSE_LENGTH = 2000;
     private static final int MAX_TRANSACTION_PAYLOAD_LENGTH = 2000;
     private static final Set<String> ZERO_DECIMAL_CURRENCIES = Set.of("VND");
@@ -304,92 +310,97 @@ public class PaymentService {
         return true;
     }
 
+    /**
+     * Handles the customer's browser redirect from VNPay. Unexpected exceptions are not caught here: they roll the
+     * transaction back, so the payment and the order can never end up half-updated. The caller reports the failure.
+     */
     @Transactional
     public PaymentCallbackResult handleVnPayReturn(Map<String, String> callbackParams, Long userId) {
-        try {
-            if (!vnPayService.isValidSignature(callbackParams)) {
-                return new PaymentCallbackResult(false, "Chữ ký bảo mật VNPay không hợp lệ", null);
-            }
-
-            Payment payment = resolveAndValidateVnPayPayment(callbackParams, true);
-            String payload = vnPayService.compactPayload(callbackParams);
-            saveTransaction(payment, "VNPAY_RETURN", "RECEIVED", payload);
-
-            if (vnPayService.isSuccessfulResponse(callbackParams)) {
-                boolean finalizedNow = finalizeSuccessfulPayment(payment, "VNPAY_RETURN", payload);
-                if (!isOrderOwner(payment, userId)) {
-                    return new PaymentCallbackResult(false, "Không thể truy cập đơn hàng thanh toán", null);
-                }
-                String message = finalizedNow ? "Thanh toán qua cổng VNPay thành công" : "Thanh toán đã được xác nhận";
-                return new PaymentCallbackResult(true, message, payment.getOrder().getId());
-            }
-
-            processVnPayFailure(payment, callbackParams, "VNPAY_RETURN", payload);
-            if (!isOrderOwner(payment, userId)) {
-                return new PaymentCallbackResult(false, "Không thể truy cập đơn hàng thanh toán", null);
-            }
-            return new PaymentCallbackResult(false, mapVnPayFailureMessage(callbackParams), payment.getOrder().getId());
-        } catch (Exception ex) {
-            return new PaymentCallbackResult(false, "Xác thực VNPay thất bại: " + ex.getMessage(), null);
+        if (!vnPayService.isValidSignature(callbackParams)) {
+            return new PaymentCallbackResult(false, "Chữ ký bảo mật VNPay không hợp lệ", null);
         }
+
+        // Check ownership before any state change, so a valid return URL cannot settle someone else's order.
+        Payment payment = resolveAndValidateVnPayPayment(callbackParams, true);
+        if (!isOrderOwner(payment, userId)) {
+            return new PaymentCallbackResult(false, "Không thể truy cập đơn hàng thanh toán", null);
+        }
+
+        String payload = vnPayService.compactPayload(callbackParams);
+        saveTransaction(payment, "VNPAY_RETURN", "RECEIVED", payload);
+
+        if (vnPayService.isSuccessfulResponse(callbackParams)) {
+            boolean finalizedNow = finalizeSuccessfulPayment(payment, "VNPAY_RETURN", payload);
+            String message = finalizedNow ? "Thanh toán qua cổng VNPay thành công" : "Thanh toán đã được xác nhận";
+            return new PaymentCallbackResult(true, message, payment.getOrder().getId());
+        }
+
+        processVnPayFailure(payment, callbackParams, "VNPAY_RETURN", payload);
+        return new PaymentCallbackResult(false, mapVnPayFailureMessage(callbackParams), payment.getOrder().getId());
     }
 
+    /**
+     * Server-to-server notification from VNPay. Responds with RspCode 00 (confirmed), 02 (already confirmed),
+     * 01 (order not found), 04 (amount mismatch), 97 (bad checksum) or 99 (unexpected error, transaction rolled back
+     * so VNPay retries the notification).
+     */
     @Transactional
     public Map<String, String> handleVnPayIpn(Map<String, String> callbackParams) {
         if (!vnPayService.isValidSignature(callbackParams)) {
-            return Map.of("RspCode", "97", "Message", "Invalid checksum");
+            return ipnResponse("97", "Invalid checksum");
         }
 
+        Payment payment;
         try {
-            Payment payment = resolveAndValidateVnPayPayment(callbackParams, true);
-            String payload = vnPayService.compactPayload(callbackParams);
-            saveTransaction(payment, "VNPAY_IPN", "RECEIVED", payload);
-
-            if (vnPayService.isSuccessfulResponse(callbackParams)) {
-                if (payment.getStatus() == PaymentStatus.SUCCESS) {
-                    saveTransaction(payment, "VNPAY_IPN", "SKIPPED", "ALREADY_SUCCESS:" + payload);
-                    return Map.of("RspCode", "02", "Message", "Order already confirmed");
-                }
-                finalizeSuccessfulPayment(payment, "VNPAY_IPN", payload);
-                return Map.of("RspCode", "00", "Message", "Confirm Success");
-            }
-
-            if (payment.getStatus() == PaymentStatus.SUCCESS) {
-                saveTransaction(payment, "VNPAY_IPN", "SKIPPED", "ALREADY_SUCCESS:" + payload);
-                return Map.of("RspCode", "02", "Message", "Order already confirmed");
-            }
-
-            processVnPayFailure(payment, callbackParams, "VNPAY_IPN", payload);
-            return Map.of("RspCode", "00", "Message", "Confirm Success");
-        } catch (IllegalStateException ex) {
-            return Map.of("RspCode", "01", "Message", "Order not found or invalid: " + ex.getMessage());
-        } catch (Exception ex) {
-            return Map.of("RspCode", "99", "Message", "Unknown error: " + ex.getMessage());
+            payment = resolveAndValidateVnPayPayment(callbackParams, true);
+        } catch (VnPayCallbackException ex) {
+            // Rejected before any write, so there is nothing to roll back.
+            return ipnResponse(ex.getRspCode(), ex.getMessage());
         }
+
+        String payload = vnPayService.compactPayload(callbackParams);
+        saveTransaction(payment, "VNPAY_IPN", "RECEIVED", payload);
+
+        if (payment.getStatus() == PaymentStatus.SUCCESS) {
+            saveTransaction(payment, "VNPAY_IPN", "SKIPPED", "ALREADY_SUCCESS:" + payload);
+            return ipnResponse("02", "Order already confirmed");
+        }
+
+        if (vnPayService.isSuccessfulResponse(callbackParams)) {
+            finalizeSuccessfulPayment(payment, "VNPAY_IPN", payload);
+        } else {
+            processVnPayFailure(payment, callbackParams, "VNPAY_IPN", payload);
+        }
+        return ipnResponse("00", "Confirm Success");
+    }
+
+    private Map<String, String> ipnResponse(String rspCode, String message) {
+        return Map.of("RspCode", rspCode, "Message", message);
     }
 
     private Payment resolveAndValidateVnPayPayment(Map<String, String> callbackParams, boolean lockForUpdate) {
         String txnRef = vnPayService.getTxnRef(callbackParams);
         if (txnRef == null || txnRef.isBlank()) {
-            throw new IllegalArgumentException("VNPay callback thiếu vnp_TxnRef");
+            throw new VnPayCallbackException("01", "VNPay callback thiếu vnp_TxnRef");
         }
 
         Payment payment = paymentRepository.findByPaymentReference(txnRef)
-                .orElseThrow(() -> new IllegalStateException("Không tìm thấy payment theo txnRef VNPay: " + txnRef));
+                .orElseThrow(() -> new VnPayCallbackException("01", "Không tìm thấy payment theo txnRef VNPay: " + txnRef));
 
         if (lockForUpdate) {
             payment = paymentRepository.findByIdForUpdate(payment.getId())
-                    .orElseThrow(() -> new IllegalStateException("Payment không tồn tại khi xử lý VNPay callback"));
+                    .orElseThrow(() -> new VnPayCallbackException("01", "Payment không tồn tại khi xử lý VNPay callback"));
         }
 
         if (payment.getMethod() != PaymentMethod.VNPAY) {
-            throw new IllegalStateException("Payment method không phải VNPay");
+            throw new VnPayCallbackException("01", "Payment method không phải VNPay");
         }
 
+        // Compare with the amount that was sent to VNPay when the payment was created.
         long callbackAmount = vnPayService.getAmount(callbackParams);
-        long expectedAmount = vnPayService.toVnPayAmount(payment.getOrder().getTotalPrice());
+        long expectedAmount = vnPayService.toVnPayAmount(payment.getAmount());
         if (callbackAmount != expectedAmount) {
-            throw new IllegalStateException("Số tiền VNPay không khớp tổng đơn hàng");
+            throw new VnPayCallbackException("04", "Số tiền VNPay không khớp tổng đơn hàng");
         }
 
         String gatewaySessionId = payment.getGatewaySessionId();
@@ -398,10 +409,46 @@ public class PaymentService {
             payment.setUpdatedAt(LocalDateTime.now());
             payment = paymentRepository.save(payment);
         } else if (!Objects.equals(gatewaySessionId, txnRef)) {
-            throw new IllegalStateException("Mismatched txnRef giữa VNPay và DB");
+            throw new VnPayCallbackException("01", "Mismatched txnRef giữa VNPay và DB");
         }
 
         return payment;
+    }
+
+    /**
+     * Cancels VNPay payments that never received a result within the timeout, releasing their reserved stock.
+     * Returns the number of payments expired in this run. Each payment is expired in its own transaction.
+     */
+    public int expireStaleVnPayPayments(LocalDateTime createdBefore) {
+        List<Long> candidateIds = paymentRepository.findExpirableIds(
+                PaymentMethod.VNPAY, PaymentStatus.PENDING, createdBefore, PageRequest.of(0, MAX_EXPIRY_BATCH_SIZE));
+        int expired = 0;
+        for (Long paymentId : candidateIds) {
+            try {
+                if (self.expireVnPayPaymentIfPending(paymentId)) {
+                    expired++;
+                }
+            } catch (RuntimeException ex) {
+                log.error("Could not expire VNPay payment {}; the next run retries it", paymentId, ex);
+            }
+        }
+        return expired;
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public boolean expireVnPayPaymentIfPending(Long paymentId) {
+        Payment payment = paymentRepository.findByIdForUpdate(paymentId)
+                .orElseThrow(() -> new IllegalStateException("Payment không tồn tại: " + paymentId));
+        if (payment.getStatus() != PaymentStatus.PENDING) {
+            return false;
+        }
+        payment.setStatus(PaymentStatus.CANCELLED);
+        payment.setGatewayResponse("VNPAY_EXPIRED");
+        payment.setUpdatedAt(LocalDateTime.now());
+        paymentRepository.save(payment);
+        saveTransaction(payment, "VNPAY_EXPIRE", "CANCELLED", "Không nhận được kết quả từ VNPay trong thời gian chờ");
+        orderService.cancelPendingOrder(payment.getOrder().getId());
+        return true;
     }
 
     private void processVnPayFailure(Payment payment, Map<String, String> callbackParams, String transactionType, String payload) {
