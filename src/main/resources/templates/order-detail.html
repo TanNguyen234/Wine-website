@@ -29,7 +29,7 @@
         <!-- 5-Step Realtime Delivery Stepper -->
         <section class="panel mb20">
             <div class="eyebrow">TIẾN TRÌNH VẬN CHUYỂN THỜI GIAN THỰC (SSE)</div>
-            <h3 class="serif mt8 mb0">Hành trình từ hầm rượu tới tay bạn</h3>
+            <h2 class="serif sw-section-heading mt8 mb0">Hành trình từ hầm rượu tới tay bạn</h2>
 
             <div class="stepper" id="orderTimelineStepper"
                  th:with="st=${shipment != null and shipment.status != null ? shipment.status.name() : 'CREATED'}">
@@ -73,7 +73,7 @@
                 <section class="table-card">
                     <div style="padding:18px 20px;border-bottom:1px solid var(--sw-line)">
                         <div class="eyebrow">DANH SÁCH RƯỢU VANG</div>
-                        <h3 class="serif mt8 mb0">Chi tiết sản phẩm đặt mua</h3>
+                        <h2 class="serif sw-section-heading mt8 mb0">Chi tiết sản phẩm đặt mua</h2>
                     </div>
                     <div class="table-scroll">
                         <table class="sw-table">
@@ -139,7 +139,7 @@
                 <div class="otp-vault" id="otpVaultCard"
                      th:if="${!isAdmin and shipment != null and shipment.otpCode != null and (shipment.status == null or shipment.status.name() != 'COMPLETED')}">
                     <div class="eyebrow" style="color:var(--sw-champagne)">MÃ XÁC THỰC BÀN GIAO (OTP 6 SỐ)</div>
-                    <h3 class="serif mt8 mb8">Mã nhận rượu bảo mật</h3>
+                    <h2 class="serif sw-section-heading mt8 mb8">Mã nhận rượu bảo mật</h2>
                     <p class="small" style="color:#dfd3c3;margin:0">Chỉ đọc mã này cho tài xế khi bạn đã kiểm tra đúng chủng loại và tem niêm phong chai vang.</p>
                     <div class="otp-code" id="otpCodeDisplay" th:text="${shipment.otpCode}">------</div>
                     <button type="button" class="btn btn-gold btn-sm w100" id="btnCopyOtp">
@@ -149,15 +149,24 @@
 
                 <div class="panel" th:if="${shipment != null and shipment.status != null and shipment.status.name() == 'COMPLETED'}">
                     <span class="badge badge-ok mb8">ĐÃ XÁC THỰC OTP THÀNH CÔNG</span>
-                    <h3 class="serif mb8">Đơn hàng đã bàn giao hoàn tất</h3>
+                    <h2 class="serif sw-section-heading mb8">Đơn hàng đã bàn giao hoàn tất</h2>
                     <p class="muted small mb0">Cảm ơn bạn đã tin chọn StrongWine. Chúc bạn có những khoảnh khắc thưởng thức rượu vang trọn vẹn!</p>
                 </div>
 
-                <div class="panel" th:if="${order.paymentStatus != null and order.paymentStatus.name() != 'SUCCESS' and order.status != null and order.status.name() != 'CANCELLED'}">
+                <div class="panel" th:if="${!isAdmin and order.paymentStatus != null and order.paymentStatus.name() != 'SUCCESS' and order.status != null and order.status.name() != 'CANCELLED' and order.paymentMethod != null and order.paymentMethod.name() != 'COD'}">
                     <div class="eyebrow">THANH TOÁN ĐƠN HÀNG</div>
-                    <h3 class="serif mt8 mb12">Hoàn tất thanh toán trực tuyến</h3>
+                    <h2 class="serif sw-section-heading mt8 mb12">Hoàn tất thanh toán trực tuyến</h2>
                     <form th:action="@{/orders/{id}/pay(id=${order.id})}" method="post">
                         <button type="submit" class="btn w100">Thanh toán ngay &rarr;</button>
+                    </form>
+                </div>
+
+                <div class="panel" th:if="${!isAdmin and order.status != null and order.status.name() == 'PENDING' and order.paymentStatus != null and order.paymentStatus.name() != 'SUCCESS' and shipment == null}">
+                    <div class="eyebrow">HỦY ĐƠN</div>
+                    <p class="small mt8 mb12" style="color:var(--sw-ink)">Đơn chưa thanh toán và chưa chuyển vận chuyển có thể hủy. Số lượng rượu sẽ được hoàn lại kho.</p>
+                    <form th:action="@{/orders/{id}/cancel(id=${order.id})}" method="post"
+                          onsubmit="return confirm('Hủy đơn hàng này?');">
+                        <button type="submit" class="btn btn-sm w100">Hủy đơn hàng</button>
                     </form>
                 </div>
             </aside>

@@ -157,12 +157,48 @@ public class OrderController {
             String baseUrl = request.getScheme() + "://" + request.getServerName()
                     + ((request.getServerPort() == 80 || request.getServerPort() == 443) ? "" : ":" + request.getServerPort());
             String method = order.getPaymentMethod() == null ? PaymentMethod.STRIPE.name() : order.getPaymentMethod().name();
-            String paymentRedirectUrl = paymentService.createPaymentSession(order, method, baseUrl);
+            String paymentRedirectUrl = paymentService.createPaymentSession(order, method, baseUrl, request.getRemoteAddr());
             return "redirect:" + paymentRedirectUrl;
         } catch (Exception ex) {
             redirectAttributes.addFlashAttribute("error", "Không thể tạo phiên thanh toán: " + rootCauseMessage(ex));
             return "redirect:/orders/" + orderId;
         }
+    }
+
+    /**
+     * Lets the customer cancel an order that is unpaid and has not been handed to shipping yet.
+     * Releases the reserved stock through OrderService.
+     */
+    @PostMapping("/orders/{id}/cancel")
+    public String cancelUnpaidOrder(@PathVariable("id") Long orderId,
+                                    Authentication authentication,
+                                    RedirectAttributes redirectAttributes) {
+        User currentUser = requireCurrentUser(authentication);
+        if (currentUser == null) {
+            redirectAttributes.addFlashAttribute("error", "Vui lòng đăng nhập để hủy đơn hàng");
+            return "redirect:/login";
+        }
+
+        Optional<Order> orderOpt = orderService.getOrderByIdForUser(orderId, currentUser.getId());
+        if (orderOpt.isEmpty()) {
+            redirectAttributes.addFlashAttribute("error", "Không tìm thấy đơn hàng");
+            return "redirect:/orders";
+        }
+
+        Order order = orderOpt.get();
+        if (!isCancellableByCustomer(order) || shipmentService.getShipmentByOrderId(orderId).isPresent()) {
+            redirectAttributes.addFlashAttribute("error", "Đơn hàng này không thể hủy vì đã thanh toán hoặc đã được chuyển vận chuyển");
+            return "redirect:/orders/" + orderId;
+        }
+
+        orderService.cancelPendingOrder(orderId);
+        redirectAttributes.addFlashAttribute("message", "Đã hủy đơn hàng #" + orderId + ". Số lượng rượu đã được hoàn lại kho.");
+        return "redirect:/orders";
+    }
+
+    private boolean isCancellableByCustomer(Order order) {
+        return order.getStatus() == OrderStatus.PENDING
+                && order.getPaymentStatus() != PaymentStatus.SUCCESS;
     }
 
     private User requireCurrentUser(Authentication authentication) {
@@ -189,7 +225,9 @@ public class OrderController {
     }
 
     private boolean isPayable(Order order) {
+        // COD is settled on delivery; a second payment session would duplicate the payment and the shipment.
         return order != null
+                && order.getPaymentMethod() != PaymentMethod.COD
                 && order.getPaymentStatus() != PaymentStatus.SUCCESS
                 && order.getStatus() != OrderStatus.CANCELLED;
     }

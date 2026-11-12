@@ -18,7 +18,7 @@
         </div>
 
         <div th:if="${orders == null or orders.isEmpty()}" class="panel text-center" style="padding:48px 24px">
-            <h3 class="serif mb8">Bạn chưa có đơn hàng nào</h3>
+            <h2 class="serif sw-section-heading mb8">Bạn chưa có đơn hàng nào</h2>
             <p class="muted mb20">Các đơn đặt hàng và trạng thái vận chuyển thời gian thực sẽ xuất hiện tại đây.</p>
             <a th:href="@{/wines}" class="btn">Khám phá bộ sưu tập &rarr;</a>
         </div>
@@ -64,9 +64,14 @@
                     </div>
 
                     <div class="display-flex gap10">
-                        <form th:if="${order.paymentStatus != null and order.paymentStatus.name() != 'SUCCESS' and order.status != null and order.status.name() != 'CANCELLED'}"
+                        <form th:if="${order.paymentStatus != null and order.paymentStatus.name() != 'SUCCESS' and order.status != null and order.status.name() != 'CANCELLED' and order.paymentMethod != null and order.paymentMethod.name() != 'COD'}"
                               th:action="@{/orders/{id}/pay(id=${order.id})}" method="post" class="d-inline">
                             <button type="submit" class="btn btn-gold btn-sm">Thanh toán lại</button>
+                        </form>
+                        <form th:if="${order.status != null and order.status.name() == 'PENDING' and order.paymentStatus != null and order.paymentStatus.name() != 'SUCCESS' and shipment == null}"
+                              th:action="@{/orders/{id}/cancel(id=${order.id})}" method="post" class="d-inline"
+                              onsubmit="return confirm('Hủy đơn hàng này? Số lượng rượu sẽ được hoàn lại kho.');">
+                            <button type="submit" class="btn btn-sm">Hủy đơn</button>
                         </form>
                         <a th:href="@{/orders/{id}(id=${order.id})}" class="btn btn-sm">Theo dõi &amp; Xem OTP &rarr;</a>
                     </div>
