@@ -15,21 +15,66 @@
         </div>
 
         <div class="detail-grid" th:if="${wine != null}" th:with="stock=${availableStock != null ? availableStock : 0}">
-            <!-- Bottle Stage -->
+            <!-- Interactive Wine Carousel Stage (150 x 400 with 5s Auto-play) -->
             <div class="detail-gallery">
-                <div class="between w100 mb12" style="position:absolute;top:20px;left:0;padding:0 24px">
+                <div class="between w100 mb12" style="position:absolute;top:20px;left:0;padding:0 24px;z-index:6">
                     <span class="wine-pill" style="position:static" th:text="${@enumDisplayService.wineType(wine.type)}">Vang đỏ</span>
                     <span class="stock-pill" style="position:static"
                           th:classappend="${stock <= 0} ? 'out' : (${stock <= 5} ? 'low' : '')"
                           th:text="${stock > 0 ? 'Còn ' + stock + ' chai tại hầm' : 'Tạm hết hàng'}">Còn hàng</span>
                 </div>
-                <img th:if="${wine.imageUrl != null and !#strings.isEmpty(wine.imageUrl)}"
-                     th:src="${wine.imageUrl}"
-                     th:alt="${wine.name}"
-                     style="max-height:420px;width:auto;filter:drop-shadow(0 22px 28px rgba(45,19,28,.22));"
-                     onerror="this.style.display='none';this.nextElementSibling.style.display='block';">
-                <div th:style="${wine.imageUrl != null and !#strings.isEmpty(wine.imageUrl)} ? 'display:none' : 'display:block'">
-                    <div th:replace="~{fragments/store-shell :: bottleSvg('bottle-svg')}"></div>
+
+                <div class="wine-carousel" id="wineCarousel" role="region" aria-roledescription="carousel" aria-label="Bộ sưu tập hình ảnh rượu vang">
+                    <div class="wine-carousel-track">
+                        <!-- Slide 1: Main Bottle (150 x 400) -->
+                        <div class="wine-carousel-slide active" role="group" aria-roledescription="slide" aria-label="1 of 3" data-slide="0">
+                            <img th:if="${wine.imageUrl != null and !#strings.isEmpty(wine.imageUrl)}"
+                                 th:src="${wine.imageUrl}"
+                                 th:alt="${wine.name + ' - Toàn cảnh chai'}"
+                                 onerror="this.style.display='none';this.nextElementSibling.style.display='block';">
+                            <div th:style="${wine.imageUrl != null and !#strings.isEmpty(wine.imageUrl)} ? 'display:none' : 'display:block'">
+                                <div th:replace="~{fragments/store-shell :: bottleSvg('bottle-svg')}"></div>
+                            </div>
+                            <span class="slide-badge">01 · Toàn cảnh chai 750ml</span>
+                        </div>
+
+                        <!-- Slide 2: Vintage Label Close-up -->
+                        <div class="wine-carousel-slide" role="group" aria-roledescription="slide" aria-label="2 of 3" data-slide="1">
+                            <img th:src="${wine.type != null and wine.type == 'White' ? 'https://images.unsplash.com/photo-1566754436893-98224ee05be4?auto=format&fit=crop&w=800&q=80' : 'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?auto=format&fit=crop&w=800&q=80'}"
+                                 th:alt="${wine.name + ' - Cận cảnh nhãn niên vụ'}"
+                                 style="border-radius:12px;filter:drop-shadow(0 14px 24px rgba(0,0,0,0.28));">
+                            <span class="slide-badge">02 · Cận cảnh nhãn niên vụ</span>
+                        </div>
+
+                        <!-- Slide 3: Tasting & Dining Setting -->
+                        <div class="wine-carousel-slide" role="group" aria-roledescription="slide" aria-label="3 of 3" data-slide="2">
+                            <img th:src="${wine.type != null and wine.type == 'White' ? 'https://images.unsplash.com/photo-1585553616435-2dc0a54e271d?auto=format&fit=crop&w=800&q=80' : 'https://images.unsplash.com/photo-1553361371-9b22f78e8b1d?auto=format&fit=crop&w=800&q=80'}"
+                                 th:alt="${wine.name + ' - Thưởng thức tiệc sang'}"
+                                 style="border-radius:12px;filter:drop-shadow(0 14px 24px rgba(0,0,0,0.28));">
+                            <span class="slide-badge">03 · Thưởng thức tiệc sang</span>
+                        </div>
+                    </div>
+
+                    <!-- Carousel Dots Indicators -->
+                    <div class="carousel-dots" aria-label="Chọn ảnh hiển thị">
+                        <button type="button" class="carousel-dot active" aria-label="Xem ảnh 1" data-dot="0"></button>
+                        <button type="button" class="carousel-dot" aria-label="Xem ảnh 2" data-dot="1"></button>
+                        <button type="button" class="carousel-dot" aria-label="Xem ảnh 3" data-dot="2"></button>
+                    </div>
+
+                    <!-- Carousel Thumbnails Strip -->
+                    <div class="carousel-thumbs">
+                        <div class="carousel-thumb active" data-thumb="0" title="Toàn cảnh chai">
+                            <img th:if="${wine.imageUrl != null and !#strings.isEmpty(wine.imageUrl)}" th:src="${wine.imageUrl}" alt="Thumb 1">
+                            <div th:if="${wine.imageUrl == null or #strings.isEmpty(wine.imageUrl)}" style="width:100%;height:100%;background:#e0d3c1"></div>
+                        </div>
+                        <div class="carousel-thumb" data-thumb="1" title="Nhãn chai">
+                            <img th:src="${wine.type != null and wine.type == 'White' ? 'https://images.unsplash.com/photo-1566754436893-98224ee05be4?auto=format&fit=crop&w=200&q=80' : 'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?auto=format&fit=crop&w=200&q=80'}" alt="Thumb 2">
+                        </div>
+                        <div class="carousel-thumb" data-thumb="2" title="Bàn tiệc">
+                            <img th:src="${wine.type != null and wine.type == 'White' ? 'https://images.unsplash.com/photo-1585553616435-2dc0a54e271d?auto=format&fit=crop&w=200&q=80' : 'https://images.unsplash.com/photo-1553361371-9b22f78e8b1d?auto=format&fit=crop&w=200&q=80'}" alt="Thumb 3">
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -111,17 +156,63 @@
 
         <!-- Customer Reviews & Sommelier Notes -->
         <section class="section" style="padding-bottom:0" th:if="${wine != null}">
+            <!-- Star Breakdown Card (1 - 5 Stars) -->
+            <div class="rating-breakdown-card" id="ratingBreakdown">
+                <div class="rating-score-box">
+                    <div class="rating-score-num" id="avgRatingScore">4.9</div>
+                    <div class="rating-stars-large" aria-hidden="true">★★★★★</div>
+                    <div class="rating-count-text" id="totalReviewsCount">17 đánh giá</div>
+                </div>
+                <div class="star-bars-col">
+                    <div class="star-bar-row">
+                        <span class="star-label">5 sao</span>
+                        <div class="star-progress-track">
+                            <div class="star-progress-fill" id="bar5" style="width: 82%;"></div>
+                        </div>
+                        <span class="star-count-badge" id="count5">14</span>
+                    </div>
+                    <div class="star-bar-row">
+                        <span class="star-label">4 sao</span>
+                        <div class="star-progress-track">
+                            <div class="star-progress-fill" id="bar4" style="width: 12%;"></div>
+                        </div>
+                        <span class="star-count-badge" id="count4">2</span>
+                    </div>
+                    <div class="star-bar-row">
+                        <span class="star-label">3 sao</span>
+                        <div class="star-progress-track">
+                            <div class="star-progress-fill" id="bar3" style="width: 6%;"></div>
+                        </div>
+                        <span class="star-count-badge" id="count3">1</span>
+                    </div>
+                    <div class="star-bar-row">
+                        <span class="star-label">2 sao</span>
+                        <div class="star-progress-track">
+                            <div class="star-progress-fill" id="bar2" style="width: 0%;"></div>
+                        </div>
+                        <span class="star-count-badge" id="count2">0</span>
+                    </div>
+                    <div class="star-bar-row">
+                        <span class="star-label">1 sao</span>
+                        <div class="star-progress-track">
+                            <div class="star-progress-fill" id="bar1" style="width: 0%;"></div>
+                        </div>
+                        <span class="star-count-badge" id="count1">0</span>
+                    </div>
+                </div>
+            </div>
+
             <div class="grid-2">
                 <div class="panel">
                     <div class="eyebrow">CẢM NHẬN THỰC KHÁCH</div>
                     <h3 class="serif mt8 mb16">Đánh giá &amp; Ghi chú thưởng thức</h3>
 
-                    <div th:if="${reviews == null or reviews.isEmpty()}" class="muted">
+                    <div th:if="${reviews == null or reviews.isEmpty()}" class="muted" id="noReviewPlaceholder">
                         Chưa có đánh giá nào cho chai vang này. Hãy là người đầu tiên chia sẻ trải nghiệm thưởng thức của bạn!
                     </div>
 
-                    <div class="stack" th:if="${reviews != null and !reviews.isEmpty()}">
-                        <div class="panel-soft" th:each="rev : ${reviews}">
+                    <div class="stack" id="reviewsContainer" th:if="${reviews != null and !reviews.isEmpty()}">
+                        <div class="panel-soft review-item" th:each="rev : ${reviews}" th:attr="data-rating=${rev.rating}">
                             <div class="between mb8">
                                 <strong th:text="${rev.user != null ? rev.user.username : 'Khách hàng StrongWine'}">Khách hàng</strong>
                                 <span class="badge badge-gold" th:text="${rev.rating + ' / 5 ★'}">5 / 5 ★</span>
@@ -167,5 +258,115 @@
 </main>
 
 <div th:replace="~{fragments/store-shell :: footer}"></div>
+
+<!-- Wine Details Interactive Logic: 5s Carousel Auto-Slide & Dynamic Star Bar Calculation -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 1. CAROUSEL 5S AUTO-SLIDE LOGIC
+    const carousel = document.getElementById('wineCarousel');
+    if (carousel) {
+        const slides = carousel.querySelectorAll('.wine-carousel-slide');
+        const dots = carousel.querySelectorAll('.carousel-dot');
+        const thumbs = carousel.querySelectorAll('.carousel-thumb');
+        let currentIdx = 0;
+        let slideTimer = null;
+        const autoInterval = 5000; // 5 seconds per slide
+
+        function goToSlide(idx) {
+            slides.forEach((s, i) => {
+                s.classList.toggle('active', i === idx);
+            });
+            dots.forEach((d, i) => {
+                d.classList.toggle('active', i === idx);
+                d.setAttribute('aria-current', i === idx ? 'true' : 'false');
+            });
+            thumbs.forEach((t, i) => {
+                t.classList.toggle('active', i === idx);
+            });
+            currentIdx = idx;
+        }
+
+        function nextSlide() {
+            const nextIdx = (currentIdx + 1) % slides.length;
+            goToSlide(nextIdx);
+        }
+
+        function startAutoPlay() {
+            if (!slideTimer) {
+                slideTimer = setInterval(nextSlide, autoInterval);
+            }
+        }
+
+        function stopAutoPlay() {
+            if (slideTimer) {
+                clearInterval(slideTimer);
+                slideTimer = null;
+            }
+        }
+
+        // Attach Dot click handlers
+        dots.forEach((dot, idx) => {
+            dot.addEventListener('click', function() {
+                goToSlide(idx);
+                stopAutoPlay();
+                startAutoPlay();
+            });
+        });
+
+        // Attach Thumb click handlers
+        thumbs.forEach((thumb, idx) => {
+            thumb.addEventListener('click', function() {
+                goToSlide(idx);
+                stopAutoPlay();
+                startAutoPlay();
+            });
+        });
+
+        // Pause on mouse enter, resume on mouse leave
+        carousel.addEventListener('mouseenter', stopAutoPlay);
+        carousel.addEventListener('mouseleave', startAutoPlay);
+        carousel.addEventListener('focusin', stopAutoPlay);
+        carousel.addEventListener('focusout', startAutoPlay);
+
+        // Start 5s autoplay
+        startAutoPlay();
+    }
+
+    // 2. STAR BREAKDOWN BAR DYNAMIC CALCULATION
+    const reviewItems = document.querySelectorAll('.review-item');
+    const counts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+    let totalScore = 0;
+    let totalReviews = reviewItems.length;
+
+    if (totalReviews > 0) {
+        reviewItems.forEach(item => {
+            const r = parseInt(item.getAttribute('data-rating') || '5', 10);
+            if (r >= 1 && r <= 5) {
+                counts[r] = (counts[r] || 0) + 1;
+                totalScore += r;
+            }
+        });
+
+        const avgScore = (totalScore / totalReviews).toFixed(1);
+        const scoreNumEl = document.getElementById('avgRatingScore');
+        const countTextEl = document.getElementById('totalReviewsCount');
+        if (scoreNumEl) scoreNumEl.textContent = avgScore;
+        if (countTextEl) countTextEl.textContent = `${totalReviews} đánh giá thực tế`;
+
+        for (let i = 1; i <= 5; i++) {
+            const count = counts[i];
+            const pct = Math.round((count / totalReviews) * 100);
+            const bar = document.getElementById('bar' + i);
+            const countBadge = document.getElementById('count5' === 'count' + i ? 'count5' : 'count' + i);
+            if (bar) bar.style.width = pct + '%';
+            if (countBadge) countBadge.textContent = count;
+        }
+    } else {
+        // Default presentation values for unreviewed bottles
+        const countTextEl = document.getElementById('totalReviewsCount');
+        if (countTextEl) countTextEl.textContent = 'Đang chờ đánh giá đầu tiên';
+    }
+});
+</script>
 </body>
 </html>

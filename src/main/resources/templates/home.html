@@ -9,9 +9,9 @@
     <section class="hero">
         <div class="sw-container hero-grid">
             <div class="hero-copy">
-                <div class="eyebrow">HẦM RƯỢU TUYỂN CHỌN · GIAO NHẬN BẢO MẬT OTP</div>
-                <h1>Tinh hoa từ những vườn nho danh tiếng thế giới.</h1>
-                <p>Khám phá các dòng vang đỏ, vang trắng, vang hồng và vang sủi được tuyển chọn nghiêm ngặt, lưu trữ chuẩn nhiệt độ hầm rượu và bàn giao tận tay qua mã xác thực OTP 6 chữ số.</p>
+                <div class="eyebrow">BỘ SƯU TẬP GRAND CRU · DI SẢN VANG THƯỢNG HẠNG</div>
+                <h1>Tinh hoa từ những điền trang danh giá bậc nhất thế giới.</h1>
+                <p>Khám phá các dòng vang đỏ, vang trắng, vang hồng và vang sủi thượng hạng được lưu trữ trong điều kiện nhiệt độ - độ ẩm hầm ủ chuẩn mực, chuyển phát chuyên biệt và tận tâm đến bàn tiệc của quý khách.</p>
                 <div class="hero-actions">
                     <a class="btn" th:href="@{/wines}">Khám phá bộ sưu tập &rarr;</a>
                     <a class="btn btn-outline" th:href="@{/wines(type='Red')}">Dòng Vang Đỏ</a>
@@ -26,8 +26,8 @@
                         <span>Bảo quản tiêu chuẩn hầm</span>
                     </div>
                     <div>
-                        <strong>OTP 6 số</strong>
-                        <span>Xác thực bàn giao tận tay</span>
+                        <strong>100%</strong>
+                        <span>Chính ngạch &amp; Bảo ôn</span>
                     </div>
                 </div>
             </div>
@@ -38,7 +38,7 @@
                         <img th:if="${heroWine.imageUrl != null and !#strings.isEmpty(heroWine.imageUrl)}"
                              th:src="${heroWine.imageUrl}"
                              th:alt="${heroWine.name}"
-                             style="max-height:390px;width:auto;margin:0 auto;filter:drop-shadow(0 28px 34px rgba(0,0,0,.42));"
+                             style="max-height:420px;max-width:160px;aspect-ratio:150/400;width:auto;margin:0 auto;object-fit:contain;filter:drop-shadow(0 28px 34px rgba(0,0,0,.42));"
                              onerror="this.style.display='none';this.nextElementSibling.style.display='block';">
                         <div th:style="${heroWine.imageUrl != null and !#strings.isEmpty(heroWine.imageUrl)} ? 'display:none' : 'display:block'">
                             <div th:replace="~{fragments/store-shell :: bottleSvg('bottle-svg')}"></div>
@@ -64,7 +64,7 @@
         <div class="sw-container trust-grid">
             <div class="trust-item"><b>01 · Nguồn gốc minh bạch</b><span>Nhập khẩu chính ngạch từ Pháp, Ý, Chile, Tây Ban Nha, Úc</span></div>
             <div class="trust-item"><b>02 · Kiểm soát tồn kho thực</b><span>Đồng bộ trực tiếp với hệ thống kho trung tâm theo thời gian thực</span></div>
-            <div class="trust-item"><b>03 · Giao nhận bảo mật OTP</b><span>Mỗi chuyến giao đều xác thực mã OTP 6 số trực tiếp với khách nhận</span></div>
+            <div class="trust-item"><b>03 · Giao nhận bảo ôn chuyên biệt</b><span>Chuyển phát riêng tư, giữ nguyên hương vị và độ hoàn mỹ của từng chai vang</span></div>
             <div class="trust-item"><b>04 · Tư vấn ẩm thực tinh tế</b><span>Gợi ý kết hợp món ăn, nhiệt độ phục vụ và bình thở rượu phù hợp</span></div>
         </div>
     </div>
@@ -189,9 +189,9 @@
         <div class="sw-container">
             <div class="pairing-banner">
                 <div>
-                    <div class="eyebrow" style="color:var(--sw-champagne)">NGHỆ THUẬT THƯỞNG THỨC &amp; GIAO NHẬN</div>
-                    <h2 class="serif" style="font-size:2rem;margin:8px 0 12px">Từ hầm rượu tiêu chuẩn đến bàn tiệc của bạn</h2>
-                    <p style="color:#dfd3c3;max-width:58ch;margin:0">Mỗi đơn hàng đều được kiểm tra tồn kho thực tế, định vị toạ độ giao hàng trên bản đồ và bảo vệ bằng mã xác thực OTP 6 chữ số để đảm bảo chai vang quý giá được trao đúng người nhận.</p>
+                    <div class="eyebrow" style="color:var(--sw-champagne)">NGHỆ THUẬT THƯỞNG THỨC &amp; DỊCH VỤ HOÀNG GIA</div>
+                    <h2 class="serif" style="font-size:2rem;margin:8px 0 12px">Từ hầm ủ danh tiếng đến bàn tiệc thượng lưu</h2>
+                    <p style="color:#dfd3c3;max-width:58ch;margin:0">Mỗi tuyệt phẩm đều trải qua quy trình kiểm soát chất lượng khắt khe, lưu trữ trong hầm bảo ôn chuẩn mực và chuyển phát chuyên biệt, tôn vinh trọn vẹn nghệ thuật thưởng thức đích thực.</p>
                 </div>
                 <div class="display-flex gap12" style="flex-wrap:wrap">
                     <a class="btn btn-gold" th:href="@{/wines}">Tư vấn &amp; Chọn vang</a>
