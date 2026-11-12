@@ -94,6 +94,12 @@ body.sw-body h3 {
     line-height: 1.28;
 }
 
+/* Section headings on the order pages: an h2 in the outline, sized well above the 14px body text. */
+.sw-section-heading {
+    font-size: clamp(22px, 2.2vw, 28px);
+    line-height: 1.2;
+}
+
 small, .small {
     font-size: 12px;
 }
@@ -109,7 +115,7 @@ label, .sw-label {
 }
 
 .eyebrow {
-    font-size: 10px;
+    font-size: 11px;
     letter-spacing: 0.22em;
     text-transform: uppercase;
     font-weight: 800;
@@ -276,7 +282,7 @@ body.sw-body .btn.btn-sm {
 .status,
 .stock-badge {
     font-weight: 700;
-    font-size: 10px;
+    font-size: 11px;
     letter-spacing: 0.02em;
     border-radius: 30px;
     padding: 5px 11px;
@@ -433,7 +439,7 @@ body.sw-body .form-select:focus {
     color: #dacebd;
     text-align: center;
     padding: 8px 14px;
-    font-size: 10px;
+    font-size: 11px;
     letter-spacing: 0.095em;
     font-weight: 600;
 }
@@ -528,7 +534,7 @@ body.sw-body .form-select:focus {
     min-width: 17px;
     height: 17px;
     line-height: 17px;
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 700;
     text-align: center;
     padding: 0 4px;
@@ -697,7 +703,7 @@ body.sw-body .form-select:focus {
     top: 52px;
     color: #bd9474;
     font-family: 'Playfair Display', Georgia, serif;
-    font-size: 10px;
+    font-size: 11px;
     letter-spacing: 0.25em;
     writing-mode: vertical-rl;
 }
@@ -710,7 +716,7 @@ body.sw-body .form-select:focus {
     padding-top: 18px;
     margin-top: 36px;
     color: #bea9ad;
-    font-size: 10px;
+    font-size: 11px;
     letter-spacing: 0.08em;
 }
 
@@ -796,7 +802,7 @@ body.sw-body .form-select:focus {
 }
 
 .category-link span {
-    font-size: 10px;
+    font-size: 11px;
     letter-spacing: 0.12em;
     font-weight: 700;
 }
@@ -874,7 +880,7 @@ body.sw-body .form-select:focus {
     color: #7d4d3d;
     padding: 5px 10px;
     border-radius: 3px;
-    font-size: 9px;
+    font-size: 11px;
     letter-spacing: 0.08em;
     font-weight: 800;
     text-transform: uppercase;
@@ -1409,7 +1415,7 @@ body.sw-body .form-select:focus {
 }
 
 .admin-nav-heading {
-    font-size: 10px;
+    font-size: 11px;
     color: #958a98;
     letter-spacing: 0.15em;
     text-transform: uppercase;
@@ -1591,7 +1597,7 @@ body.sw-body .form-select:focus {
     padding: 13px 12px;
     color: #7d7783;
     background: #faf9f8;
-    font-size: 10px;
+    font-size: 11px;
     letter-spacing: 0.06em;
     text-transform: uppercase;
     font-weight: 800;
@@ -1877,7 +1883,7 @@ body.sw-body .form-select:focus {
     justify-items: center;
     gap: 2px;
     color: #8a7882;
-    font-size: 10px;
+    font-size: 11px;
     background: none;
     border: 0;
     min-height: 44px;
@@ -2082,7 +2088,7 @@ body.sw-body .form-select:focus {
         gap: 2px;
     }
     .timeline-step {
-        font-size: 9.5px;
+        font-size: 11px;
     }
 }
 
@@ -2998,7 +3004,7 @@ input.otp-digit {
 .cat-card:nth-child(3) { background: #ebe2d1; }
 .cat-card:nth-child(4) { background: #e9dfe3; }
 .cat-card:hover { transform: translateY(-2px); box-shadow: var(--sw-shadow); color: var(--sw-ink); }
-.cat-count { color: #815d52; font-size: 10px; font-weight: 800; letter-spacing: .14em; }
+.cat-count { color: #815d52; font-size: 11px; font-weight: 800; letter-spacing: .14em; }
 .cat-card h3 { margin-bottom: 7px; font: 500 24px/1.18 'Playfair Display', Georgia, serif; }
 .cat-card p { max-width: 30ch; color: #685d5d; font-size: 12px; line-height: 1.55; }
 .chip-row { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
@@ -3024,7 +3030,7 @@ textarea.field, .textarea { min-height: 110px; resize: vertical; }
     mix-blend-mode: multiply;
     filter: drop-shadow(0 10px 18px rgba(0,0,0,0.18));
 }
-.wine-pill, .stock-pill { position: absolute; z-index: 3; top: 12px; max-width: calc(50% - 20px); overflow: hidden; padding: 5px 9px; border-radius: 999px; background: #fffaf3; color: #744353; font-size: 10px; font-weight: 700; line-height: 1.2; text-overflow: ellipsis; white-space: nowrap; }
+.wine-pill, .stock-pill { position: absolute; z-index: 3; top: 12px; max-width: calc(50% - 20px); overflow: hidden; padding: 5px 9px; border-radius: 999px; background: #fffaf3; color: #744353; font-size: 11px; font-weight: 700; line-height: 1.2; text-overflow: ellipsis; white-space: nowrap; }
 .wine-pill { left: 12px; }
 .stock-pill { right: 12px; background: #e8f2eb; color: #356a54; }
 .stock-pill.low { background: #fbf0df; color: #8a5b25; }
@@ -3062,7 +3068,7 @@ textarea.field, .textarea { min-height: 110px; resize: vertical; }
 .filter-summary-icon { display: grid; width: 30px; height: 30px; flex: 0 0 30px; place-items: center; border: 1px solid var(--sw-line); border-radius: 50%; color: var(--sw-bordeaux); transition: transform .18s ease; }
 .filter-details[open] .filter-summary-icon { transform: rotate(180deg); }
 .filter-fields { padding-top: 12px; }
-.kpi-card > span { display: block; color: var(--sw-muted); font-size: 10px; font-weight: 800; letter-spacing: .06em; }
+.kpi-card > span { display: block; color: var(--sw-muted); font-size: 11px; font-weight: 800; letter-spacing: .06em; }
 .kpi-card > strong { display: block; overflow-wrap: anywhere; margin: 7px 0 5px; color: var(--sw-bordeaux); font: 700 clamp(20px, 2vw, 28px)/1.15 'Playfair Display', Georgia, serif; }
 .kpi-card small.up { color: var(--sw-success); }
 .kpi-card small.warn { color: var(--sw-warn); }
@@ -3112,7 +3118,7 @@ textarea.field, .textarea { min-height: 110px; resize: vertical; }
     .hero-copy p { margin: 16px 0 20px; }
     .hero-metrics { gap: 10px; margin-top: 23px; }
     .hero-metrics strong { font-size: 16px; }
-    .hero-metrics span { font-size: 10px; }
+    .hero-metrics span { font-size: 11px; }
     .hero-visual { min-height: 310px; }
     .hero-visual > div { min-height: 310px; }
     .hero-visual img { max-height: 290px !important; }
@@ -3175,7 +3181,7 @@ textarea.field, .textarea { min-height: 110px; resize: vertical; }
 }
 @media (max-width: 560px) {
     .sw-container { width: calc(100% - 28px); }
-    .announcement { padding: 7px 10px; font-size: 9px; line-height: 1.35; }
+    .announcement { padding: 7px 10px; font-size: 11px; line-height: 1.35; }
     .logo-txt { font-size: 17px; }
     .header-actions .icon-btn { width: 40px; height: 44px; }
     .mobile-nav-toggle { width: 42px; flex-basis: 42px; }
@@ -3218,7 +3224,7 @@ textarea.field, .textarea { min-height: 110px; resize: vertical; }
 .shipper-section-title { margin: 0 0 12px; color: var(--sw-bordeaux); font: 700 13px/1.35 'Lato', 'Segoe UI', sans-serif; }
 .shipper-recipient-details { display: grid; gap: 10px; margin: 0; }
 .shipper-recipient-details > div { min-width: 0; }
-.shipper-recipient-details dt { margin-bottom: 3px; color: var(--sw-muted); font-size: 10px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
+.shipper-recipient-details dt { margin-bottom: 3px; color: var(--sw-muted); font-size: 11px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
 .shipper-recipient-details dd { margin: 0; color: var(--sw-ink); font-size: 13px; line-height: 1.5; overflow-wrap: anywhere; }
 .shipper-address-detail dd { font-weight: 700; }
 .shipper-item-list { display: grid; gap: 9px; }
