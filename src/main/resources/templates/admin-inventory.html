@@ -49,7 +49,8 @@
                     <table class="sw-table">
                         <thead>
                         <tr>
-                            <th>ID Rượu</th>
+                            <th style="width:50px">Ảnh</th>
+                            <th>Mã</th>
                             <th>Tên rượu vang</th>
                             <th>Kho lưu trữ</th>
                             <th>Tổng tồn</th>
@@ -61,13 +62,25 @@
                         </thead>
                         <tbody>
                         <tr th:if="${inventories == null or inventories.isEmpty()}">
-                            <td colspan="8" class="text-center muted">Chưa có dữ liệu tồn kho.</td>
+                            <td colspan="9" class="text-center muted">Chưa có dữ liệu tồn kho.</td>
                         </tr>
                         <tr th:each="inv : ${inventories}">
-                            <td th:text="${inv.wine != null ? '#' + inv.wine.id : '-'}">#1</td>
+                            <td>
+                                <div class="admin-wine-thumb-box">
+                                    <img th:if="${inv.wine != null and inv.wine.imageUrl != null}"
+                                         th:src="${inv.wine.imageUrl}"
+                                         th:alt="${inv.wine.name}"
+                                         class="admin-wine-thumb"
+                                         loading="lazy">
+                                    <span th:unless="${inv.wine != null and inv.wine.imageUrl != null}" class="admin-wine-thumb-placeholder">
+                                        <i class="fa-solid fa-wine-bottle"></i>
+                                    </span>
+                                </div>
+                            </td>
+                            <td><strong th:text="${inv.wine != null ? '#' + inv.wine.id : '-'}">#1</strong></td>
                             <td>
                                 <strong th:text="${inv.wine != null ? inv.wine.name : 'Sản phẩm'}">Tên rượu</strong>
-                                <div class="small muted" th:if="${inv.wine != null}" th:text="${inv.wine.country + ' · ' + @enumDisplayService.wineType(inv.wine.type)}">Pháp</div>
+                                <div class="small muted" th:if="${inv.wine != null}" th:text="${inv.wine.country + ' · ' + @enumDisplayService.wineType(inv.wine.type) + ' · Niên vụ ' + inv.wine.year}">Pháp</div>
                             </td>
                             <td th:text="${inv.warehouse != null ? inv.warehouse.name : 'Kho mặc định'}">Kho</td>
                             <td><strong th:text="${inv.currentQuantity}">0</strong></td>

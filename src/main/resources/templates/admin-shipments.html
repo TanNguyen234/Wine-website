@@ -46,6 +46,44 @@
                 </div>
             </div>
 
+            <!-- Status Quick Tabs -->
+            <div class="admin-quick-tabs mb16">
+                <a th:href="@{/admin/shipments}"
+                   class="quick-tab"
+                   th:classappend="${filterStatus == null} ? 'active'">
+                    <i class="fa-solid fa-list-ul"></i>
+                    <span>Tất cả vận đơn</span>
+                </a>
+                <a th:href="@{/admin/shipments(status='PENDING_ASSIGNMENT')}"
+                   class="quick-tab"
+                   th:classappend="${filterStatus != null and filterStatus.name() == 'PENDING_ASSIGNMENT'} ? 'active'">
+                    <i class="fa-solid fa-user-clock"></i>
+                    <span>Chờ phân công</span>
+                    <span class="tab-badge warn" th:if="${shipmentStats != null}" th:text="${shipmentStats[T(com.strongwine.strongwine.entity.ShipmentStatus).PENDING_ASSIGNMENT] ?: 0}">0</span>
+                </a>
+                <a th:href="@{/admin/shipments(status='DELIVERING')}"
+                   class="quick-tab"
+                   th:classappend="${filterStatus != null and filterStatus.name() == 'DELIVERING'} ? 'active'">
+                    <i class="fa-solid fa-truck-fast"></i>
+                    <span>Đang giao hàng</span>
+                    <span class="tab-badge info" th:if="${shipmentStats != null}" th:text="${shipmentStats[T(com.strongwine.strongwine.entity.ShipmentStatus).DELIVERING] ?: 0}">0</span>
+                </a>
+                <a th:href="@{/admin/shipments(status='COMPLETED')}"
+                   class="quick-tab"
+                   th:classappend="${filterStatus != null and filterStatus.name() == 'COMPLETED'} ? 'active'">
+                    <i class="fa-solid fa-circle-check"></i>
+                    <span>Giao thành công</span>
+                    <span class="tab-badge success" th:if="${shipmentStats != null}" th:text="${shipmentStats[T(com.strongwine.strongwine.entity.ShipmentStatus).COMPLETED] ?: 0}">0</span>
+                </a>
+                <a th:href="@{/admin/shipments(status='FAILED')}"
+                   class="quick-tab"
+                   th:classappend="${filterStatus != null and filterStatus.name() == 'FAILED'} ? 'active'">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <span>Giao thất bại</span>
+                    <span class="tab-badge danger" th:if="${shipmentStats != null}" th:text="${shipmentStats[T(com.strongwine.strongwine.entity.ShipmentStatus).FAILED] ?: 0}">0</span>
+                </a>
+            </div>
+
             <!-- Filter Bar -->
             <section class="admin-card mb20">
                 <form th:action="@{/admin/shipments}" method="get" class="grid-3" style="align-items:end">

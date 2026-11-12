@@ -64,9 +64,23 @@ public class OrderService {
     public org.springframework.data.domain.Page<Order> getAllOrdersPage(org.springframework.data.domain.Pageable pageable) {
         return orderRepository.findAll(pageable);
     }
+
+    public org.springframework.data.domain.Page<Order> getOrdersPage(com.strongwine.strongwine.entity.OrderStatus status, org.springframework.data.domain.Pageable pageable) {
+        if (status == null) {
+            return orderRepository.findAll(pageable);
+        }
+        return orderRepository.findByStatus(status, pageable);
+    }
     
     public long countOrders() {
         return orderRepository.count();
+    }
+
+    public long countOrdersByStatus(com.strongwine.strongwine.entity.OrderStatus status) {
+        if (status == null) {
+            return orderRepository.count();
+        }
+        return orderRepository.countByStatus(status);
     }
     
     /**

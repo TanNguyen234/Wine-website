@@ -31,14 +31,21 @@ public class AdminOrderController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "orderDate") String sortBy,
             @RequestParam(defaultValue = "desc") String sortDir,
+            @RequestParam(required = false) com.strongwine.strongwine.entity.OrderStatus status,
             Model model) {
 
         Sort.Direction direction = "asc".equalsIgnoreCase(sortDir) ? Sort.Direction.ASC : Sort.Direction.DESC;
         PageRequest pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
         
-        Page<Order> orderPage = orderService.getAllOrdersPage(pageable);
+        Page<Order> orderPage = orderService.getOrdersPage(status, pageable);
 
         model.addAttribute("orders", orderPage.getContent());
+        model.addAttribute("currentStatus", status);
+        model.addAttribute("totalAllOrders", orderService.countOrders());
+        model.addAttribute("pendingCount", orderService.countOrdersByStatus(com.strongwine.strongwine.entity.OrderStatus.PENDING));
+        model.addAttribute("paidCount", orderService.countOrdersByStatus(com.strongwine.strongwine.entity.OrderStatus.PAID));
+        model.addAttribute("cancelledCount", orderService.countOrdersByStatus(com.strongwine.strongwine.entity.OrderStatus.CANCELLED));
+
         model.addAttribute("currentPage", page);
         model.addAttribute("pageSize", size);
         model.addAttribute("sortBy", sortBy);

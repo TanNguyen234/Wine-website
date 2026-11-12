@@ -31,6 +31,38 @@
                 </div>
             </div>
 
+            <!-- Status Quick Tabs -->
+            <div class="admin-quick-tabs mb16">
+                <a th:href="@{/admin/orders}"
+                   class="quick-tab"
+                   th:classappend="${currentStatus == null} ? 'active'">
+                    <i class="fa-solid fa-list-ul"></i>
+                    <span>Tất cả</span>
+                    <span class="tab-badge" th:text="${totalAllOrders != null ? totalAllOrders : 0}">0</span>
+                </a>
+                <a th:href="@{/admin/orders(status='PENDING')}"
+                   class="quick-tab"
+                   th:classappend="${currentStatus != null and currentStatus.name() == 'PENDING'} ? 'active'">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                    <span>Chờ xử lý</span>
+                    <span class="tab-badge warn" th:text="${pendingCount != null ? pendingCount : 0}">0</span>
+                </a>
+                <a th:href="@{/admin/orders(status='PAID')}"
+                   class="quick-tab"
+                   th:classappend="${currentStatus != null and currentStatus.name() == 'PAID'} ? 'active'">
+                    <i class="fa-solid fa-circle-check"></i>
+                    <span>Đã thanh toán</span>
+                    <span class="tab-badge success" th:text="${paidCount != null ? paidCount : 0}">0</span>
+                </a>
+                <a th:href="@{/admin/orders(status='CANCELLED')}"
+                   class="quick-tab"
+                   th:classappend="${currentStatus != null and currentStatus.name() == 'CANCELLED'} ? 'active'">
+                    <i class="fa-solid fa-ban"></i>
+                    <span>Đã hủy</span>
+                    <span class="tab-badge danger" th:text="${cancelledCount != null ? cancelledCount : 0}">0</span>
+                </a>
+            </div>
+
             <section class="admin-card">
                 <div class="table-scroll">
                     <table class="sw-table">
@@ -94,7 +126,7 @@
                     </table>
                 </div>
 
-                <div th:replace="~{fragments/pagination :: pagination('/admin/orders')}"></div>
+                <div th:replace="~{fragments/pagination :: pagination(${currentStatus != null} ? @{/admin/orders(status=${currentStatus})} : '/admin/orders')}"></div>
             </section>
         </main>
     </div>

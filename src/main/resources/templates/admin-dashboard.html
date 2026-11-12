@@ -188,9 +188,21 @@
                         </div>
                         <div class="between" style="padding:10px 12px;border:1px solid #e6e0d8;border-radius:8px"
                              th:each="inv : ${lowStockItems}">
-                            <div>
-                                <strong style="font-size:13px" th:text="${inv.wine != null ? inv.wine.name : 'Sản phẩm'}">Tên rượu</strong>
-                                <div class="small muted" th:text="${inv.warehouse != null ? inv.warehouse.name : 'Kho trung tâm'}">Kho</div>
+                            <div style="display:flex;align-items:center;gap:12px">
+                                <div class="admin-wine-thumb-box" style="width:34px;height:44px">
+                                    <img th:if="${inv.wine != null and inv.wine.imageUrl != null}"
+                                         th:src="${inv.wine.imageUrl}"
+                                         th:alt="${inv.wine.name}"
+                                         class="admin-wine-thumb"
+                                         loading="lazy">
+                                    <span th:unless="${inv.wine != null and inv.wine.imageUrl != null}" class="admin-wine-thumb-placeholder">
+                                        <i class="fa-solid fa-wine-bottle"></i>
+                                    </span>
+                                </div>
+                                <div>
+                                    <strong style="font-size:13px" th:text="${inv.wine != null ? inv.wine.name : 'Sản phẩm'}">Tên rượu</strong>
+                                    <div class="small muted" th:text="${inv.warehouse != null ? inv.warehouse.name : 'Kho trung tâm'}">Kho</div>
+                                </div>
                             </div>
                             <span class="status"
                                   th:classappend="${inv.availableQuantity <= 0} ? 'bad' : 'warn'"

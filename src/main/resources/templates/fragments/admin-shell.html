@@ -27,55 +27,55 @@
 
     <div class="admin-nav-heading">TỔNG QUAN</div>
     <a class="admin-link" th:classappend="${activeMenu == 'dashboard'} ? 'active'" th:href="@{/admin}">
-        <b>&#9707;</b><span>Dashboard</span>
+        <i class="fa-solid fa-chart-pie admin-icon"></i><span>Dashboard</span>
     </a>
 
     <div class="admin-nav-heading">QUẢN LÝ CỬA HÀNG</div>
     <a class="admin-link" th:classappend="${activeMenu == 'catalog'} ? 'active'" th:href="@{/wines}">
-        <b>&#9831;</b><span>Danh mục rượu</span>
+        <i class="fa-solid fa-wine-bottle admin-icon"></i><span>Danh mục rượu</span>
     </a>
     <a class="admin-link" th:classappend="${activeMenu == 'wineform'} ? 'active'" th:href="@{/wines/admin/create}">
-        <b>&#65291;</b><span>Thêm / sửa sản phẩm</span>
+        <i class="fa-solid fa-circle-plus admin-icon"></i><span>Thêm / sửa sản phẩm</span>
     </a>
     <a class="admin-link" th:classappend="${activeMenu == 'import'} ? 'active'" th:href="@{/admin/wines/import}">
-        <b>&#8679;</b><span>Nhập sản phẩm Excel</span>
+        <i class="fa-solid fa-file-excel admin-icon"></i><span>Nhập sản phẩm Excel</span>
     </a>
     <a class="admin-link" th:classappend="${activeMenu == 'inventory'} ? 'active'" th:href="@{/admin/inventory}">
-        <b>&#9636;</b><span>Tồn kho</span>
+        <i class="fa-solid fa-boxes-stacked admin-icon"></i><span>Tồn kho hầm rượu</span>
     </a>
 
-    <div class="admin-nav-heading">VẬN HÀNH</div>
+    <div class="admin-nav-heading">VẬN HÀNH &amp; LOGISTICS</div>
     <a class="admin-link" th:classappend="${activeMenu == 'orders'} ? 'active'" th:href="@{/admin/orders}">
-        <b>&#9635;</b><span>Đơn hàng</span>
+        <i class="fa-solid fa-cart-shopping admin-icon"></i><span>Đơn hàng</span>
     </a>
     <a class="admin-link" th:classappend="${activeMenu == 'payments'} ? 'active'" th:href="@{/admin/payments}">
-        <b>&#9671;</b><span>Thanh toán</span>
+        <i class="fa-solid fa-credit-card admin-icon"></i><span>Thanh toán</span>
     </a>
     <a class="admin-link" th:classappend="${activeMenu == 'shipments'} ? 'active'" th:href="@{/admin/shipments}">
-        <b>&#9826;</b><span>Vận đơn</span>
+        <i class="fa-solid fa-truck-fast admin-icon"></i><span>Điều phối vận đơn</span>
     </a>
     <a class="admin-link" th:classappend="${activeMenu == 'shippers'} ? 'active'" th:href="@{/admin/shippers}">
-        <b>&#9831;</b><span>Nhân viên giao hàng</span>
+        <i class="fa-solid fa-id-card-clip admin-icon"></i><span>Nhân viên giao hàng</span>
     </a>
     <a class="admin-link" th:classappend="${activeMenu == 'users'} ? 'active'" th:href="@{/admin/users}">
-        <b>&#9823;</b><span>Người dùng</span>
+        <i class="fa-solid fa-users admin-icon"></i><span>Quản lý thành viên</span>
     </a>
 
-    <div class="admin-nav-heading">KHÁC</div>
+    <div class="admin-nav-heading">HỆ THỐNG</div>
     <a class="admin-link" th:classappend="${activeMenu == 'profile'} ? 'active'" th:href="@{/admin/profile}">
-        <b>&#9733;</b><span>Hồ sơ Admin</span>
+        <i class="fa-solid fa-user-shield admin-icon"></i><span>Hồ sơ Admin</span>
     </a>
     <a class="admin-link" th:classappend="${activeMenu == 'shipper-view'} ? 'active'" th:href="@{/shipper/dashboard}">
-        <b>&#8674;</b><span>Xem giao diện Shipper</span>
+        <i class="fa-solid fa-motorcycle admin-icon"></i><span>Giao diện Shipper</span>
     </a>
 
     <div class="admin-sidebar-bottom">
         <a class="admin-link" th:href="@{/home}">
-            <b>&#8599;</b><span>Về trang bán hàng</span>
+            <i class="fa-solid fa-arrow-up-right-from-square admin-icon"></i><span>Xem trang bán hàng</span>
         </a>
         <form th:action="@{/logout}" method="post" class="m-0">
             <button type="submit" class="admin-link w100" style="background:none;border:0;text-align:left">
-                <b>&#8672;</b><span>Đăng xuất</span>
+                <i class="fa-solid fa-arrow-right-from-bracket admin-icon"></i><span>Đăng xuất</span>
             </button>
         </form>
     </div>
@@ -85,13 +85,16 @@
 <header th:fragment="topbar" class="admin-topbar">
     <form th:action="@{/wines}" method="get" class="m-0">
         <label class="admin-search">
-            <span>&#8981;</span>
-            <input type="text" name="name" placeholder="Tìm nhanh sản phẩm trong kho..." style="border:0;background:transparent;outline:none;color:#242229;min-width:210px">
+            <i class="fa-solid fa-magnifying-glass" style="color:#a89f91;font-size:13px"></i>
+            <input type="text" name="name" placeholder="Tìm nhanh sản phẩm trong kho..." style="border:0;background:transparent;outline:none;color:var(--sw-ink, #242229);min-width:240px;font-size:13px">
         </label>
     </form>
 
-    <div class="display-flex gap16">
-        <span class="status neutral" id="adminLiveBadge">&#9679; Đang kết nối SSE...</span>
+    <div class="display-flex gap16 align-items-center">
+        <span class="status neutral" id="adminLiveBadge">
+            <span class="live-pulse-dot"></span>
+            <span>Đang kết nối SSE...</span>
+        </span>
         <a th:href="@{/admin/profile}" class="avatar text-decoration-none" style="display:inline-flex;align-items:center;justify-content:center;cursor:pointer" sec:authentication="name" title="Hồ sơ quản trị viên">AD</a>
     </div>
 </header>

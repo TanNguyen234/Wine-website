@@ -86,6 +86,16 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
                         ORDER BY o.orderDate ASC
                         """)
                 List<Order> findOldestOrdersWithoutShipmentByStatus(OrderStatus status, Pageable pageable);
+
+        /**
+         * Find orders filtered by status with pagination.
+         */
+        org.springframework.data.domain.Page<Order> findByStatus(OrderStatus status, Pageable pageable);
+
+        /**
+         * Count orders by status.
+         */
+        long countByStatus(OrderStatus status);
 }
 
 
