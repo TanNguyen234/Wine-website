@@ -1,201 +1,1145 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="vi">
+<html xmlns:th="http://www.thymeleaf.org" lang="vi" data-theme="cellar">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="_csrf" th:content="${_csrf.token}">
-    <meta name="_csrf_header" th:content="${_csrf.headerName}">
-    <meta name="shipper-id" th:content="${currentShipperId}">
-    <title>Shipper Cockpit · StrongWine Giao Nhận Bảo Mật OTP</title>
-    <link rel="icon" type="image/svg+xml" th:href="@{/favicon.svg}">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" th:href="@{/css/app.css}">
+  <th:block th:replace="~{fragments/shipper-shell :: head('Giao hàng')}"/>
+  <meta name="shipper-id"
+        th:if="${shipperId == null and currentShipperId != null and !#strings.isEmpty(currentShipperId + '')}"
+        th:content="${currentShipperId}">
+  <style>
+    @layer tokens {
+      :root {
+        --status-ok-text: var(--status-ok-ink);
+        --status-warn-text: var(--status-warn-ink);
+        --status-danger-text: var(--status-danger-ink);
+        --status-info-text: var(--status-info-ink);
+        --status-neutral-text: var(--status-neutral-ink);
+        --z-sticky: 40;
+        --z-toast: 90;
+        --dur-fast: 150ms;
+        --ease-out: var(--ease-out-expo);
+        --shadow-sm: 0 4px 14px rgba(0, 0, 0, 0.18);
+        --shadow-lg: var(--shadow-elevated);
+      }
+    }
+
+    @layer components {
+      .shipper-phone {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-4);
+      }
+
+      .shipper-live-bar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--space-2);
+      }
+
+      .shipper-sticky-top {
+        position: sticky;
+        top: calc(64px + env(safe-area-inset-top));
+        z-index: 30;
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-2);
+        padding: var(--space-2) 0;
+        background: color-mix(in srgb, var(--surface-canvas) 94%, transparent);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-bottom: 1px solid var(--border-hairline);
+      }
+
+      .shipper-sticky-top .shipper-kpi-strip {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: var(--space-2);
+      }
+
+      .shipper-sticky-top .shipper-kpi {
+        padding: var(--space-2) var(--space-3);
+      }
+
+      .shipper-sticky-top .shipper-kpi-value {
+        font-size: 1.1rem;
+      }
+
+      .shipper-filter-row {
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+        overflow-x: auto;
+        padding-bottom: 2px;
+        scrollbar-width: none;
+      }
+
+      .shipper-filter-row::-webkit-scrollbar {
+        display: none;
+      }
+
+      .shipper-chip {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.4rem;
+        min-width: 48px;
+        min-height: 48px;
+        padding: 0.55rem 0.95rem;
+        border-radius: var(--radius-pill);
+        border: 1px solid var(--border-hairline);
+        background: var(--surface-card);
+        color: var(--text-secondary);
+        font-size: var(--text-xs);
+        font-weight: 700;
+        white-space: nowrap;
+        flex-shrink: 0;
+        text-decoration: none;
+        touch-action: manipulation;
+        transition: background-color var(--dur-fast) var(--ease-out),
+          border-color var(--dur-fast) var(--ease-out),
+          color var(--dur-fast) var(--ease-out);
+      }
+
+      .shipper-chip:hover {
+        color: var(--text-primary);
+        border-color: var(--border-strong);
+      }
+
+      .shipper-chip.active,
+      .shipper-chip[aria-pressed="true"] {
+        background: linear-gradient(135deg, var(--accent-crimson), #621010);
+        border-color: var(--accent-gold);
+        color: #fff8ef;
+      }
+
+      .shipper-refresh-chip.is-highlighted {
+        border-color: var(--accent-gold);
+        background: rgba(201, 168, 76, 0.16);
+        color: var(--accent-gold-ink);
+      }
+
+      .shipper-chip-count {
+        font-family: var(--font-mono);
+        font-variant-numeric: tabular-nums;
+        padding: 0.1rem 0.45rem;
+        border-radius: var(--radius-pill);
+        background: rgba(255, 255, 255, 0.14);
+        font-size: 0.72rem;
+      }
+
+      :root[data-theme="ivory"] .shipper-chip:not(.active) .shipper-chip-count {
+        background: var(--surface-subtle);
+        color: var(--text-primary);
+      }
+
+      .shipper-alerts {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-2);
+      }
+
+      .shipper-alert {
+        padding: var(--space-3) var(--space-4);
+        border-radius: var(--radius-md);
+        border: 1px solid var(--border-hairline);
+        font-size: var(--text-sm);
+        font-weight: 600;
+      }
+
+      .shipper-alert--good {
+        background: var(--status-ok-bg);
+        border-color: var(--status-ok-border);
+        color: var(--status-ok-ink);
+      }
+
+      .shipper-alert--bad {
+        background: var(--status-danger-bg);
+        border-color: var(--status-danger-border);
+        color: var(--status-danger-ink);
+      }
+
+      .shipper-alert--warn {
+        background: var(--status-warn-bg);
+        border-color: var(--status-warn-border);
+        color: var(--status-warn-ink);
+      }
+
+      .shipper-section {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-4);
+      }
+
+      .shipper-feed {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-4);
+      }
+
+      .shipper-empty-card {
+        text-align: center;
+        padding: var(--space-8) var(--space-4);
+      }
+
+      .shipper-panel {
+        padding: var(--space-3);
+        border-radius: var(--radius-md);
+        background: var(--surface-subtle);
+        border: 1px solid var(--border-hairline);
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-2);
+      }
+
+      .shipper-section-label {
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--accent-gold-ink);
+        font-weight: 700;
+      }
+
+      .shipper-paid-online {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--space-2);
+        padding: var(--space-2) var(--space-3);
+        border-radius: var(--radius-md);
+        background: var(--status-ok-bg);
+        border: 1px solid var(--status-ok-border);
+        color: var(--status-ok-ink);
+        font-size: var(--text-xs);
+        font-weight: 700;
+      }
+
+      .shipper-pod-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--space-2);
+      }
+
+      .shipper-pod-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.3rem 0.75rem;
+        border-radius: var(--radius-pill);
+        background: var(--status-info-bg);
+        border: 1px solid var(--status-info-border);
+        color: var(--status-info-ink);
+        font-size: var(--text-xs);
+        font-weight: 700;
+      }
+
+      .shipper-wine-list {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-2);
+      }
+
+      .shipper-wine-row {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: var(--space-3);
+        padding-top: var(--space-2);
+        border-top: 1px solid var(--border-hairline);
+      }
+
+      .shipper-wine-row:first-child {
+        padding-top: 0;
+        border-top: 0;
+      }
+
+      .shipper-wine-name {
+        font-weight: 600;
+        color: var(--text-primary);
+      }
+
+      .shipper-actions-stack {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-2);
+      }
+
+      /* Dialog layout */
+      .sw-dialog-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--space-3);
+        padding: var(--space-4);
+        border-bottom: 1px solid var(--border-hairline);
+      }
+
+      .sw-dialog-title {
+        font-family: var(--font-display);
+        font-size: 1.15rem;
+        font-weight: 700;
+        margin: 0;
+      }
+
+      .sw-dialog-body {
+        padding: var(--space-4);
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-3);
+        overflow-y: auto;
+        max-height: calc(100dvh - 11rem);
+      }
+
+      .sw-dialog-foot {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-2);
+        padding-top: var(--space-2);
+      }
+
+      .shipper-field-label {
+        display: block;
+        font-size: var(--text-xs);
+        font-weight: 700;
+        color: var(--text-secondary);
+        margin-bottom: 0.35rem;
+      }
+
+      .shipper-input {
+        width: 100%;
+        min-height: 48px;
+        padding: 0.65rem 0.85rem;
+        border-radius: var(--radius-md);
+        border: 1px solid var(--border-strong);
+        background: var(--surface-elevated);
+        color: var(--text-primary);
+        font-size: var(--text-sm);
+      }
+
+      .shipper-input:focus {
+        outline: 2px solid var(--accent-gold-bright);
+        outline-offset: 1px;
+      }
+
+      .shipper-file-drop {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-2);
+        padding: var(--space-3);
+        border-radius: var(--radius-md);
+        border: 1.5px dashed var(--accent-gold);
+        background: var(--surface-subtle);
+      }
+
+      .shipper-file-input {
+        width: 100%;
+        min-height: 48px;
+        padding: 0.5rem 0;
+        font-size: var(--text-sm);
+      }
+
+      .shipper-pod-preview {
+        border-radius: var(--radius-md);
+        border: 1px solid var(--border-hairline);
+        background: var(--surface-elevated);
+        padding: var(--space-2);
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-2);
+      }
+
+      .shipper-pod-preview img {
+        width: 100%;
+        max-height: 220px;
+        object-fit: cover;
+        border-radius: var(--radius-sm);
+      }
+
+      .shipper-resend-box {
+        padding-top: var(--space-3);
+        border-top: 1px solid var(--border-hairline);
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--space-2);
+      }
+
+      .shipper-preset-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-2);
+      }
+
+      .shipper-confirm-check {
+        display: flex;
+        align-items: center;
+        gap: var(--space-3);
+        min-height: 48px;
+        padding: var(--space-2) var(--space-3);
+        border-radius: var(--radius-md);
+        background: var(--status-danger-bg);
+        border: 1px solid var(--status-danger-border);
+        color: var(--status-danger-ink);
+        font-size: var(--text-xs);
+        font-weight: 600;
+        cursor: pointer;
+      }
+
+      .shipper-confirm-check input[type="checkbox"] {
+        width: 22px;
+        height: 22px;
+        flex-shrink: 0;
+        accent-color: var(--accent-crimson);
+      }
+
+      .shipper-cod-cta-box {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-3);
+        padding: var(--space-3);
+        border-radius: var(--radius-md);
+        background: rgba(201, 168, 76, 0.12);
+        border: 1px solid rgba(201, 168, 76, 0.34);
+      }
+
+      .shipper-cod-check-list {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-2);
+        max-height: 240px;
+        overflow-y: auto;
+      }
+
+      .shipper-cod-check-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--space-3);
+        min-height: 48px;
+        padding: var(--space-2) var(--space-3);
+        border-radius: var(--radius-md);
+        background: var(--surface-subtle);
+        border: 1px solid var(--border-hairline);
+        cursor: pointer;
+      }
+
+      .shipper-cod-check-item input[type="checkbox"] {
+        width: 22px;
+        height: 22px;
+        flex-shrink: 0;
+        accent-color: var(--accent-gold);
+      }
+
+      .shipper-batch-list {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-3);
+      }
+
+      .shipper-batch-card {
+        padding: var(--space-3);
+        border-radius: var(--radius-md);
+        background: var(--surface-subtle);
+        border: 1px solid var(--border-hairline);
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-2);
+      }
+
+      .shipper-batch-amounts {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: var(--space-2);
+      }
+
+      .shipper-batch-amounts > div {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .shipper-batch-dispute-note {
+        padding: var(--space-2) var(--space-3);
+        border-radius: var(--radius-sm);
+        background: var(--status-danger-bg);
+        border: 1px solid var(--status-danger-border);
+        color: var(--status-danger-ink);
+        font-weight: 600;
+      }
+
+      .shipper-inline-error {
+        padding: var(--space-2) var(--space-3);
+        border-radius: var(--radius-sm);
+        background: var(--status-danger-bg);
+        border: 1px solid var(--status-danger-border);
+        color: var(--status-danger-ink);
+        font-size: var(--text-xs);
+        font-weight: 600;
+      }
+    }
+
+    @layer utilities {
+      [hidden] {
+        display: none;
+      }
+    }
+  </style>
 </head>
-<body>
-<div class="shipper-surface">
-    <div class="shipper-phone shipper-desktop-layout">
-        <header class="shipper-top">
-            <div class="between">
-                <div>
-                    <div class="eyebrow" style="color:var(--sw-champagne)">STRONGWINE LOGISTICS</div>
-                    <h2 class="serif mt8 mb0" style="font-size:1.35rem" th:text="${currentShipperName != null ? currentShipperName : 'Tài xế StrongWine'}">Tài xế</h2>
-                </div>
-                <div style="text-align:right">
-                    <span class="status ok" id="shipperOnlineBadge">&#9679; Đang kết nối</span>
-                    <div class="mt8 display-flex gap8" style="justify-content:flex-end">
-                        <a th:href="@{/admin}" sec:authorize="hasRole('ADMIN')" class="small" style="color:var(--sw-champagne)">Admin</a>
-                        <form th:action="@{/logout}" method="post" class="m-0 d-inline">
-                            <button type="submit" style="background:none;border:0;color:#dfd3c3;font-size:12px;text-decoration:underline;cursor:pointer">Đăng xuất</button>
-                        </form>
-                    </div>
-                </div>
-            </div>
+<body class="shipper-body">
+<header th:replace="~{fragments/shipper-shell :: header(${currentShipperName})}"></header>
 
-            <!-- Filter Tabs -->
-            <div class="shipper-tabs" role="tablist">
-                <button type="button" class="active" data-shipper-tab="all">
-                    Tất cả (<span th:text="${shipments != null ? #lists.size(shipments) : 0}">0</span>)
-                </button>
-                <button type="button" data-shipper-tab="delivering">
-                    Đang giao (<span th:text="${deliveringCount != null ? deliveringCount : 0}">0</span>)
-                </button>
-                <button type="button" data-shipper-tab="assigned">
-                    Chờ lấy (<span th:text="${assignedCount != null ? assignedCount : 0}">0</span>)
-                </button>
-                <button type="button" data-shipper-tab="done">
-                    Đã xử lý (<span th:text="${doneCount != null ? doneCount : 0}">0</span>)
-                </button>
-            </div>
-        </header>
+<main class="shipper-main">
+  <div class="shipper-phone"
+       th:attr="data-shipper-id=${currentShipperId != null ? currentShipperId : ''}">
 
-        <!-- Flash Messages -->
-        <div style="padding:12px 14px 0" th:if="${success != null or error != null}">
-            <div th:if="${success}" class="alert-sw success mb8" th:text="${success}"></div>
-            <div th:if="${error}" class="alert-sw danger mb8" th:text="${error}"></div>
-        </div>
+    <!-- Live SSE Status Bar & Manual Refresh Chip (Never forces page reload) -->
+    <div class="shipper-live-bar">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <span class="status neutral" id="shipperOnlineBadge" aria-live="polite"
+              th:text="${(currentShipperId != null and !#strings.isEmpty(currentShipperId + '')) ? '● Đang kết nối SSE...' : (isAdminView == true ? '● Chế độ giám sát' : '○ Ngoại tuyến')}">
+          ● Đang kết nối SSE...
+        </span>
+        <span id="shipperPendingUpdatesHint" class="small text-muted" hidden>Có cập nhật điều phối mới</span>
+      </div>
 
-        <!-- Empty State -->
-        <div th:if="${shipments == null or shipments.isEmpty()}" style="padding:36px 20px;text-align:center">
-            <h3 class="serif mb8">Chưa có vận đơn được phân công</h3>
-            <p class="muted small">Các chuyến giao hàng mới sẽ tự động hiển thị tại đây ngay khi điều phối viên gán đơn.</p>
-        </div>
-
-        <!-- Shipment Cards Feed -->
-        <div class="shipper-feed" th:if="${shipments != null and !shipments.isEmpty()}">
-            <article class="delivery-card"
-                     th:each="s : ${shipments}"
-                     th:with="st=${s.status != null ? s.status.name() : 'PENDING_ASSIGNMENT'},
-                              grp=${(st == 'PICKED_UP' or st == 'DELIVERING') ? 'delivering' : ((st == 'PENDING_ASSIGNMENT' or st == 'ASSIGNED') ? 'assigned' : 'done')}"
-                     th:attr="data-shipment-group=${grp}">
-                <div class="between mb8">
-                    <div>
-                        <span class="small muted" th:text="'Vận đơn #' + ${s.id}">Vận đơn #1</span>
-                        <strong class="d-block serif" style="font-size:1.15rem"
-                                th:text="${s.order != null ? 'Đơn hàng #' + s.order.id : 'Đơn hàng'}">Đơn #1</strong>
-                    </div>
-                    <span class="status"
-                          th:classappend="${st == 'COMPLETED'} ? 'ok' : (${st == 'FAILED' or st == 'CANCELLED'} ? 'bad' : 'info')"
-                          th:text="${@enumDisplayService.shipmentStatus(s.status)}">Trạng thái</span>
-                </div>
-
-                <div class="shipper-card-grid">
-                    <section class="shipper-info-panel" aria-label="Thông tin giao hàng">
-                        <h3 class="shipper-section-title">Thông tin người nhận</h3>
-                        <dl class="shipper-recipient-details">
-                            <div>
-                                <dt>Người nhận</dt>
-                                <dd th:text="${s.shippingName}">Khách nhận</dd>
-                            </div>
-                            <div>
-                                <dt>Số điện thoại</dt>
-                                <dd th:text="${s.shippingPhone}">0900000000</dd>
-                            </div>
-                            <div class="shipper-address-detail">
-                                <dt>Địa chỉ giao hàng</dt>
-                                <dd th:text="${s.shippingAddress}">Địa chỉ giao hàng</dd>
-                            </div>
-                        </dl>
-                    </section>
-
-                    <section class="shipper-info-panel shipper-order-items" aria-label="Sản phẩm trong đơn" th:if="${s.order != null}">
-                        <h3 class="shipper-section-title">Sản phẩm trong đơn</h3>
-                        <div class="shipper-item-list" th:if="${s.order.orderItems != null and !s.order.orderItems.isEmpty()}">
-                            <div class="shipper-item-row" th:each="item : ${s.order.orderItems}">
-                                <div class="shipper-item-name" th:text="${item.wine != null ? item.wine.name : 'Sản phẩm'}">Tên rượu</div>
-                                <span class="shipper-item-quantity" th:text="'SL: ' + ${item.quantity} + ' chai'">SL: 1 chai</span>
-                                <strong class="shipper-item-price" th:text="${#numbers.formatDecimal(item.price, 0, 'COMMA', 0, 'POINT')} + ' ₫ / chai'">0 ₫ / chai</strong>
-                            </div>
-                        </div>
-                        <p class="shipper-empty-items" th:unless="${s.order.orderItems != null and !s.order.orderItems.isEmpty()}">Chưa có thông tin mặt hàng trong đơn này.</p>
-                        <div class="shipper-order-total">
-                            <span>Giá trị đơn</span>
-                            <strong th:text="${#numbers.formatDecimal(s.order.totalPrice, 0, 'COMMA', 0, 'POINT')} + ' ₫'">0 ₫</strong>
-                        </div>
-                    </section>
-                </div>
-
-                <!-- Quick Call & Google Maps Route Buttons -->
-                <div class="quick-call-row">
-                    <a class="btn btn-outline btn-sm"
-                       th:href="'tel:' + ${s.shippingPhone}">
-                        &#9742; Gọi khách hàng
-                    </a>
-                    <a class="btn btn-outline btn-sm"
-                       th:if="${(s.shippingLatitude != null and s.shippingLongitude != null) or (s.shippingAddress != null and !#strings.isEmpty(#strings.trim(s.shippingAddress)) and #strings.trim(s.shippingAddress) != '.')}"
-                       target="_blank" rel="noopener noreferrer"
-                       th:href="${@enumDisplayService.googleMapsUrl(s.shippingLatitude, s.shippingLongitude, s.shippingAddress)}">
-                        &#9873; Chỉ đường Maps
-                    </a>
-                    <span class="small muted"
-                          th:unless="${s.shippingAddress != null and !#strings.isEmpty(#strings.trim(s.shippingAddress)) and #strings.trim(s.shippingAddress) != '.'}">
-                        Chưa có địa chỉ hợp lệ để chỉ đường
-                    </span>
-                </div>
-
-                <!-- Action Stage 1: CREATED / ASSIGNED -> Pick Up Wine -->
-                <div class="mt12" th:if="${st == 'PENDING_ASSIGNMENT' or st == 'ASSIGNED'}">
-                    <form th:action="@{/shipper/shipments/{id}/pickup(id=${s.id})}" method="post">
-                        <button type="submit" class="btn w100">Xác nhận đã lấy rượu tại hầm &rarr;</button>
-                    </form>
-                </div>
-
-                <!-- Action Stage 2: PICKED_UP -> Start Out For Delivery -->
-                <div class="mt12" th:if="${st == 'PICKED_UP'}">
-                    <form th:action="@{/shipper/shipments/{id}/start(id=${s.id})}" method="post">
-                        <button type="submit" class="btn btn-gold w100">Bắt đầu xuất phát giao hàng &rarr;</button>
-                    </form>
-                </div>
-
-                <!-- Action Stage 3: OUT_FOR_DELIVERY -> 6-Digit OTP Verification -->
-                <div class="mt12" th:if="${st == 'DELIVERING'}">
-                    <div class="panel-soft">
-                        <div class="between mb8">
-                            <strong class="small">Nhập mã OTP 6 số từ khách nhận</strong>
-                            <form th:action="@{/shipper/shipments/{id}/resend-otp(id=${s.id})}" method="post" class="m-0">
-                                <button type="submit" style="background:none;border:0;color:var(--sw-bordeaux);font-size:12px;font-weight:700;cursor:pointer">
-                                    Gửi lại OTP
-                                </button>
-                            </form>
-                        </div>
-
-                        <form th:id="'otpForm-' + ${s.id}"
-                              th:action="@{/shipper/shipments/{id}/complete(id=${s.id})}"
-                              method="post">
-                            <input type="hidden" name="otp" th:id="'hiddenOtp-' + ${s.id}" value="">
-                            <div class="otp-boxes otp-container" th:attr="data-shipment-id=${s.id}">
-                                <input type="text" class="otp-box" maxlength="1" inputmode="numeric" pattern="[0-9]" aria-label="OTP số 1" required>
-                                <input type="text" class="otp-box" maxlength="1" inputmode="numeric" pattern="[0-9]" aria-label="OTP số 2" required>
-                                <input type="text" class="otp-box" maxlength="1" inputmode="numeric" pattern="[0-9]" aria-label="OTP số 3" required>
-                                <input type="text" class="otp-box" maxlength="1" inputmode="numeric" pattern="[0-9]" aria-label="OTP số 4" required>
-                                <input type="text" class="otp-box" maxlength="1" inputmode="numeric" pattern="[0-9]" aria-label="OTP số 5" required>
-                                <input type="text" class="otp-box" maxlength="1" inputmode="numeric" pattern="[0-9]" aria-label="OTP số 6" required>
-                            </div>
-                            <button type="submit" class="btn w100 mt12">Xác thực OTP &amp; Hoàn tất giao</button>
-                        </form>
-                    </div>
-
-                    <!-- Report Delivery Issue -->
-                    <form th:action="@{/shipper/shipments/{id}/fail(id=${s.id})}" method="post" class="mt12 display-flex gap8">
-                        <input type="text" name="reason" class="field" placeholder="Lý do chưa giao được (khách hẹn lại...)" style="min-height:38px;font-size:12px" required>
-                        <button type="submit" class="btn btn-danger btn-sm">Báo sự cố</button>
-                    </form>
-                </div>
-
-                <!-- Completed / Failed Summary -->
-                <div class="mt12 small muted" th:if="${st == 'COMPLETED'}">
-                    &#10003; Đã bàn giao thành công lúc
-                    <span th:text="${s.completedAt != null ? #temporals.format(s.completedAt, 'HH:mm dd/MM/yyyy') : 'vừa xong'}"></span>
-                </div>
-                <div class="mt12 small" style="color:var(--sw-danger)" th:if="${st == 'FAILED' and s.failureNote != null}"
-                     th:text="'Lý do sự cố: ' + ${s.failureNote}"></div>
-            </article>
-        </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <a th:if="${isAdminView == true}" th:href="@{/admin/shipments}" class="shipper-chip">
+          <span>Quản trị</span>
+        </a>
+        <a th:href="@{/shipper/dashboard}"
+           id="shipperRefreshChip"
+           class="shipper-chip shipper-refresh-chip"
+           data-pending-count="0">
+          <th:block th:replace="~{fragments/icons :: icon('truck')}"/>
+          <span id="shipperRefreshLabel">Làm mới danh sách</span>
+        </a>
+      </div>
     </div>
-</div>
 
-<script th:src="@{/js/shipper-mobile-actions.js}"></script>
+    <!-- Sticky Top KPI + Status Filter Chips -->
+    <section class="shipper-sticky-top" aria-label="Tổng quan và bộ lọc trạng thái">
+      <div class="shipper-kpi-strip">
+        <div class="shipper-kpi">
+          <div class="shipper-kpi-label">Cần nhận</div>
+          <div class="shipper-kpi-value" th:text="${assignedCount != null ? assignedCount : 0}">0</div>
+        </div>
+        <div class="shipper-kpi">
+          <div class="shipper-kpi-label">Đang giao</div>
+          <div class="shipper-kpi-value" th:text="${deliveringCount != null ? deliveringCount : 0}">0</div>
+        </div>
+        <div class="shipper-kpi">
+          <div class="shipper-kpi-label">Hoàn tất</div>
+          <div class="shipper-kpi-value" th:text="${doneCount != null ? doneCount : 0}">0</div>
+        </div>
+      </div>
+
+      <div class="shipper-filter-row" role="tablist" aria-label="Lọc danh sách chuyến giao">
+        <button type="button" class="shipper-chip active" data-shipper-tab="all" aria-pressed="true">
+          <span>Tất cả</span>
+          <span class="shipper-chip-count" th:text="${shipments != null ? #lists.size(shipments) : 0}">0</span>
+        </button>
+        <button type="button" class="shipper-chip" data-shipper-tab="assigned" aria-pressed="false">
+          <span>Cần nhận</span>
+          <span class="shipper-chip-count" th:text="${assignedCount != null ? assignedCount : 0}">0</span>
+        </button>
+        <button type="button" class="shipper-chip" data-shipper-tab="delivering" aria-pressed="false">
+          <span>Đang giao</span>
+          <span class="shipper-chip-count" th:text="${deliveringCount != null ? deliveringCount : 0}">0</span>
+        </button>
+        <button type="button" class="shipper-chip" data-shipper-tab="done" aria-pressed="false">
+          <span>Hoàn tất</span>
+          <span class="shipper-chip-count" th:text="${doneCount != null ? doneCount : 0}">0</span>
+        </button>
+        <button type="button" class="shipper-chip" data-shipper-tab="cod" aria-pressed="false">
+          <span>Bảng kê COD</span>
+          <span class="shipper-chip-count" th:text="${unbatchedCodShipments != null ? #lists.size(unbatchedCodShipments) : 0}">0</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Flash Banners -->
+    <div th:if="${success != null or error != null}" class="shipper-alerts" aria-live="polite">
+      <div th:if="${success}" class="shipper-alert shipper-alert--good" role="status" th:text="${success}"></div>
+      <div th:if="${error}" class="shipper-alert shipper-alert--bad" role="alert" th:text="${error}"></div>
+    </div>
+
+    <!-- Delivery Stops Feed -->
+    <section id="shipmentsFeedSection" class="shipper-section" aria-label="Danh sách điểm giao hàng">
+      <div th:if="${shipments == null or shipments.isEmpty()}" class="shipper-card shipper-empty-card">
+        <h2 style="font-size:var(--text-lg);">Chưa có vận đơn được phân công</h2>
+        <p class="text-muted small">Các chuyến giao hàng mới sẽ hiển thị tại đây ngay khi điều phối viên gán đơn.</p>
+      </div>
+
+      <div id="filterEmptyState" class="shipper-card shipper-empty-card" hidden>
+        <h2 style="font-size:var(--text-lg);">Không có chuyến giao trong mục này</h2>
+        <p class="text-muted small">Chọn trạng thái khác trên thanh lọc để tiếp tục theo dõi đơn.</p>
+      </div>
+
+      <div class="shipper-feed" th:if="${shipments != null and !shipments.isEmpty()}">
+        <article class="shipper-card"
+                 th:each="s : ${shipments}"
+                 th:with="st=${s.status != null ? s.status.name() : 'PENDING_ASSIGNMENT'},
+                          grp=${(st == 'PICKED_UP' or st == 'DELIVERING') ? 'delivering' : ((st == 'PENDING_ASSIGNMENT' or st == 'ASSIGNED') ? 'assigned' : 'done')},
+                          isCod=${s.order != null and s.order.paymentMethod != null and s.order.paymentMethod.name() == 'COD'},
+                          codValue=${s.codCollectedAmount != null ? s.codCollectedAmount : (s.order != null and s.order.totalPrice != null ? s.order.totalPrice : 0)},
+                          formattedOrderTotal=${s.order != null and s.order.totalPrice != null ? #numbers.formatDecimal(s.order.totalPrice, 0, 'COMMA', 0, 'POINT') + ' ₫' : '0 ₫'},
+                          formattedCod=${#numbers.formatDecimal(codValue, 0, 'COMMA', 0, 'POINT') + ' ₫'},
+                          hasPod=${s.proofOfDeliveryUrl != null and !#strings.isEmpty(#strings.trim(s.proofOfDeliveryUrl))},
+                          canMutate=${isAdminView == null or !isAdminView}"
+                 th:attr="data-shipment-id=${s.id},data-shipment-group=${grp},data-shipment-status=${st}">
+
+          <!-- Stop Header -->
+          <div class="shipper-card-head">
+            <div>
+              <span class="shipper-order-code" th:text="'Vận đơn #' + ${s.id}">Vận đơn #1</span>
+              <div class="small text-muted tabular-nums"
+                   th:text="${s.order != null ? 'Đơn hàng #' + s.order.id : 'Đơn hàng StrongWine'}">Đơn hàng #1</div>
+            </div>
+            <span class="status"
+                  th:classappend="${st == 'COMPLETED'} ? 'good' : (${st == 'FAILED' or st == 'CANCELLED'} ? 'bad' : (${st == 'PENDING_ASSIGNMENT'} ? 'warn' : ''))"
+                  th:text="${@enumDisplayService.shipmentStatus(s.status)}">Trạng thái</span>
+          </div>
+
+          <!-- Prominent COD vs Online Payment Badge -->
+          <div th:if="${isCod}" class="shipper-cod-highlight">
+            <div>
+              <strong class="small" th:text="${st == 'COMPLETED' ? 'ĐÃ THU COD' : 'CẦN THU COD'}">CẦN THU COD</strong>
+              <div class="small text-muted" th:if="${s.codBatch != null}" th:text="'Bảng kê: ' + ${s.codBatch.batchCode}"></div>
+            </div>
+            <strong class="shipper-cod-amount" th:text="${formattedCod}">0 ₫</strong>
+          </div>
+
+          <div th:unless="${isCod}" class="shipper-paid-online">
+            <span>ĐÃ THANH TOÁN ONLINE</span>
+            <span class="tabular-nums" th:text="${formattedOrderTotal}">0 ₫</span>
+          </div>
+
+          <!-- POD Uploaded Badge -->
+          <div th:if="${hasPod}" class="shipper-pod-row">
+            <span class="shipper-pod-badge">
+              <th:block th:replace="~{fragments/icons :: icon('check')}"/>
+              <span>Đã có ảnh POD</span>
+            </span>
+            <span class="small text-muted"
+                  th:if="${s.statusReason != null and #strings.startsWith(s.statusReason, 'POD_NOTE:')}"
+                  th:text="${#strings.substring(s.statusReason, 9)}"></span>
+          </div>
+
+          <!-- One-tap Call Row -->
+          <div class="shipper-phone-row">
+            <div style="min-width:0;">
+              <div class="shipper-section-label">Người nhận</div>
+              <strong th:text="${s.shippingName != null ? s.shippingName : 'Khách nhận'}">Khách nhận</strong>
+              <div class="small tabular-nums text-muted"
+                   th:text="${s.shippingPhone != null ? s.shippingPhone : 'Chưa có SĐT'}">0900000000</div>
+            </div>
+            <a th:if="${s.shippingPhone != null and !#strings.isEmpty(#strings.trim(s.shippingPhone))}"
+               class="shipper-phone-link"
+               th:href="'tel:' + ${#strings.trim(s.shippingPhone)}"
+               aria-label="Gọi ngay cho khách hàng">
+              <span>&#9742; Gọi ngay</span>
+            </a>
+          </div>
+
+          <!-- Delivery Address + Google Maps Deep-Link -->
+          <div class="shipper-panel">
+            <div class="shipper-section-label">Địa chỉ giao hàng</div>
+            <p th:text="${s.shippingAddress != null and !#strings.isEmpty(#strings.trim(s.shippingAddress)) ? s.shippingAddress : 'Chưa cập nhật địa chỉ'}">
+              Địa chỉ giao hàng
+            </p>
+            <a class="shipper-btn w-100"
+               th:if="${(s.shippingLatitude != null and s.shippingLongitude != null) or (s.shippingAddress != null and !#strings.isEmpty(#strings.trim(s.shippingAddress)) and #strings.trim(s.shippingAddress) != '.')}"
+               target="_blank"
+               rel="noopener noreferrer"
+               th:href="${@enumDisplayService.googleMapsUrl(s.shippingLatitude, s.shippingLongitude, s.shippingAddress)}">
+              <th:block th:replace="~{fragments/icons :: icon('warehouse-map')}"/>
+              <span>Chỉ đường Google Maps</span>
+            </a>
+          </div>
+
+          <!-- Order Wine Bottle List -->
+          <section class="shipper-panel" aria-label="Sản phẩm trong đơn" th:if="${s.order != null}">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+              <span class="shipper-section-label">Sản phẩm trong đơn</span>
+              <span class="small tabular-nums text-muted" th:text="'Tổng: ' + ${formattedOrderTotal}">Tổng: 0 ₫</span>
+            </div>
+            <div class="shipper-wine-list" th:if="${s.order.orderItems != null and !s.order.orderItems.isEmpty()}">
+              <div class="shipper-wine-row" th:each="od : ${s.order.orderItems}">
+                <div style="min-width:0;">
+                  <div class="shipper-wine-name" th:text="${od.wine != null ? od.wine.name : 'Rượu vang StrongWine'}">Tên rượu</div>
+                  <div class="small tabular-nums text-muted"
+                       th:text="'SL: ' + ${od.quantity != null ? od.quantity : 0} + ' chai'">SL: 1 chai</div>
+                </div>
+                <strong class="small tabular-nums"
+                        th:text="${od.price != null ? #numbers.formatDecimal(od.price, 0, 'COMMA', 0, 'POINT') + ' ₫' : '0 ₫'}">0 ₫</strong>
+              </div>
+            </div>
+            <p class="small text-muted" th:unless="${s.order.orderItems != null and !s.order.orderItems.isEmpty()}">
+              Chưa có thông tin mặt hàng trong đơn này.
+            </p>
+            <p class="small text-muted"
+               th:if="${s.order.note != null and !#strings.isEmpty(#strings.trim(s.order.note))}"
+               th:text="'Ghi chú khách: ' + ${s.order.note}"></p>
+          </section>
+
+          <!-- Admin Monitoring Read-Only Note -->
+          <div class="small text-muted" th:if="${!canMutate}">
+            Chế độ giám sát quản trị (chỉ tài xế được gán mới có quyền cập nhật trạng thái).
+          </div>
+
+          <!-- Stage 1: PENDING_ASSIGNMENT / ASSIGNED -> Pickup -->
+          <div class="shipper-actions-stack" th:if="${canMutate and (st == 'PENDING_ASSIGNMENT' or st == 'ASSIGNED')}">
+            <form th:action="@{/shipper/shipments/{id}/pickup(id=${s.id})}" method="post" class="js-shipper-action-form">
+              <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+              <button type="submit" class="shipper-btn shipper-btn-primary">
+                <th:block th:replace="~{fragments/icons :: icon('oak-barrel')}"/>
+                <span>Xác nhận đã lấy rượu tại hầm</span>
+              </button>
+            </form>
+          </div>
+
+          <!-- Stage 2: PICKED_UP -> Start Delivery + Optional POD -->
+          <div class="shipper-actions-stack" th:if="${canMutate and st == 'PICKED_UP'}">
+            <form th:action="@{/shipper/shipments/{id}/start(id=${s.id})}" method="post" class="js-shipper-action-form">
+              <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+              <button type="submit" class="shipper-btn shipper-btn-gold w-100">
+                <th:block th:replace="~{fragments/icons :: icon('truck')}"/>
+                <span>Bắt đầu xuất phát giao hàng</span>
+              </button>
+            </form>
+            <button type="button"
+                    class="shipper-btn w-100 js-open-pod-modal"
+                    th:attr="data-shipment-id=${s.id},
+                             data-order-label=${s.order != null ? 'Đơn #' + s.order.id : 'Vận đơn #' + s.id},
+                             data-recipient=${s.shippingName != null ? s.shippingName : ''},
+                             data-pod-action=@{/shipper/shipments/{id}/pod(id=${s.id})},
+                             data-has-pod=${hasPod}">
+              <th:block th:replace="~{fragments/icons :: icon('verified-bottle')}"/>
+              <span th:text="${hasPod ? 'Cập nhật ảnh POD' : 'Chụp ảnh kiểm tra hàng (POD)'}">Chụp ảnh POD</span>
+            </button>
+          </div>
+
+          <!-- Stage 3: DELIVERING -> POD Dialog + Single-Input OTP Dialog -->
+          <div class="shipper-actions-stack" th:if="${canMutate and st == 'DELIVERING'}">
+            <button type="button"
+                    class="shipper-btn shipper-btn-primary js-open-otp-modal"
+                    th:attr="data-shipment-id=${s.id},
+                             data-order-label=${s.order != null ? 'Đơn #' + s.order.id : 'Vận đơn #' + s.id},
+                             data-recipient=${s.shippingName != null ? s.shippingName : ''},
+                             data-cod-reminder=${isCod ? 'Cần thu COD: ' + formattedCod : 'Đã thanh toán online (' + formattedOrderTotal + ')'},
+                             data-complete-action=@{/shipper/shipments/{id}/complete(id=${s.id})},
+                             data-resend-action=@{/shipper/shipments/{id}/resend-otp(id=${s.id})},
+                             data-otp-sent-at=${s.otpLastSentAt != null ? #temporals.format(s.otpLastSentAt, 'yyyy-MM-dd''T''HH:mm:ss') : ''}">
+              <th:block th:replace="~{fragments/icons :: icon('shield')}"/>
+              <span>Nhập OTP 6 số &amp; Hoàn tất giao</span>
+            </button>
+
+            <button type="button"
+                    class="shipper-btn w-100 js-open-pod-modal"
+                    th:attr="data-shipment-id=${s.id},
+                             data-order-label=${s.order != null ? 'Đơn #' + s.order.id : 'Vận đơn #' + s.id},
+                             data-recipient=${s.shippingName != null ? s.shippingName : ''},
+                             data-pod-action=@{/shipper/shipments/{id}/pod(id=${s.id})},
+                             data-has-pod=${hasPod}">
+              <th:block th:replace="~{fragments/icons :: icon('verified-bottle')}"/>
+              <span th:text="${hasPod ? 'Cập nhật ảnh giao hàng (POD)' : 'Chụp / Tải ảnh giao hàng (POD)'}">Chụp / Tải ảnh giao hàng (POD)</span>
+            </button>
+          </div>
+
+          <!-- Stage 4: COMPLETED Summary + Optional POD Upload -->
+          <div class="shipper-actions-stack" th:if="${st == 'COMPLETED'}">
+            <div class="small" style="color:var(--status-ok-ink);font-weight:600;">
+              &#10003; Đã bàn giao thành công lúc
+              <span class="tabular-nums"
+                    th:text="${s.completedAt != null ? #temporals.format(s.completedAt, 'HH:mm dd/MM/yyyy') : (s.deliveredAt != null ? #temporals.format(s.deliveredAt, 'HH:mm dd/MM/yyyy') : 'vừa xong')}">vừa xong</span>
+              <span th:text="${s.otpVerified == true ? ' · Đã xác thực OTP' : ' · Hoàn tất thủ công'}"></span>
+            </div>
+            <button th:if="${canMutate}"
+                    type="button"
+                    class="shipper-btn w-100 js-open-pod-modal"
+                    th:attr="data-shipment-id=${s.id},
+                             data-order-label=${s.order != null ? 'Đơn #' + s.order.id : 'Vận đơn #' + s.id},
+                             data-recipient=${s.shippingName != null ? s.shippingName : ''},
+                             data-pod-action=@{/shipper/shipments/{id}/pod(id=${s.id})},
+                             data-has-pod=${hasPod}">
+              <span th:text="${hasPod ? 'Cập nhật ảnh POD' : 'Bổ sung ảnh giao hàng (POD)'}">Bổ sung ảnh giao hàng (POD)</span>
+            </button>
+          </div>
+
+          <!-- Stage 5: FAILED / CANCELLED Summary -->
+          <div class="shipper-alert shipper-alert--bad" th:if="${st == 'FAILED' or st == 'CANCELLED'}">
+            <strong th:text="${st == 'FAILED' ? 'Đã báo sự cố giao hàng' : 'Vận đơn đã hủy'}">Đã báo sự cố</strong>
+            <div class="small" th:if="${s.failureNote != null or s.statusReason != null}"
+                 th:text="${s.failureNote != null ? s.failureNote : s.statusReason}"></div>
+          </div>
+
+          <!-- Visually Separated Danger Zone -->
+          <div class="shipper-danger-zone"
+               th:if="${canMutate and (st == 'ASSIGNED' or st == 'PICKED_UP' or st == 'DELIVERING')}">
+            <span class="small text-muted">Không liên hệ được khách hoặc gặp sự cố?</span>
+            <button type="button"
+                    class="shipper-btn-danger js-open-fail-modal"
+                    th:attr="data-shipment-id=${s.id},
+                             data-order-label=${s.order != null ? 'Đơn #' + s.order.id : 'Vận đơn #' + s.id},
+                             data-recipient=${s.shippingName != null ? s.shippingName : ''},
+                             data-fail-action=@{/shipper/shipments/{id}/fail(id=${s.id})}">
+              Báo sự cố giao hàng
+            </button>
+          </div>
+
+        </article>
+      </div>
+    </section>
+
+    <!-- COD Batch Submission & History Section -->
+    <section id="codBatchesSection" class="shipper-section shipper-cod-section" aria-label="Bảng kê nộp tiền COD">
+      <div class="shipper-card">
+        <div class="shipper-card-head">
+          <div>
+            <div class="shipper-section-label">Đối soát thu hộ</div>
+            <h2 style="font-size:var(--text-lg);margin-top:0.2rem;">Bảng kê nộp tiền COD</h2>
+          </div>
+          <span class="status warn tabular-nums"
+                th:text="${(unbatchedCodShipments != null ? #lists.size(unbatchedCodShipments) : 0) + ' đơn chờ nộp'}">0 đơn chờ nộp</span>
+        </div>
+
+        <div th:if="${unbatchedCodShipments != null and !unbatchedCodShipments.isEmpty() and (isAdminView == null or !isAdminView)}"
+             class="shipper-cod-cta-box">
+          <p class="small">
+            Bạn có <strong class="tabular-nums" th:text="${#lists.size(unbatchedCodShipments)}">0</strong> đơn COD hoàn tất chưa gom bảng kê nộp về thủ quỹ.
+          </p>
+          <button type="button"
+                  id="openCodBatchModalBtn"
+                  class="shipper-btn shipper-btn-gold w-100"
+                  data-dialog-open="codBatchModal">
+            <th:block th:replace="~{fragments/icons :: icon('cod-wallet')}"/>
+            <span>Tạo bảng kê nộp COD</span>
+          </button>
+        </div>
+
+        <p class="small text-muted" th:if="${unbatchedCodShipments == null or unbatchedCodShipments.isEmpty()}">
+          Hiện chưa có đơn COD hoàn tất nào chờ tạo bảng kê.
+        </p>
+
+        <div class="shipper-batch-list" th:if="${codBatches != null and !codBatches.isEmpty()}">
+          <div class="shipper-section-label" style="margin-top:var(--space-2);">Lịch sử bảng kê COD</div>
+          <article class="shipper-batch-card"
+                   th:each="b : ${codBatches}"
+                   th:with="bst=${b.status != null ? b.status.name() : 'PENDING_SETTLEMENT'},
+                            bTone=${bst == 'VERIFIED' ? 'good' : (bst == 'DISPUTED' ? 'bad' : 'warn')},
+                            expectedFmt=${b.totalExpectedAmount != null ? #numbers.formatDecimal(b.totalExpectedAmount, 0, 'COMMA', 0, 'POINT') + ' ₫' : '0 ₫'},
+                            submittedFmt=${b.totalSubmittedAmount != null ? #numbers.formatDecimal(b.totalSubmittedAmount, 0, 'COMMA', 0, 'POINT') + ' ₫' : expectedFmt}"
+                   th:attr="data-batch-code=${b.batchCode},data-batch-status=${bst}">
+            <div class="shipper-card-head">
+              <div>
+                <strong class="shipper-order-code" th:text="${b.batchCode}">COD-001</strong>
+                <div class="small text-muted tabular-nums">
+                  <span th:text="${(b.orderCount != null ? b.orderCount : 0) + ' đơn'}">0 đơn</span>
+                  <span th:if="${b.submittedAt != null}"
+                        th:text="' · ' + ${#temporals.format(b.submittedAt, 'HH:mm dd/MM/yyyy')}"></span>
+                </div>
+              </div>
+              <span class="status"
+                    th:classappend="${bTone}"
+                    th:attr="data-cod-batch-status=${bst}"
+                    th:text="${@enumDisplayService.codBatchStatus(b.status)}">Chờ đối soát</span>
+            </div>
+
+            <div class="shipper-batch-amounts">
+              <div>
+                <span class="small text-muted">Dự kiến thu</span>
+                <strong class="tabular-nums" th:text="${expectedFmt}">0 ₫</strong>
+              </div>
+              <div>
+                <span class="small text-muted">Đã khai nộp</span>
+                <strong class="tabular-nums" th:text="${submittedFmt}">0 ₫</strong>
+              </div>
+            </div>
+
+            <div class="small"
+                 th:if="${b.note != null and !#strings.isEmpty(#strings.trim(b.note))}"
+                 th:classappend="${bst == 'DISPUTED'} ? 'shipper-batch-dispute-note' : 'text-muted'">
+              <strong th:text="${bst == 'DISPUTED' ? 'Ghi chú đối soát (Admin): ' : 'Ghi chú: '}">Ghi chú: </strong>
+              <span th:text="${b.note}"></span>
+            </div>
+
+            <div class="small text-muted" th:if="${b.verifiedBy != null and !#strings.isEmpty(#strings.trim(b.verifiedBy))}">
+              Đối soát bởi <strong th:text="${b.verifiedBy}">admin</strong>
+              <span th:if="${b.verifiedAt != null}"
+                    th:text="' lúc ' + ${#temporals.format(b.verifiedAt, 'HH:mm dd/MM/yyyy')}"></span>
+            </div>
+          </article>
+        </div>
+
+        <p class="small text-muted" th:if="${codBatches == null or codBatches.isEmpty()}">
+          Chưa có lịch sử bảng kê COD nào được gửi.
+        </p>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<!-- Native Dialog 1: Proof Of Delivery (POD) Photo Capture & Instant Preview -->
+<dialog id="podModal" class="sw-dialog" closedby="any" aria-labelledby="podModalTitle">
+  <div class="sw-dialog-head">
+    <h2 id="podModalTitle" class="sw-dialog-title">Ảnh bằng chứng giao hàng (POD)</h2>
+    <button type="button" class="shipper-icon-btn" data-dialog-close="podModal" aria-label="Đóng hộp thoại POD">
+      <th:block th:replace="~{fragments/icons :: icon('close')}"/>
+    </button>
+  </div>
+  <div class="sw-dialog-body">
+    <p id="podModalMeta" class="small text-muted">Chụp hoặc chọn ảnh giao hàng.</p>
+    <div id="podModalExistingNote" class="shipper-alert shipper-alert--good small" hidden>
+      Vận đơn này đã có ảnh POD. Chọn ảnh mới để cập nhật nếu cần.
+    </div>
+    <form id="podModalForm" action="/shipper/shipments/0/pod" method="post" enctype="multipart/form-data">
+      <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+      <div class="shipper-file-drop">
+        <label for="podPhotoInput" class="shipper-field-label">Chọn / Chụp ảnh bàn giao (JPG, PNG, tối đa 5MB)</label>
+        <input type="file"
+               id="podPhotoInput"
+               name="podPhoto"
+               class="shipper-file-input"
+               accept="image/*"
+               capture="environment"
+               data-dialog-autofocus="true"
+               required>
+      </div>
+
+      <div id="podPreviewWrap" class="shipper-pod-preview" style="margin-top:var(--space-3);" hidden>
+        <img id="podPreviewImg" src="" alt="Xem trước ảnh bằng chứng giao hàng">
+        <span id="podPreviewInfo" class="small text-muted"></span>
+      </div>
+
+      <div style="margin-top:var(--space-3);">
+        <label for="podDeliveryNote" class="shipper-field-label">Ghi chú bàn giao (tùy chọn)</label>
+        <textarea id="podDeliveryNote"
+                  name="deliveryNote"
+                  rows="2"
+                  maxlength="400"
+                  class="shipper-input"
+                  placeholder="Ví dụ: Đã giao tận tay khách hoặc lễ tân tòa nhà..."></textarea>
+      </div>
+
+      <div id="podModalError" class="shipper-inline-error" style="margin-top:var(--space-2);" role="alert" hidden></div>
+
+      <div class="sw-dialog-foot">
+        <button type="button" class="shipper-btn" data-dialog-close="podModal">Hủy</button>
+        <button type="submit" id="podSubmitBtn" class="shipper-btn shipper-btn-primary" style="flex:1;">
+          Lưu ảnh POD
+        </button>
+      </div>
+    </form>
+  </div>
+</dialog>
+
+<!-- Native Dialog 2: Single-Input 6-Digit OTP Completion + Resend OTP with Cooldown -->
+<dialog id="otpModal" class="sw-dialog" closedby="any" aria-labelledby="otpModalTitle">
+  <div class="sw-dialog-head">
+    <h2 id="otpModalTitle" class="sw-dialog-title">Xác thực OTP giao hàng</h2>
+    <button type="button" class="shipper-icon-btn" data-dialog-close="otpModal" aria-label="Đóng hộp thoại OTP">
+      <th:block th:replace="~{fragments/icons :: icon('close')}"/>
+    </button>
+  </div>
+  <div class="sw-dialog-body">
+    <div id="otpModalMeta" class="small text-muted">Đơn hàng đang giao</div>
+    <div id="otpModalCodReminder" class="shipper-alert shipper-alert--warn small"></div>
+
+    <form id="otpModalForm" action="/shipper/shipments/0/complete" method="post">
+      <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+      <div>
+        <label for="otpSingleInput" class="shipper-field-label">Mã OTP 6 chữ số từ khách hàng</label>
+        <input type="text"
+               id="otpSingleInput"
+               name="otp"
+               inputmode="numeric"
+               maxlength="6"
+               pattern="[0-9]{6}"
+               autocomplete="one-time-code"
+               class="otp-single-input"
+               placeholder="000000"
+               data-dialog-autofocus="true"
+               required>
+      </div>
+
+      <div style="margin-top:var(--space-3);">
+        <label for="otpDeliveryNote" class="shipper-field-label">Ghi chú hoàn tất (tùy chọn)</label>
+        <input type="text"
+               id="otpDeliveryNote"
+               name="deliveryNote"
+               maxlength="400"
+               class="shipper-input"
+               placeholder="Ghi chú giao nhận (nếu có)">
+      </div>
+
+      <div id="otpModalError" class="shipper-inline-error" style="margin-top:var(--space-2);" role="alert" hidden></div>
+
+      <div class="sw-dialog-foot">
+        <button type="button" class="shipper-btn" data-dialog-close="otpModal">Đóng</button>
+        <button type="submit" id="otpSubmitBtn" class="shipper-btn shipper-btn-primary" style="flex:1;">
+          Xác thực OTP &amp; Hoàn tất giao
+        </button>
+      </div>
+    </form>
+
+    <div class="shipper-resend-box">
+      <div style="min-width:0;flex:1;">
+        <div class="small text-muted">Khách chưa nhận được mã?</div>
+        <div id="resendOtpFeedback" class="small text-muted" aria-live="polite"></div>
+      </div>
+      <form id="resendOtpForm" action="/shipper/shipments/0/resend-otp" method="post">
+        <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+        <button type="submit" id="resendOtpBtn" class="shipper-btn shipper-btn-gold">
+          Gửi lại OTP
+        </button>
+      </form>
+    </div>
+  </div>
+</dialog>
+
+<!-- Native Dialog 3: Delivery Failure Confirmation (Prevents Mis-Taps) -->
+<dialog id="failModal" class="sw-dialog" closedby="any" aria-labelledby="failModalTitle">
+  <div class="sw-dialog-head">
+    <h2 id="failModalTitle" class="sw-dialog-title">Xác nhận báo sự cố giao hàng</h2>
+    <button type="button" class="shipper-icon-btn" data-dialog-close="failModal" aria-label="Đóng hộp thoại báo sự cố">
+      <th:block th:replace="~{fragments/icons :: icon('close')}"/>
+    </button>
+  </div>
+  <div class="sw-dialog-body">
+    <p id="failModalMeta" class="small text-muted">Đơn hàng sẽ chuyển sang trạng thái thất bại và hủy OTP hiện tại.</p>
+
+    <div class="shipper-preset-chips" aria-label="Chọn nhanh lý do">
+      <button type="button" class="shipper-chip js-fail-preset" data-reason="Khách không nghe máy sau nhiều lần gọi">Khách không nghe máy</button>
+      <button type="button" class="shipper-chip js-fail-preset" data-reason="Khách hẹn giao lại vào khung giờ khác">Khách hẹn giao lại</button>
+      <button type="button" class="shipper-chip js-fail-preset" data-reason="Địa chỉ không chính xác / Không tìm thấy điểm giao">Sai địa chỉ</button>
+      <button type="button" class="shipper-chip js-fail-preset" data-reason="Khách từ chối nhận hàng">Khách từ chối nhận</button>
+    </div>
+
+    <form id="failModalForm" action="/shipper/shipments/0/fail" method="post">
+      <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+      <div>
+        <label for="failReasonInput" class="shipper-field-label">Lý do giao không thành công</label>
+        <textarea id="failReasonInput"
+                  name="reason"
+                  rows="3"
+                  maxlength="400"
+                  class="shipper-input"
+                  placeholder="Nhập lý do chi tiết..."
+                  data-dialog-autofocus="true"
+                  required></textarea>
+      </div>
+
+      <label class="shipper-confirm-check" style="margin-top:var(--space-3);">
+        <input type="checkbox" id="failConfirmCheck" required>
+        <span>Tôi xác nhận đã liên hệ khách và đồng ý đánh dấu đơn giao thất bại.</span>
+      </label>
+
+      <div id="failModalError" class="shipper-inline-error" style="margin-top:var(--space-2);" role="alert" hidden></div>
+
+      <div class="sw-dialog-foot">
+        <button type="button" class="shipper-btn" data-dialog-close="failModal">Quay lại</button>
+        <button type="submit" id="failSubmitBtn" class="shipper-btn-danger" style="flex:1;">
+          Xác nhận báo sự cố
+        </button>
+      </div>
+    </form>
+  </div>
+</dialog>
+
+<!-- Native Dialog 4: COD Batch Multi-Select & Live Sum Calculator -->
+<dialog id="codBatchModal" class="sw-dialog" closedby="any" aria-labelledby="codBatchModalTitle">
+  <div class="sw-dialog-head">
+    <h2 id="codBatchModalTitle" class="sw-dialog-title">Tạo bảng kê nộp tiền COD</h2>
+    <button type="button" class="shipper-icon-btn" data-dialog-close="codBatchModal" aria-label="Đóng hộp thoại bảng kê COD">
+      <th:block th:replace="~{fragments/icons :: icon('close')}"/>
+    </button>
+  </div>
+  <div class="sw-dialog-body">
+    <form id="codBatchForm" th:action="@{/shipper/cod-batches}" method="post">
+      <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:var(--space-2);">
+        <span class="shipper-field-label" style="margin-bottom:0;">Chọn vận đơn COD cần nộp</span>
+        <button type="button" id="codToggleAllBtn" class="shipper-chip" style="min-height:48px;">Chọn / Bỏ chọn tất cả</button>
+      </div>
+
+      <div class="shipper-cod-check-list" th:if="${unbatchedCodShipments != null and !unbatchedCodShipments.isEmpty()}">
+        <label class="shipper-cod-check-item"
+               th:each="cs : ${unbatchedCodShipments}"
+               th:with="amt=${cs.codCollectedAmount != null ? cs.codCollectedAmount : (cs.order != null and cs.order.totalPrice != null ? cs.order.totalPrice : 0)}">
+          <span style="display:flex;align-items:center;gap:10px;min-width:0;">
+            <input type="checkbox"
+                   class="cod-shipment-checkbox"
+                   name="shipmentIds"
+                   th:value="${cs.id}"
+                   th:attr="data-cod-amount=${amt}"
+                   checked>
+            <span style="min-width:0;">
+              <strong class="small tabular-nums"
+                      th:text="${'Vận đơn #' + cs.id + (cs.order != null ? ' · Đơn #' + cs.order.id : '')}">Vận đơn</strong>
+              <span class="small text-muted" style="display:block;"
+                    th:text="${cs.shippingName != null ? cs.shippingName : 'Khách nhận'}">Khách nhận</span>
+            </span>
+          </span>
+          <strong class="small tabular-nums"
+                  th:text="${#numbers.formatDecimal(amt, 0, 'COMMA', 0, 'POINT') + ' ₫'}">0 ₫</strong>
+        </label>
+      </div>
+
+      <p class="small text-muted" th:if="${unbatchedCodShipments == null or unbatchedCodShipments.isEmpty()}">
+        Không có đơn COD nào khả dụng để tạo bảng kê.
+      </p>
+
+      <div class="shipper-cod-highlight" style="margin-top:var(--space-3);">
+        <div>
+          <div class="small text-muted" id="codSelectedCount">0 đơn được chọn</div>
+          <strong>Tổng COD dự kiến</strong>
+        </div>
+        <strong class="shipper-cod-amount" id="codCalculatedTotal">0 ₫</strong>
+      </div>
+
+      <div style="margin-top:var(--space-3);">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+          <label for="codSubmittedAmount" class="shipper-field-label">Số tiền thực nộp (VNĐ)</label>
+          <button type="button" id="codSyncExpectedBtn" class="small" style="background:none;border:0;color:var(--accent-gold-ink);font-weight:700;min-height:36px;">
+            Khớp tổng dự kiến
+          </button>
+        </div>
+        <input type="number"
+               id="codSubmittedAmount"
+               name="submittedAmount"
+               min="0"
+               step="1000"
+               class="shipper-input tabular-nums"
+               required>
+      </div>
+
+      <div style="margin-top:var(--space-3);">
+        <label for="codBatchNote" class="shipper-field-label">Ghi chú nộp tiền (tùy chọn)</label>
+        <textarea id="codBatchNote"
+                  name="note"
+                  rows="2"
+                  maxlength="500"
+                  class="shipper-input"
+                  placeholder="Ví dụ: Nộp tiền mặt ca chiều hoặc mã giao dịch chuyển khoản..."></textarea>
+      </div>
+
+      <div id="codBatchModalError" class="shipper-inline-error" style="margin-top:var(--space-2);" role="alert" hidden></div>
+
+      <div class="sw-dialog-foot">
+        <button type="button" class="shipper-btn" data-dialog-close="codBatchModal">Hủy</button>
+        <button type="submit" id="codBatchSubmitBtn" class="shipper-btn shipper-btn-primary" style="flex:1;">
+          Nộp bảng kê COD
+        </button>
+      </div>
+    </form>
+  </div>
+</dialog>
+
+<nav th:replace="~{fragments/shipper-shell :: bottomNav('dashboard')}"></nav>
+<th:block th:replace="~{fragments/shipper-shell :: scripts}"></th:block>
+<script th:src="@{/js/shipper-mobile-actions.js}" defer></script>
 </body>
 </html>
