@@ -18,7 +18,7 @@
   <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
   <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : 'X-CSRF-TOKEN'}">
   <title th:text="${pageTitle != null ? pageTitle : 'StrongWine — Maison de Vins'}">StrongWine — Maison de Vins</title>
-  <link rel="icon" type="image/svg+xml" th:href="@{/favicon.svg}">
+  <link rel="icon" type="image/svg+xml" th:href="@{/favicon.svg(v='20261114c')}">
   <script>
     (function () {
       try {
@@ -33,8 +33,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" th:href="@{/css/tokens.css}">
-  <link rel="stylesheet" th:href="@{/css/storefront.css}">
+  <link rel="stylesheet" th:href="@{/css/tokens.css(v='20261114c')}">
+  <link rel="stylesheet" th:href="@{/css/storefront.css(v='20261114c')}">
 </th:block>
 
 <header th:fragment="header(activePage)" class="site-header">
@@ -95,7 +95,7 @@
       </button>
 
       <button type="button"
-              class="btn-gold js-open-cart-drawer"
+              class="btn-outline js-open-cart-drawer"
               aria-label="Mở giỏ hàng"
               style="padding: 9px 14px; min-height: 40px;">
         <th:block th:replace="~{fragments/icons :: icon('cart')}"/>
@@ -145,46 +145,46 @@
       <stop offset="100%" stop-color="#2c1216"/>
     </linearGradient>
     <linearGradient id="swBottleFoil" x1="48" y1="16" x2="72" y2="66" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#e2be72"/>
-      <stop offset="50%" stop-color="#c9a84c"/>
-      <stop offset="100%" stop-color="#8b6b23"/>
+      <stop offset="0%" stop-color="#cdb387"/>
+      <stop offset="50%" stop-color="#b89b6d"/>
+      <stop offset="100%" stop-color="#7c6644"/>
     </linearGradient>
     <linearGradient id="swBottleLabel" x1="34" y1="142" x2="86" y2="220" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#f7f1e5"/>
-      <stop offset="100%" stop-color="#e5dac4"/>
+      <stop offset="0%" stop-color="#f7f5f0"/>
+      <stop offset="100%" stop-color="#e7e3db"/>
     </linearGradient>
   </defs>
   <ellipse cx="60" cy="266" rx="34" ry="7" fill="rgba(0,0,0,0.42)"/>
   <path d="M51 18h18v12l-1 40c0 12 22 24 22 50v130c0 10-8 16-30 16s-30-6-30-16V120c0-26 22-38 22-50l-1-40V18Z"
         fill="url(#swBottleGlass)"
-        stroke="#c9a84c"
+        stroke="#b89b6d"
         stroke-opacity="0.45"
         stroke-width="1.2"/>
   <rect x="49" y="14" width="22" height="42" rx="3" fill="url(#swBottleFoil)"/>
-  <rect x="48" y="22" width="24" height="5" rx="2" fill="#8b1a1a"/>
+  <rect x="48" y="22" width="24" height="5" rx="2" fill="#7c2430"/>
   <path d="M40 124c2-12 7-20 9-36" stroke="rgba(255,255,255,0.22)" stroke-width="3" stroke-linecap="round"/>
-  <rect x="36" y="140" width="48" height="78" rx="4" fill="url(#swBottleLabel)" stroke="#c9a84c" stroke-width="1"/>
-  <path d="M44 156h32M48 168h24" stroke="#7c1818" stroke-width="1.4" stroke-linecap="round"/>
-  <circle cx="60" cy="189" r="9" fill="#8b1a1a"/>
-  <circle cx="60" cy="189" r="5.5" stroke="#e2be72" stroke-width="1"/>
-  <path d="M44 206h32" stroke="#5b4d3f" stroke-width="1.1" stroke-linecap="round"/>
+  <rect x="36" y="140" width="48" height="78" rx="4" fill="url(#swBottleLabel)" stroke="#b89b6d" stroke-width="1"/>
+  <path d="M44 156h32M48 168h24" stroke="#6e1f2a" stroke-width="1.4" stroke-linecap="round"/>
+  <circle cx="60" cy="189" r="9" fill="#7c2430"/>
+  <circle cx="60" cy="189" r="5.5" stroke="#cdb387" stroke-width="1"/>
+  <path d="M44 206h32" stroke="#52504c" stroke-width="1.1" stroke-linecap="round"/>
 </svg>
 
 <footer th:fragment="footer" class="site-footer">
   <div class="sw-container">
-    <div class="footer-grid" style="display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:28px;padding-bottom:32px;border-bottom:1px solid rgba(201,168,76,0.18);">
+    <div class="footer-grid" style="display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:28px;padding-bottom:32px;border-bottom:1px solid rgba(243,241,236,0.1);">
       <div>
         <a th:href="@{/}" class="logo" style="margin-bottom:12px;">
           <span class="logo-mark" aria-hidden="true">S</span>
           <span class="logo-txt">StrongWine</span>
         </a>
-        <p style="font-size:13px;line-height:1.65;color:#c7bba8;max-width:320px;">
+        <p style="font-size:13px;line-height:1.65;color:#a8a49c;max-width:320px;">
           Maison de Vins — Tuyển chọn vang Grand Cru và tinh hoa rượu truyền thống Việt bảo quản hầm lạnh chuẩn quốc tế.
         </p>
       </div>
 
       <div>
-        <h4 style="font-size:13px;text-transform:uppercase;letter-spacing:0.12em;color:#e2be72;margin-bottom:12px;">Hầm rượu</h4>
+        <h4 style="font-size:13px;text-transform:uppercase;letter-spacing:0.12em;color:#d4be96;margin-bottom:12px;">Hầm rượu</h4>
         <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:8px;font-size:13px;">
           <li><a th:href="@{/wines}">Tất cả chai vang</a></li>
           <li><a th:href="@{/wines(type='Red')}">Vang Đỏ</a></li>
@@ -194,7 +194,7 @@
       </div>
 
       <div>
-        <h4 style="font-size:13px;text-transform:uppercase;letter-spacing:0.12em;color:#e2be72;margin-bottom:12px;">Dịch vụ</h4>
+        <h4 style="font-size:13px;text-transform:uppercase;letter-spacing:0.12em;color:#d4be96;margin-bottom:12px;">Dịch vụ</h4>
         <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:8px;font-size:13px;">
           <li><a th:href="@{/orders}">Theo dõi đơn hàng</a></li>
           <li><a th:href="@{/cart}">Giỏ hàng &amp; Checkout</a></li>
@@ -203,16 +203,16 @@
       </div>
 
       <div>
-        <h4 style="font-size:13px;text-transform:uppercase;letter-spacing:0.12em;color:#e2be72;margin-bottom:12px;">Cam kết</h4>
-        <p style="font-size:13px;line-height:1.6;color:#c7bba8;margin:0;">
+        <h4 style="font-size:13px;text-transform:uppercase;letter-spacing:0.12em;color:#d4be96;margin-bottom:12px;">Cam kết</h4>
+        <p style="font-size:13px;line-height:1.6;color:#a8a49c;margin:0;">
           Giao hàng bảo quản lạnh trong ngày, kiểm tra niêm phong &amp; xác thực OTP 6 chữ số khi nhận hàng.
         </p>
       </div>
     </div>
 
-    <div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;padding-top:20px;font-size:12px;color:#9e9180;">
+    <div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;padding-top:20px;font-size:12px;color:#76736d;">
       <span>&copy; 2026 StrongWine — Maison de Vins. Uống có trách nhiệm (18+).</span>
-      <span>Luxury Dark Wine Cellar Architecture</span>
+      <span>Obsidian &amp; Limestone Atelier Architecture</span>
     </div>
   </div>
 
@@ -254,7 +254,7 @@
         <th:block th:replace="~{fragments/icons :: icon('wine-glass')}"/>
         <strong id="aiPanelTitle" style="font-family:var(--font-display);font-size:0.98rem;">Sommelier AI</strong>
       </div>
-      <button type="button" id="aiClose" class="close-btn" data-dialog-close="aiPanel" aria-label="Đóng Sommelier AI" style="color:#f0e8da;">
+      <button type="button" id="aiClose" class="close-btn" data-dialog-close="aiPanel" aria-label="Đóng Sommelier AI">
         <th:block th:replace="~{fragments/icons :: icon('close')}"/>
       </button>
     </div>

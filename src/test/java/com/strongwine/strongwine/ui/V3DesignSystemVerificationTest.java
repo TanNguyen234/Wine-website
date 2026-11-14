@@ -91,9 +91,9 @@ class V3DesignSystemVerificationTest {
         assertTrue(tokens.contains("color-scheme: dark light;"));
         assertTrue(tokens.contains("[data-theme=\"cellar\"]"));
         assertTrue(tokens.contains("[data-theme=\"ivory\"]"));
-        assertTrue(tokens.contains("--surface-canvas: #0c0a08;"));
-        assertTrue(tokens.contains("--accent-crimson: #8b1a1a;"));
-        assertTrue(tokens.contains("--accent-gold: #c9a84c;"));
+        assertTrue(tokens.contains("--surface-canvas: #0c0d10;"));
+        assertTrue(tokens.contains("--accent-crimson: #6f1d2b;"));
+        assertTrue(tokens.contains("--accent-gold: #b5a68e;"));
         assertTrue(tokens.contains("--sw-bordeaux"));
         assertTrue(tokens.contains("--sw-champagne"));
         assertTrue(tokens.contains("@view-transition"));
@@ -131,8 +131,8 @@ class V3DesignSystemVerificationTest {
         JsonNode manifest = new ObjectMapper().readTree(manifestRaw);
         assertEquals("/shipper/dashboard", manifest.get("start_url").asText());
         assertEquals("standalone", manifest.get("display").asText());
-        assertEquals("#0c0a08", manifest.get("theme_color").asText());
-        assertEquals("#0c0a08", manifest.get("background_color").asText());
+        assertEquals("#0c0d10", manifest.get("theme_color").asText());
+        assertEquals("#0c0d10", manifest.get("background_color").asText());
         assertEquals("/favicon.svg", manifest.get("icons").get(0).get("src").asText());
 
         String sw = readStatic("sw-shipper.js");

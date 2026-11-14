@@ -30,21 +30,21 @@
 
         return {
             isIvory: isIvory,
-            textPrimary: readCssToken("--text-primary", isIvory ? "#1e1612" : "#f4ede2"),
-            textSecondary: readCssToken("--text-secondary", isIvory ? "#5f5249" : "#b7ab9a"),
-            gridLine: readCssToken("--border-hairline", isIvory ? "rgba(30,22,18,0.1)" : "rgba(255,255,255,0.1)"),
-            surfaceElevated: readCssToken("--surface-elevated", isIvory ? "#ffffff" : "#181310"),
-            crimson: readCssToken("--accent-crimson", "#8b1a1a"),
-            gold: readCssToken("--accent-gold", "#c9a84c"),
-            goldInk: readCssToken("--accent-gold-ink", isIvory ? "#8d6b20" : "#e2be72"),
+            textPrimary: readCssToken("--text-primary", isIvory ? "#161618" : "#f3f1ec"),
+            textSecondary: readCssToken("--text-secondary", isIvory ? "#52504c" : "#a8a49c"),
+            gridLine: readCssToken("--border-hairline", isIvory ? "rgba(21, 22, 25, 0.09)" : "rgba(244, 243, 239, 0.08)"),
+            surfaceElevated: readCssToken("--surface-elevated", isIvory ? "#ffffff" : "#121418"),
+            crimson: readCssToken("--accent-crimson", "#6f1d2b"),
+            gold: readCssToken("--accent-gold", "#b5a68e"),
+            goldInk: readCssToken("--accent-gold-ink", isIvory ? "#5b4f3d" : "#dbd2c2"),
             fontSans: readCssToken("--font-sans", "'Plus Jakarta Sans', system-ui, sans-serif"),
             fontMono: readCssToken("--font-mono", "ui-monospace, monospace"),
             slicePalette: [
-                readCssToken("--accent-crimson", "#8b1a1a"),
-                readCssToken("--accent-gold", "#c9a84c"),
-                isIvory ? "#b96e62" : "#c78b7d",
-                isIvory ? "#7d5b24" : "#d9b970",
-                isIvory ? "#52323a" : "#70424c"
+                readCssToken("--accent-crimson", "#6f1d2b"),
+                readCssToken("--accent-gold", "#b5a68e"),
+                isIvory ? "#2e6f56" : "#4b9176",
+                isIvory ? "#3b6b96" : "#5e8ebd",
+                isIvory ? "#6e5586" : "#8b72a4"
             ]
         };
     }
@@ -220,8 +220,8 @@
 
         var ctx = canvas.getContext("2d");
         var gradient = ctx.createLinearGradient(0, 0, 0, 280);
-        gradient.addColorStop(0, palette.isIvory ? "rgba(139, 26, 26, 0.22)" : "rgba(201, 168, 76, 0.28)");
-        gradient.addColorStop(1, "rgba(201, 168, 76, 0.0)");
+        gradient.addColorStop(0, palette.isIvory ? "rgba(106, 28, 41, 0.16)" : "rgba(181, 166, 142, 0.2)");
+        gradient.addColorStop(1, "rgba(181, 166, 142, 0.0)");
 
         var instance = new window.Chart(canvas, {
             type: "line",

@@ -86,28 +86,28 @@
         --header-height: 74px;
         --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
 
-        /* Default Theme: Luxury Dark Wine Cellar ([data-theme="cellar"]) */
-        --surface-canvas: #0c0a08;
-        --surface-elevated: #171310;
-        --surface-card: #1b1612;
-        --surface-modal: #221b17;
-        --surface-subtle: #29211c;
+        /* Default Theme: Cool Obsidian & Champagne Stone Atelier ([data-theme="cellar"]) */
+        --surface-canvas: #0c0d10;
+        --surface-elevated: #121418;
+        --surface-card: #16181e;
+        --surface-modal: #1c1e26;
+        --surface-subtle: #23262f;
 
-        --accent-crimson: #8b1a1a;
-        --accent-crimson-hover: #a83030;
+        --accent-crimson: #6f1d2b;
+        --accent-crimson-hover: #872536;
         --accent-crimson-ink: #ffffff;
-        --accent-gold: #c9a84c;
-        --accent-gold-bright: #e2be72;
-        --accent-gold-ink: #e2be72;
+        --accent-gold: #b5a68e;
+        --accent-gold-bright: #ccc0ab;
+        --accent-gold-ink: #dbd2c2;
 
-        --text-primary: #f0e8da;
-        --text-secondary: #c7bba8;
-        --text-muted: #9e9180;
-        --border-hairline: rgba(201, 168, 76, 0.22);
-        --border-strong: rgba(240, 232, 218, 0.24);
+        --text-primary: #f4f3ef;
+        --text-secondary: #a4a6ad;
+        --text-muted: #72757e;
+        --border-hairline: rgba(244, 243, 239, 0.08);
+        --border-strong: rgba(244, 243, 239, 0.16);
 
-        --shadow-card: 0 12px 32px rgba(0, 0, 0, 0.38);
-        --shadow-elevated: 0 22px 56px rgba(0, 0, 0, 0.54);
+        --shadow-card: 0 12px 32px rgba(0, 0, 0, 0.34);
+        --shadow-elevated: 0 22px 54px rgba(0, 0, 0, 0.52);
 
         /* Semantic Status Tones (WCAG AA >= 4.5:1 on Cellar surfaces) */
         --status-ok-bg: rgba(34, 139, 94, 0.22);
@@ -126,19 +126,19 @@
         --status-info-ink: #93c5fd;
         --status-info-border: rgba(147, 197, 253, 0.36);
 
-        --status-wine-bg: rgba(139, 26, 26, 0.34);
-        --status-wine-ink: #f5c2c2;
-        --status-wine-border: rgba(226, 190, 114, 0.34);
+        --status-wine-bg: rgba(111, 29, 43, 0.28);
+        --status-wine-ink: #ecc8ce;
+        --status-wine-border: rgba(181, 166, 142, 0.28);
 
-        --status-neutral-bg: rgba(240, 232, 218, 0.11);
-        --status-neutral-ink: #d6cbb8;
-        --status-neutral-border: rgba(240, 232, 218, 0.22);
+        --status-neutral-bg: rgba(244, 243, 239, 0.08);
+        --status-neutral-ink: #cbc9c3;
+        --status-neutral-border: rgba(244, 243, 239, 0.15);
 
         /* Legacy Variable Aliases (Smooth V2 -> V3 Transition) */
         --sw-ink: var(--text-primary);
         --sw-muted: var(--text-muted);
         --sw-bordeaux: var(--accent-crimson);
-        --sw-bordeaux-deep: #4e1010;
+        --sw-bordeaux-deep: #48131d;
         --sw-crimson: var(--accent-crimson);
         --sw-champagne: var(--accent-gold);
         --sw-gold: var(--accent-gold);
@@ -146,7 +146,7 @@
         --sw-paper: var(--surface-card);
         --sw-soft: var(--surface-subtle);
         --sw-line: var(--border-hairline);
-        --sw-plum: #381822;
+        --sw-plum: #1a1c22;
         --sw-success: var(--status-ok-ink);
         --sw-warn: var(--status-warn-ink);
         --sw-danger: var(--status-danger-ink);
@@ -174,27 +174,27 @@
 @layer themes {
     [data-theme="cellar"] {
         color-scheme: dark;
-        --surface-canvas: #0c0a08;
-        --surface-elevated: #171310;
-        --surface-card: #1b1612;
-        --surface-modal: #221b17;
-        --surface-subtle: #29211c;
+        --surface-canvas: #0c0d10;
+        --surface-elevated: #121418;
+        --surface-card: #16181e;
+        --surface-modal: #1c1e26;
+        --surface-subtle: #23262f;
 
-        --accent-crimson: #8b1a1a;
-        --accent-crimson-hover: #a83030;
+        --accent-crimson: #6f1d2b;
+        --accent-crimson-hover: #872536;
         --accent-crimson-ink: #ffffff;
-        --accent-gold: #c9a84c;
-        --accent-gold-bright: #e2be72;
-        --accent-gold-ink: #e2be72;
+        --accent-gold: #b5a68e;
+        --accent-gold-bright: #ccc0ab;
+        --accent-gold-ink: #dbd2c2;
 
-        --text-primary: #f0e8da;
-        --text-secondary: #c7bba8;
-        --text-muted: #9e9180;
-        --border-hairline: rgba(201, 168, 76, 0.22);
-        --border-strong: rgba(240, 232, 218, 0.24);
+        --text-primary: #f4f3ef;
+        --text-secondary: #a4a6ad;
+        --text-muted: #72757e;
+        --border-hairline: rgba(244, 243, 239, 0.08);
+        --border-strong: rgba(244, 243, 239, 0.16);
 
-        --shadow-card: 0 12px 32px rgba(0, 0, 0, 0.38);
-        --shadow-elevated: 0 22px 56px rgba(0, 0, 0, 0.54);
+        --shadow-card: 0 12px 32px rgba(0, 0, 0, 0.34);
+        --shadow-elevated: 0 22px 54px rgba(0, 0, 0, 0.52);
 
         --status-ok-bg: rgba(34, 139, 94, 0.22);
         --status-ok-ink: #7ce2b3;
@@ -212,38 +212,38 @@
         --status-info-ink: #93c5fd;
         --status-info-border: rgba(147, 197, 253, 0.36);
 
-        --status-wine-bg: rgba(139, 26, 26, 0.34);
-        --status-wine-ink: #f5c2c2;
-        --status-wine-border: rgba(226, 190, 114, 0.34);
+        --status-wine-bg: rgba(111, 29, 43, 0.28);
+        --status-wine-ink: #ecc8ce;
+        --status-wine-border: rgba(181, 166, 142, 0.28);
 
-        --status-neutral-bg: rgba(240, 232, 218, 0.11);
-        --status-neutral-ink: #d6cbb8;
-        --status-neutral-border: rgba(240, 232, 218, 0.22);
+        --status-neutral-bg: rgba(244, 243, 239, 0.08);
+        --status-neutral-ink: #cbc9c3;
+        --status-neutral-border: rgba(244, 243, 239, 0.15);
     }
 
     [data-theme="ivory"] {
         color-scheme: light;
-        --surface-canvas: #f7f4ed;
-        --surface-elevated: #fffdf8;
+        --surface-canvas: #f7f7f5;
+        --surface-elevated: #ffffff;
         --surface-card: #ffffff;
-        --surface-modal: #fffdf8;
-        --surface-subtle: #efe9dd;
+        --surface-modal: #ffffff;
+        --surface-subtle: #ecece9;
 
-        --accent-crimson: #7c1818;
-        --accent-crimson-hover: #962222;
+        --accent-crimson: #6a1c29;
+        --accent-crimson-hover: #812434;
         --accent-crimson-ink: #ffffff;
-        --accent-gold: #9a7728;
-        --accent-gold-bright: #b68e32;
-        --accent-gold-ink: #6e5214;
+        --accent-gold: #7c6d56;
+        --accent-gold-bright: #93836a;
+        --accent-gold-ink: #5b4f3d;
 
-        --text-primary: #1a1512;
-        --text-secondary: #4c4138;
-        --text-muted: #66594e;
-        --border-hairline: rgba(124, 24, 24, 0.16);
-        --border-strong: rgba(26, 21, 18, 0.24);
+        --text-primary: #151619;
+        --text-secondary: #51535a;
+        --text-muted: #73767f;
+        --border-hairline: rgba(21, 22, 25, 0.09);
+        --border-strong: rgba(21, 22, 25, 0.18);
 
-        --shadow-card: 0 10px 28px rgba(42, 26, 22, 0.06);
-        --shadow-elevated: 0 20px 50px rgba(42, 26, 22, 0.12);
+        --shadow-card: 0 8px 24px rgba(18, 18, 22, 0.05);
+        --shadow-elevated: 0 20px 48px rgba(18, 18, 22, 0.1);
 
         --status-ok-bg: #e3f2ea;
         --status-ok-ink: #1e5b41;
@@ -261,13 +261,13 @@
         --status-info-ink: #1c4c85;
         --status-info-border: #bad2f4;
 
-        --status-wine-bg: #f6e7e9;
-        --status-wine-ink: #7c1818;
-        --status-wine-border: #ddc0c4;
+        --status-wine-bg: #f6eaec;
+        --status-wine-ink: #6e1f2a;
+        --status-wine-border: #dec1c5;
 
-        --status-neutral-bg: #ede8df;
-        --status-neutral-ink: #4c4138;
-        --status-neutral-border: #d5ccc0;
+        --status-neutral-bg: #efede8;
+        --status-neutral-ink: #52504c;
+        --status-neutral-border: #dad6ce;
     }
 }
 

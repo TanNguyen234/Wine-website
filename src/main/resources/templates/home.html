@@ -45,7 +45,7 @@
                         </div>
                         <a class="hero-bottle-card" th:href="@{/wines/{id}(id=${heroWine.id})}">
                             <div>
-                                <div class="eyebrow" style="color:#e2be72;"
+                                <div class="eyebrow" style="color:var(--accent-gold-ink);"
                                      th:text="${(heroWine.country != null ? heroWine.country : 'Maison de Vins') + (heroWine.year != null ? ' · ' + heroWine.year : '')}">Pháp · 2018</div>
                                 <strong th:text="${heroWine.name}">Château Margaux</strong>
                             </div>
@@ -291,13 +291,13 @@
         <div class="sw-container">
             <div class="pairing-banner">
                 <div>
-                    <div class="eyebrow" style="color:#e2be72;">SOMMELIER AI · GỢI Ý THỰC ĐƠN</div>
+                    <div class="eyebrow" style="color:var(--accent-gold-ink);">SOMMELIER AI · GỢI Ý THỰC ĐƠN</div>
                     <h2>Chưa chắc nên chọn chai vang nào cho bữa tối?</h2>
                     <p>Hỏi trợ lý Sommelier AI để nhận gợi ý chai vang phù hợp món ăn, niên vụ và ngân sách ngay từ danh mục đang còn hàng tại StrongWine.</p>
                 </div>
                 <div class="display-flex gap12" style="flex-wrap:wrap;">
                     <button type="button" class="btn btn-gold" data-dialog-open="aiPanel">Mở Sommelier AI</button>
-                    <a class="btn btn-outline" th:href="@{/wines}" style="color:#f0e8da;border-color:rgba(226,190,114,0.4);">Xem danh mục &rarr;</a>
+                    <a class="btn btn-outline" th:href="@{/wines}" style="color:#f4f3ef;border-color:rgba(244,243,239,0.28);">Xem danh mục &rarr;</a>
                 </div>
             </div>
         </div>

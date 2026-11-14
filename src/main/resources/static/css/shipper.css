@@ -8,9 +8,7 @@
 @layer layout {
   .shipper-body {
     min-height: 100dvh;
-    background:
-      radial-gradient(640px 320px at 50% -10%, rgba(139, 26, 26, 0.16), transparent 65%),
-      var(--surface-canvas);
+    background: var(--surface-canvas);
     color: var(--text-primary);
     padding-bottom: calc(84px + env(safe-area-inset-bottom));
   }
@@ -59,12 +57,12 @@
 @layer components {
   /* Daylight high-contrast outdoor readability boost when ivory theme active */
   :root[data-theme="ivory"] .shipper-body {
-    --surface-canvas: #f8f6f1;
+    --surface-canvas: #f8f7f4;
     --surface-card: #ffffff;
-    --text-primary: #14100d;
-    --text-secondary: #383029;
-    --border-hairline: rgba(20, 16, 13, 0.16);
-    --border-strong: rgba(20, 16, 13, 0.28);
+    --text-primary: #161618;
+    --text-secondary: #52504c;
+    --border-hairline: rgba(22, 22, 24, 0.12);
+    --border-strong: rgba(22, 22, 24, 0.22);
   }
 
   .shipper-brand {
@@ -82,8 +80,8 @@
     border-radius: var(--radius-md);
     display: inline-grid;
     place-items: center;
-    background: linear-gradient(145deg, var(--accent-crimson), #4d0d0d);
-    border: 1px solid rgba(226, 190, 114, 0.45);
+    background: var(--accent-crimson);
+    border: 1px solid color-mix(in srgb, var(--accent-gold) 36%, transparent);
     color: var(--accent-gold-bright);
     flex-shrink: 0;
   }
@@ -138,7 +136,7 @@
   .shipper-nav-item.active,
   .shipper-nav-item[aria-current="page"] {
     color: var(--accent-gold-ink);
-    background: rgba(201, 168, 76, 0.14);
+    background: color-mix(in srgb, var(--accent-gold) 14%, transparent);
   }
 
   /* Summary & assignment cards */
@@ -238,8 +236,8 @@
     justify-content: space-between;
     padding: var(--space-3) var(--space-4);
     border-radius: var(--radius-md);
-    background: rgba(201, 168, 76, 0.12);
-    border: 1px solid rgba(201, 168, 76, 0.36);
+    background: color-mix(in srgb, var(--accent-gold) 11%, transparent);
+    border: 1px solid color-mix(in srgb, var(--accent-gold) 30%, transparent);
   }
 
   .shipper-cod-amount {
@@ -279,18 +277,18 @@
 
   .shipper-btn-primary {
     width: 100%;
-    background: linear-gradient(135deg, var(--accent-crimson), #621010);
-    border-color: rgba(226, 190, 114, 0.45);
-    color: #fff8ef;
+    background: var(--accent-crimson);
+    border-color: color-mix(in srgb, var(--accent-gold) 32%, transparent);
+    color: #f7f5f0;
   }
 
   .shipper-btn-primary:hover {
-    background: linear-gradient(135deg, var(--accent-crimson-hover), var(--accent-crimson));
-    border-color: var(--accent-gold-bright);
+    background: var(--accent-crimson-hover);
+    border-color: var(--accent-gold);
   }
 
   .shipper-btn-gold {
-    background: rgba(201, 168, 76, 0.16);
+    background: color-mix(in srgb, var(--accent-gold) 14%, transparent);
     border-color: var(--accent-gold);
     color: var(--accent-gold-ink);
   }
@@ -328,7 +326,7 @@
     background-image: repeating-linear-gradient(
       to right,
       transparent 0 18px,
-      rgba(201, 168, 76, 0.32) 18px 42px
+      color-mix(in srgb, var(--accent-gold) 32%, transparent) 18px 42px
     );
     background-size: 100% 2px;
     background-position: center bottom 10px;
@@ -338,7 +336,7 @@
   .otp-single-input:focus {
     outline: none;
     border-color: var(--accent-gold-bright);
-    box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.22);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-gold) 20%, transparent);
   }
 
   .otp-container {

@@ -3,15 +3,15 @@
    Caches ONLY static shell assets. NEVER caches /api/**, HTML/PII, or POSTs.
    ========================================================================== */
 
-var SW_CACHE_VERSION = "sw-shipper-v3-static-1";
+var SW_CACHE_VERSION = "sw-shipper-v3-static-2";
 
 var STATIC_SHELL_ASSETS = [
-  "/css/tokens.css",
-  "/css/shipper.css",
+  "/css/tokens.css?v=20261114c",
+  "/css/shipper.css?v=20261114c",
   "/js/theme-toggle.js",
   "/js/dialog-kit.js",
   "/js/shipper-mobile-actions.js",
-  "/favicon.svg",
+  "/favicon.svg?v=20261114c",
   "/manifest.webmanifest"
 ];
 
@@ -105,22 +105,13 @@ self.addEventListener("fetch", function (event) {
 
   event.respondWith(
     caches.open(SW_CACHE_VERSION).then(function (cache) {
-      return cache.match(event.request).then(function (cachedResponse) {
-        var networkFetch = fetch(event.request).then(function (networkResponse) {
-          if (networkResponse && networkResponse.ok && networkResponse.type === "basic") {
-            cache.put(event.request, networkResponse.clone());
-          }
-          return networkResponse;
-        });
-
-        if (cachedResponse) {
-          event.waitUntil(networkFetch.catch(function () {
-            return null;
-          }));
-          return cachedResponse;
+      return fetch(event.request).then(function (networkResponse) {
+        if (networkResponse && networkResponse.ok && networkResponse.type === "basic") {
+          cache.put(event.request, networkResponse.clone());
         }
-
-        return networkFetch;
+        return networkResponse;
+      }).catch(function () {
+        return cache.match(event.request);
       });
     })
   );

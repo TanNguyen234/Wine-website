@@ -6,8 +6,8 @@
   "scope": "/shipper/",
   "display": "standalone",
   "orientation": "portrait-primary",
-  "theme_color": "#0c0a08",
-  "background_color": "#0c0a08",
+  "theme_color": "#0c0d10",
+  "background_color": "#0c0d10",
   "lang": "vi",
   "icons": [
     {
