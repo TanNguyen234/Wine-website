@@ -3,6 +3,7 @@ package com.strongwine.strongwine.entity;
 import jakarta.persistence.*;
 import com.strongwine.strongwine.util.AddressTextUtils;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -130,6 +131,22 @@ public class Shipment {
 
     @Column(name = "completed_at")
     private LocalDateTime completedAt;
+
+    @Column(name = "otp_encrypted", length = 512)
+    private String otpEncrypted;
+
+    @Column(name = "proof_of_delivery_url", length = 500)
+    private String proofOfDeliveryUrl;
+
+    @Column(name = "delivered_at")
+    private LocalDateTime deliveredAt;
+
+    @Column(name = "cod_collected_amount", precision = 18, scale = 2)
+    private BigDecimal codCollectedAmount;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "cod_batch_id")
+    private ShipperCodBatch codBatch;
 
     @PrePersist
     public void prePersist() {
@@ -457,5 +474,45 @@ public class Shipment {
 
     public void setCompletedAt(LocalDateTime completedAt) {
         this.completedAt = completedAt;
+    }
+
+    public String getOtpEncrypted() {
+        return otpEncrypted;
+    }
+
+    public void setOtpEncrypted(String otpEncrypted) {
+        this.otpEncrypted = otpEncrypted;
+    }
+
+    public String getProofOfDeliveryUrl() {
+        return proofOfDeliveryUrl;
+    }
+
+    public void setProofOfDeliveryUrl(String proofOfDeliveryUrl) {
+        this.proofOfDeliveryUrl = proofOfDeliveryUrl;
+    }
+
+    public LocalDateTime getDeliveredAt() {
+        return deliveredAt;
+    }
+
+    public void setDeliveredAt(LocalDateTime deliveredAt) {
+        this.deliveredAt = deliveredAt;
+    }
+
+    public BigDecimal getCodCollectedAmount() {
+        return codCollectedAmount;
+    }
+
+    public void setCodCollectedAmount(BigDecimal codCollectedAmount) {
+        this.codCollectedAmount = codCollectedAmount;
+    }
+
+    public ShipperCodBatch getCodBatch() {
+        return codBatch;
+    }
+
+    public void setCodBatch(ShipperCodBatch codBatch) {
+        this.codBatch = codBatch;
     }
 }

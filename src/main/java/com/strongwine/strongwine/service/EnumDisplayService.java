@@ -29,6 +29,8 @@ public class EnumDisplayService {
             case PENDING -> "Chờ xử lý";
             case PAID -> "Đã thanh toán";
             case CANCELLED -> "Đã hủy";
+            case RETURN_REQUESTED -> "Yêu cầu hoàn trả";
+            case RETURNED -> "Đã hoàn trả";
         };
     }
 
@@ -41,6 +43,8 @@ public class EnumDisplayService {
             case SUCCESS -> "Thành công";
             case FAILED -> "Thất bại";
             case CANCELLED -> "Đã hủy";
+            case REFUND_REQUIRED -> "Chờ hoàn tiền";
+            case REFUNDED -> "Đã hoàn tiền";
         };
     }
 
@@ -55,6 +59,7 @@ public class EnumDisplayService {
             case DELIVERING -> "Đang giao";
             case COMPLETED -> "Hoàn tất";
             case FAILED -> "Thất bại";
+            case CANCELLED -> "Đã hủy";
         };
     }
 

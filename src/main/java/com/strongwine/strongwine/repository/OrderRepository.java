@@ -3,12 +3,16 @@ package com.strongwine.strongwine.repository;
 import com.strongwine.strongwine.entity.Order;
 import com.strongwine.strongwine.entity.OrderStatus;
 import com.strongwine.strongwine.entity.User;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Repository interface for Order entity
@@ -96,6 +100,10 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
          * Count orders by status.
          */
         long countByStatus(OrderStatus status);
+
+        @Lock(LockModeType.PESSIMISTIC_WRITE)
+        @Query("SELECT o FROM Order o WHERE o.id = :id")
+        Optional<Order> findByIdWithPessimisticLock(@Param("id") Long id);
 }
 
 

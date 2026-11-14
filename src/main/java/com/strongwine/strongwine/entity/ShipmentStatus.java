@@ -6,5 +6,6 @@ public enum ShipmentStatus {
     PICKED_UP,
     DELIVERING,
     COMPLETED,
-    FAILED
+    FAILED,
+    CANCELLED
 }

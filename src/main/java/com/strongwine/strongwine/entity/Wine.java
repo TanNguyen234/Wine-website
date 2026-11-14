@@ -25,7 +25,7 @@ public class Wine extends Auditable {
     @Column(nullable = false)
     private Integer year;
     
-    @Column(nullable = false, precision = 10, scale = 2)
+    @Column(nullable = false, precision = 18, scale = 2)
     private BigDecimal price;
     
     @Column(length = 1000)

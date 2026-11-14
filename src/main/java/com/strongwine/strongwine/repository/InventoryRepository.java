@@ -29,4 +29,12 @@ public interface InventoryRepository extends JpaRepository<Inventory, Long> {
     
     List<Inventory> findByCurrentQuantityLessThanEqual(Integer quantity);
     List<Inventory> findByCurrentQuantityGreaterThan(Integer quantity);
+
+    @Query("SELECT i FROM Inventory i JOIN FETCH i.warehouse w WHERE i.wine.id = :wineId AND w.active = true")
+    List<Inventory> findAllActiveByWineId(@Param("wineId") Long wineId);
+
+    @Query("SELECT i FROM Inventory i JOIN FETCH i.warehouse w WHERE i.wine.id IN :wineIds AND w.active = true")
+    List<Inventory> findAllActiveByWineIdIn(@Param("wineIds") List<Long> wineIds);
+
+    List<Inventory> findByWarehouseActiveTrue();
 }

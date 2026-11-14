@@ -32,4 +32,10 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
                                 @Param("status") PaymentStatus status,
                                 @Param("createdBefore") LocalDateTime createdBefore,
                                 Pageable pageable);
+
+    List<Payment> findByOrderIdOrderByCreatedAtDesc(Long orderId);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select p from Payment p where p.order.id = :orderId order by p.createdAt desc")
+    List<Payment> findByOrderIdForUpdate(@Param("orderId") Long orderId);
 }

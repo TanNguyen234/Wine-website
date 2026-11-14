@@ -70,4 +70,10 @@ public interface ShipmentRepository extends JpaRepository<Shipment, Long> {
     boolean existsByShipperIdAndStatusIn(Long shipperId, List<ShipmentStatus> statuses);
 
     long countByShipperIdAndStatusIn(Long shipperId, List<ShipmentStatus> statuses);
+
+    List<Shipment> findByCodBatchId(Long codBatchId);
+
+    List<Shipment> findByShipperIdAndStatusAndCodBatchIsNullOrderByDeliveredAtAsc(Long shipperId, ShipmentStatus status);
+
+    List<Shipment> findByOrderIdIn(List<Long> orderIds);
 }

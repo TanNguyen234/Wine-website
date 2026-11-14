@@ -25,8 +25,24 @@ public class Order {
     @Column(name = "order_date", nullable = false)
     private LocalDateTime orderDate;
     
-    @Column(name = "total_price", nullable = false, precision = 10, scale = 2)
+    @Column(name = "total_price", nullable = false, precision = 18, scale = 2)
     private BigDecimal totalPrice;
+
+    @Column(name = "subtotal_amount", precision = 18, scale = 2)
+    private BigDecimal subtotalAmount;
+
+    @Column(name = "discount_amount", nullable = false, precision = 18, scale = 2)
+    private BigDecimal discountAmount = BigDecimal.ZERO;
+
+    @Column(name = "shipping_fee", nullable = false, precision = 18, scale = 2)
+    private BigDecimal shippingFee = BigDecimal.ZERO;
+
+    @Column(name = "voucher_code", length = 64)
+    private String voucherCode;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "allocated_warehouse_id")
+    private Warehouse allocatedWarehouse;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 50)
@@ -244,6 +260,46 @@ public class Order {
 
     public void setPayments(List<Payment> payments) {
         this.payments = payments;
+    }
+
+    public BigDecimal getSubtotalAmount() {
+        return subtotalAmount;
+    }
+
+    public void setSubtotalAmount(BigDecimal subtotalAmount) {
+        this.subtotalAmount = subtotalAmount;
+    }
+
+    public BigDecimal getDiscountAmount() {
+        return discountAmount;
+    }
+
+    public void setDiscountAmount(BigDecimal discountAmount) {
+        this.discountAmount = discountAmount;
+    }
+
+    public BigDecimal getShippingFee() {
+        return shippingFee;
+    }
+
+    public void setShippingFee(BigDecimal shippingFee) {
+        this.shippingFee = shippingFee;
+    }
+
+    public String getVoucherCode() {
+        return voucherCode;
+    }
+
+    public void setVoucherCode(String voucherCode) {
+        this.voucherCode = voucherCode;
+    }
+
+    public Warehouse getAllocatedWarehouse() {
+        return allocatedWarehouse;
+    }
+
+    public void setAllocatedWarehouse(Warehouse allocatedWarehouse) {
+        this.allocatedWarehouse = allocatedWarehouse;
     }
 }
 

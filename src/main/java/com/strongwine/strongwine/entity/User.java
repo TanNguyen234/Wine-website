@@ -27,6 +27,15 @@ public class User {
     
     @Column(nullable = false)
     private String role; // ADMIN or USER
+
+    @Column(name = "full_name", length = 255)
+    private String fullName;
+
+    @Column(length = 50)
+    private String phone;
+
+    @Column(name = "default_address", length = 500)
+    private String defaultAddress;
     
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Order> orders = new ArrayList<>();
@@ -99,6 +108,30 @@ public class User {
     
     public void setReviews(List<Review> reviews) {
         this.reviews = reviews;
+    }
+
+    public String getFullName() {
+        return fullName;
+    }
+
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+
+    public String getDefaultAddress() {
+        return defaultAddress;
+    }
+
+    public void setDefaultAddress(String defaultAddress) {
+        this.defaultAddress = defaultAddress;
     }
 }
 
