@@ -8,8 +8,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Map;
-
 @RestController
 @RequestMapping("/api/assistant")
 public class AiAssistantApiController {
@@ -21,10 +19,10 @@ public class AiAssistantApiController {
     }
 
     @PostMapping("/chat")
-    public ResponseEntity<Map<String, String>> chat(@RequestBody AiAssistantRequest request) {
+    public ResponseEntity<GeminiAssistantService.StructuredAssistantResponse> chat(
+            @RequestBody(required = false) AiAssistantRequest request) {
         String prompt = request == null ? null : request.getPrompt();
         String context = request == null ? null : request.getContext();
-        String answer = geminiAssistantService.ask(prompt, context);
-        return ResponseEntity.ok(Map.of("answer", answer));
+        return ResponseEntity.ok(geminiAssistantService.askStructured(prompt, context));
     }
 }

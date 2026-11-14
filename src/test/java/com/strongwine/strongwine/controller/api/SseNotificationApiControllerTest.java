@@ -136,6 +136,67 @@ class SseNotificationApiControllerTest {
         verify(sseService).subscribeShipper(7L);
     }
 
+    @Test
+    void orderStreamReplaysMissedEventsFromLastEventIdHeader() {
+        User owner = user(12L);
+        when(userRepository.findByUsername("customer")).thenReturn(Optional.of(owner));
+        when(orderRepository.findByIdAndUserId(42L, 12L)).thenReturn(Optional.of(new Order()));
+        SseEmitter emitter = new SseEmitter();
+        when(sseService.subscribeOrder(42L, 15L)).thenReturn(emitter);
+
+        assertSame(emitter, controller.streamOrderEvents(
+                42L, authentication("customer", "ROLE_USER"), "15", null));
+
+        verify(sseService).subscribeOrder(42L, 15L);
+    }
+
+    @Test
+    void adminStreamFallsBackToQueryParamWhenLastEventIdHeaderMalformed() {
+        SseEmitter emitter = new SseEmitter();
+        when(sseService.subscribeAdmin(88L)).thenReturn(emitter);
+
+        assertSame(emitter, controller.streamAdminNotifications(
+                authentication("admin", "ROLE_ADMIN"), "not-a-number", 88L));
+
+        verify(sseService).subscribeAdmin(88L);
+    }
+
+    @Test
+    void shipperStreamReplaysMissedEventsFromLastEventIdHeader() {
+        when(userRepository.findByUsername("shipper-user")).thenReturn(Optional.of(user(21L)));
+        Shipper shipper = new Shipper();
+        shipper.setId(7L);
+        when(shipperRepository.findByUserId(21L)).thenReturn(Optional.of(shipper));
+        SseEmitter emitter = new SseEmitter();
+        when(sseService.subscribeShipper(7L, 20L)).thenReturn(emitter);
+
+        assertSame(emitter, controller.streamShipperEvents(
+                7L, authentication("shipper-user", "ROLE_SHIPPER"), "20", null));
+
+        verify(sseService).subscribeShipper(7L, 20L);
+    }
+
+    @Test
+    void userStreamSubscribesAuthenticatedUserAndSupportsLastEventId() {
+        when(userRepository.findByUsername("customer")).thenReturn(Optional.of(user(12L)));
+        SseEmitter freshEmitter = new SseEmitter();
+        SseEmitter replayEmitter = new SseEmitter();
+        when(sseService.subscribeUser(12L)).thenReturn(freshEmitter);
+        when(sseService.subscribeUser(12L, 33L)).thenReturn(replayEmitter);
+
+        assertSame(freshEmitter, controller.streamUserNotifications(authentication("customer", "ROLE_USER")));
+        assertSame(replayEmitter, controller.streamUserNotifications(
+                authentication("customer", "ROLE_USER"), "33", null));
+
+        ResponseStatusException unauth = assertThrows(
+                ResponseStatusException.class,
+                () -> controller.streamUserNotifications(null));
+        assertEquals(401, unauth.getStatusCode().value());
+
+        verify(sseService).subscribeUser(12L);
+        verify(sseService).subscribeUser(12L, 33L);
+    }
+
     private User user(Long id) {
         User user = new User();
         user.setId(id);
