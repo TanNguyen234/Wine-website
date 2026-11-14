@@ -32,6 +32,14 @@ public class ProductDto {
 
     private BigDecimal finalPrice;
 
+    private String categoryName;
+    private String typeLabel;
+    private String typeTone;
+    private String stockStatus;
+    private String stockBadgeLabel;
+    private String stockBadgeTone;
+    private Boolean inStock;
+
     public Long getId() {
         return id;
     }
@@ -118,5 +126,61 @@ public class ProductDto {
 
     public void setFinalPrice(BigDecimal finalPrice) {
         this.finalPrice = finalPrice;
+    }
+
+    public String getCategoryName() {
+        return categoryName;
+    }
+
+    public void setCategoryName(String categoryName) {
+        this.categoryName = categoryName;
+    }
+
+    public String getTypeLabel() {
+        return typeLabel;
+    }
+
+    public void setTypeLabel(String typeLabel) {
+        this.typeLabel = typeLabel;
+    }
+
+    public String getTypeTone() {
+        return typeTone;
+    }
+
+    public void setTypeTone(String typeTone) {
+        this.typeTone = typeTone;
+    }
+
+    public String getStockStatus() {
+        return stockStatus;
+    }
+
+    public void setStockStatus(String stockStatus) {
+        this.stockStatus = stockStatus;
+    }
+
+    public String getStockBadgeLabel() {
+        return stockBadgeLabel;
+    }
+
+    public void setStockBadgeLabel(String stockBadgeLabel) {
+        this.stockBadgeLabel = stockBadgeLabel;
+    }
+
+    public String getStockBadgeTone() {
+        return stockBadgeTone;
+    }
+
+    public void setStockBadgeTone(String stockBadgeTone) {
+        this.stockBadgeTone = stockBadgeTone;
+    }
+
+    public Boolean getInStock() {
+        return inStock;
+    }
+
+    public void setInStock(Boolean inStock) {
+        this.inStock = inStock;
     }
 }

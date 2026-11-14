@@ -1,5 +1,8 @@
 package com.strongwine.strongwine.controller.api;
 
+import com.strongwine.strongwine.service.EnumDisplayService;
+import com.strongwine.strongwine.util.AddressTextUtils;
+
 import com.strongwine.strongwine.dto.ProductDto;
 import com.strongwine.strongwine.entity.Category;
 import com.strongwine.strongwine.entity.Wine;
@@ -61,6 +64,11 @@ public class WineApiController {
     /**
      * Search wines
      */
+    private static final EnumDisplayService DEFAULT_ENUM_DISPLAY_SERVICE = new EnumDisplayService();
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private EnumDisplayService enumDisplayService;
+
     @GetMapping("/search")
     public ResponseEntity<List<ProductDto>> searchWines(
             @RequestParam(required = false) String name,
@@ -69,7 +77,8 @@ public class WineApiController {
             @RequestParam(required = false) Integer year,
             @RequestParam(required = false) BigDecimal minPrice,
             @RequestParam(required = false) BigDecimal maxPrice) {
-        List<Wine> wines = wineService.searchWines(name, type, country, year, minPrice, maxPrice);
+        String normalizedType = normalizeWineType(type, true);
+        List<Wine> wines = wineService.searchWines(name, normalizedType, country, year, minPrice, maxPrice);
         Map<Long, Integer> stockMap = inventoryService.getAvailableStockByWineIds(wines.stream().map(Wine::getId).toList());
         return ResponseEntity.ok(wines.stream().map(w -> toDto(w, stockMap)).toList());
     }
@@ -112,10 +121,17 @@ public class WineApiController {
     }
 
     private ProductDto toDto(Wine wine, int availableStock) {
+        EnumDisplayService display = enumDisplayService != null ? enumDisplayService : DEFAULT_ENUM_DISPLAY_SERVICE;
+        String effectiveType = normalizeWineType(wine.getType(), false);
+        int safeStock = Math.max(0, availableStock);
+        String stockStatus = safeStock <= 0
+                ? "OUT_OF_STOCK"
+                : (safeStock <= EnumDisplayService.LOW_STOCK_THRESHOLD ? "LOW_STOCK" : "IN_STOCK");
+
         ProductDto dto = new ProductDto();
         dto.setId(wine.getId());
         dto.setName(wine.getName());
-        dto.setType(wine.getType());
+        dto.setType(effectiveType != null ? effectiveType : wine.getType());
         dto.setYear(wine.getYear());
         dto.setPrice(wine.getPrice());
         dto.setFinalPrice(wine.getPrice());
@@ -123,14 +139,21 @@ public class WineApiController {
         dto.setCountry(wine.getCountry());
         dto.setImageUrl(wine.getImageUrl());
         dto.setCategoryId(wine.getCategory() != null ? wine.getCategory().getId() : null);
-        dto.setAvailableStock(availableStock);
+        dto.setCategoryName(wine.getCategory() != null ? wine.getCategory().getName() : null);
+        dto.setAvailableStock(safeStock);
+        dto.setTypeLabel(display.wineType(dto.getType()));
+        dto.setTypeTone(display.wineTypeTone(dto.getType()));
+        dto.setStockStatus(stockStatus);
+        dto.setStockBadgeLabel(display.stockStatusLabel(safeStock));
+        dto.setStockBadgeTone(display.stockStatusTone(safeStock));
+        dto.setInStock(safeStock > 0);
         return dto;
     }
 
     private Wine fromDto(ProductDto dto) {
         Wine wine = new Wine();
         wine.setName(dto.getName());
-        wine.setType(dto.getType());
+        wine.setType(normalizeWineType(dto.getType(), false));
         wine.setYear(dto.getYear());
         wine.setPrice(dto.getPrice());
         wine.setDescription(dto.getDescription());
@@ -138,6 +161,22 @@ public class WineApiController {
         wine.setImageUrl(dto.getImageUrl());
         wine.setCategory(resolveCategory(dto.getCategoryId()));
         return wine;
+    }
+
+    private String normalizeWineType(String rawType, boolean blankToNull) {
+        String normalized = AddressTextUtils.normalizeText(rawType);
+        if (normalized == null || normalized.isEmpty()) {
+            return blankToNull ? null : normalized;
+        }
+        String asciiLower = AddressTextUtils.stripAccents(normalized).toLowerCase(java.util.Locale.ROOT);
+        return switch (asciiLower) {
+            case "red", "vang do" -> "Red";
+            case "white", "vang trang" -> "White";
+            case "rose", "vang hong" -> "Rose";
+            case "sparkling", "vang sui" -> "Sparkling";
+            case "traditional", "ruou truyen thong", "traditional wine" -> "Traditional";
+            default -> normalized;
+        };
     }
 
     private Category resolveCategory(Long categoryId) {

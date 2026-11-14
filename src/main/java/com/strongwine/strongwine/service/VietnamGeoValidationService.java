@@ -1,5 +1,8 @@
 package com.strongwine.strongwine.service;
 
+import com.strongwine.strongwine.util.AddressTextUtils;
+import java.util.concurrent.ConcurrentHashMap;
+
 import com.strongwine.strongwine.exception.DeliveryAddressNotSupportedException;
 import org.springframework.stereotype.Service;
 
@@ -81,22 +84,36 @@ public class VietnamGeoValidationService {
             {22.00, 103.10}
     };
 
+    private static final ConcurrentHashMap<String, Pattern> TERM_PATTERN_CACHE = new ConcurrentHashMap<>();
+
     /**
      * Validates that an address is in mainland Vietnam and not located in remote islands / offshore archipelagos.
      * Throws DeliveryAddressNotSupportedException or IllegalArgumentException if invalid.
      */
     public void validateMainlandDeliveryAddress(String address, Double lat, Double lng) {
-        if (address == null || address.trim().isEmpty()) {
+        String cleaned = AddressTextUtils.normalizeText(address);
+        if (cleaned == null || cleaned.isEmpty()) {
             throw new IllegalArgumentException("Vui lòng nhập địa chỉ giao hàng chi tiết");
         }
 
-        String normalizedAddress = address.trim().toLowerCase(Locale.ROOT);
+        if ((lat == null) != (lng == null)) {
+            throw new IllegalArgumentException("Toạ độ vĩ độ và kinh độ phải được cung cấp đầy đủ.");
+        }
+        if (lat != null && !AddressTextUtils.isValidCoordinatePair(lat, lng)) {
+            throw new IllegalArgumentException(
+                    "Toạ độ GPS không hợp lệ (vĩ độ phải nằm trong [-90, 90] và kinh độ trong [-180, 180]).");
+        }
+
+        String textWithoutLegacyGps = AddressTextUtils.stripLegacyGpsSuffix(cleaned);
+        String normalizedAddress = textWithoutLegacyGps.toLowerCase(Locale.ROOT);
         String unaccentedAddress = stripAccents(normalizedAddress);
 
-        // 1. Check for remote islands / offshore archipelagos
+        // 1. Check for remote islands / offshore archipelagos with whole-term boundary matching
         for (String island : REMOTE_ISLAND_KEYWORDS) {
-            String unaccentedIsland = stripAccents(island);
-            if (normalizedAddress.contains(island) || unaccentedAddress.contains(unaccentedIsland)) {
+            String lowerIsland = AddressTextUtils.normalizeText(island).toLowerCase(Locale.ROOT);
+            String unaccentedIsland = stripAccents(lowerIsland);
+            if (containsWholeTerm(normalizedAddress, lowerIsland)
+                    || containsWholeTerm(unaccentedAddress, unaccentedIsland)) {
                 throw new DeliveryAddressNotSupportedException(
                         "StrongWine chỉ phục vụ giao rượu vang bảo ôn trên đất liền tại Việt Nam. " +
                         "Rất tiếc hiện chưa hỗ trợ giao hàng tới khu vực huyện đảo/đảo xa (" + island + ") " +
@@ -104,20 +121,21 @@ public class VietnamGeoValidationService {
             }
         }
 
-        // 2. Check for foreign country indicators
+        // 2. Check for foreign country indicators with whole-term boundary matching (avoids substring false positives)
         for (String foreign : FOREIGN_COUNTRY_KEYWORDS) {
-            if (normalizedAddress.contains(foreign)) {
+            String lowerForeign = AddressTextUtils.normalizeText(foreign).toLowerCase(Locale.ROOT);
+            String unaccentedForeign = stripAccents(lowerForeign);
+            if (containsWholeTerm(normalizedAddress, lowerForeign)
+                    || containsWholeTerm(unaccentedAddress, unaccentedForeign)) {
                 throw new DeliveryAddressNotSupportedException(
                         "Địa chỉ giao hàng không hợp lệ: StrongWine chỉ phục vụ giao hàng nội địa tại Việt Nam (không hỗ trợ quốc tế).");
             }
         }
 
         // 3. Coordinate validation if coordinates are provided
-        if (lat != null && lng != null) {
-            if (!isWithinMainlandVietnam(lat, lng)) {
-                throw new DeliveryAddressNotSupportedException(
-                        "Toạ độ vị trí giao hàng nằm ngoài phạm vi đất liền Việt Nam (không hỗ trợ giao hàng tới khu vực hải đảo xa).");
-            }
+        if (lat != null && lng != null && !isWithinMainlandVietnam(lat, lng)) {
+            throw new DeliveryAddressNotSupportedException(
+                    "Toạ độ vị trí giao hàng nằm ngoài phạm vi đất liền Việt Nam (không hỗ trợ giao hàng tới khu vực hải đảo xa).");
         }
     }
 
@@ -125,13 +143,17 @@ public class VietnamGeoValidationService {
      * Checks whether an address points to an offshore island.
      */
     public boolean isRemoteIslandAddress(String address) {
-        if (address == null || address.isBlank()) {
+        String cleaned = AddressTextUtils.normalizeText(address);
+        if (cleaned == null || cleaned.isEmpty()) {
             return false;
         }
-        String normalizedAddress = address.trim().toLowerCase(Locale.ROOT);
+        String normalizedAddress = AddressTextUtils.stripLegacyGpsSuffix(cleaned).toLowerCase(Locale.ROOT);
         String unaccentedAddress = stripAccents(normalizedAddress);
         for (String island : REMOTE_ISLAND_KEYWORDS) {
-            if (normalizedAddress.contains(island) || unaccentedAddress.contains(stripAccents(island))) {
+            String lowerIsland = AddressTextUtils.normalizeText(island).toLowerCase(Locale.ROOT);
+            String unaccentedIsland = stripAccents(lowerIsland);
+            if (containsWholeTerm(normalizedAddress, lowerIsland)
+                    || containsWholeTerm(unaccentedAddress, unaccentedIsland)) {
                 return true;
             }
         }
@@ -142,43 +164,147 @@ public class VietnamGeoValidationService {
      * Resolves fallback coordinates for common Vietnam cities if customer didn't pick on map.
      */
     public double[] resolveDefaultCoordinates(String address) {
-        if (address == null || address.isBlank()) {
+        String cleaned = AddressTextUtils.normalizeText(address);
+        if (cleaned == null || cleaned.isEmpty()) {
             return new double[]{10.7769, 106.7009}; // Default TP.HCM center
         }
-        String norm = stripAccents(address.toLowerCase(Locale.ROOT));
-        if (norm.contains("ha noi") || norm.contains("hoan kiem") || norm.contains("ba dinh") || norm.contains("cau giay") || norm.contains("dong da")) {
-            return new double[]{21.0285, 105.8542}; // Ha Noi
+
+        String withoutGps = AddressTextUtils.stripLegacyGpsSuffix(cleaned);
+        String norm = stripAccents(withoutGps.toLowerCase(Locale.ROOT));
+        String[] rawSegments = norm.split(",");
+
+        // Pass 1: Match city/province tokens from right-most segment (province/city) to left-most (street)
+        for (int i = rawSegments.length - 1; i >= 0; i--) {
+            String seg = normalizeSegmentTokens(rawSegments[i]);
+            if (seg.isEmpty()) {
+                continue;
+            }
+            double[] cityCoords = matchCityOrProvinceSegment(seg);
+            if (cityCoords != null) {
+                return cityCoords;
+            }
         }
-        if (norm.contains("da nang") || norm.contains("hai chau") || norm.contains("son tra") || norm.contains("thanh khe")) {
-            return new double[]{16.0544, 108.2022}; // Da Nang
+
+        // Pass 2: Fall back to distinctive district tokens from right to left
+        for (int i = rawSegments.length - 1; i >= 0; i--) {
+            String seg = normalizeSegmentTokens(rawSegments[i]);
+            if (seg.isEmpty()) {
+                continue;
+            }
+            double[] districtCoords = matchDistrictSegment(seg);
+            if (districtCoords != null) {
+                return districtCoords;
+            }
         }
-        if (norm.contains("hai phong")) {
-            return new double[]{20.8449, 106.6881}; // Hai Phong
-        }
-        if (norm.contains("can tho") || norm.contains("ninh kieu")) {
-            return new double[]{10.0452, 105.7469}; // Can Tho
-        }
-        if (norm.contains("binh duong") || norm.contains("thu dau mot")) {
-            return new double[]{10.9805, 106.6519}; // Binh Duong
-        }
-        if (norm.contains("dong nai") || norm.contains("bien hoa")) {
-            return new double[]{10.9425, 106.8228}; // Dong Nai
-        }
-        if (norm.contains("vung tau") || norm.contains("ba ria")) {
-            return new double[]{10.3460, 107.0843}; // Vung Tau mainland
-        }
+
         // Default to Ho Chi Minh City center
         return new double[]{10.7769, 106.7009};
     }
 
     public boolean isWithinMainlandVietnam(Double lat, Double lng) {
-        if (lat == null || lng == null) {
+        if (!AddressTextUtils.isValidCoordinatePair(lat, lng)) {
             return false;
         }
         if (lat < MIN_LAT || lat > MAX_LAT || lng < MIN_LNG || lng > MAX_LNG) {
             return false;
         }
         return isPointInsidePolygon(lat, lng, MAINLAND_VIETNAM_POLYGON);
+    }
+
+    private static boolean containsWholeTerm(String text, String term) {
+        if (text == null || text.isEmpty() || term == null || term.isEmpty()) {
+            return false;
+        }
+        Pattern pattern = TERM_PATTERN_CACHE.computeIfAbsent(term, key -> Pattern.compile(
+                "(?<![\\p{L}\\p{N}])" + Pattern.quote(key) + "(?![\\p{L}\\p{N}])",
+                Pattern.UNICODE_CASE));
+        return pattern.matcher(text).find();
+    }
+
+    private static String normalizeSegmentTokens(String segment) {
+        if (segment == null) {
+            return "";
+        }
+        return segment.replace('.', ' ')
+                .replace('-', ' ')
+                .replaceAll("\\s+", " ")
+                .trim();
+    }
+
+    private static double[] matchCityOrProvinceSegment(String seg) {
+        if (containsAnyWholeTerm(seg, "ha noi", "hanoi", "tp ha noi", "thanh pho ha noi")) {
+            return new double[]{21.0285, 105.8542};
+        }
+        if (containsAnyWholeTerm(seg, "ho chi minh", "tp ho chi minh", "tphcm", "tp hcm", "hcm", "sai gon", "saigon")) {
+            return new double[]{10.7769, 106.7009};
+        }
+        if (containsAnyWholeTerm(seg, "da nang", "danang", "tp da nang", "thanh pho da nang")) {
+            return new double[]{16.0544, 108.2022};
+        }
+        if (containsAnyWholeTerm(seg, "hai phong", "haiphong", "tp hai phong")) {
+            return new double[]{20.8449, 106.6881};
+        }
+        if (containsAnyWholeTerm(seg, "can tho", "cantho", "tp can tho")) {
+            return new double[]{10.0452, 105.7469};
+        }
+        if (containsAnyWholeTerm(seg, "da lat", "dalat", "tp da lat", "lam dong")) {
+            return new double[]{11.9404, 108.4583};
+        }
+        if (containsAnyWholeTerm(seg, "thua thien hue", "tp hue", "thanh pho hue")
+                || (containsWholeTerm(seg, "hue") && !seg.startsWith("ngo ") && !seg.startsWith("duong ") && !seg.startsWith("pho "))) {
+            return new double[]{16.4637, 107.5909};
+        }
+        if (containsAnyWholeTerm(seg, "nha trang", "khanh hoa", "tp nha trang")) {
+            return new double[]{12.2388, 109.1967};
+        }
+        if (containsAnyWholeTerm(seg, "binh duong")) {
+            return new double[]{10.9805, 106.6519};
+        }
+        if (containsAnyWholeTerm(seg, "dong nai", "bien hoa")) {
+            return new double[]{10.9425, 106.8228};
+        }
+        if (containsAnyWholeTerm(seg, "vung tau", "ba ria", "ba ria vung tau")) {
+            return new double[]{10.3460, 107.0843};
+        }
+        if (containsAnyWholeTerm(seg, "quy nhon", "qui nhon", "binh dinh")) {
+            return new double[]{13.7820, 109.2197};
+        }
+        if (containsAnyWholeTerm(seg, "tp vinh", "thanh pho vinh", "nghe an")) {
+            return new double[]{18.6796, 105.6813};
+        }
+        return null;
+    }
+
+    private static double[] matchDistrictSegment(String seg) {
+        if (containsAnyWholeTerm(seg, "quan 1", "quan 2", "quan 3", "quan 4", "quan 5", "quan 6",
+                "quan 7", "quan 8", "quan 9", "quan 10", "quan 11", "quan 12",
+                "q 1", "q1", "q 3", "q3", "q 7", "q7",
+                "binh thanh", "phu nhuan", "tan binh", "go vap", "thu duc", "binh tan", "tan phu")) {
+            return new double[]{10.7769, 106.7009};
+        }
+        if (containsAnyWholeTerm(seg, "hoan kiem", "ba dinh", "cau giay", "dong da",
+                "hai ba trung", "tay ho", "thanh xuan", "long bien", "ha dong", "nam tu liem", "bac tu liem", "hoang mai")) {
+            return new double[]{21.0285, 105.8542};
+        }
+        if (containsAnyWholeTerm(seg, "hai chau", "son tra", "thanh khe", "ngu hanh son", "lien chieu", "cam le")) {
+            return new double[]{16.0544, 108.2022};
+        }
+        if (containsAnyWholeTerm(seg, "ninh kieu", "binh thuy", "cai rang")) {
+            return new double[]{10.0452, 105.7469};
+        }
+        if (containsAnyWholeTerm(seg, "thu dau mot", "thuan an", "di an")) {
+            return new double[]{10.9805, 106.6519};
+        }
+        return null;
+    }
+
+    private static boolean containsAnyWholeTerm(String segment, String... terms) {
+        for (String term : terms) {
+            if (containsWholeTerm(segment, term)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private boolean isPointInsidePolygon(double lat, double lng, double[][] polygon) {
