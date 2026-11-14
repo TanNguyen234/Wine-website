@@ -6,180 +6,738 @@
 
 <main class="section">
     <div class="sw-container">
-        <!-- Flash alerts -->
         <div th:if="${successMessage}" class="alert-sw success mb16" th:text="${successMessage}"></div>
+        <div th:if="${success}" class="alert-sw success mb16" th:text="${success}"></div>
+        <div th:if="${message}" class="alert-sw success mb16" th:text="${message}"></div>
         <div th:if="${errorMessage}" class="alert-sw danger mb16" th:text="${errorMessage}"></div>
+        <div th:if="${error}" class="alert-sw danger mb16" th:text="${error}"></div>
 
-        <!-- Section Header -->
         <div class="section-head">
             <div>
                 <div class="eyebrow">HỒ SƠ KHÁCH HÀNG · MAISON DE VINS</div>
                 <h1 class="section-title">Tài khoản của tôi</h1>
             </div>
-            <div class="display-flex gap10">
-                <a th:href="@{/orders}" class="btn btn-outline btn-sm">Xem lịch sử đơn hàng &rarr;</a>
+            <div class="display-flex gap10" style="flex-wrap:wrap">
+                <a th:href="@{/orders}" class="btn btn-outline btn-sm">Lịch sử đơn hàng</a>
                 <a th:href="@{/wines}" class="btn btn-sm">Mua sắm bộ sưu tập</a>
             </div>
         </div>
 
-        <!-- KPI / Summary Grid -->
+        <!-- KPI Summary Grid -->
         <div class="kpi-grid mb24">
             <div class="kpi-card">
                 <div class="small muted">TÀI KHOẢN</div>
-                <strong class="serif mt8 d-block" style="font-size:1.35rem;color:var(--sw-bordeaux)" th:text="${user.username}">user_demo</strong>
-                <span class="badge badge-gold mt8">Thành viên Connoisseur</span>
+                <strong class="serif mt8 d-block" style="font-size:1.35rem;color:var(--accent-gold)"
+                        th:text="${user != null ? user.username : 'Khách hàng'}">user_demo</strong>
+                <span class="badge badge-gold mt8">Thành viên Maison de Vins</span>
             </div>
             <div class="kpi-card">
                 <div class="small muted">EMAIL LIÊN HỆ</div>
-                <strong class="mt8 d-block" style="font-size:1.05rem" th:text="${user.email != null and !#strings.isEmpty(user.email) ? user.email : 'Chưa cập nhật email'}">email@example.com</strong>
-                <span class="small muted mt8 d-block">Dùng nhận thông báo mã OTP giao hàng</span>
+                <strong class="mt8 d-block" style="font-size:1.05rem;word-break:break-word"
+                        th:text="${user != null and user.email != null and !#strings.isEmpty(user.email) ? user.email : 'Chưa cập nhật email'}">email@example.com</strong>
+                <span class="small muted mt8 d-block">Dùng nhận hóa đơn điện tử và thông báo vận đơn</span>
             </div>
             <div class="kpi-card">
                 <div class="small muted">TỔNG ĐƠN ĐÃ ĐẶT</div>
-                <strong class="serif mt8 d-block" style="font-size:1.6rem" th:text="${totalOrders}">0</strong>
+                <strong class="serif mt8 d-block tabular-nums" style="font-size:1.6rem"
+                        th:text="${totalOrders != null ? totalOrders : 0}">0</strong>
                 <span class="small muted mt8 d-block">Đơn hàng thành công &amp; đang xử lý</span>
             </div>
             <div class="kpi-card">
                 <div class="small muted">TỔNG CHI TIÊU TÍCH LŨY</div>
-                <strong class="serif mt8 d-block" style="font-size:1.35rem;color:var(--sw-bordeaux)" th:text="${#numbers.formatDecimal(totalSpent, 0, 'COMMA', 0, 'POINT')} + ' ₫'">0 ₫</strong>
-                <span class="small muted mt8 d-block">Ưu đãi giảm giá thành viên VIP</span>
+                <strong class="serif mt8 d-block tabular-nums" style="font-size:1.35rem;color:var(--accent-gold)"
+                        th:text="${totalSpent != null ? #numbers.formatDecimal(totalSpent, 0, 'COMMA', 0, 'POINT') + ' ₫' : '0 ₫'}">0 ₫</strong>
+                <span class="small muted mt8 d-block">Tổng giá trị đơn hàng đã ghi nhận</span>
             </div>
         </div>
 
-        <!-- Main Profile Layout -->
-        <div class="grid-2 gap24">
-            <!-- Left: Edit Profile Form -->
-            <div class="panel">
-                <h3 class="serif mb16" style="font-size:1.3rem;padding-bottom:12px;border-bottom:1px solid var(--sw-line)">
-                    Thông tin tài khoản &amp; Bảo mật
-                </h3>
-                
-                <form th:action="@{/profile}" method="post" class="stack">
-                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+        <!-- Profile Section Navigation Tabs -->
+        <div class="chip-row mb24" role="tablist" aria-label="Phân mục tài khoản">
+            <button type="button"
+                    class="chip active"
+                    id="tabBtnProfile"
+                    role="tab"
+                    aria-selected="true"
+                    aria-controls="profile"
+                    data-profile-tab="profile">Hồ sơ</button>
+            <button type="button"
+                    class="chip"
+                    id="tabBtnAddresses"
+                    role="tab"
+                    aria-selected="false"
+                    aria-controls="addresses"
+                    data-profile-tab="addresses">
+                <span>Sổ địa chỉ</span>
+                <span class="badge badge-gold" id="addressCountBadge"
+                      th:text="${savedAddresses != null ? savedAddresses.size() : 0}">0</span>
+            </button>
+            <button type="button"
+                    class="chip"
+                    id="tabBtnWishlist"
+                    role="tab"
+                    aria-selected="false"
+                    aria-controls="wishlist"
+                    data-profile-tab="wishlist">
+                <span>Yêu thích</span>
+                <span class="badge badge-wine js-wishlist-count">0</span>
+            </button>
+            <button type="button"
+                    class="chip"
+                    id="tabBtnNotifications"
+                    role="tab"
+                    aria-selected="false"
+                    aria-controls="notifications"
+                    data-profile-tab="notifications">
+                <span>Thông báo</span>
+                <span class="badge badge-info js-notif-count">0</span>
+            </button>
+        </div>
 
-                    <div>
-                        <label class="label mb8">Tên đăng nhập (Username)</label>
-                        <input type="text" class="field w100" th:value="${user.username}" readonly style="background:#f4efe8;cursor:not-allowed">
-                        <span class="small muted mt4 d-block">Tên đăng nhập được cố định trên hệ thống</span>
-                    </div>
-
-                    <div>
-                        <label class="label mb8" for="profileEmail">Địa chỉ Email</label>
-                        <input type="email" id="profileEmail" name="email" class="field w100" th:value="${user.email}" placeholder="nhap.email@domain.com" required>
-                        <span class="small muted mt4 d-block">Email dùng để nhận hóa đơn và thông báo vận đơn</span>
-                    </div>
-
-                    <div class="pt12" style="border-top:1px dashed var(--sw-line)">
-                        <div class="eyebrow mb12" style="color:var(--sw-bordeaux)">THAY ĐỔI MẬT KHẨU (BỎ TRỐNG NẾU KHÔNG ĐỔI)</div>
-                        
-                        <div class="mb12">
-                            <label class="label mb8" for="currentPassword">Mật khẩu hiện tại</label>
-                            <input type="password" id="currentPassword" name="currentPassword" class="field w100" placeholder="••••••••">
-                        </div>
-
-                        <div class="mb12">
-                            <label class="label mb8" for="newPassword">Mật khẩu mới</label>
-                            <input type="password" id="newPassword" name="newPassword" class="field w100" placeholder="Tối thiểu 6 ký tự">
-                        </div>
-
-                        <div>
-                            <label class="label mb8" for="confirmPassword">Xác nhận mật khẩu mới</label>
-                            <input type="password" id="confirmPassword" name="confirmPassword" class="field w100" placeholder="Nhập lại mật khẩu mới">
-                        </div>
-                    </div>
-
-                    <div class="pt16">
-                        <button type="submit" class="btn w100">Cập nhật hồ sơ tài khoản</button>
-                    </div>
-                </form>
-            </div>
-
-            <!-- Right: Shipping Info & Recent Orders -->
-            <div class="stack">
-                <!-- Shipping Address Card with Edit Form -->
+        <!-- TAB 1: Profile & Security + Default Shipping Quick Update -->
+        <section id="profile" role="tabpanel" aria-labelledby="tabBtnProfile" data-tab-panel="profile">
+            <div class="grid-2 gap24">
                 <div class="panel">
-                    <div class="between mb12" style="padding-bottom:10px;border-bottom:1px solid var(--sw-line)">
-                        <h3 class="serif m-0" style="font-size:1.2rem">
-                            Địa chỉ giao nhận mặc định
-                        </h3>
-                        <span class="badge badge-gold">Tự động tải khi thanh toán</span>
-                    </div>
+                    <h2 class="serif sw-section-heading mb16 pb12" style="border-bottom:1px solid var(--border-hairline)">
+                        Thông tin tài khoản &amp; Bảo mật
+                    </h2>
 
-                    <div th:if="${!#strings.isEmpty(latestAddress)}" class="mb16 p12" style="background:#fcf9f5;border:1px solid var(--sw-line);border-radius:6px">
-                        <div class="display-flex gap8 align-items-center mb4">
-                            <strong style="font-size:1.05rem" th:text="${latestFullName}">Nguyễn Văn A</strong>
-                            <span class="badge badge-wine" th:text="${latestPhone}">0900000000</span>
-                        </div>
-                        <p class="muted mb4" th:text="${latestAddress}">123 Nguyễn Huệ, Quận 1, TP. Hồ Chí Minh</p>
-                        <span class="small muted" style="color:var(--sw-bordeaux)">&#10003; Đang được sử dụng làm địa chỉ ưu tiên khi bạn thanh toán giỏ hàng</span>
-                    </div>
-
-                    <form th:action="@{/profile/shipping}" method="post" class="stack">
-                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                    <form th:action="@{/profile}" method="post" class="stack">
+                        <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
 
                         <div>
-                            <label class="label mb4" for="shippingFullName">Họ và tên người nhận hàng *</label>
-                            <input type="text" id="shippingFullName" name="fullName" class="field w100"
-                                   th:value="${latestFullName}" placeholder="Ví dụ: Nguyễn Văn A" required>
+                            <label class="label mb8" for="profileUsername">Tên đăng nhập (Username)</label>
+                            <input type="text" id="profileUsername" class="field w100"
+                                   th:value="${user != null ? user.username : ''}" readonly
+                                   style="background:var(--surface-subtle);cursor:not-allowed">
+                            <span class="small muted mt4 d-block">Tên đăng nhập được cố định trên hệ thống</span>
                         </div>
 
                         <div>
-                            <label class="label mb4" for="shippingPhone">Số điện thoại người nhận *</label>
-                            <input type="tel" id="shippingPhone" name="phone" class="field w100"
-                                   th:value="${latestPhone}" placeholder="Ví dụ: 0901234567" required>
+                            <label class="label mb8" for="profileEmail">Địa chỉ Email</label>
+                            <input type="email" id="profileEmail" name="email" class="field w100"
+                                   th:value="${user != null ? user.email : ''}"
+                                   placeholder="nhap.email@domain.com" required>
+                            <span class="small muted mt4 d-block">Email dùng để nhận hóa đơn và thông báo vận đơn</span>
                         </div>
 
-                        <div>
-                            <label class="label mb4" for="shippingAddress">Địa chỉ chi tiết (Đất liền Việt Nam) *</label>
-                            <input type="text" id="shippingAddress" name="address" class="field w100"
-                                   th:value="${latestAddress}" placeholder="Số nhà, tên đường, phường/xã, quận/huyện, tỉnh/thành phố" required>
-                            <span class="small muted mt4 d-block">
-                                Lưu ý: StrongWine giao hàng bảo ôn chuẩn hầm rượu (14&deg;C) nên chỉ hỗ trợ các địa chỉ đất liền tại Việt Nam (không giao huyện đảo/đảo xa).
-                            </span>
+                        <div class="pt12" style="border-top:1px dashed var(--border-hairline)">
+                            <div class="eyebrow mb12">THAY ĐỔI MẬT KHẨU (BỎ TRỐNG NẾU KHÔNG ĐỔI)</div>
+
+                            <div class="mb12">
+                                <label class="label mb8" for="currentPassword">Mật khẩu hiện tại</label>
+                                <input type="password" id="currentPassword" name="currentPassword"
+                                       class="field w100" autocomplete="current-password" placeholder="••••••••">
+                            </div>
+
+                            <div class="mb12">
+                                <label class="label mb8" for="newPassword">Mật khẩu mới</label>
+                                <input type="password" id="newPassword" name="newPassword"
+                                       class="field w100" autocomplete="new-password" placeholder="Tối thiểu 6 ký tự">
+                            </div>
+
+                            <div>
+                                <label class="label mb8" for="confirmPassword">Xác nhận mật khẩu mới</label>
+                                <input type="password" id="confirmPassword" name="confirmPassword"
+                                       class="field w100" autocomplete="new-password" placeholder="Nhập lại mật khẩu mới">
+                            </div>
                         </div>
 
-                        <div class="pt8">
-                            <button type="submit" class="btn btn-outline w100">Lưu địa chỉ giao nhận này &rarr;</button>
+                        <div class="pt12">
+                            <button type="submit" class="btn w100">Cập nhật hồ sơ tài khoản</button>
                         </div>
                     </form>
                 </div>
 
-                <!-- Recent Orders -->
-                <div class="panel">
-                    <div class="between mb12" style="padding-bottom:10px;border-bottom:1px solid var(--sw-line)">
-                        <h3 class="serif m-0" style="font-size:1.2rem">Đơn hàng gần đây</h3>
-                        <a th:href="@{/orders}" class="small" style="color:var(--sw-bordeaux);font-weight:700">Xem tất cả &rarr;</a>
-                    </div>
+                <div class="stack">
+                    <div class="panel">
+                        <div class="between mb12 pb12" style="border-bottom:1px solid var(--border-hairline)">
+                            <h2 class="serif sw-section-heading m-0">Địa chỉ giao nhận nhanh</h2>
+                            <span class="badge badge-gold">Tự động tải khi thanh toán</span>
+                        </div>
 
-                    <div th:if="${orders == null or orders.isEmpty()}" class="text-center py16">
-                        <p class="muted mb8">Chưa có lịch sử đơn hàng nào.</p>
-                        <a th:href="@{/wines}" class="btn btn-outline btn-sm">Khám phá rượu ngay</a>
-                    </div>
-
-                    <div class="stack" th:if="${orders != null and !orders.isEmpty()}">
-                        <div th:each="order, stat : ${orders}" th:if="${stat.index < 3}"
-                             class="between p10" style="background:#fcf9f5;border:1px solid var(--sw-line);border-radius:6px;gap:10px;flex-wrap:wrap">
-                            <div>
-                                <strong th:text="'#' + ${order.id}">#1</strong>
-                                <span class="small muted" th:if="${order.orderDate != null}" th:text="' · ' + ${#temporals.format(order.orderDate, 'dd/MM/yyyy')}"> · 10/10/2026</span>
-                                <div class="mt4">
-                                    <span class="badge badge-wine" th:text="${@enumDisplayService.orderStatus(order.status)}">Chờ xử lý</span>
-                                </div>
+                        <div th:if="${latestAddress != null and !#strings.isEmpty(latestAddress)}"
+                             class="panel-soft mb16 p12">
+                            <div class="display-flex gap8 mb4" style="flex-wrap:wrap">
+                                <strong th:text="${latestFullName != null and !#strings.isEmpty(latestFullName) ? latestFullName : 'Khách hàng'}">Nguyễn Văn A</strong>
+                                <span class="badge badge-wine" th:if="${latestPhone != null and !#strings.isEmpty(latestPhone)}" th:text="${latestPhone}">0900000000</span>
                             </div>
-                            <div style="text-align:right">
-                                <strong style="color:var(--sw-bordeaux)" th:text="${#numbers.formatDecimal(order.totalPrice, 0, 'COMMA', 0, 'POINT')} + ' ₫'">0 ₫</strong>
-                                <div class="mt4">
-                                    <a th:href="@{/orders/{id}(id=${order.id})}" class="btn btn-outline btn-sm" style="padding:4px 8px;min-height:26px;font-size:10px">Chi tiết</a>
+                            <p class="muted small mb4" th:text="${latestAddress}">Địa chỉ giao nhận</p>
+                            <span class="small" style="color:var(--accent-gold)">Đang dùng làm thông tin giao hàng ưu tiên</span>
+                        </div>
+
+                        <form th:action="@{/profile/shipping}" method="post" class="stack">
+                            <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+
+                            <div>
+                                <label class="label mb4" for="shippingFullName">Họ và tên người nhận hàng *</label>
+                                <input type="text" id="shippingFullName" name="fullName" class="field w100"
+                                       th:value="${latestFullName}" placeholder="Ví dụ: Nguyễn Văn A" required>
+                            </div>
+
+                            <div>
+                                <label class="label mb4" for="shippingPhone">Số điện thoại người nhận *</label>
+                                <input type="tel" id="shippingPhone" name="phone" class="field w100"
+                                       th:value="${latestPhone}" placeholder="Ví dụ: 0901234567" required>
+                            </div>
+
+                            <div>
+                                <label class="label mb4" for="shippingAddress">Địa chỉ chi tiết (Đất liền Việt Nam) *</label>
+                                <input type="text" id="shippingAddress" name="address" class="field w100"
+                                       th:value="${latestAddress}" placeholder="Số nhà, tên đường, phường/xã, quận/huyện, tỉnh/thành phố" required>
+                                <span class="small muted mt4 d-block">
+                                    StrongWine giao hàng bảo ôn chuẩn 14&deg;C tại khu vực đất liền Việt Nam.
+                                </span>
+                            </div>
+
+                            <div class="pt8">
+                                <button type="submit" class="btn btn-outline w100">Lưu địa chỉ giao nhận mặc định</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="panel">
+                        <div class="between mb12 pb12" style="border-bottom:1px solid var(--border-hairline)">
+                            <h2 class="serif sw-section-heading m-0">Đơn hàng gần đây</h2>
+                            <a th:href="@{/orders}" class="small" style="color:var(--accent-gold);font-weight:700">Xem tất cả</a>
+                        </div>
+
+                        <div th:if="${orders == null or orders.isEmpty()}" class="text-center p12">
+                            <p class="muted mb8">Chưa có lịch sử đơn hàng nào.</p>
+                            <a th:href="@{/wines}" class="btn btn-outline btn-sm">Khám phá rượu ngay</a>
+                        </div>
+
+                        <div class="stack" th:if="${orders != null and !orders.isEmpty()}">
+                            <div th:each="order, stat : ${orders}" th:if="${stat.index < 3}"
+                                 class="panel-soft between p12" style="gap:10px;flex-wrap:wrap">
+                                <div>
+                                    <strong th:text="'Đơn hàng #' + ${order.id}">#1</strong>
+                                    <span class="small muted" th:if="${order.orderDate != null}"
+                                          th:text="' · ' + ${#temporals.format(order.orderDate, 'dd/MM/yyyy')}"> · 10/10/2026</span>
+                                    <div class="mt4">
+                                        <span class="badge badge-wine"
+                                              th:text="${order.status != null ? @enumDisplayService.orderStatus(order.status) : 'Đang xử lý'}">Chờ xử lý</span>
+                                    </div>
+                                </div>
+                                <div style="text-align:right">
+                                    <strong style="color:var(--accent-gold)"
+                                            th:text="${order.totalPrice != null ? #numbers.formatDecimal(order.totalPrice, 0, 'COMMA', 0, 'POINT') + ' ₫' : '0 ₫'}">0 ₫</strong>
+                                    <div class="mt4">
+                                        <a th:href="@{/orders/{id}(id=${order.id})}" class="btn btn-outline btn-sm">Chi tiết</a>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </section>
+
+        <!-- TAB 2: Address Book (Sổ địa chỉ) -->
+        <section id="addresses" class="d-none" role="tabpanel" aria-labelledby="tabBtnAddresses" data-tab-panel="addresses">
+            <div class="panel">
+                <div class="between mb16 pb12" style="border-bottom:1px solid var(--border-hairline);flex-wrap:wrap;gap:12px">
+                    <div>
+                        <div class="eyebrow">QUẢN LÝ SỔ ĐỊA CHỈ GIAO HÀNG</div>
+                        <h2 class="serif sw-section-heading mt4 mb0">Địa chỉ đã lưu</h2>
+                    </div>
+                    <button type="button" class="btn btn-sm" id="btnAddAddress">
+                        <th:block th:replace="~{fragments/icons :: icon('warehouse-map')}"></th:block>
+                        <span>Thêm địa chỉ mới</span>
+                    </button>
+                </div>
+
+                <div id="addressBookList" class="grid-2 gap16">
+                    <div th:if="${savedAddresses == null or savedAddresses.isEmpty()}" class="panel-soft p12 muted" id="addressEmptySsr">
+                        Bạn chưa lưu địa chỉ giao nhận nào trong sổ địa chỉ. Hãy thêm tối đa 10 địa chỉ để thanh toán nhanh chóng.
+                    </div>
+
+                    <article class="panel-soft p12 stack gap8"
+                             th:each="addr : ${savedAddresses}"
+                             th:attr="data-address-id=${addr.id}">
+                        <div class="between gap8" style="flex-wrap:wrap">
+                            <div class="display-flex gap8">
+                                <strong th:text="${addr.label != null and !#strings.isEmpty(addr.label) ? addr.label : 'Địa chỉ giao hàng'}">Nhà riêng</strong>
+                                <span class="badge badge-gold" th:if="${addr.isDefault != null and addr.isDefault}">Mặc định</span>
+                            </div>
+                            <span class="badge badge-wine" th:text="${addr.phone}">0900000000</span>
+                        </div>
+                        <div class="small">
+                            <strong th:text="${addr.recipientName}">Người nhận</strong>
+                        </div>
+                        <p class="muted small mb0"
+                           th:text="${(addr.addressLine != null ? addr.addressLine : '') + (addr.ward != null and !#strings.isEmpty(addr.ward) ? ', ' + addr.ward : '') + (addr.district != null and !#strings.isEmpty(addr.district) ? ', ' + addr.district : '') + (addr.province != null and !#strings.isEmpty(addr.province) ? ', ' + addr.province : '')}">
+                            Địa chỉ chi tiết
+                        </p>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 3: Wishlist (Yêu thích) -->
+        <section id="wishlist" class="d-none" role="tabpanel" aria-labelledby="tabBtnWishlist" data-tab-panel="wishlist">
+            <div class="panel">
+                <div class="between mb16 pb12" style="border-bottom:1px solid var(--border-hairline);flex-wrap:wrap;gap:12px">
+                    <div>
+                        <div class="eyebrow">BỘ SƯU TẬP CÁ NHÂN</div>
+                        <h2 class="serif sw-section-heading mt4 mb0">Rượu vang yêu thích</h2>
+                    </div>
+                    <a th:href="@{/wines}" class="btn btn-outline btn-sm">Khám phá thêm rượu vang</a>
+                </div>
+                <div id="wishlistGrid" data-wishlist-container="true"></div>
+            </div>
+        </section>
+
+        <!-- TAB 4: Notifications (Thông báo) -->
+        <section id="notifications" class="d-none" role="tabpanel" aria-labelledby="tabBtnNotifications" data-tab-panel="notifications">
+            <div class="panel">
+                <div class="between mb16 pb12" style="border-bottom:1px solid var(--border-hairline);flex-wrap:wrap;gap:12px">
+                    <div>
+                        <div class="eyebrow">HỘP THƯ THÔNG BÁO</div>
+                        <h2 class="serif sw-section-heading mt4 mb0">Thông báo đơn hàng &amp; hệ thống</h2>
+                    </div>
+                    <button type="button" class="btn btn-outline btn-sm" id="profileNotifMarkAllBtn">
+                        <th:block th:replace="~{fragments/icons :: icon('check')}"></th:block>
+                        <span>Đánh dấu tất cả đã đọc</span>
+                    </button>
+                </div>
+                <div id="profileNotificationsList" class="stack">
+                    <div class="panel-soft p12 muted">Đang tải thông báo…</div>
+                </div>
+            </div>
+        </section>
     </div>
 </main>
 
+<!-- Address Book Create / Edit Dialog -->
+<dialog id="addressModal" class="sw-dialog" closedby="any" aria-labelledby="addressModalTitle">
+    <div class="dialog-surface">
+        <div class="dialog-head">
+            <div>
+                <div class="eyebrow">SỔ ĐỊA CHỈ STRONGWINE</div>
+                <h2 class="serif sw-section-heading mt4" id="addressModalTitle">Thêm địa chỉ mới</h2>
+            </div>
+            <button type="button" class="close-btn" data-dialog-close aria-label="Đóng hộp thoại">
+                <th:block th:replace="~{fragments/icons :: icon('close')}"></th:block>
+            </button>
+        </div>
+        <form id="addressModalForm" class="dialog-body stack">
+            <input type="hidden" id="addressEditId" value="">
+            <div class="grid-2 gap12">
+                <div>
+                    <label class="label mb4" for="addrLabel">Nhãn gợi nhớ</label>
+                    <input type="text" id="addrLabel" class="field w100" maxlength="80" placeholder="Nhà riêng, Văn phòng…">
+                </div>
+                <div>
+                    <label class="label mb4" for="addrRecipientName">Họ tên người nhận *</label>
+                    <input type="text" id="addrRecipientName" class="field w100" maxlength="150" required>
+                </div>
+            </div>
+            <div class="grid-2 gap12">
+                <div>
+                    <label class="label mb4" for="addrPhone">Số điện thoại *</label>
+                    <input type="tel" id="addrPhone" class="field w100" maxlength="32" required>
+                </div>
+                <div>
+                    <label class="label mb4" for="addrProvince">Tỉnh / Thành phố *</label>
+                    <input type="text" id="addrProvince" class="field w100" maxlength="120" placeholder="TP. Hồ Chí Minh" required>
+                </div>
+            </div>
+            <div class="grid-2 gap12">
+                <div>
+                    <label class="label mb4" for="addrDistrict">Quận / Huyện</label>
+                    <input type="text" id="addrDistrict" class="field w100" maxlength="120" placeholder="Quận 1">
+                </div>
+                <div>
+                    <label class="label mb4" for="addrWard">Phường / Xã</label>
+                    <input type="text" id="addrWard" class="field w100" maxlength="120" placeholder="Phường Bến Nghé">
+                </div>
+            </div>
+            <div>
+                <label class="label mb4" for="addrLine">Số nhà, tên đường *</label>
+                <input type="text" id="addrLine" class="field w100" maxlength="400" placeholder="123 Nguyễn Huệ" required>
+            </div>
+            <label class="check-line">
+                <input type="checkbox" id="addrIsDefault">
+                <span>Đặt làm địa chỉ giao hàng mặc định</span>
+            </label>
+            <div id="addressFormFeedback" class="small muted d-none"></div>
+            <div class="display-flex gap10" style="justify-content:flex-end">
+                <button type="button" class="btn btn-outline btn-sm" data-dialog-close>Hủy</button>
+                <button type="submit" class="btn btn-sm" id="btnSaveAddress">Lưu địa chỉ</button>
+            </div>
+        </form>
+    </div>
+</dialog>
+
+<!-- Delete Address Confirm Dialog -->
+<dialog id="deleteAddressModal" class="sw-dialog" closedby="any" aria-labelledby="deleteAddressTitle">
+    <div class="dialog-surface">
+        <div class="dialog-head">
+            <div>
+                <div class="eyebrow">XÁC NHẬN XÓA ĐỊA CHỈ</div>
+                <h2 class="serif sw-section-heading mt4" id="deleteAddressTitle">Xóa địa chỉ khỏi sổ?</h2>
+            </div>
+            <button type="button" class="close-btn" data-dialog-close aria-label="Đóng hộp thoại">
+                <th:block th:replace="~{fragments/icons :: icon('close')}"></th:block>
+            </button>
+        </div>
+        <div class="dialog-body stack">
+            <p class="muted mb0" id="deleteAddressDesc">Địa chỉ này sẽ bị xóa vĩnh viễn khỏi sổ địa chỉ của bạn.</p>
+            <div class="display-flex gap10" style="justify-content:flex-end">
+                <button type="button" class="btn btn-outline btn-sm" data-dialog-close>Giữ lại</button>
+                <button type="button" class="btn btn-danger btn-sm" id="btnConfirmDeleteAddress">Xác nhận xóa</button>
+            </div>
+        </div>
+    </div>
+</dialog>
+
 <div th:replace="~{fragments/store-shell :: footer}"></div>
+
+<script defer>
+(function (window, document) {
+    "use strict";
+
+    function getCsrfHeaders() {
+        var headerMeta = document.querySelector('meta[name="_csrf_header"]');
+        var tokenMeta = document.querySelector('meta[name="_csrf"]');
+        var headers = {};
+        if (tokenMeta && tokenMeta.content) {
+            headers[(headerMeta && headerMeta.content) || "X-CSRF-TOKEN"] = tokenMeta.content;
+        }
+        return headers;
+    }
+
+    function notify(title, message, tone) {
+        if (window.SwToast && typeof window.SwToast.show === "function") {
+            window.SwToast.show({ title: title, message: message, tone: tone || "info", duration: 4000 });
+        }
+    }
+
+    function openDialog(id, opener) {
+        var dlg = document.getElementById(id);
+        if (window.SwDialog && typeof window.SwDialog.open === "function") {
+            window.SwDialog.open(id, opener);
+        } else if (dlg && typeof dlg.showModal === "function") {
+            dlg.showModal();
+        }
+    }
+
+    function closeDialog(id) {
+        var dlg = document.getElementById(id);
+        if (window.SwDialog && typeof window.SwDialog.close === "function") {
+            window.SwDialog.close(id);
+        } else if (dlg && typeof dlg.close === "function" && dlg.open) {
+            dlg.close();
+        }
+    }
+
+    /* ---------------- Profile Tabs + Hash Sync ---------------- */
+    var validTabs = ["profile", "addresses", "wishlist", "notifications"];
+
+    function activateTab(tabId, updateHash) {
+        var target = validTabs.indexOf(tabId) !== -1 ? tabId : "profile";
+        document.querySelectorAll("[data-profile-tab]").forEach(function (btn) {
+            var active = btn.getAttribute("data-profile-tab") === target;
+            btn.classList.toggle("active", active);
+            btn.setAttribute("aria-selected", active ? "true" : "false");
+        });
+        document.querySelectorAll("[data-tab-panel]").forEach(function (panel) {
+            var active = panel.getAttribute("data-tab-panel") === target;
+            panel.classList.toggle("d-none", !active);
+        });
+        if (updateHash && window.history && typeof window.history.replaceState === "function") {
+            window.history.replaceState(null, "", "#" + target);
+        }
+    }
+
+    function syncTabFromHash() {
+        var hash = (window.location.hash || "").replace("#", "").trim().toLowerCase();
+        if (validTabs.indexOf(hash) !== -1) {
+            activateTab(hash, false);
+        }
+    }
+
+    /* ---------------- Address Book CRUD ---------------- */
+    var cachedAddresses = [];
+    var pendingDeleteId = null;
+
+    function clearEl(el) {
+        while (el && el.firstChild) {
+            el.removeChild(el.firstChild);
+        }
+    }
+
+    function updateAddressCount(count) {
+        var badge = document.getElementById("addressCountBadge");
+        if (badge) {
+            badge.textContent = String(Math.max(0, Number(count) || 0));
+        }
+    }
+
+    function resetAddressForm(item) {
+        var isEdit = Boolean(item && item.id);
+        var titleEl = document.getElementById("addressModalTitle");
+        if (titleEl) {
+            titleEl.textContent = isEdit ? "Chỉnh sửa địa chỉ" : "Thêm địa chỉ mới";
+        }
+        document.getElementById("addressEditId").value = isEdit ? String(item.id) : "";
+        document.getElementById("addrLabel").value = (item && item.label) || "";
+        document.getElementById("addrRecipientName").value = (item && item.recipientName) || "";
+        document.getElementById("addrPhone").value = (item && item.phone) || "";
+        document.getElementById("addrProvince").value = (item && item.province) || "";
+        document.getElementById("addrDistrict").value = (item && item.district) || "";
+        document.getElementById("addrWard").value = (item && item.ward) || "";
+        document.getElementById("addrLine").value = (item && item.addressLine) || "";
+        document.getElementById("addrIsDefault").checked = Boolean(item && item.isDefault);
+        var fb = document.getElementById("addressFormFeedback");
+        if (fb) {
+            fb.className = "small muted d-none";
+            fb.textContent = "";
+        }
+    }
+
+    function renderAddressCards(list) {
+        var container = document.getElementById("addressBookList");
+        if (!container) {
+            return;
+        }
+        cachedAddresses = Array.isArray(list) ? list : [];
+        updateAddressCount(cachedAddresses.length);
+        clearEl(container);
+
+        if (!cachedAddresses.length) {
+            var empty = document.createElement("div");
+            empty.className = "panel-soft p12 muted";
+            empty.textContent = "Bạn chưa lưu địa chỉ giao nhận nào trong sổ địa chỉ. Hãy thêm tối đa 10 địa chỉ để thanh toán nhanh chóng.";
+            container.appendChild(empty);
+            return;
+        }
+
+        cachedAddresses.forEach(function (addr) {
+            var card = document.createElement("article");
+            card.className = "panel-soft p12 stack gap8";
+            card.setAttribute("data-address-id", String(addr.id || ""));
+
+            var top = document.createElement("div");
+            top.className = "between gap8";
+            top.style.flexWrap = "wrap";
+
+            var left = document.createElement("div");
+            left.className = "display-flex gap8";
+            var labelEl = document.createElement("strong");
+            labelEl.textContent = addr.label || "Địa chỉ giao hàng";
+            left.appendChild(labelEl);
+            if (addr.isDefault) {
+                var defBadge = document.createElement("span");
+                defBadge.className = "badge badge-gold";
+                defBadge.textContent = "Mặc định";
+                left.appendChild(defBadge);
+            }
+
+            var phoneBadge = document.createElement("span");
+            phoneBadge.className = "badge badge-wine";
+            phoneBadge.textContent = addr.phone || "";
+
+            top.appendChild(left);
+            top.appendChild(phoneBadge);
+            card.appendChild(top);
+
+            var recipientRow = document.createElement("div");
+            recipientRow.className = "small";
+            var recStrong = document.createElement("strong");
+            recStrong.textContent = addr.recipientName || "";
+            recipientRow.appendChild(recStrong);
+            card.appendChild(recipientRow);
+
+            var fullText = addr.fullAddress || [addr.addressLine, addr.ward, addr.district, addr.province].filter(Boolean).join(", ");
+            var addressP = document.createElement("p");
+            addressP.className = "muted small mb0";
+            addressP.textContent = fullText;
+            card.appendChild(addressP);
+
+            var actions = document.createElement("div");
+            actions.className = "display-flex gap8 mt4";
+            actions.style.flexWrap = "wrap";
+
+            var editBtn = document.createElement("button");
+            editBtn.type = "button";
+            editBtn.className = "btn btn-outline btn-sm";
+            editBtn.textContent = "Sửa";
+            editBtn.addEventListener("click", function () {
+                resetAddressForm(addr);
+                openDialog("addressModal", editBtn);
+            });
+            actions.appendChild(editBtn);
+
+            if (!addr.isDefault) {
+                var defaultBtn = document.createElement("button");
+                defaultBtn.type = "button";
+                defaultBtn.className = "btn btn-gold btn-sm";
+                defaultBtn.textContent = "Đặt mặc định";
+                defaultBtn.addEventListener("click", function () {
+                    setDefaultAddress(addr.id);
+                });
+                actions.appendChild(defaultBtn);
+            }
+
+            var delBtn = document.createElement("button");
+            delBtn.type = "button";
+            delBtn.className = "btn btn-danger btn-sm";
+            delBtn.textContent = "Xóa";
+            delBtn.addEventListener("click", function () {
+                pendingDeleteId = addr.id;
+                var desc = document.getElementById("deleteAddressDesc");
+                if (desc) {
+                    desc.textContent = "Xóa địa chỉ \"" + (addr.label || fullText) + "\" khỏi sổ địa chỉ?";
+                }
+                openDialog("deleteAddressModal", delBtn);
+            });
+            actions.appendChild(delBtn);
+
+            card.appendChild(actions);
+            container.appendChild(card);
+        });
+    }
+
+    function loadAddresses() {
+        return fetch("/api/profile/addresses", {
+            headers: { "Accept": "application/json" },
+            credentials: "same-origin"
+        }).then(function (resp) {
+            if (!resp.ok) {
+                return null;
+            }
+            return resp.json();
+        }).then(function (data) {
+            if (Array.isArray(data)) {
+                renderAddressCards(data);
+            }
+        }).catch(function () {});
+    }
+
+    function setDefaultAddress(id) {
+        fetch("/api/profile/addresses/" + encodeURIComponent(String(id)) + "/default", {
+            method: "POST",
+            headers: getCsrfHeaders(),
+            credentials: "same-origin"
+        }).then(function (resp) {
+            if (!resp.ok) {
+                throw new Error("Không thể đặt địa chỉ mặc định");
+            }
+            notify("Sổ địa chỉ", "Đã cập nhật địa chỉ mặc định.", "ok");
+            return loadAddresses();
+        }).catch(function (err) {
+            notify("Sổ địa chỉ", (err && err.message) || "Thao tác thất bại.", "warn");
+        });
+    }
+
+    function wireAddressBook() {
+        var addBtn = document.getElementById("btnAddAddress");
+        var form = document.getElementById("addressModalForm");
+        var confirmDeleteBtn = document.getElementById("btnConfirmDeleteAddress");
+
+        if (addBtn) {
+            addBtn.addEventListener("click", function () {
+                resetAddressForm(null);
+                openDialog("addressModal", addBtn);
+            });
+        }
+
+        if (form) {
+            form.addEventListener("submit", function (event) {
+                event.preventDefault();
+                var editId = (document.getElementById("addressEditId").value || "").trim();
+                var payload = {
+                    label: (document.getElementById("addrLabel").value || "").trim() || null,
+                    recipientName: (document.getElementById("addrRecipientName").value || "").trim(),
+                    phone: (document.getElementById("addrPhone").value || "").trim(),
+                    addressLine: (document.getElementById("addrLine").value || "").trim(),
+                    ward: (document.getElementById("addrWard").value || "").trim() || null,
+                    district: (document.getElementById("addrDistrict").value || "").trim() || null,
+                    province: (document.getElementById("addrProvince").value || "").trim(),
+                    isDefault: Boolean(document.getElementById("addrIsDefault").checked)
+                };
+
+                var headers = getCsrfHeaders();
+                headers["Content-Type"] = "application/json";
+                headers["Accept"] = "application/json";
+
+                var endpoint = editId
+                    ? "/api/profile/addresses/" + encodeURIComponent(editId)
+                    : "/api/profile/addresses";
+                var method = editId ? "PUT" : "POST";
+
+                var fb = document.getElementById("addressFormFeedback");
+                fetch(endpoint, {
+                    method: method,
+                    headers: headers,
+                    credentials: "same-origin",
+                    body: JSON.stringify(payload)
+                }).then(function (resp) {
+                    return resp.json().catch(function () { return {}; }).then(function (data) {
+                        if (!resp.ok) {
+                            throw new Error(data.message || data.error || "Không thể lưu địa chỉ. Vui lòng kiểm tra thông tin.");
+                        }
+                        return data;
+                    });
+                }).then(function () {
+                    closeDialog("addressModal");
+                    notify("Sổ địa chỉ", editId ? "Đã cập nhật địa chỉ." : "Đã thêm địa chỉ mới.", "ok");
+                    return loadAddresses();
+                }).catch(function (err) {
+                    if (fb) {
+                        fb.className = "small alert-sw danger";
+                        fb.textContent = (err && err.message) || "Không thể lưu địa chỉ.";
+                    }
+                });
+            });
+        }
+
+        if (confirmDeleteBtn) {
+            confirmDeleteBtn.addEventListener("click", function () {
+                if (!pendingDeleteId) {
+                    closeDialog("deleteAddressModal");
+                    return;
+                }
+                var targetId = pendingDeleteId;
+                pendingDeleteId = null;
+                fetch("/api/profile/addresses/" + encodeURIComponent(String(targetId)), {
+                    method: "DELETE",
+                    headers: getCsrfHeaders(),
+                    credentials: "same-origin"
+                }).then(function (resp) {
+                    if (!resp.ok) {
+                        throw new Error("Không thể xóa địa chỉ");
+                    }
+                    closeDialog("deleteAddressModal");
+                    notify("Sổ địa chỉ", "Đã xóa địa chỉ khỏi sổ.", "ok");
+                    return loadAddresses();
+                }).catch(function (err) {
+                    closeDialog("deleteAddressModal");
+                    notify("Sổ địa chỉ", (err && err.message) || "Xóa địa chỉ thất bại.", "warn");
+                });
+            });
+        }
+    }
+
+    function init() {
+        document.querySelectorAll("[data-profile-tab]").forEach(function (btn) {
+            btn.addEventListener("click", function () {
+                activateTab(btn.getAttribute("data-profile-tab"), true);
+            });
+        });
+        window.addEventListener("hashchange", syncTabFromHash);
+        syncTabFromHash();
+        wireAddressBook();
+        loadAddresses();
+    }
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", init, { once: true });
+    } else {
+        init();
+    }
+})(window, document);
+</script>
 </body>
 </html>

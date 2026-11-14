@@ -1,137 +1,234 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="vi">
-<head th:replace="~{fragments/store-shell :: head('Thanh Toán & Định Vị Giao Nhận · StrongWine')}"></head>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi" data-theme="cellar">
+<head th:replace="~{fragments/store-shell :: head('Thanh Toán & Giao Hàng · StrongWine')}"></head>
 <body data-checkout-page="true">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
 <div th:replace="~{fragments/store-shell :: header('cart')}"></div>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 
 <main class="section">
     <div class="sw-container">
-        <div th:if="${message}" class="alert-sw success mb16" th:text="${message}"></div>
-        <div th:if="${error}" class="alert-sw danger mb16" th:text="${error}"></div>
+        <div th:if="${error}" class="alert-sw danger mb16" role="alert" th:text="${error}"></div>
+        <div id="checkoutErrorAlert" class="alert-sw danger mb16 d-none" role="alert"></div>
 
         <div class="section-head">
             <div>
-                <div class="eyebrow">BÀN GIAO BẢO MẬT · ĐỊNH VỊ BẢN ĐỒ</div>
-                <h1 class="section-title">Hoàn tất đơn đặt hàng</h1>
+                <div class="eyebrow">HOÀN TẤT ĐƠN HÀNG</div>
+                <h1 class="section-title">Thông tin giao nhận &amp; Thanh toán</h1>
             </div>
             <a th:href="@{/cart}" class="btn btn-outline btn-sm">&larr; Quay lại giỏ hàng</a>
         </div>
 
         <form id="checkoutForm" th:action="@{/cart/checkout/process}" method="post">
+            <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
             <input type="hidden" name="checkoutToken" th:value="${checkoutToken}">
-            <input type="hidden" id="deliveryLat" name="deliveryLat" th:value="${checkoutForm != null and checkoutForm.deliveryLat != null ? checkoutForm.deliveryLat : ''}">
-            <input type="hidden" id="deliveryLng" name="deliveryLng" th:value="${checkoutForm != null and checkoutForm.deliveryLng != null ? checkoutForm.deliveryLng : ''}">
+            <input type="hidden" id="savedAddressId" name="savedAddressId"
+                   th:value="${defaultAddress != null ? defaultAddress.id : ''}">
+            <input type="hidden" id="deliveryLat" name="deliveryLat"
+                   th:value="${checkoutForm != null and checkoutForm.deliveryLat != null ? checkoutForm.deliveryLat : (defaultAddress != null and defaultAddress.latitude != null ? defaultAddress.latitude : '')}">
+            <input type="hidden" id="deliveryLng" name="deliveryLng"
+                   th:value="${checkoutForm != null and checkoutForm.deliveryLng != null ? checkoutForm.deliveryLng : (defaultAddress != null and defaultAddress.longitude != null ? defaultAddress.longitude : '')}">
 
             <div class="checkout-grid">
-                <!-- Left Column: Recipient Info + Interactive Map -->
+                <!-- Left Column: Saved Address Book + Recipient + Map + Payment -->
                 <div class="stack">
-                    <section class="panel">
-                        <div class="eyebrow">01 · THÔNG TIN NGƯỜI NHẬN</div>
-                        <h3 class="serif mt8 mb16">Thông tin liên hệ &amp; nhận mã OTP</h3>
+                    <!-- Saved Address Book -->
+                    <section class="panel" id="savedAddressesSection" th:if="${savedAddresses != null and !savedAddresses.isEmpty()}">
+                        <div class="between mb12" style="flex-wrap:wrap;gap:8px;">
+                            <div>
+                                <div class="eyebrow">SỔ ĐỊA CHỈ ĐÃ LƯU</div>
+                                <h2 class="serif sw-section-heading mt4 mb0">Chọn nhanh địa chỉ nhận rượu</h2>
+                            </div>
+                            <a th:href="@{/profile#addresses}" class="btn btn-outline btn-sm">Quản lý sổ địa chỉ</a>
+                        </div>
 
                         <div class="grid-2">
-                            <div>
-                                <label class="label" for="fullName">Họ và tên người nhận *</label>
-                                <input type="text" id="fullName" name="fullName" class="field" required
-                                       placeholder="Nguyễn Văn A"
-                                       th:value="${checkoutForm != null ? checkoutForm.fullName : ''}">
-                            </div>
-                            <div>
-                                <label class="label" for="phone">Số điện thoại liên hệ *</label>
-                                <input type="tel" id="phone" name="phone" class="field" required
-                                       placeholder="0901234567"
-                                       th:value="${checkoutForm != null ? checkoutForm.phone : ''}">
-                            </div>
-                        </div>
+                            <label class="panel-soft p12" style="cursor:pointer;display:flex;gap:10px;align-items:flex-start;"
+                                   th:each="addr : ${savedAddresses}">
+                                <input type="radio"
+                                       name="savedAddressChoice"
+                                       th:value="${addr.id}"
+                                       th:checked="${defaultAddress != null and defaultAddress.id == addr.id}"
+                                       data-saved-address-choice="true"
+                                       th:attr="data-recipient-name=${addr.recipientName},data-phone=${addr.phone},data-full-address=${(addr.addressLine != null ? addr.addressLine : '') + (addr.ward != null and !#strings.isEmpty(addr.ward) ? ', ' + addr.ward : '') + (addr.district != null and !#strings.isEmpty(addr.district) ? ', ' + addr.district : '') + (addr.province != null and !#strings.isEmpty(addr.province) ? ', ' + addr.province : '')},data-lat=${addr.latitude},data-lng=${addr.longitude}"
+                                       style="margin-top:4px;accent-color:var(--accent-gold);">
+                                <span style="display:block;">
+                                    <span class="display-flex gap6 mb4" style="flex-wrap:wrap;">
+                                        <strong th:text="${addr.label != null and !#strings.isEmpty(addr.label) ? addr.label : 'Địa chỉ giao hàng'}">Nhà riêng</strong>
+                                        <span class="badge badge-gold" th:if="${addr.isDefault != null and addr.isDefault}">Mặc định</span>
+                                    </span>
+                                    <span style="display:block;font-size:13px;" th:text="${addr.recipientName + ' · ' + addr.phone}">Người nhận</span>
+                                    <span class="muted" style="display:block;font-size:12.5px;"
+                                          th:text="${(addr.addressLine != null ? addr.addressLine : '') + (addr.district != null and !#strings.isEmpty(addr.district) ? ', ' + addr.district : '') + (addr.province != null and !#strings.isEmpty(addr.province) ? ', ' + addr.province : '')}">
+                                        Địa chỉ chi tiết
+                                    </span>
+                                </span>
+                            </label>
 
-                        <div class="mt12">
-                            <label class="label" for="email">Email nhận thông báo &amp; mã OTP</label>
-                            <input type="email" id="email" name="email" class="field"
-                                   placeholder="khachhang@example.com"
-                                   th:value="${checkoutForm != null ? checkoutForm.email : ''}">
-                        </div>
-
-                        <div class="mt12">
-                            <label class="label" for="address">Địa chỉ nhận hàng chi tiết *</label>
-                            <input type="text" id="address" name="address" class="field" required
-                                   placeholder="Số nhà, tên đường, phường/xã, quận/huyện, tỉnh/thành phố"
-                                   th:value="${checkoutForm != null ? checkoutForm.address : ''}">
-                            <span class="small muted mt4 d-block">
-                                Giao hàng bảo ôn hầm rượu 14&deg;C trên toàn đất liền Việt Nam (không hỗ trợ đảo xa). Bạn có thể chỉnh sửa địa chỉ trực tiếp tại đây.
-                            </span>
-                        </div>
-
-                        <div class="mt12">
-                            <label class="label" for="note">Ghi chú cho hầm rượu &amp; tài xế</label>
-                            <textarea id="note" name="note" class="textarea" rows="2"
-                                      placeholder="Thời gian nhận hàng mong muốn, yêu cầu ướp lạnh hoặc lời nhắn quà tặng..."
-                                      ></textarea>
+                            <label class="panel-soft p12" style="cursor:pointer;display:flex;gap:10px;align-items:flex-start;">
+                                <input type="radio"
+                                       name="savedAddressChoice"
+                                       value=""
+                                       data-saved-address-choice="true"
+                                       th:checked="${defaultAddress == null}"
+                                       style="margin-top:4px;accent-color:var(--accent-gold);">
+                                <span>
+                                    <strong style="display:block;">Địa chỉ giao hàng mới</strong>
+                                    <span class="muted" style="display:block;font-size:12.5px;">Nhập địa chỉ thủ công và ghim trực tiếp trên bản đồ</span>
+                                </span>
+                            </label>
                         </div>
                     </section>
 
-                    <!-- Interactive Delivery Pin Map -->
+                    <!-- Recipient Details -->
                     <section class="panel">
-                        <div class="between mb12">
+                        <div class="eyebrow">1. NGƯỜI NHẬN HÀNG</div>
+                        <h2 class="serif sw-section-heading mt8 mb16">Thông tin liên hệ giao nhận</h2>
+                        <div class="grid-2">
                             <div>
-                                <div class="eyebrow">02 · ĐỊNH VỊ ĐIỂM GIAO HÀNG</div>
-                                <h3 class="serif mt8 mb0">Ghim toạ độ giao nhận chính xác</h3>
+                                <label class="label" for="fullName">Họ và tên người nhận *</label>
+                                <input type="text" id="fullName" name="fullName" class="field" required autocomplete="name"
+                                       placeholder="Nguyễn Văn A"
+                                       th:value="${checkoutForm != null and checkoutForm.fullName != null and !#strings.isEmpty(checkoutForm.fullName) ? checkoutForm.fullName : (defaultAddress != null ? defaultAddress.recipientName : '')}">
                             </div>
-                            <button type="button" id="btnUseCurrentLocation" class="btn btn-outline btn-sm">Vị trí hiện tại</button>
+                            <div>
+                                <label class="label" for="phone">Số điện thoại *</label>
+                                <input type="tel" id="phone" name="phone" class="field" required autocomplete="tel"
+                                       placeholder="0901234567"
+                                       th:value="${checkoutForm != null and checkoutForm.phone != null and !#strings.isEmpty(checkoutForm.phone) ? checkoutForm.phone : (defaultAddress != null ? defaultAddress.phone : '')}">
+                            </div>
+                        </div>
+                        <div class="mt12">
+                            <label class="label" for="email">Email nhận mã xác thực OTP *</label>
+                            <input type="email" id="email" name="email" class="field" required autocomplete="email"
+                                   placeholder="khachhang@example.com"
+                                   th:value="${checkoutForm != null ? checkoutForm.email : ''}">
+                        </div>
+                        <div class="mt12">
+                            <label class="label" for="address">Địa chỉ giao hàng chi tiết (Đất liền Việt Nam) *</label>
+                            <input type="text" id="address" name="address" class="field" required autocomplete="street-address"
+                                   placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành phố"
+                                   th:value="${checkoutForm != null and checkoutForm.address != null and !#strings.isEmpty(checkoutForm.address) ? checkoutForm.address : ''}">
+                        </div>
+                        <div class="mt12">
+                            <label class="label" for="note">Ghi chú cho tài xế bảo ôn</label>
+                            <textarea id="note" name="note" class="textarea" rows="2"
+                                      placeholder="Ví dụ: Giao giờ hành chính, gọi trước 15 phút..."></textarea>
+                        </div>
+                    </section>
+
+                    <!-- Interactive Map -->
+                    <section class="panel">
+                        <div class="between mb12" style="flex-wrap:wrap;gap:10px;">
+                            <div>
+                                <div class="eyebrow">2. BẢN ĐỒ ĐỊNH VỊ (VIỆT NAM ĐẤT LIỀN)</div>
+                                <h2 class="serif sw-section-heading mt4 mb0">Chọn tọa độ giao hàng chính xác</h2>
+                            </div>
+                            <button type="button" id="btnUseCurrentLocation" class="btn btn-outline btn-sm">
+                                <th:block th:replace="~{fragments/icons :: icon('warehouse-map')}"/>
+                                <span>Dùng vị trí hiện tại</span>
+                            </button>
                         </div>
 
-                        <div class="display-flex gap8 mb12">
-                            <input type="text" id="mapSearchInput" class="field" placeholder="Tìm địa điểm trên bản đồ (VD: Chợ Bến Thành, Quận 1)...">
-                            <button type="button" id="btnMapSearch" class="btn btn-sm">Tìm địa điểm</button>
+                        <div class="display-flex gap8 mb10">
+                            <label class="d-none" for="mapSearchInput">Tìm kiếm địa điểm hoặc tọa độ</label>
+                            <input type="text" id="mapSearchInput" class="field"
+                                   placeholder="Tìm quận, tên đường hoặc nhập vĩ độ, kinh độ...">
+                            <button type="button" id="btnMapSearch" class="btn btn-outline btn-sm">Tìm vị trí</button>
                         </div>
-                        <div id="mapSearchResult" class="small muted mb8"></div>
+                        <div id="mapSearchResult" class="muted mb10" style="font-size:12.5px;" role="status">
+                            Nhấp trực tiếp lên bản đồ hoặc tìm địa điểm để hệ thống tính cước giao từ kho gần nhất.
+                        </div>
 
-                        <div id="checkoutMap" class="map-mock" style="height:280px"></div>
-                        <div class="between mt12 small muted">
-                            <span>Chạm hoặc kéo ghim trên bản đồ để cập nhật địa chỉ giao hàng</span>
+                        <div id="checkoutMap" class="map-mock" style="height:290px;"></div>
+                        <div class="mt10 display-flex gap8" style="font-size:13px;">
+                            <span class="muted">Vị trí đã ghim:</span>
                             <strong id="selectedMapLocation">Chưa chọn địa điểm giao hàng</strong>
                         </div>
                     </section>
 
-                    <!-- Payment Method Selection -->
+                    <!-- Payment Method -->
                     <section class="panel">
-                        <div class="eyebrow">03 · PHƯƠNG THỨC THANH TOÁN</div>
-                        <h3 class="serif mt8 mb12">Chọn hình thức thanh toán</h3>
-                        <select id="paymentMethod" name="paymentMethod" class="select">
-                            <option th:each="method : ${paymentMethods}"
-                                    th:value="${method}"
-                                    th:text="${@enumDisplayService.paymentMethod(T(com.strongwine.strongwine.entity.PaymentMethod).valueOf(method))}">
-                                Stripe
-                            </option>
-                            <option th:if="${paymentMethods == null or paymentMethods.isEmpty()}" value="COD">Thanh toán khi nhận hàng (COD)</option>
-                        </select>
+                        <div class="eyebrow">3. PHƯƠNG THỨC THANH TOÁN</div>
+                        <h2 class="serif sw-section-heading mt8 mb16">Chọn hình thức thanh toán</h2>
+                        <div class="stack">
+                            <label class="panel-soft p12" style="cursor:pointer;display:flex;align-items:center;gap:12px;">
+                                <input type="radio" name="paymentMethod" value="STRIPE" checked style="accent-color:var(--accent-gold);">
+                                <th:block th:replace="~{fragments/icons :: icon('shield')}"/>
+                                <span>
+                                    <strong style="display:block;">Thẻ quốc tế (Stripe Checkout)</strong>
+                                    <span class="muted" style="font-size:12.5px;">Thanh toán trực tuyến an toàn bằng Visa / Mastercard.</span>
+                                </span>
+                            </label>
+                            <label class="panel-soft p12" style="cursor:pointer;display:flex;align-items:center;gap:12px;">
+                                <input type="radio" name="paymentMethod" value="VNPAY" style="accent-color:var(--accent-gold);">
+                                <th:block th:replace="~{fragments/icons :: icon('check')}"/>
+                                <span>
+                                    <strong style="display:block;">Cổng thanh toán VNPay / QR Ngân hàng</strong>
+                                    <span class="muted" style="font-size:12.5px;">Quét mã VNPAY-QR hoặc thẻ nội địa ATM Napas.</span>
+                                </span>
+                            </label>
+                            <label class="panel-soft p12" style="cursor:pointer;display:flex;align-items:center;gap:12px;">
+                                <input type="radio" name="paymentMethod" value="COD" style="accent-color:var(--accent-gold);">
+                                <th:block th:replace="~{fragments/icons :: icon('cod-wallet')}"/>
+                                <span>
+                                    <strong style="display:block;">Thanh toán khi nhận hàng (COD)</strong>
+                                    <span class="muted" style="font-size:12.5px;">Kiểm tra niêm phong, đọc mã OTP và thanh toán trực tiếp cho tài xế.</span>
+                                </span>
+                            </label>
+                        </div>
                     </section>
                 </div>
 
-                <!-- Right Column: Order Summary -->
-                <aside class="panel" style="align-self:start;position:sticky;top:92px">
-                    <div class="between mb12">
+                <!-- Right Column: Voucher + Quote Breakdown -->
+                <aside class="panel stack" style="align-self:start;">
+                    <div class="between">
                         <div>
-                            <div class="eyebrow">CHI TIẾT GIỎ HÀNG</div>
-                            <h3 class="serif mt8 mb0">Đơn hàng của bạn</h3>
+                            <div class="eyebrow">ĐƠN HÀNG CỦA BẠN</div>
+                            <h2 class="serif sw-section-heading mt4 mb0">Chi tiết báo giá</h2>
                         </div>
-                        <span class="badge badge-wine" id="checkoutItemCount">0 sản phẩm</span>
+                        <span class="badge badge-wine tabular-nums" id="checkoutItemCount">0 chai</span>
                     </div>
 
-                    <div id="checkoutSummary" class="stack mb16">
-                        <p class="muted">Đang tải danh sách sản phẩm...</p>
+                    <div id="checkoutSummary" class="stack"></div>
+
+                    <!-- Voucher Code Input -->
+                    <div class="panel-soft p12">
+                        <label class="label" for="voucherCode">Mã giảm giá (Voucher)</label>
+                        <div class="display-flex gap8">
+                            <input type="text" id="voucherCode" name="voucherCode" class="field mono"
+                                   placeholder="Nhập mã ưu đãi..." autocomplete="off" style="text-transform:uppercase;">
+                            <button type="button" id="btnApplyCheckoutVoucher" class="btn btn-outline btn-sm">Áp dụng</button>
+                            <button type="button" id="btnClearCheckoutVoucher" class="btn btn-outline btn-sm" aria-label="Xóa mã">&times;</button>
+                        </div>
+                        <div id="checkoutVoucherStatus" class="muted mt8" style="font-size:12.5px;" role="status"></div>
                     </div>
 
-                    <div class="between pt16" style="border-top:1px solid var(--sw-line)">
-                        <strong>Tổng thanh toán</strong>
-                        <strong class="price" id="checkoutTotal">0 ₫</strong>
+                    <div class="stack pt12" style="gap:10px;border-top:1px solid var(--border-hairline);">
+                        <div class="between">
+                            <span class="muted">Tạm tính rượu vang</span>
+                            <strong id="checkoutSubtotal" class="tabular-nums">0 ₫</strong>
+                        </div>
+                        <div class="between">
+                            <span class="muted">Phí vận chuyển bảo ôn</span>
+                            <span class="display-flex gap6">
+                                <span id="checkoutOriginalShippingFee" class="muted tabular-nums d-none" style="text-decoration:line-through;font-size:12.5px;">0 ₫</span>
+                                <strong id="checkoutShippingFee" class="tabular-nums">Đang tính…</strong>
+                            </span>
+                        </div>
+                        <div class="between d-none" id="checkoutDiscountRow">
+                            <span class="muted">Giảm giá ưu đãi</span>
+                            <strong id="checkoutDiscount" class="tabular-nums" style="color:var(--status-ok-ink);">0 ₫</strong>
+                        </div>
+                        <div class="between pt12" style="border-top:1px solid var(--border-hairline);">
+                            <strong>Tổng thanh toán</strong>
+                            <strong class="price tabular-nums" id="checkoutTotal">0 ₫</strong>
+                        </div>
                     </div>
 
-                    <div class="panel-soft mt16 small">
-                        <strong>Quy trình bàn giao bảo mật:</strong> Để đảm bảo an toàn tuyệt đối, hệ thống cung cấp mã xác nhận giao hàng tại trang Chi tiết đơn hàng. Quý khách vui lòng chỉ cung cấp mã này cho Shipper sau khi đã kiểm tra niêm phong chai rượu nguyên vẹn.
-                    </div>
-
-                    <button type="submit" class="btn w100 mt20">Xác nhận đặt hàng &rarr;</button>
+                    <button type="submit" class="btn w100">Xác nhận &amp; Đặt hàng &rarr;</button>
+                    <p class="muted m-0" style="font-size:12.5px;line-height:1.55;">
+                        Đơn hàng được giữ chỗ tồn kho tự động và tạo mã OTP bảo mật bàn giao tận tay.
+                    </p>
                 </aside>
             </div>
         </form>
@@ -139,7 +236,7 @@
 </main>
 
 <div th:replace="~{fragments/store-shell :: footer}"></div>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
-<script th:src="@{/js/checkout-map.js}"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
+<script th:src="@{/js/checkout-map.js}" defer></script>
 </body>
 </html>

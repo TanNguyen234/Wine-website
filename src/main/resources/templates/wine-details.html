@@ -1,203 +1,202 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="vi">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="vi" data-theme="cellar">
 <head th:replace="~{fragments/store-shell :: head(${wine != null ? wine.name + ' · StrongWine' : 'Chi Tiết Rượu Vang · StrongWine'})}"></head>
-<body>
-<div th:replace="~{fragments/store-shell :: header('catalog')}"></div>
+<body th:with="navPage=${wine != null and wine.type != null and #strings.equalsIgnoreCase(wine.type, 'Traditional') ? 'traditional' : 'wines'}">
+<div th:replace="~{fragments/store-shell :: header(${navPage})}"></div>
 
-<main class="section">
+<main class="section" th:attr="data-wine-detail-id=${wine != null ? wine.id : ''}"
+      th:with="stock=${availableStock != null ? availableStock : 0},
+               revCount=${reviews != null ? #lists.size(reviews) : 0},
+               r5=${revCount > 0 ? #lists.size(reviews.?[rating != null and rating == 5]) : 0},
+               r4=${revCount > 0 ? #lists.size(reviews.?[rating != null and rating == 4]) : 0},
+               r3=${revCount > 0 ? #lists.size(reviews.?[rating != null and rating == 3]) : 0},
+               r2=${revCount > 0 ? #lists.size(reviews.?[rating != null and rating == 2]) : 0},
+               r1=${revCount > 0 ? #lists.size(reviews.?[rating != null and rating == 1]) : 0},
+               sumR=${r5 * 5 + r4 * 4 + r3 * 3 + r2 * 2 + r1},
+               avgR=${revCount > 0 ? (sumR * 1.0 / revCount) : 0.0}">
     <div class="sw-container">
-        <div th:if="${success}" class="alert-sw success mb16" th:text="${success}"></div>
-        <div th:if="${message}" class="alert-sw success mb16" th:text="${message}"></div>
-        <div th:if="${error}" class="alert-sw danger mb16" th:text="${error}"></div>
+        <div th:if="${success}" class="alert-sw success mb16" role="status" th:text="${success}"></div>
+        <div th:if="${message}" class="alert-sw success mb16" role="status" th:text="${message}"></div>
+        <div th:if="${error}" class="alert-sw danger mb16" role="alert" th:text="${error}"></div>
 
-        <div class="mb20">
-            <a th:href="@{/wines}" class="muted small">&larr; Quay lại bộ sưu tập rượu vang</a>
-        </div>
+        <nav aria-label="Đường dẫn" class="mb16">
+            <a th:href="@{/wines}" class="muted" style="font-size:13.5px;">&larr; Quay lại bộ sưu tập</a>
+        </nav>
 
-        <div class="detail-grid" th:if="${wine != null}" th:with="stock=${availableStock != null ? availableStock : 0}">
-            <!-- Interactive Wine Carousel Stage (150 x 400 with 5s Auto-play) -->
-            <div class="detail-gallery">
-                <div class="between w100 mb12" style="position:absolute;top:20px;left:0;padding:0 24px;z-index:6">
-                    <span class="wine-pill" style="position:static" th:text="${@enumDisplayService.wineType(wine.type)}">Vang đỏ</span>
-                    <span class="stock-pill" style="position:static"
-                          th:classappend="${stock <= 0} ? 'out' : (${stock <= 5} ? 'low' : '')"
-                          th:text="${stock > 0 ? 'Còn ' + stock + ' chai tại hầm' : 'Tạm hết hàng'}">Còn hàng</span>
+        <section class="detail-grid" th:if="${wine != null}">
+            <!-- Left: Gallery Carousel + Bottle SVG Fallback -->
+            <div class="stack">
+                <div class="detail-gallery" id="wineCarousel">
+                    <div class="wine-carousel">
+                        <div class="wine-carousel-track">
+                            <div class="wine-carousel-slide active" style="display:grid;place-items:center;padding:24px;">
+                                <span class="slide-badge" th:text="${@enumDisplayService.wineType(wine.type)}">Vang đỏ</span>
+                                <img th:if="${wine.imageUrl != null and !#strings.isEmpty(wine.imageUrl)}"
+                                     th:src="${wine.imageUrl}"
+                                     th:alt="${wine.name}"
+                                     data-bottle-fallback="detailBottleFallback"
+                                     style="max-height:420px;object-fit:contain;">
+                                <div id="detailBottleFallback"
+                                     th:classappend="${wine.imageUrl != null and !#strings.isEmpty(wine.imageUrl)} ? ' d-none' : ''">
+                                    <div th:replace="~{fragments/store-shell :: bottleSvg('wine-svg')}"></div>
+                                </div>
+                            </div>
+                            <div class="wine-carousel-slide" hidden style="display:grid;place-items:center;padding:28px;">
+                                <span class="slide-badge">Niêm phong hầm rượu</span>
+                                <div class="stack text-center" style="align-items:center;max-width:34ch;">
+                                    <th:block th:replace="~{fragments/icons :: icon('wax-seal')}"/>
+                                    <h3 class="serif mt8 mb6" th:text="${wine.name}">Chai vang tuyển chọn</h3>
+                                    <p class="muted m-0" style="font-size:13.5px;">Bảo quản ở 14°C · Độ ẩm 70% · Xuất kho kèm mã OTP giao nhận bảo mật.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="carousel-dots" role="tablist" aria-label="Chuyển ảnh sản phẩm">
+                            <button type="button" class="carousel-dot active" aria-label="Ảnh chai rượu" aria-selected="true"></button>
+                            <button type="button" class="carousel-dot" aria-label="Thông tin niêm phong" aria-selected="false"></button>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="wine-carousel" id="wineCarousel" role="region" aria-roledescription="carousel" aria-label="Bộ sưu tập hình ảnh rượu vang">
-                    <div class="wine-carousel-track">
-                        <!-- Slide 1: Main Bottle (150 x 400) -->
-                        <div class="wine-carousel-slide active" role="group" aria-roledescription="slide" aria-label="1 of 3" data-slide="0">
-                            <img th:if="${wine.imageUrl != null and !#strings.isEmpty(wine.imageUrl)}"
-                                 th:src="${wine.imageUrl}"
-                                 th:alt="${wine.name + ' - Toàn cảnh chai'}"
-                                 onerror="this.style.display='none';this.nextElementSibling.style.display='block';">
-                            <div th:style="${wine.imageUrl != null and !#strings.isEmpty(wine.imageUrl)} ? 'display:none' : 'display:block'">
-                                <div th:replace="~{fragments/store-shell :: bottleSvg('bottle-svg')}"></div>
-                            </div>
-                            <span class="slide-badge">01 · Toàn cảnh chai 750ml</span>
-                        </div>
-
-                        <!-- Slide 2: Vintage Label Close-up -->
-                        <div class="wine-carousel-slide" role="group" aria-roledescription="slide" aria-label="2 of 3" data-slide="1">
-                            <img th:src="${wine.type != null and wine.type == 'White' ? 'https://images.unsplash.com/photo-1566754436893-98224ee05be4?auto=format&fit=crop&w=800&q=80' : 'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?auto=format&fit=crop&w=800&q=80'}"
-                                 th:alt="${wine.name + ' - Cận cảnh nhãn niên vụ'}"
-                                 style="border-radius:12px;filter:drop-shadow(0 14px 24px rgba(0,0,0,0.28));">
-                            <span class="slide-badge">02 · Cận cảnh nhãn niên vụ</span>
-                        </div>
-
-                        <!-- Slide 3: Tasting & Dining Setting -->
-                        <div class="wine-carousel-slide" role="group" aria-roledescription="slide" aria-label="3 of 3" data-slide="2">
-                            <img th:src="${wine.type != null and wine.type == 'White' ? 'https://images.unsplash.com/photo-1585553616435-2dc0a54e271d?auto=format&fit=crop&w=800&q=80' : 'https://images.unsplash.com/photo-1553361371-9b22f78e8b1d?auto=format&fit=crop&w=800&q=80'}"
-                                 th:alt="${wine.name + ' - Thưởng thức tiệc sang'}"
-                                 style="border-radius:12px;filter:drop-shadow(0 14px 24px rgba(0,0,0,0.28));">
-                            <span class="slide-badge">03 · Thưởng thức tiệc sang</span>
-                        </div>
-                    </div>
-
-                    <!-- Carousel Dots Indicators -->
-                    <div class="carousel-dots" aria-label="Chọn ảnh hiển thị">
-                        <button type="button" class="carousel-dot active" aria-label="Xem ảnh 1" data-dot="0"></button>
-                        <button type="button" class="carousel-dot" aria-label="Xem ảnh 2" data-dot="1"></button>
-                        <button type="button" class="carousel-dot" aria-label="Xem ảnh 3" data-dot="2"></button>
-                    </div>
-
-                    <!-- Carousel Thumbnails Strip -->
+                <div class="between gap8">
                     <div class="carousel-thumbs">
-                        <div class="carousel-thumb active" data-thumb="0" title="Toàn cảnh chai">
-                            <img th:if="${wine.imageUrl != null and !#strings.isEmpty(wine.imageUrl)}" th:src="${wine.imageUrl}" alt="Thumb 1">
-                            <div th:if="${wine.imageUrl == null or #strings.isEmpty(wine.imageUrl)}" style="width:100%;height:100%;background:#e0d3c1"></div>
-                        </div>
-                        <div class="carousel-thumb" data-thumb="1" title="Nhãn chai">
-                            <img th:src="${wine.type != null and wine.type == 'White' ? 'https://images.unsplash.com/photo-1566754436893-98224ee05be4?auto=format&fit=crop&w=200&q=80' : 'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?auto=format&fit=crop&w=200&q=80'}" alt="Thumb 2">
-                        </div>
-                        <div class="carousel-thumb" data-thumb="2" title="Bàn tiệc">
-                            <img th:src="${wine.type != null and wine.type == 'White' ? 'https://images.unsplash.com/photo-1585553616435-2dc0a54e271d?auto=format&fit=crop&w=200&q=80' : 'https://images.unsplash.com/photo-1553361371-9b22f78e8b1d?auto=format&fit=crop&w=200&q=80'}" alt="Thumb 3">
-                        </div>
+                        <button type="button" class="carousel-thumb active" aria-pressed="true" aria-label="Xem ảnh chính">
+                            <th:block th:replace="~{fragments/icons :: icon('verified-bottle')}"/>
+                        </button>
+                        <button type="button" class="carousel-thumb" aria-pressed="false" aria-label="Xem chứng nhận niêm phong">
+                            <th:block th:replace="~{fragments/icons :: icon('wax-seal')}"/>
+                        </button>
+                    </div>
+                    <div class="display-flex gap8">
+                        <button type="button" id="carouselPrev" class="btn btn-outline btn-sm" aria-label="Ảnh trước">&larr;</button>
+                        <button type="button" id="carouselNext" class="btn btn-outline btn-sm" aria-label="Ảnh sau">&rarr;</button>
                     </div>
                 </div>
             </div>
 
-            <!-- Wine Tasting & Purchase Panel -->
-            <div class="panel">
-                <div class="eyebrow" th:text="${(wine.country != null ? wine.country : 'Quốc tế') + (wine.year != null ? ' · NIÊN VỤ ' + wine.year : '')}">PHÁP · NIÊN VỤ 2018</div>
-                <h1 class="serif mt8 mb12" style="font-size:2.35rem" th:text="${wine.name}">Tên rượu vang</h1>
-
-                <div class="display-flex gap12 mb16">
-                    <div class="price" style="font-size:1.75rem" th:text="${#numbers.formatDecimal(wine.price, 0, 'COMMA', 0, 'POINT')} + ' ₫'">0 ₫</div>
-                    <span class="badge badge-gold">Chai 750ml · Chính ngạch</span>
+            <!-- Right: Product Info & Purchase Controls -->
+            <div class="panel stack">
+                <div class="between gap12" style="flex-wrap:wrap;">
+                    <span class="badge badge-wine" th:text="${@enumDisplayService.wineType(wine.type)}">Vang đỏ</span>
+                    <span class="stock-pill"
+                          th:classappend="${stock <= 0 ? ' out' : (stock <= 5 ? ' low' : '')}"
+                          th:text="${stock > 0 ? 'Còn ' + stock + ' chai tại kho' : 'Tạm hết hàng'}">Còn hàng</span>
                 </div>
 
-                <p class="muted mb20" th:text="${wine.description != null and !#strings.isEmpty(wine.description) ? wine.description : 'Rượu vang mang cấu trúc cân bằng, hương thơm phức hợp của trái cây chín mọng và gỗ sồi Pháp, thích hợp thưởng thức trong các bữa tiệc sang trọng.'}">Mô tả chi tiết</p>
+                <div>
+                    <h1 class="section-title mb6" th:text="${wine.name}">Château Margaux</h1>
+                    <div class="muted" style="font-size:14px;">
+                        <span th:text="${wine.country != null ? wine.country : 'Quốc tế'}">Pháp</span>
+                        <span th:if="${wine.year != null}" th:text="' · Niên vụ ' + ${wine.year}"> · Niên vụ 2018</span>
+                        <span th:if="${revCount > 0}" class="tabular-nums" th:text="' · ' + ${#numbers.formatDecimal(avgR, 1, 1)} + '/5 (' + ${revCount} + ' đánh giá)'"></span>
+                    </div>
+                </div>
 
-                <!-- Tasting & Technical Specs -->
+                <div class="price tabular-nums" style="font-size:1.75rem;"
+                     th:text="${wine.price != null ? #numbers.formatDecimal(wine.price, 0, 'COMMA', 0, 'POINT') + ' ₫' : 'Liên hệ'}">0 ₫</div>
+
+                <p class="m-0" style="color:var(--text-secondary);line-height:1.7;"
+                   th:text="${wine.description != null and !#strings.isEmpty(wine.description) ? wine.description : 'Hương vị cân bằng, cấu trúc tròn đầy và hậu vị kéo dài thanh lịch.'}">
+                    Mô tả chi tiết sản phẩm.
+                </p>
+
                 <div class="spec-grid">
                     <div class="spec-box">
-                        <span>PHân loại</span>
-                        <b th:text="${@enumDisplayService.wineType(wine.type)}">Vang đỏ</b>
+                        <span>PHONG CÁCH</span>
+                        <strong th:text="${@enumDisplayService.wineType(wine.type)}">Vang đỏ</strong>
                     </div>
                     <div class="spec-box">
-                        <span>Xuất xứ</span>
-                        <b th:text="${wine.country != null ? wine.country : 'Nhập khẩu'}">Pháp</b>
+                        <span>XUẤT XỨ</span>
+                        <strong th:text="${wine.country != null ? wine.country : 'Quốc tế'}">Pháp</strong>
                     </div>
                     <div class="spec-box">
-                        <span>Niên vụ</span>
-                        <b th:text="${wine.year != null ? wine.year : 'NV'}">2018</b>
+                        <span>NIÊN VỤ</span>
+                        <strong class="tabular-nums" th:text="${wine.year != null ? wine.year : 'NV'}">2018</strong>
                     </div>
                     <div class="spec-box">
-                        <span>Nhiệt độ phục vụ</span>
-                        <b th:text="${wine.type != null and wine.type == 'White' ? '8°C – 11°C' : (wine.type != null and wine.type == 'Sparkling' ? '6°C – 8°C' : '16°C – 18°C')}">16°C – 18°C</b>
+                        <span>TỒN KHO HẦM</span>
+                        <strong class="tabular-nums" th:text="${stock > 0 ? stock + ' chai' : 'Hết hàng'}">10 chai</strong>
                     </div>
                 </div>
 
-                <!-- Quantity & Add to Cart Controls -->
-                <div class="display-flex gap12 mt24" style="flex-wrap:wrap">
-                    <div style="width:120px">
-                        <label class="label" for="detailQuantity">Số lượng</label>
-                        <input type="number" id="detailQuantity" class="field" value="1" min="1"
-                               th:attr="max=${stock > 0 ? stock : 1}"
-                               th:disabled="${stock <= 0}">
+                <div class="display-flex gap12 pt12" style="flex-wrap:wrap;border-top:1px solid var(--border-hairline);">
+                    <div style="width:92px;">
+                        <label class="muted" for="detailQty" style="font-size:12px;display:block;margin-bottom:4px;">Số lượng</label>
+                        <input type="number" id="detailQty" class="field tabular-nums" value="1" min="1"
+                               th:max="${stock > 0 ? stock : 1}" th:disabled="${stock <= 0}">
                     </div>
-
-                    <div style="flex:1;min-width:220px;align-self:flex-end" class="display-flex gap10">
+                    <div class="display-flex gap8" style="flex:1;flex-wrap:wrap;align-self:flex-end;">
                         <button type="button"
-                                class="btn w100"
+                                class="btn js-add-to-cart"
+                                data-cart-add="true"
+                                data-cart-quantity-selector="#detailQty"
                                 th:disabled="${stock <= 0}"
-                                data-cart-add="true"
-                                data-cart-quantity-selector="#detailQuantity"
-                                th:attr="data-cart-product-id=${wine.id},
-                                         data-cart-name=${wine.name},
-                                         data-cart-price=${wine.price},
-                                         data-cart-image=${wine.imageUrl},
-                                         data-cart-stock=${stock}">
-                            <span th:text="${stock > 0 ? 'Thêm vào giỏ hàng' : 'Tạm hết hàng'}">Thêm vào giỏ hàng</span>
+                                th:attr="data-cart-product-id=${wine.id},data-cart-name=${wine.name},data-cart-price=${wine.price},data-cart-image=${wine.imageUrl != null ? wine.imageUrl : ''},data-cart-stock=${stock}">
+                            <th:block th:replace="~{fragments/icons :: icon('cart')}"/>
+                            <span>Thêm vào giỏ</span>
                         </button>
                         <button type="button"
-                                class="btn btn-gold"
-                                th:if="${stock > 0}"
+                                class="btn btn-gold js-add-to-cart"
                                 data-cart-add="true"
-                                data-cart-quantity-selector="#detailQuantity"
+                                data-cart-quantity-selector="#detailQty"
                                 data-cart-redirect="/cart/checkout"
-                                th:attr="data-cart-product-id=${wine.id},
-                                         data-cart-name=${wine.name},
-                                         data-cart-price=${wine.price},
-                                         data-cart-image=${wine.imageUrl},
-                                         data-cart-stock=${stock}">
-                            Mua ngay
+                                th:disabled="${stock <= 0}"
+                                th:attr="data-cart-product-id=${wine.id},data-cart-name=${wine.name},data-cart-price=${wine.price},data-cart-image=${wine.imageUrl != null ? wine.imageUrl : ''},data-cart-stock=${stock}">
+                            Mua ngay &rarr;
+                        </button>
+                        <button type="button"
+                                class="btn btn-outline"
+                                data-wishlist-toggle
+                                th:attr="data-wine-id=${wine.id},data-wine-name=${wine.name}"
+                                aria-pressed="false">
+                            <th:block th:replace="~{fragments/icons :: icon('heart')}"/>
+                            <span>Yêu thích</span>
                         </button>
                     </div>
-                </div>
-
-                <div class="display-flex gap12 mt16 pt16" style="border-top:1px solid var(--sw-line)" sec:authorize="hasRole('ADMIN')">
-                    <a th:href="@{/wines/admin/edit/{id}(id=${wine.id})}" class="btn btn-outline btn-sm">Chỉnh sửa thông tin</a>
                 </div>
             </div>
-        </div>
+        </section>
 
-        <!-- Customer Reviews & Sommelier Notes -->
-        <section class="section" style="padding-bottom:0" th:if="${wine != null}">
-            <!-- Star Breakdown Card (1 - 5 Stars) -->
-            <div class="rating-breakdown-card" id="ratingBreakdown">
+        <!-- Dynamic Rating Breakdown & Verified Reviews (Zero Fake Hardcoded Numbers) -->
+        <section class="mt28 stack" th:if="${wine != null}">
+            <div class="rating-breakdown-card">
                 <div class="rating-score-box">
-                    <div class="rating-score-num" id="avgRatingScore">4.9</div>
-                    <div class="rating-stars-large" aria-hidden="true">★★★★★</div>
-                    <div class="rating-count-text" id="totalReviewsCount">17 đánh giá</div>
+                    <div class="rating-score-num tabular-nums"
+                         th:text="${revCount > 0 ? #numbers.formatDecimal(avgR, 1, 1, 'POINT') : '0.0'}">0.0</div>
+                    <div class="rating-stars-large" aria-hidden="true">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+                    <div class="rating-count-text"
+                         th:text="${revCount > 0 ? revCount + ' đánh giá thực tế' : 'Chưa có đánh giá'}">Chưa có đánh giá</div>
                 </div>
-                <div class="star-bars-col">
+                <div class="star-bars-col"
+                     th:with="p5=${revCount > 0 ? (r5 * 100 / revCount) : 0},
+                              p4=${revCount > 0 ? (r4 * 100 / revCount) : 0},
+                              p3=${revCount > 0 ? (r3 * 100 / revCount) : 0},
+                              p2=${revCount > 0 ? (r2 * 100 / revCount) : 0},
+                              p1=${revCount > 0 ? (r1 * 100 / revCount) : 0}">
                     <div class="star-bar-row">
                         <span class="star-label">5 sao</span>
-                        <div class="star-progress-track">
-                            <div class="star-progress-fill" id="bar5" style="width: 82%;"></div>
-                        </div>
-                        <span class="star-count-badge" id="count5">14</span>
+                        <div class="star-progress-track"><div class="star-progress-fill" th:style="'width:' + ${p5} + '%'"></div></div>
+                        <span class="star-count-badge tabular-nums" th:text="${r5} + ' (' + ${p5} + '%)'">0</span>
                     </div>
                     <div class="star-bar-row">
                         <span class="star-label">4 sao</span>
-                        <div class="star-progress-track">
-                            <div class="star-progress-fill" id="bar4" style="width: 12%;"></div>
-                        </div>
-                        <span class="star-count-badge" id="count4">2</span>
+                        <div class="star-progress-track"><div class="star-progress-fill" th:style="'width:' + ${p4} + '%'"></div></div>
+                        <span class="star-count-badge tabular-nums" th:text="${r4} + ' (' + ${p4} + '%)'">0</span>
                     </div>
                     <div class="star-bar-row">
                         <span class="star-label">3 sao</span>
-                        <div class="star-progress-track">
-                            <div class="star-progress-fill" id="bar3" style="width: 6%;"></div>
-                        </div>
-                        <span class="star-count-badge" id="count3">1</span>
+                        <div class="star-progress-track"><div class="star-progress-fill" th:style="'width:' + ${p3} + '%'"></div></div>
+                        <span class="star-count-badge tabular-nums" th:text="${r3} + ' (' + ${p3} + '%)'">0</span>
                     </div>
                     <div class="star-bar-row">
                         <span class="star-label">2 sao</span>
-                        <div class="star-progress-track">
-                            <div class="star-progress-fill" id="bar2" style="width: 0%;"></div>
-                        </div>
-                        <span class="star-count-badge" id="count2">0</span>
+                        <div class="star-progress-track"><div class="star-progress-fill" th:style="'width:' + ${p2} + '%'"></div></div>
+                        <span class="star-count-badge tabular-nums" th:text="${r2} + ' (' + ${p2} + '%)'">0</span>
                     </div>
                     <div class="star-bar-row">
                         <span class="star-label">1 sao</span>
-                        <div class="star-progress-track">
-                            <div class="star-progress-fill" id="bar1" style="width: 0%;"></div>
-                        </div>
-                        <span class="star-count-badge" id="count1">0</span>
+                        <div class="star-progress-track"><div class="star-progress-fill" th:style="'width:' + ${p1} + '%'"></div></div>
+                        <span class="star-count-badge tabular-nums" th:text="${r1} + ' (' + ${p1} + '%)'">0</span>
                     </div>
                 </div>
             </div>
@@ -205,27 +204,47 @@
             <div class="grid-2">
                 <div class="panel">
                     <div class="eyebrow">CẢM NHẬN THỰC KHÁCH</div>
-                    <h3 class="serif mt8 mb16">Đánh giá &amp; Ghi chú thưởng thức</h3>
+                    <h2 class="serif sw-section-heading mt8 mb16">Đánh giá &amp; Ghi chú thưởng thức</h2>
 
                     <div th:if="${reviews == null or reviews.isEmpty()}" class="muted" id="noReviewPlaceholder">
                         Chưa có đánh giá nào cho chai vang này. Hãy là người đầu tiên chia sẻ trải nghiệm thưởng thức của bạn!
                     </div>
 
                     <div class="stack" id="reviewsContainer" th:if="${reviews != null and !reviews.isEmpty()}">
-                        <div class="panel-soft review-item" th:each="rev : ${reviews}" th:attr="data-rating=${rev.rating}">
-                            <div class="between mb8">
-                                <strong th:text="${rev.user != null ? rev.user.username : 'Khách hàng StrongWine'}">Khách hàng</strong>
-                                <span class="badge badge-gold" th:text="${rev.rating + ' / 5 ★'}">5 / 5 ★</span>
+                        <article class="panel-soft review-item" th:each="rev : ${reviews}"
+                                 th:attr="data-review-id=${rev.id},data-rating=${rev.rating}">
+                            <div class="between mb8" style="flex-wrap:wrap;gap:8px;">
+                                <div class="display-flex gap8">
+                                    <strong th:text="${rev.user != null ? rev.user.username : 'Khách hàng StrongWine'}">Khách hàng</strong>
+                                    <span class="badge badge-ok d-none" data-verified-badge>Đã mua hàng</span>
+                                </div>
+                                <span class="badge badge-gold tabular-nums" th:text="${rev.rating + ' / 5 ★'}">5 / 5 ★</span>
                             </div>
-                            <p class="mb8" th:text="${rev.comment}">Nhận xét</p>
-                            <div class="small muted" th:if="${rev.createdAt != null}" th:text="${#temporals.format(rev.createdAt, 'dd/MM/yyyy HH:mm')}">10/10/2026</div>
-                        </div>
+                            <p class="mb8 m-0" th:text="${rev.comment}">Nhận xét</p>
+                            <div class="between mt8" style="flex-wrap:wrap;gap:8px;">
+                                <span class="muted" style="font-size:12px;" th:if="${rev.createdAt != null}"
+                                      th:text="${#temporals.format(rev.createdAt, 'dd/MM/yyyy HH:mm')}">10/10/2026</span>
+                                <div class="display-flex gap8" sec:authorize="isAuthenticated()"
+                                     th:if="${rev.user != null and #authentication != null and #authentication.name == rev.user.username}">
+                                    <button type="button" class="btn btn-outline btn-sm"
+                                            th:attr="data-edit-review-id=${rev.id},data-review-rating=${rev.rating},data-review-comment=${rev.comment}">
+                                        Sửa
+                                    </button>
+                                    <form th:action="@{/reviews/{id}/delete(id=${rev.id})}" method="post"
+                                          onsubmit="return confirm('Xác nhận xóa đánh giá này?');" class="d-inline">
+                                        <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                                        <input type="hidden" name="wineId" th:value="${wine.id}">
+                                        <button type="submit" class="btn btn-danger btn-sm">Xóa</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </article>
                     </div>
                 </div>
 
                 <div class="panel">
                     <div class="eyebrow">CHIA SẺ TRẢI NGHIỆM</div>
-                    <h3 class="serif mt8 mb16">Gửi đánh giá của bạn</h3>
+                    <h2 class="serif sw-section-heading mt8 mb16">Gửi đánh giá của bạn</h2>
 
                     <div sec:authorize="!isAuthenticated()" class="panel-soft">
                         <p class="muted mb12">Vui lòng đăng nhập tài khoản khách hàng để gửi nhận xét và chấm điểm cho chai vang này.</p>
@@ -233,6 +252,7 @@
                     </div>
 
                     <form th:action="@{/reviews/create}" method="post" sec:authorize="isAuthenticated()" class="stack">
+                        <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
                         <input type="hidden" name="wineId" th:value="${wine.id}">
                         <div>
                             <label class="label" for="reviewRating">Điểm thưởng thức (1 - 5 sao)</label>
@@ -257,116 +277,41 @@
     </div>
 </main>
 
+<!-- Edit Review Dialog -->
+<dialog id="editReviewModal" class="sw-dialog" closedby="any" aria-labelledby="editReviewTitle" th:if="${wine != null}">
+    <div class="dialog-surface">
+        <div class="between mb16 pb12" style="border-bottom:1px solid var(--border-hairline);">
+            <h3 id="editReviewTitle" class="serif m-0">Cập nhật đánh giá</h3>
+            <button type="button" class="close-btn" data-dialog-close="editReviewModal" aria-label="Đóng">
+                <th:block th:replace="~{fragments/icons :: icon('close')}"/>
+            </button>
+        </div>
+        <form id="editReviewForm" method="post" class="stack">
+            <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <input type="hidden" name="wineId" th:value="${wine.id}">
+            <div>
+                <label class="label" for="editReviewRating">Điểm thưởng thức</label>
+                <select id="editReviewRating" name="rating" class="select" required>
+                    <option value="5">5 Sao — Tuyệt hảo</option>
+                    <option value="4">4 Sao — Rất đáng thưởng thức</option>
+                    <option value="3">3 Sao — Cân bằng</option>
+                    <option value="2">2 Sao — Chưa hợp khẩu vị</option>
+                    <option value="1">1 Sao — Cần cải thiện</option>
+                </select>
+            </div>
+            <div>
+                <label class="label" for="editReviewComment">Nội dung nhận xét</label>
+                <textarea id="editReviewComment" name="comment" class="textarea" rows="3" required></textarea>
+            </div>
+            <div class="display-flex gap10" style="justify-content:flex-end;">
+                <button type="button" class="btn btn-outline" data-dialog-close="editReviewModal">Hủy</button>
+                <button type="submit" class="btn">Lưu thay đổi</button>
+            </div>
+        </form>
+    </div>
+</dialog>
+
 <div th:replace="~{fragments/store-shell :: footer}"></div>
-
-<!-- Wine Details Interactive Logic: 5s Carousel Auto-Slide & Dynamic Star Bar Calculation -->
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // 1. CAROUSEL 5S AUTO-SLIDE LOGIC
-    const carousel = document.getElementById('wineCarousel');
-    if (carousel) {
-        const slides = carousel.querySelectorAll('.wine-carousel-slide');
-        const dots = carousel.querySelectorAll('.carousel-dot');
-        const thumbs = carousel.querySelectorAll('.carousel-thumb');
-        let currentIdx = 0;
-        let slideTimer = null;
-        const autoInterval = 5000; // 5 seconds per slide
-
-        function goToSlide(idx) {
-            slides.forEach((s, i) => {
-                s.classList.toggle('active', i === idx);
-            });
-            dots.forEach((d, i) => {
-                d.classList.toggle('active', i === idx);
-                d.setAttribute('aria-current', i === idx ? 'true' : 'false');
-            });
-            thumbs.forEach((t, i) => {
-                t.classList.toggle('active', i === idx);
-            });
-            currentIdx = idx;
-        }
-
-        function nextSlide() {
-            const nextIdx = (currentIdx + 1) % slides.length;
-            goToSlide(nextIdx);
-        }
-
-        function startAutoPlay() {
-            if (!slideTimer) {
-                slideTimer = setInterval(nextSlide, autoInterval);
-            }
-        }
-
-        function stopAutoPlay() {
-            if (slideTimer) {
-                clearInterval(slideTimer);
-                slideTimer = null;
-            }
-        }
-
-        // Attach Dot click handlers
-        dots.forEach((dot, idx) => {
-            dot.addEventListener('click', function() {
-                goToSlide(idx);
-                stopAutoPlay();
-                startAutoPlay();
-            });
-        });
-
-        // Attach Thumb click handlers
-        thumbs.forEach((thumb, idx) => {
-            thumb.addEventListener('click', function() {
-                goToSlide(idx);
-                stopAutoPlay();
-                startAutoPlay();
-            });
-        });
-
-        // Pause on mouse enter, resume on mouse leave
-        carousel.addEventListener('mouseenter', stopAutoPlay);
-        carousel.addEventListener('mouseleave', startAutoPlay);
-        carousel.addEventListener('focusin', stopAutoPlay);
-        carousel.addEventListener('focusout', startAutoPlay);
-
-        // Start 5s autoplay
-        startAutoPlay();
-    }
-
-    // 2. STAR BREAKDOWN BAR DYNAMIC CALCULATION
-    const reviewItems = document.querySelectorAll('.review-item');
-    const counts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
-    let totalScore = 0;
-    let totalReviews = reviewItems.length;
-
-    if (totalReviews > 0) {
-        reviewItems.forEach(item => {
-            const r = parseInt(item.getAttribute('data-rating') || '5', 10);
-            if (r >= 1 && r <= 5) {
-                counts[r] = (counts[r] || 0) + 1;
-                totalScore += r;
-            }
-        });
-
-        const avgScore = (totalScore / totalReviews).toFixed(1);
-        const scoreNumEl = document.getElementById('avgRatingScore');
-        const countTextEl = document.getElementById('totalReviewsCount');
-        if (scoreNumEl) scoreNumEl.textContent = avgScore;
-        if (countTextEl) countTextEl.textContent = `${totalReviews} đánh giá thực tế`;
-
-        for (let i = 1; i <= 5; i++) {
-            const count = counts[i];
-            const pct = Math.round((count / totalReviews) * 100);
-            const bar = document.getElementById('bar' + i);
-            const countBadge = document.getElementById('count5' === 'count' + i ? 'count5' : 'count' + i);
-            if (bar) bar.style.width = pct + '%';
-            if (countBadge) countBadge.textContent = count;
-        }
-    } else {
-        // Default presentation values for unreviewed bottles
-        const countTextEl = document.getElementById('totalReviewsCount');
-        if (countTextEl) countTextEl.textContent = 'Đang chờ đánh giá đầu tiên';
-    }
-});
-</script>
+<script th:src="@{/js/wine-details.js}" defer></script>
 </body>
 </html>

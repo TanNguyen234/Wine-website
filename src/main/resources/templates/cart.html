@@ -1,13 +1,21 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<html xmlns:th="http://www.thymeleaf.org" lang="vi" data-theme="cellar">
 <head th:replace="~{fragments/store-shell :: head('Giỏ Hàng Của Bạn · StrongWine')}"></head>
 <body data-cart-page="true">
 <div th:replace="~{fragments/store-shell :: header('cart')}"></div>
 
 <main class="section">
     <div class="sw-container">
-        <div th:if="${message}" class="alert-sw success mb16" th:text="${message}"></div>
-        <div th:if="${error}" class="alert-sw danger mb16" th:text="${error}"></div>
+        <div th:if="${message}" class="alert-sw success mb16" role="status" th:text="${message}"></div>
+        <div th:if="${warning}" class="alert-sw warn mb16" role="status" th:text="${warning}"></div>
+        <div th:if="${error}" class="alert-sw danger mb16" role="alert" th:text="${error}"></div>
+
+        <!-- Optional reorder items hydration payload from OrderController#reorderOrder -->
+        <div class="d-none" aria-hidden="true" th:if="${reorderItems != null and !reorderItems.isEmpty()}">
+            <span th:each="ri : ${reorderItems}"
+                  data-reorder-item="true"
+                  th:attr="data-product-id=${ri.productId},data-name=${ri.name},data-price=${ri.price},data-quantity=${ri.quantity},data-image=${ri.imageUrl != null ? ri.imageUrl : ''},data-stock=${ri.stock}"></span>
+        </div>
 
         <div class="section-head">
             <div>
@@ -18,21 +26,21 @@
         </div>
 
         <!-- Empty Cart State -->
-        <div id="emptyState" class="panel text-center d-none" style="padding:48px 24px">
+        <div id="emptyState" class="panel text-center d-none" style="padding:48px 24px;">
             <div class="eyebrow">GIỎ HÀNG ĐANG TRỐNG</div>
             <h2 class="serif mt8 mb12">Bạn chưa chọn chai vang nào</h2>
-            <p class="muted mb20">Khám phá bộ sưu tập rượu vang Pháp, Ý, Chile để thêm vào hầm rượu của bạn.</p>
+            <p class="muted mb20">Khám phá bộ sưu tập rượu vang Pháp, Ý, Chile và rượu truyền thống để thêm vào hầm rượu của bạn.</p>
             <a th:href="@{/wines}" class="btn">Khám phá bộ sưu tập &rarr;</a>
         </div>
 
         <!-- Populated Cart Content -->
-        <div id="cartContent" class="checkout-grid">
+        <div id="cartContent" class="cart-layout">
             <div class="table-card">
                 <div class="table-scroll">
                     <table class="sw-table">
                         <thead>
                         <tr>
-                            <th style="width:92px">Hình ảnh</th>
+                            <th style="width:92px;">Hình ảnh</th>
                             <th>Rượu vang</th>
                             <th>Đơn giá</th>
                             <th>Số lượng</th>
@@ -40,31 +48,52 @@
                             <th>Thao tác</th>
                         </tr>
                         </thead>
-                        <tbody id="cartTableBody">
-                        </tbody>
+                        <tbody id="cartTableBody"></tbody>
                     </table>
                 </div>
             </div>
 
-            <aside class="panel">
-                <div class="eyebrow">TỔNG KẾT ĐƠN HÀNG</div>
-                <h3 class="serif mt8 mb16">Thông tin tạm tính</h3>
-                <div class="stack">
+            <aside class="panel stack">
+                <div>
+                    <div class="eyebrow">TỔNG KẾT ĐƠN HÀNG</div>
+                    <h2 class="serif sw-section-heading mt8 mb0">Thông tin tạm tính</h2>
+                </div>
+
+                <!-- Voucher / Promo Preview -->
+                <div class="panel-soft p12">
+                    <label class="label" for="cartVoucherCode">Mã ưu đãi / Voucher</label>
+                    <div class="display-flex gap8">
+                        <input type="text" id="cartVoucherCode" class="field mono"
+                               placeholder="VD: MAISON10" autocomplete="off" style="text-transform:uppercase;">
+                        <button type="button" id="btnApplyCartVoucher" class="btn btn-outline btn-sm">Áp dụng</button>
+                        <button type="button" id="btnClearCartVoucher" class="btn btn-outline btn-sm" aria-label="Xóa mã ưu đãi">&times;</button>
+                    </div>
+                    <div id="cartVoucherFeedback" class="muted mt8" style="font-size:12.5px;" role="status"></div>
+                </div>
+
+                <div class="stack" style="gap:10px;">
                     <div class="between">
                         <span class="muted">Tạm tính sản phẩm</span>
-                        <strong id="cartSubtotal">0 ₫</strong>
+                        <strong id="cartSubtotal" class="tabular-nums">0 ₫</strong>
+                    </div>
+                    <div class="between d-none" id="cartDiscountRow">
+                        <span class="muted">Ưu đãi áp dụng</span>
+                        <strong id="cartDiscountAmount" class="tabular-nums" style="color:var(--status-ok-ink);">0 ₫</strong>
                     </div>
                     <div class="between">
-                        <span class="muted">Bảo quản &amp; đóng gói</span>
+                        <span class="muted">Bảo quản &amp; đóng gói lạnh</span>
                         <span class="badge badge-ok">Miễn phí</span>
                     </div>
-                    <div class="between pt12" style="border-top:1px solid var(--sw-line)">
-                        <strong>Tổng thanh toán</strong>
-                        <strong class="price" id="cartTotal">0 ₫</strong>
+                    <div class="between pt12" style="border-top:1px solid var(--border-hairline);">
+                        <strong>Tổng tạm tính</strong>
+                        <strong class="price tabular-nums" id="cartTotal">0 ₫</strong>
                     </div>
                 </div>
-                <p class="muted small mt12">Tồn kho thực tế và mã xác thực OTP giao nhận sẽ được khởi tạo ngay khi bạn hoàn tất đặt hàng.</p>
-                <a id="checkoutBtn" th:href="@{/cart/checkout}" class="btn w100 mt20">Tiến hành thanh toán &rarr;</a>
+
+                <p class="muted m-0" style="font-size:12.5px;line-height:1.55;">
+                    Phí vận chuyển chính xác theo khoảng cách kho sẽ được tính trực tiếp tại bước thanh toán.
+                </p>
+                <a id="checkoutBtn" th:href="@{/cart/checkout}" class="btn w100">Tiến hành thanh toán &rarr;</a>
             </aside>
         </div>
     </div>

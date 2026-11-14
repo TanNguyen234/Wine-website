@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="vi">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="vi" data-theme="cellar">
 <head th:replace="~{fragments/store-shell :: head('StrongWine · Maison de Vins — Bộ Sưu Tập Rượu Vang Tinh Tuyển')}"></head>
 <body>
 <div th:replace="~{fragments/store-shell :: header('home')}"></div>
@@ -9,25 +9,25 @@
     <section class="hero">
         <div class="sw-container hero-grid">
             <div class="hero-copy">
-                <div class="eyebrow">BỘ SƯU TẬP GRAND CRU · DI SẢN VANG THƯỢNG HẠNG</div>
-                <h1>Tinh hoa từ những điền trang danh giá bậc nhất thế giới.</h1>
-                <p>Khám phá các dòng vang đỏ, vang trắng, vang hồng và vang sủi thượng hạng được lưu trữ trong điều kiện nhiệt độ - độ ẩm hầm ủ chuẩn mực, chuyển phát chuyên biệt và tận tâm đến bàn tiệc của quý khách.</p>
+                <div class="eyebrow">MAISON DE VINS · HẦM RƯỢU &amp; DI SẢN</div>
+                <h1>Tinh hoa từ những điền trang danh giá và rượu truyền thống tuyển chọn.</h1>
+                <p>Khám phá các dòng vang đỏ, vang trắng, vang hồng, vang sủi và rượu truyền thống được lưu trữ ở nhiệt độ tiêu chuẩn hầm ủ, giao nhanh bảo ôn với xác thực OTP 6 chữ số.</p>
                 <div class="hero-actions">
                     <a class="btn" th:href="@{/wines}">Khám phá bộ sưu tập &rarr;</a>
-                    <a class="btn btn-outline" th:href="@{/wines(type='Red')}">Dòng Vang Đỏ</a>
+                    <a class="btn btn-outline" th:href="@{/wines(type='Traditional')}">Rượu truyền thống</a>
                 </div>
                 <div class="hero-metrics">
                     <div>
-                        <strong th:text="${featuredWines != null ? #lists.size(featuredWines) + '+' : '16+'}">16+</strong>
-                        <span>Dòng vang tuyển chọn</span>
+                        <strong class="tabular-nums" th:text="${featuredWines != null ? #lists.size(featuredWines) : 0}">0</strong>
+                        <span>Phẩm vang tiêu biểu</span>
                     </div>
                     <div>
-                        <strong>14°C</strong>
-                        <span>Bảo quản tiêu chuẩn hầm</span>
+                        <strong class="tabular-nums">14°C</strong>
+                        <span>Bảo quản chuẩn hầm rượu</span>
                     </div>
                     <div>
-                        <strong>100%</strong>
-                        <span>Chính ngạch &amp; Bảo ôn</span>
+                        <strong>OTP 6 số</strong>
+                        <span>Xác thực bàn giao niêm phong</span>
                     </div>
                 </div>
             </div>
@@ -38,18 +38,20 @@
                         <img th:if="${heroWine.imageUrl != null and !#strings.isEmpty(heroWine.imageUrl)}"
                              th:src="${heroWine.imageUrl}"
                              th:alt="${heroWine.name}"
-                             style="max-height:420px;max-width:160px;aspect-ratio:150/400;width:auto;margin:0 auto;object-fit:contain;filter:drop-shadow(0 28px 34px rgba(0,0,0,.42));"
-                             onerror="this.style.display='none';this.nextElementSibling.style.display='block';">
-                        <div th:style="${heroWine.imageUrl != null and !#strings.isEmpty(heroWine.imageUrl)} ? 'display:none' : 'display:block'">
+                             style="max-height:400px;max-width:160px;aspect-ratio:150/400;width:auto;margin:0 auto;object-fit:contain;filter:drop-shadow(0 28px 34px rgba(0,0,0,.42));"
+                             onerror="this.classList.add('d-none');this.nextElementSibling.classList.remove('d-none');">
+                        <div th:classappend="${heroWine.imageUrl != null and !#strings.isEmpty(heroWine.imageUrl)} ? ' d-none' : ''">
                             <div th:replace="~{fragments/store-shell :: bottleSvg('bottle-svg')}"></div>
                         </div>
-                        <div class="hero-bottle-card">
+                        <a class="hero-bottle-card" th:href="@{/wines/{id}(id=${heroWine.id})}">
                             <div>
-                                <div class="eyebrow" style="color:var(--sw-champagne)" th:text="${heroWine.country + (heroWine.year != null ? ' · ' + heroWine.year : '')}">Pháp · 2018</div>
+                                <div class="eyebrow" style="color:#e2be72;"
+                                     th:text="${(heroWine.country != null ? heroWine.country : 'Maison de Vins') + (heroWine.year != null ? ' · ' + heroWine.year : '')}">Pháp · 2018</div>
                                 <strong th:text="${heroWine.name}">Château Margaux</strong>
                             </div>
-                            <span class="badge badge-gold" th:text="${#numbers.formatDecimal(heroWine.price, 0, 'COMMA', 0, 'POINT')} + ' ₫'">0 ₫</span>
-                        </div>
+                            <span class="badge badge-gold tabular-nums"
+                                  th:text="${heroWine.price != null ? #numbers.formatDecimal(heroWine.price, 0, 'COMMA', 0, 'POINT') + ' ₫' : 'Liên hệ'}">0 ₫</span>
+                        </a>
                     </th:block>
                 </div>
                 <div th:if="${featuredWines == null or featuredWines.isEmpty()}">
@@ -60,14 +62,38 @@
     </section>
 
     <!-- Trust Ribbon -->
-    <div class="trust-ribbon">
+    <section class="trust-ribbon" aria-label="Cam kết chất lượng StrongWine">
         <div class="sw-container trust-grid">
-            <div class="trust-item"><b>01 · Nguồn gốc minh bạch</b><span>Nhập khẩu chính ngạch từ Pháp, Ý, Chile, Tây Ban Nha, Úc</span></div>
-            <div class="trust-item"><b>02 · Kiểm soát tồn kho thực</b><span>Đồng bộ trực tiếp với hệ thống kho trung tâm theo thời gian thực</span></div>
-            <div class="trust-item"><b>03 · Giao nhận bảo ôn chuyên biệt</b><span>Chuyển phát riêng tư, giữ nguyên hương vị và độ hoàn mỹ của từng chai vang</span></div>
-            <div class="trust-item"><b>04 · Tư vấn ẩm thực tinh tế</b><span>Gợi ý kết hợp món ăn, nhiệt độ phục vụ và bình thở rượu phù hợp</span></div>
+            <div class="trust-item">
+                <div class="display-flex gap8 mb4">
+                    <th:block th:replace="~{fragments/icons :: icon('verified-bottle')}"/>
+                    <b>01 · Nguồn gốc minh bạch</b>
+                </div>
+                <span>Nhập khẩu chính ngạch từ Pháp, Ý, Chile, Tây Ban Nha cùng tinh hoa bản địa.</span>
+            </div>
+            <div class="trust-item">
+                <div class="display-flex gap8 mb4">
+                    <th:block th:replace="~{fragments/icons :: icon('warehouse-map')}"/>
+                    <b>02 · Định tuyến kho gần nhất</b>
+                </div>
+                <span>Kiểm soát tồn kho theo từng hầm chứa và tính phí giao hàng minh bạch.</span>
+            </div>
+            <div class="trust-item">
+                <div class="display-flex gap8 mb4">
+                    <th:block th:replace="~{fragments/icons :: icon('shield')}"/>
+                    <b>03 · Giao nhận bảo ôn &amp; OTP</b>
+                </div>
+                <span>Theo dõi trạng thái SSE trực tiếp và xác nhận mã OTP 6 chữ số khi nhận hàng.</span>
+            </div>
+            <div class="trust-item">
+                <div class="display-flex gap8 mb4">
+                    <th:block th:replace="~{fragments/icons :: icon('decanter')}"/>
+                    <b>04 · Tư vấn Sommelier AI</b>
+                </div>
+                <span>Gợi ý chai vang thực tế đang có sẵn theo món ăn và ngân sách của bạn.</span>
+            </div>
         </div>
-    </div>
+    </section>
 
     <!-- Category Discovery -->
     <section class="section">
@@ -75,106 +101,116 @@
             <div class="section-head">
                 <div>
                     <div class="eyebrow">PHÂN LOẠI PHONG CÁCH</div>
-                    <h2 class="section-title">Khám phá theo dòng rượu vang</h2>
+                    <h2 class="section-title">Khám phá theo dòng rượu</h2>
                 </div>
                 <a class="btn btn-outline btn-sm" th:href="@{/wines}">Xem toàn bộ danh mục &rarr;</a>
             </div>
-            <div class="cat-grid">
+            <div class="cat-grid" style="grid-template-columns:repeat(auto-fit, minmax(210px, 1fr));">
                 <a class="cat-card" th:href="@{/wines(type='Red')}">
                     <span class="cat-count">RED WINE</span>
                     <div>
                         <h3>Vang Đỏ</h3>
-                        <p>Đậm đà cấu trúc tannin, hương trái chín đen, gỗ sồi và gia vị ấm.</p>
+                        <p>Cấu trúc tannin mượt mà, hương quả mọng đen, gỗ sồi và gia vị ấm.</p>
                     </div>
                 </a>
                 <a class="cat-card" th:href="@{/wines(type='White')}">
                     <span class="cat-count">WHITE WINE</span>
                     <div>
                         <h3>Vang Trắng</h3>
-                        <p>Thanh khiết, khoáng chất tươi mát cùng nốt hương cam chanh và hoa trắng.</p>
+                        <p>Thanh mát, khoáng chất tinh tế và hương cam chanh thanh lịch.</p>
                     </div>
                 </a>
                 <a class="cat-card" th:href="@{/wines(type='Rose')}">
                     <span class="cat-count">ROSÉ WINE</span>
                     <div>
                         <h3>Vang Hồng</h3>
-                        <p>Tinh tế, trẻ trung với hương dâu rừng thanh tao cho buổi tiệc ngoài trời.</p>
+                        <p>Sắc hồng phấn rạng rỡ với hương dâu rừng và hoa trắng dịu nhẹ.</p>
                     </div>
                 </a>
                 <a class="cat-card" th:href="@{/wines(type='Sparkling')}">
                     <span class="cat-count">SPARKLING</span>
                     <div>
                         <h3>Vang Sủi</h3>
-                        <p>Bọt sủi mịn màng, sống động cho những khoảnh khắc kỷ niệm đáng nhớ.</p>
+                        <p>Bọt sủi mịn màng cho những khoảnh khắc chúc mừng trang trọng.</p>
+                    </div>
+                </a>
+                <a class="cat-card" th:href="@{/wines(type='Traditional')}">
+                    <span class="cat-count">HERITAGE SPIRIT</span>
+                    <div>
+                        <h3>Rượu truyền thống</h3>
+                        <p>Di sản ủ men cổ truyền Việt Nam đóng chai chuẩn mực hiện đại.</p>
                     </div>
                 </a>
             </div>
         </div>
     </section>
 
-    <!-- Featured Wines Grid -->
-    <section class="section" style="padding-top:0">
+    <!-- Featured Collection -->
+    <section class="section">
         <div class="sw-container">
             <div class="section-head">
                 <div>
                     <div class="eyebrow">TUYỂN CHỌN TỪ HẦM RƯỢU</div>
-                    <h2 class="section-title">Bộ sưu tập nổi bật</h2>
+                    <h2 class="section-title">Những chai vang nổi bật</h2>
                 </div>
-                <div class="chip-row">
-                    <a class="chip active" th:href="@{/wines}">Tất cả</a>
-                    <a class="chip" th:href="@{/wines(type='Red')}">Vang đỏ</a>
-                    <a class="chip" th:href="@{/wines(type='White')}">Vang trắng</a>
-                    <a class="chip" th:href="@{/wines(inStock=true)}">Còn hàng</a>
-                </div>
+                <a class="btn btn-outline btn-sm" th:href="@{/wines}">Tất cả sản phẩm &rarr;</a>
             </div>
 
             <div th:if="${featuredWines == null or featuredWines.isEmpty()}" class="panel text-center">
-                <p class="muted">Hiện chưa có sản phẩm nào trong danh mục nổi bật.</p>
-                <a class="btn mt16" th:href="@{/wines}">Tới trang danh mục</a>
+                <p class="muted m-0">Danh mục hầm rượu đang được cập nhật. Quý khách vui lòng quay lại sau.</p>
             </div>
 
             <div class="wine-grid" th:if="${featuredWines != null and !featuredWines.isEmpty()}">
                 <article class="wine-card" th:each="wine : ${featuredWines}"
-                         th:with="stock=${availableStockByWineId != null and availableStockByWineId.containsKey(wine.id) ? availableStockByWineId.get(wine.id) : 0}">
-                    <a th:href="@{/wines/{id}(id=${wine.id})}" class="wine-stage">
+                         th:with="stock=${availableStockByWineId != null and wine.id != null ? (availableStockByWineId[wine.id] != null ? availableStockByWineId[wine.id] : 0) : 0}">
+                    <div class="wine-stage">
                         <span class="wine-pill" th:text="${@enumDisplayService.wineType(wine.type)}">Vang đỏ</span>
                         <span class="stock-pill"
-                              th:classappend="${stock <= 0} ? 'out' : (${stock <= 5} ? 'low' : '')"
-                              th:text="${stock > 0 ? 'Còn ' + stock + ' chai' : 'Hết hàng'}">Còn hàng</span>
-                        <img th:if="${wine.imageUrl != null and !#strings.isEmpty(wine.imageUrl)}"
-                             th:src="${wine.imageUrl}"
-                             th:alt="${wine.name}"
-                             onerror="this.style.display='none';this.nextElementSibling.style.display='block';">
-                        <div th:style="${wine.imageUrl != null and !#strings.isEmpty(wine.imageUrl)} ? 'display:none' : 'display:block'">
-                            <div th:replace="~{fragments/store-shell :: bottleSvg('bottle-svg-sm')}"></div>
-                        </div>
-                    </a>
+                              th:classappend="${stock <= 0 ? ' out' : (stock <= 5 ? ' low' : '')}"
+                              th:text="${stock > 0 ? 'Còn ' + stock : 'Hết hàng'}">Còn hàng</span>
+                        <button type="button"
+                                class="wishlist-btn"
+                                data-wishlist-toggle
+                                th:attr="data-wine-id=${wine.id},data-wine-name=${wine.name}"
+                                aria-pressed="false"
+                                th:aria-label="'Thêm ' + ${wine.name} + ' vào yêu thích'">
+                            <th:block th:replace="~{fragments/icons :: icon('heart')}"/>
+                        </button>
+                        <a th:href="@{/wines/{id}(id=${wine.id})}" th:aria-label="'Xem chi tiết ' + ${wine.name}">
+                            <img th:if="${wine.imageUrl != null and !#strings.isEmpty(wine.imageUrl)}"
+                                 th:src="${wine.imageUrl}"
+                                 th:alt="${wine.name}"
+                                 loading="lazy"
+                                 onerror="this.classList.add('d-none');this.nextElementSibling.classList.remove('d-none');">
+                            <div th:classappend="${wine.imageUrl != null and !#strings.isEmpty(wine.imageUrl)} ? ' d-none' : ''">
+                                <div th:replace="~{fragments/store-shell :: bottleSvg('wine-svg')}"></div>
+                            </div>
+                        </a>
+                    </div>
                     <div class="wine-body">
                         <div class="wine-meta">
                             <span th:text="${wine.country != null ? wine.country : 'Quốc tế'}">Pháp</span>
-                            <span th:if="${wine.year != null}" th:text="'Niên vụ ' + ${wine.year}">2019</span>
+                            <span th:if="${wine.year != null}" th:text="' · ' + ${wine.year}"> · 2018</span>
                         </div>
                         <h3 class="wine-name">
-                            <a th:href="@{/wines/{id}(id=${wine.id})}" th:text="${wine.name}">Tên rượu vang</a>
+                            <a th:href="@{/wines/{id}(id=${wine.id})}" th:text="${wine.name}">Tên chai vang</a>
                         </h3>
-                        <p class="wine-note" th:text="${wine.description != null and !#strings.isEmpty(wine.description) ? wine.description : 'Hương vị cân bằng, hậu vị sâu lắng đặc trưng từ vùng trồng nho truyền thống.'}">Ghi chú hương vị</p>
+                        <p class="wine-note"
+                           th:text="${wine.description != null and !#strings.isEmpty(wine.description) ? wine.description : 'Cấu trúc cân bằng, hậu vị thanh lịch từ nhà làm vang tuyển chọn.'}">
+                            Ghi chú hương vị
+                        </p>
                         <div class="wine-foot">
                             <div>
-                                <div class="price" th:text="${#numbers.formatDecimal(wine.price, 0, 'COMMA', 0, 'POINT')} + ' ₫'">0 ₫</div>
-                                <span class="price-sub">Chai 750ml tiêu chuẩn</span>
+                                <div class="price tabular-nums"
+                                     th:text="${wine.price != null ? #numbers.formatDecimal(wine.price, 0, 'COMMA', 0, 'POINT') + ' ₫' : 'Liên hệ'}">0 ₫</div>
                             </div>
                             <div class="display-flex gap8">
-                                <a class="btn btn-outline btn-sm" th:href="@{/wines/{id}(id=${wine.id})}">Chi tiết</a>
                                 <button type="button"
-                                        class="btn btn-sm"
-                                        th:disabled="${stock <= 0}"
+                                        class="btn btn-sm js-add-to-cart"
                                         data-cart-add="true"
-                                        th:attr="data-cart-product-id=${wine.id},
-                                                 data-cart-name=${wine.name},
-                                                 data-cart-price=${wine.price},
-                                                 data-cart-image=${wine.imageUrl},
-                                                 data-cart-stock=${stock}">
-                                    <span th:text="${stock > 0 ? '+ Giỏ' : 'Hết hàng'}">+ Giỏ</span>
+                                        th:disabled="${stock <= 0}"
+                                        th:attr="data-cart-product-id=${wine.id},data-cart-name=${wine.name},data-cart-price=${wine.price},data-cart-image=${wine.imageUrl != null ? wine.imageUrl : ''},data-cart-stock=${stock}">
+                                    + Giỏ
                                 </button>
                             </div>
                         </div>
@@ -184,18 +220,84 @@
         </div>
     </section>
 
-    <!-- Editorial Pairing Banner -->
-    <section class="section" style="padding-top:0">
+    <!-- Traditional Heritage Spirits Section (shown when present) -->
+    <section class="section" th:if="${traditionalWines != null and !traditionalWines.isEmpty()}">
+        <div class="sw-container">
+            <div class="section-head">
+                <div>
+                    <div class="eyebrow">TINH HOA DI SẢN VIỆT</div>
+                    <h2 class="section-title">Bộ sưu tập Rượu truyền thống</h2>
+                </div>
+                <a class="btn btn-outline btn-sm" th:href="@{/wines(type='Traditional')}">Khám phá dòng truyền thống &rarr;</a>
+            </div>
+            <div class="wine-grid">
+                <article class="wine-card" th:each="wine : ${traditionalWines}"
+                         th:with="stock=${availableStockByWineId != null and wine.id != null ? (availableStockByWineId[wine.id] != null ? availableStockByWineId[wine.id] : 0) : 0}">
+                    <div class="wine-stage">
+                        <span class="wine-pill" th:text="${@enumDisplayService.wineType(wine.type)}">Rượu truyền thống</span>
+                        <span class="stock-pill"
+                              th:classappend="${stock <= 0 ? ' out' : (stock <= 5 ? ' low' : '')}"
+                              th:text="${stock > 0 ? 'Còn ' + stock : 'Hết hàng'}">Còn hàng</span>
+                        <button type="button"
+                                class="wishlist-btn"
+                                data-wishlist-toggle
+                                th:attr="data-wine-id=${wine.id},data-wine-name=${wine.name}"
+                                aria-pressed="false"
+                                th:aria-label="'Thêm ' + ${wine.name} + ' vào yêu thích'">
+                            <th:block th:replace="~{fragments/icons :: icon('heart')}"/>
+                        </button>
+                        <a th:href="@{/wines/{id}(id=${wine.id})}" th:aria-label="'Xem chi tiết ' + ${wine.name}">
+                            <img th:if="${wine.imageUrl != null and !#strings.isEmpty(wine.imageUrl)}"
+                                 th:src="${wine.imageUrl}"
+                                 th:alt="${wine.name}"
+                                 loading="lazy"
+                                 onerror="this.classList.add('d-none');this.nextElementSibling.classList.remove('d-none');">
+                            <div th:classappend="${wine.imageUrl != null and !#strings.isEmpty(wine.imageUrl)} ? ' d-none' : ''">
+                                <div th:replace="~{fragments/store-shell :: bottleSvg('wine-svg')}"></div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="wine-body">
+                        <div class="wine-meta">
+                            <span th:text="${wine.country != null ? wine.country : 'Việt Nam'}">Việt Nam</span>
+                            <span th:if="${wine.year != null}" th:text="' · ' + ${wine.year}"></span>
+                        </div>
+                        <h3 class="wine-name">
+                            <a th:href="@{/wines/{id}(id=${wine.id})}" th:text="${wine.name}">Tên rượu truyền thống</a>
+                        </h3>
+                        <p class="wine-note"
+                           th:text="${wine.description != null and !#strings.isEmpty(wine.description) ? wine.description : 'Chưng cất thủ công chọn lọc, êm dịu và đậm bản sắc.'}">
+                            Mô tả
+                        </p>
+                        <div class="wine-foot">
+                            <div class="price tabular-nums"
+                                 th:text="${wine.price != null ? #numbers.formatDecimal(wine.price, 0, 'COMMA', 0, 'POINT') + ' ₫' : 'Liên hệ'}">0 ₫</div>
+                            <button type="button"
+                                    class="btn btn-sm js-add-to-cart"
+                                    data-cart-add="true"
+                                    th:disabled="${stock <= 0}"
+                                    th:attr="data-cart-product-id=${wine.id},data-cart-name=${wine.name},data-cart-price=${wine.price},data-cart-image=${wine.imageUrl != null ? wine.imageUrl : ''},data-cart-stock=${stock}">
+                                + Giỏ
+                            </button>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <!-- Editorial Sommelier Banner -->
+    <section class="section">
         <div class="sw-container">
             <div class="pairing-banner">
                 <div>
-                    <div class="eyebrow" style="color:var(--sw-champagne)">NGHỆ THUẬT THƯỞNG THỨC &amp; DỊCH VỤ HOÀNG GIA</div>
-                    <h2 class="serif" style="font-size:2rem;margin:8px 0 12px">Từ hầm ủ danh tiếng đến bàn tiệc thượng lưu</h2>
-                    <p style="color:#dfd3c3;max-width:58ch;margin:0">Mỗi tuyệt phẩm đều trải qua quy trình kiểm soát chất lượng khắt khe, lưu trữ trong hầm bảo ôn chuẩn mực và chuyển phát chuyên biệt, tôn vinh trọn vẹn nghệ thuật thưởng thức đích thực.</p>
+                    <div class="eyebrow" style="color:#e2be72;">SOMMELIER AI · GỢI Ý THỰC ĐƠN</div>
+                    <h2>Chưa chắc nên chọn chai vang nào cho bữa tối?</h2>
+                    <p>Hỏi trợ lý Sommelier AI để nhận gợi ý chai vang phù hợp món ăn, niên vụ và ngân sách ngay từ danh mục đang còn hàng tại StrongWine.</p>
                 </div>
-                <div class="display-flex gap12" style="flex-wrap:wrap">
-                    <a class="btn btn-gold" th:href="@{/wines}">Tư vấn &amp; Chọn vang</a>
-                    <a class="btn btn-outline" style="color:#f8f3eb;border-color:rgba(255,255,255,.3)" th:href="@{/orders}" sec:authorize="isAuthenticated()">Theo dõi đơn hàng</a>
+                <div class="display-flex gap12" style="flex-wrap:wrap;">
+                    <button type="button" class="btn btn-gold" data-dialog-open="aiPanel">Mở Sommelier AI</button>
+                    <a class="btn btn-outline" th:href="@{/wines}" style="color:#f0e8da;border-color:rgba(226,190,114,0.4);">Xem danh mục &rarr;</a>
                 </div>
             </div>
         </div>

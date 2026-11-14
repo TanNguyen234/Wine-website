@@ -1,111 +1,138 @@
-/**
- * StrongWine — Real-Time Order Tracking Engine (Shopee-Style)
- * Kết nối Server-Sent Events (SSE) với cơ chế tự động kết nối lại (Exponential Backoff).
- */
-class OrderTrackingRealtime {
-    constructor(orderId, options = {}) {
+(function (window, document) {
+    "use strict";
+
+    function OrderTrackingRealtime(orderId, options) {
         this.orderId = orderId;
         this.options = Object.assign({
             onStatusChange: null,
             onShipmentChange: null,
+            onOrderPaid: null,
             onConnect: null,
             onDisconnect: null
-        }, options);
+        }, options || {});
 
         this.eventSource = null;
+        this.lastEventId = null;
         this.retryDelay = 1000;
         this.maxRetryDelay = 16000;
         this.isClosedManually = false;
+        this.retryTimer = null;
 
         this.connect();
     }
 
-    connect() {
-        if (this.isClosedManually) return;
+    OrderTrackingRealtime.prototype.trackEventId = function (event) {
+        if (event && event.lastEventId) {
+            this.lastEventId = event.lastEventId;
+        }
+    };
 
-        const streamUrl = `/api/live/orders/${this.orderId}/stream`;
-        console.log(`[SSE] Kết nối tới order stream: ${streamUrl}`);
+    OrderTrackingRealtime.prototype.connect = function () {
+        var self = this;
+        if (self.isClosedManually || !self.orderId || typeof window.EventSource !== "function") {
+            return;
+        }
 
-        this.eventSource = new EventSource(streamUrl);
+        var streamUrl = "/api/live/orders/" + encodeURIComponent(String(self.orderId)) + "/stream";
+        if (self.lastEventId) {
+            streamUrl += "?lastEventId=" + encodeURIComponent(String(self.lastEventId));
+        }
 
-        this.eventSource.addEventListener('init', (e) => {
-            console.log('[SSE] Khởi tạo stream thành công:', e.data);
-            this.retryDelay = 1000; // Reset delay khi thành công
-            if (this.options.onConnect) this.options.onConnect();
-        });
+        self.eventSource = new window.EventSource(streamUrl);
 
-        this.eventSource.addEventListener('ping', (e) => {
-            // Heartbeat frame từ server để giữ kết nối
-            console.debug('[SSE] Heartbeat received');
-        });
-
-        this.eventSource.addEventListener('order_status_updated', (e) => {
-            try {
-                const data = JSON.parse(e.data);
-                console.log('[SSE] Nhận cập nhật trạng thái đơn hàng:', data);
-                if (this.options.onStatusChange) this.options.onStatusChange(data);
-                this.playChime();
-            } catch (err) {
-                console.error('[SSE] Lỗi parse dữ liệu order_status_updated', err);
+        self.eventSource.addEventListener("init", function (event) {
+            self.trackEventId(event);
+            self.retryDelay = 1000;
+            if (typeof self.options.onConnect === "function") {
+                self.options.onConnect();
             }
         });
 
-        this.eventSource.addEventListener('shipment_step_updated', (e) => {
+        self.eventSource.addEventListener("ping", function () {});
+        self.eventSource.addEventListener("heartbeat", function () {});
+
+        self.eventSource.addEventListener("order_status_updated", function (event) {
+            self.trackEventId(event);
+            self.retryDelay = 1000;
             try {
-                const data = JSON.parse(e.data);
-                console.log('[SSE] Nhận cập nhật giao hàng:', data);
-                if (this.options.onShipmentChange) this.options.onShipmentChange(data);
-                this.playChime();
-            } catch (err) {
-                console.error('[SSE] Lỗi parse dữ liệu shipment_step_updated', err);
-            }
+                var data = JSON.parse(event.data || "{}");
+                if (typeof self.options.onStatusChange === "function") {
+                    self.options.onStatusChange(data);
+                }
+                self.playChime();
+            } catch (_) {}
         });
 
-        this.eventSource.onerror = (err) => {
-            console.warn('[SSE] Mất kết nối tới server. Đang thử kết nối lại...', err);
-            this.eventSource.close();
-            if (this.options.onDisconnect) this.options.onDisconnect();
+        self.eventSource.addEventListener("shipment_step_updated", function (event) {
+            self.trackEventId(event);
+            self.retryDelay = 1000;
+            try {
+                var data = JSON.parse(event.data || "{}");
+                if (typeof self.options.onShipmentChange === "function") {
+                    self.options.onShipmentChange(data);
+                }
+                self.playChime();
+            } catch (_) {}
+        });
 
-            // Thử kết nối lại với exponential backoff
-            setTimeout(() => {
-                this.retryDelay = Math.min(this.retryDelay * 2, this.maxRetryDelay);
-                this.connect();
-            }, this.retryDelay);
+        self.eventSource.addEventListener("order_paid", function (event) {
+            self.trackEventId(event);
+            self.retryDelay = 1000;
+            try {
+                var data = JSON.parse(event.data || "{}");
+                if (typeof self.options.onOrderPaid === "function") {
+                    self.options.onOrderPaid(data);
+                }
+                self.playChime();
+            } catch (_) {}
+        });
+
+        self.eventSource.onerror = function () {
+            if (self.eventSource) {
+                self.eventSource.close();
+            }
+            if (typeof self.options.onDisconnect === "function") {
+                self.options.onDisconnect();
+            }
+            if (self.isClosedManually) {
+                return;
+            }
+            window.clearTimeout(self.retryTimer);
+            self.retryTimer = window.setTimeout(function () {
+                self.retryDelay = Math.min(self.retryDelay * 2, self.maxRetryDelay);
+                self.connect();
+            }, self.retryDelay);
         };
-    }
+    };
 
-    playChime() {
+    OrderTrackingRealtime.prototype.playChime = function () {
         try {
-            // Tạo âm thanh thông báo nhẹ nhàng bằng Web Audio API (không cần tải file audio ngoài)
-            const AudioContextClass = typeof window !== 'undefined' ? (window.AudioContext || window.webkitAudioContext) : null;
-            if (!AudioContextClass) return;
-            const audioCtx = new AudioContextClass();
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
-            osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.15); // A5
-            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+            var AudioContextClass = window.AudioContext || window.webkitAudioContext;
+            if (!AudioContextClass) {
+                return;
+            }
+            var audioCtx = new AudioContextClass();
+            var osc = audioCtx.createOscillator();
+            var gain = audioCtx.createGain();
+            osc.type = "sine";
+            osc.frequency.setValueAtTime(587.33, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.15);
+            gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
             osc.connect(gain);
             gain.connect(audioCtx.destination);
             osc.start();
-            osc.stop(audioCtx.currentTime + 0.3);
-        } catch (e) {
-            // Trình duyệt chặn audio hoặc không hỗ trợ
-        }
-    }
+            osc.stop(audioCtx.currentTime + 0.26);
+        } catch (_) {}
+    };
 
-    disconnect() {
+    OrderTrackingRealtime.prototype.disconnect = function () {
         this.isClosedManually = true;
+        window.clearTimeout(this.retryTimer);
         if (this.eventSource) {
             this.eventSource.close();
-            console.log('[SSE] Đã đóng kết nối stream chủ động.');
         }
-    }
-}
+    };
 
-// Global helper
-if (typeof window !== 'undefined') {
     window.StrongWineTracking = OrderTrackingRealtime;
-}
+})(window, document);

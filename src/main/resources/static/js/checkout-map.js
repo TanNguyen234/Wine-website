@@ -1,8 +1,10 @@
-(function () {
-    const NOMINATIM_SEARCH_URL = "https://nominatim.openstreetmap.org/search";
-    const NOMINATIM_REVERSE_URL = "https://nominatim.openstreetmap.org/reverse";
+(function (window, document) {
+    "use strict";
 
-    const MAINLAND_VIETNAM_POLYGON = [
+    var NOMINATIM_SEARCH_URL = "https://nominatim.openstreetmap.org/search";
+    var NOMINATIM_REVERSE_URL = "https://nominatim.openstreetmap.org/reverse";
+
+    var MAINLAND_VIETNAM_POLYGON = [
         [23.23, 102.14],
         [22.50, 104.70],
         [22.85, 106.70],
@@ -30,14 +32,14 @@
     ];
 
     function pointInsidePolygon(lat, lng, polygon) {
-        let inside = false;
-        let j = polygon.length - 1;
-        for (let i = 0; i < polygon.length; i += 1) {
-            const yi = polygon[i][0];
-            const xi = polygon[i][1];
-            const yj = polygon[j][0];
-            const xj = polygon[j][1];
-            const intersect = ((yi > lat) !== (yj > lat))
+        var inside = false;
+        var j = polygon.length - 1;
+        for (var i = 0; i < polygon.length; i += 1) {
+            var yi = polygon[i][0];
+            var xi = polygon[i][1];
+            var yj = polygon[j][0];
+            var xj = polygon[j][1];
+            var intersect = ((yi > lat) !== (yj > lat))
                 && (lng < ((xj - xi) * (lat - yi)) / ((yj - yi) + 1e-12) + xi);
             if (intersect) {
                 inside = !inside;
@@ -48,45 +50,69 @@
     }
 
     function parseCoordinateQuery(value) {
-        const match = String(value || "").trim().match(/^([+-]?(?:\d+(?:\.\d*)?|\.\d+))\s*[,;]\s*([+-]?(?:\d+(?:\.\d*)?|\.\d+))$/);
+        var match = String(value || "").trim().match(/^([+-]?(?:\d+(?:\.\d*)?|\.\d+))\s*[,;]\s*([+-]?(?:\d+(?:\.\d*)?|\.\d+))$/);
         if (!match) {
             return null;
         }
 
-        const lat = Number(match[1]);
-        const lng = Number(match[2]);
+        var lat = Number(match[1]);
+        var lng = Number(match[2]);
         return {
-            lat,
-            lng,
+            lat: lat,
+            lng: lng,
             valid: Number.isFinite(lat) && Number.isFinite(lng)
                 && lat >= -90 && lat <= 90
                 && lng >= -180 && lng <= 180
         };
     }
 
+    function ensureLeafletCss() {
+        if (document.querySelector('link[href*="leaflet"]')) {
+            return;
+        }
+        var link = document.createElement("link");
+        link.rel = "stylesheet";
+        link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+        document.head.appendChild(link);
+    }
+
+    function notifyMap(message, tone) {
+        if (window.SwToast && typeof window.SwToast.show === "function") {
+            window.SwToast.show({
+                title: "Bản đồ giao hàng",
+                message: message,
+                tone: tone || "warn"
+            });
+        }
+    }
+
     function initCheckoutMap() {
-        const checkoutPage = document.querySelector("[data-checkout-page='true']");
-        if (!checkoutPage || typeof L === "undefined") {
+        var checkoutPage = document.querySelector("[data-checkout-page='true']");
+        if (!checkoutPage) {
+            return;
+        }
+        ensureLeafletCss();
+        if (typeof window.L === "undefined") {
             return;
         }
 
-        const mapEl = document.getElementById("checkoutMap");
-        const latInput = document.getElementById("deliveryLat");
-        const lngInput = document.getElementById("deliveryLng");
-        const locationLabel = document.getElementById("selectedMapLocation");
-        const useCurrentBtn = document.getElementById("btnUseCurrentLocation");
-        const addressInput = document.getElementById("address");
-        const searchInput = document.getElementById("mapSearchInput");
-        const searchBtn = document.getElementById("btnMapSearch");
-        const searchResult = document.getElementById("mapSearchResult");
+        var L = window.L;
+        var mapEl = document.getElementById("checkoutMap");
+        var latInput = document.getElementById("deliveryLat");
+        var lngInput = document.getElementById("deliveryLng");
+        var locationLabel = document.getElementById("selectedMapLocation");
+        var useCurrentBtn = document.getElementById("btnUseCurrentLocation");
+        var addressInput = document.getElementById("address");
+        var searchInput = document.getElementById("mapSearchInput");
+        var searchBtn = document.getElementById("btnMapSearch");
+        var searchResult = document.getElementById("mapSearchResult");
 
         if (!mapEl || !latInput || !lngInput) {
             return;
         }
 
-        const vietnamCenter = [16.2, 106.1];
-
-        const map = L.map(mapEl, {
+        var vietnamCenter = [16.2, 106.1];
+        var map = L.map(mapEl, {
             minZoom: 5,
             maxZoom: 18
         }).setView(vietnamCenter, 6);
@@ -96,8 +122,8 @@
             attribution: "&copy; OpenStreetMap contributors"
         }).addTo(map);
 
-        let marker = null;
-        let isBusy = false;
+        var marker = null;
+        var isBusy = false;
 
         function setLocationLabel(text) {
             if (locationLabel) {
@@ -110,16 +136,21 @@
                 return;
             }
             searchResult.textContent = text;
-            searchResult.classList.remove("text-danger", "text-muted");
-            searchResult.classList.add(isError ? "text-danger" : "text-muted");
+            searchResult.style.color = isError ? "var(--status-danger-ink)" : "var(--text-muted)";
         }
 
         function buildDisplayLabel(placeName, lat, lng) {
-            const coordText = lat.toFixed(6) + ", " + lng.toFixed(6);
+            var coordText = lat.toFixed(6) + ", " + lng.toFixed(6);
             if (placeName) {
                 return "Đã chọn: " + placeName + " (" + coordText + ")";
             }
             return "Đã chọn: " + coordText;
+        }
+
+        function emitLocationUpdated(lat, lng, placeName) {
+            document.dispatchEvent(new CustomEvent("strongwine:location-updated", {
+                detail: { lat: lat, lng: lng, placeName: placeName || "" }
+            }));
         }
 
         function updateCoordinateFields(lat, lng, placeName) {
@@ -128,7 +159,7 @@
             setLocationLabel(buildDisplayLabel(placeName, lat, lng));
 
             if (addressInput) {
-                const currentAddress = addressInput.value.trim();
+                var currentAddress = addressInput.value.trim();
                 const addressIsMapFallback = currentAddress === "Vị trí được chọn trên bản đồ";
 
                 if ((!currentAddress || addressIsMapFallback) && placeName) {
@@ -137,10 +168,11 @@
                     addressInput.value = "Vị trí được chọn trên bản đồ";
                 }
             }
+            emitLocationUpdated(lat, lng, placeName);
         }
 
         function reverseGeocode(lat, lng) {
-            const url = NOMINATIM_REVERSE_URL
+            var url = NOMINATIM_REVERSE_URL
                 + "?format=jsonv2"
                 + "&lat=" + encodeURIComponent(String(lat))
                 + "&lon=" + encodeURIComponent(String(lng))
@@ -166,12 +198,12 @@
         }
 
         function searchLocationByName(keyword) {
-            const trimmed = (keyword || "").trim();
+            var trimmed = (keyword || "").trim();
             if (!trimmed) {
                 return Promise.resolve([]);
             }
 
-            const url = NOMINATIM_SEARCH_URL
+            var url = NOMINATIM_SEARCH_URL
                 + "?format=jsonv2"
                 + "&q=" + encodeURIComponent(trimmed)
                 + "&limit=5"
@@ -199,24 +231,28 @@
             });
         }
 
-        function setMarkerAt(lat, lng) {
+        function setMarkerAt(lat, lng, skipReverse) {
             if (!pointInsidePolygon(lat, lng, MAINLAND_VIETNAM_POLYGON)) {
-                alert("Vị trí phải nằm trong phạm vi đất liền Việt Nam.");
+                setSearchResultText("Vị trí phải nằm trong phạm vi đất liền Việt Nam.", true);
+                notifyMap("Vị trí phải nằm trong phạm vi đất liền Việt Nam.", "warn");
                 return false;
             }
 
             if (!marker) {
                 marker = L.marker([lat, lng], { draggable: true }).addTo(map);
                 marker.on("dragend", function () {
-                    const next = marker.getLatLng();
+                    var next = marker.getLatLng();
                     if (!pointInsidePolygon(next.lat, next.lng, MAINLAND_VIETNAM_POLYGON)) {
-                        alert("Vị trí phải nằm trong phạm vi đất liền Việt Nam.");
+                        setSearchResultText("Vị trí phải nằm trong phạm vi đất liền Việt Nam.", true);
+                        notifyMap("Vị trí phải nằm trong phạm vi đất liền Việt Nam.", "warn");
                         marker.setLatLng([
                             Number(latInput.value || lat),
                             Number(lngInput.value || lng)
                         ]);
                         return;
                     }
+                    var savedHidden = document.getElementById("savedAddressId");
+                    if (savedHidden) savedHidden.value = "";
                     updateMarkerLabelFromCoordinates(next.lat, next.lng);
                 });
             } else {
@@ -224,28 +260,48 @@
             }
 
             updateCoordinateFields(lat, lng, null);
-            updateMarkerLabelFromCoordinates(lat, lng);
+            if (!skipReverse) {
+                updateMarkerLabelFromCoordinates(lat, lng);
+            }
             return true;
         }
 
         map.on("click", function (event) {
+            var savedHidden = document.getElementById("savedAddressId");
+            if (savedHidden) savedHidden.value = "";
             setMarkerAt(event.latlng.lat, event.latlng.lng);
+        });
+
+        document.addEventListener("strongwine:set-map-pin", function (event) {
+            var detail = event.detail || {};
+            if (Number.isFinite(detail.lat) && Number.isFinite(detail.lng)) {
+                if (setMarkerAt(detail.lat, detail.lng, true)) {
+                    map.setView([detail.lat, detail.lng], 15);
+                    if (detail.address) {
+                        setLocationLabel(buildDisplayLabel(detail.address, detail.lat, detail.lng));
+                    }
+                }
+            }
         });
 
         if (useCurrentBtn) {
             useCurrentBtn.addEventListener("click", function () {
                 if (!navigator.geolocation) {
-                    alert("Trình duyệt không hỗ trợ định vị.");
+                    setSearchResultText("Trình duyệt không hỗ trợ định vị.", true);
+                    notifyMap("Trình duyệt không hỗ trợ định vị.", "warn");
                     return;
                 }
                 navigator.geolocation.getCurrentPosition(function (position) {
-                    const lat = position.coords.latitude;
-                    const lng = position.coords.longitude;
+                    var lat = position.coords.latitude;
+                    var lng = position.coords.longitude;
+                    var savedHidden = document.getElementById("savedAddressId");
+                    if (savedHidden) savedHidden.value = "";
                     if (setMarkerAt(lat, lng)) {
                         map.setView([lat, lng], 14);
                     }
                 }, function () {
-                    alert("Không thể lấy vị trí hiện tại. Hãy chọn trực tiếp trên bản đồ.");
+                    setSearchResultText("Không thể lấy vị trí hiện tại. Hãy chọn trực tiếp trên bản đồ.", true);
+                    notifyMap("Không thể lấy vị trí hiện tại. Hãy chọn trực tiếp trên bản đồ.", "warn");
                 });
             });
         }
@@ -254,7 +310,7 @@
             if (isBusy || !searchInput) {
                 return;
             }
-            const keyword = searchInput.value || "";
+            var keyword = searchInput.value || "";
             if (!keyword.trim()) {
                 setSearchResultText("Nhập tên địa điểm để tìm", false);
                 return;
@@ -284,9 +340,9 @@
                     return;
                 }
 
-                const first = items[0];
-                const lat = Number(first.lat);
-                const lng = Number(first.lon);
+                var first = items[0];
+                var lat = Number(first.lat);
+                var lng = Number(first.lon);
                 if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
                     setSearchResultText("Kết quả tìm kiếm không có tọa độ hợp lệ", true);
                     return;
@@ -317,21 +373,20 @@
             });
         }
 
-        // Auto-center and place pin for prefilled profile coordinates or address
-        setTimeout(function () {
+        window.setTimeout(function () {
             map.invalidateSize();
-            const initLat = parseFloat(latInput.value);
-            const initLng = parseFloat(lngInput.value);
-            if (!isNaN(initLat) && !isNaN(initLng) && Math.abs(initLat) > 0.001 && Math.abs(initLng) > 0.001) {
+            var initLat = parseFloat(latInput.value);
+            var initLng = parseFloat(lngInput.value);
+            if (!Number.isNaN(initLat) && !Number.isNaN(initLng) && Math.abs(initLat) > 0.001 && Math.abs(initLng) > 0.001) {
                 if (setMarkerAt(initLat, initLng)) {
                     map.setView([initLat, initLng], 15);
                 }
             } else if (addressInput && addressInput.value.trim() && addressInput.value.trim() !== "Vị trí được chọn trên bản đồ") {
                 searchLocationByName(addressInput.value.trim()).then(function (items) {
                     if (items && items.length > 0) {
-                        const lat = Number(items[0].lat);
-                        const lng = Number(items[0].lon);
-                        if (!isNaN(lat) && !isNaN(lng) && setMarkerAt(lat, lng)) {
+                        var lat = Number(items[0].lat);
+                        var lng = Number(items[0].lon);
+                        if (!Number.isNaN(lat) && !Number.isNaN(lng) && setMarkerAt(lat, lng)) {
                             map.setView([lat, lng], 15);
                         }
                     }
@@ -340,5 +395,9 @@
         }, 250);
     }
 
-    document.addEventListener("DOMContentLoaded", initCheckoutMap);
-})();
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", initCheckoutMap, { once: true });
+    } else {
+        initCheckoutMap();
+    }
+})(window, document);

@@ -7,22 +7,25 @@
 <main class="section" id="orderDetailContainer" th:attr="data-order-id=${order.id}">
     <div class="sw-container">
         <div th:if="${message}" class="alert-sw success mb16" th:text="${message}"></div>
+        <div th:if="${success}" class="alert-sw success mb16" th:text="${success}"></div>
         <div th:if="${error}" class="alert-sw danger mb16" th:text="${error}"></div>
 
         <div class="between mb20" style="flex-wrap:wrap;gap:12px">
             <div>
-                <a th:href="@{/orders}" class="muted small">&larr; Quay lại danh sách đơn hàng</a>
+                <a th:href="@{/orders}" class="muted small">Quay lại danh sách đơn hàng</a>
                 <h1 class="section-title mt8" th:text="'Đơn hàng #' + ${order.id}">Đơn hàng #1</h1>
             </div>
             <div class="display-flex gap10" style="flex-wrap:wrap">
                 <span class="badge badge-info" id="sseIndicator">
                     <span class="live-dot"></span>
-                    <span id="sseStatusText">Đang kết nối trực tuyến...</span>
+                    <span id="sseStatusText">Đang kết nối trực tuyến…</span>
                 </span>
-                <span class="badge badge-wine" id="orderStatusBadge" th:text="${@enumDisplayService.orderStatus(order.status)}">Trạng thái đơn</span>
-                <span class="badge badge-gold" id="orderPaymentBadge" th:text="${@enumDisplayService.paymentStatus(order.paymentStatus)}">Thanh toán</span>
+                <span class="badge badge-wine" id="orderStatusBadge"
+                      th:text="${order.status != null ? @enumDisplayService.orderStatus(order.status) : 'Đang xử lý'}">Trạng thái đơn</span>
+                <span class="badge badge-gold" id="orderPaymentBadge"
+                      th:text="${order.paymentStatus != null ? @enumDisplayService.paymentStatus(order.paymentStatus) : 'Chờ thanh toán'}">Thanh toán</span>
                 <span class="badge badge-ok" id="shipmentStatusBadge"
-                      th:text="${shipment != null ? @enumDisplayService.shipmentStatus(shipment.status) : 'Đang khởi tạo vận đơn'}">Vận đơn</span>
+                      th:text="${shipment != null and shipment.status != null ? @enumDisplayService.shipmentStatus(shipment.status) : 'Đang khởi tạo vận đơn'}">Vận đơn</span>
             </div>
         </div>
 
@@ -68,10 +71,10 @@
         </section>
 
         <div class="checkout-grid">
-            <!-- Left Column: Order Items & Recipient Details -->
+            <!-- Left Column: Order Items, Pricing Breakdown & Recipient Details -->
             <div class="stack">
                 <section class="table-card">
-                    <div style="padding:18px 20px;border-bottom:1px solid var(--sw-line)">
+                    <div style="padding:18px 20px;border-bottom:1px solid var(--border-hairline)">
                         <div class="eyebrow">DANH SÁCH RƯỢU VANG</div>
                         <h2 class="serif sw-section-heading mt8 mb0">Chi tiết sản phẩm đặt mua</h2>
                     </div>
@@ -86,21 +89,47 @@
                             </tr>
                             </thead>
                             <tbody>
+                            <tr th:if="${order.orderItems == null or order.orderItems.isEmpty()}">
+                                <td colspan="4" class="muted text-center">Chưa có dòng sản phẩm trong đơn hàng.</td>
+                            </tr>
                             <tr th:each="item : ${order.orderItems}">
                                 <td>
                                     <strong th:text="${item.wine != null ? item.wine.name : 'Rượu vang StrongWine'}">Tên rượu</strong>
-                                    <div class="small muted" th:if="${item.wine != null}" th:text="${item.wine.country}">Pháp</div>
+                                    <div class="small muted" th:if="${item.wine != null and item.wine.country != null}" th:text="${item.wine.country}">Pháp</div>
                                 </td>
-                                <td th:text="${#numbers.formatDecimal(item.price, 0, 'COMMA', 0, 'POINT')} + ' ₫'">0 ₫</td>
+                                <td th:text="${item.price != null ? #numbers.formatDecimal(item.price, 0, 'COMMA', 0, 'POINT') + ' ₫' : '0 ₫'}">0 ₫</td>
                                 <td th:text="${item.quantity}">1</td>
-                                <td><strong th:text="${#numbers.formatDecimal(item.price * item.quantity, 0, 'COMMA', 0, 'POINT')} + ' ₫'">0 ₫</strong></td>
+                                <td>
+                                    <strong th:text="${item.price != null ? #numbers.formatDecimal(item.price * item.quantity, 0, 'COMMA', 0, 'POINT') + ' ₫' : '0 ₫'}">0 ₫</strong>
+                                </td>
                             </tr>
                             </tbody>
                         </table>
                     </div>
-                    <div class="between" style="padding:18px 20px;border-top:1px solid var(--sw-line)">
-                        <strong>Tổng giá trị đơn hàng</strong>
-                        <strong class="price" th:text="${#numbers.formatDecimal(order.totalPrice, 0, 'COMMA', 0, 'POINT')} + ' ₫'">0 ₫</strong>
+
+                    <div class="stack gap8" style="padding:18px 20px;border-top:1px solid var(--border-hairline)">
+                        <div class="between small muted" th:if="${order.subtotalAmount != null}">
+                            <span>Tạm tính rượu vang</span>
+                            <span th:text="${#numbers.formatDecimal(order.subtotalAmount, 0, 'COMMA', 0, 'POINT')} + ' ₫'">0 ₫</span>
+                        </div>
+                        <div class="between small muted" th:if="${order.shippingFee != null}">
+                            <span>Phí vận chuyển bảo ôn (14&deg;C)</span>
+                            <span th:text="${#numbers.formatDecimal(order.shippingFee, 0, 'COMMA', 0, 'POINT')} + ' ₫'">0 ₫</span>
+                        </div>
+                        <div class="between small" style="color:var(--status-ok-ink)"
+                             th:if="${order.discountAmount != null and order.discountAmount.signum() > 0}">
+                            <span>
+                                Ưu đãi
+                                <strong th:if="${order.voucherCode != null and !#strings.isEmpty(order.voucherCode)}"
+                                        th:text="'(' + ${order.voucherCode} + ')'"></strong>
+                            </span>
+                            <span th:text="'-' + ${#numbers.formatDecimal(order.discountAmount, 0, 'COMMA', 0, 'POINT')} + ' ₫'">-0 ₫</span>
+                        </div>
+                        <div class="between pt8" style="border-top:1px dashed var(--border-hairline)">
+                            <strong>Tổng thanh toán đơn hàng</strong>
+                            <strong class="price"
+                                    th:text="${order.totalPrice != null ? #numbers.formatDecimal(order.totalPrice, 0, 'COMMA', 0, 'POINT') + ' ₫' : '0 ₫'}">0 ₫</strong>
+                        </div>
                     </div>
                 </section>
 
@@ -109,22 +138,24 @@
                     <div class="grid-2 mt12">
                         <div>
                             <div class="small muted">Người nhận</div>
-                            <strong th:text="${order.shippingFullName}">Nguyễn Văn A</strong>
-                            <div class="muted small mt8" th:text="${order.shippingPhone}">0900000000</div>
-                            <div class="muted small mt8" th:text="${order.shippingAddress}">Địa chỉ</div>
+                            <strong th:text="${order.shippingFullName != null ? order.shippingFullName : 'Khách hàng'}">Nguyễn Văn A</strong>
+                            <div class="muted small mt8" th:if="${order.shippingPhone != null}" th:text="${order.shippingPhone}">0900000000</div>
+                            <div class="muted small mt8" th:text="${order.shippingAddress != null ? order.shippingAddress : 'Chưa cập nhật địa chỉ'}">Địa chỉ</div>
                             <div class="mt12" th:if="${order.shippingAddress != null and !#strings.isEmpty(#strings.trim(order.shippingAddress))}">
                                 <a class="btn btn-outline btn-sm"
                                    target="_blank" rel="noopener noreferrer"
                                    th:href="${@enumDisplayService.googleMapsUrl(order.shippingLatitude, order.shippingLongitude, order.shippingAddress)}">
-                                    &#9873; Xem chỉ đường Maps
+                                    <th:block th:replace="~{fragments/icons :: icon('warehouse-map')}"></th:block>
+                                    <span>Xem chỉ đường Maps</span>
                                 </a>
                             </div>
                         </div>
                         <div>
                             <div class="small muted">Tài xế phụ trách</div>
-                            <div id="shipperInfoWrap" th:classappend="${shipment == null or shipment.shipper == null} ? 'd-none'">
+                            <div id="shipperInfoWrap" class="mt8" th:classappend="${shipment == null or shipment.shipper == null} ? 'd-none'">
                                 <strong id="shipperName" th:text="${shipment != null and shipment.shipper != null ? shipment.shipper.name : 'Đang cập nhật'}">Tài xế</strong>
-                                <div class="muted small mt8" th:if="${shipment != null and shipment.shipper != null}" th:text="'SĐT: ' + ${shipment.shipper.phone}">SĐT</div>
+                                <div class="muted small mt8" id="shipperPhone"
+                                     th:text="${shipment != null and shipment.shipper != null ? 'SĐT: ' + shipment.shipper.phone : ''}">SĐT</div>
                             </div>
                             <div id="shipperPending" th:classappend="${shipment != null and shipment.shipper != null} ? 'd-none'" class="muted small mt8">
                                 Đang chờ điều phối viên phân công tài xế gần nhất.
@@ -134,61 +165,147 @@
                 </section>
             </div>
 
-            <!-- Right Column: Security OTP Vault -->
+            <!-- Right Column: Security OTP Vault, Invoices, Reorder & Returns -->
             <aside class="stack">
                 <div class="otp-vault" id="otpVaultCard"
-                     th:if="${!isAdmin and shipment != null and shipment.otpCode != null and (shipment.status == null or shipment.status.name() != 'COMPLETED')}">
-                    <div class="eyebrow" style="color:var(--sw-champagne)">MÃ XÁC THỰC BÀN GIAO (OTP 6 SỐ)</div>
+                     th:if="${!isAdmin and shipment != null and (decryptedOtp != null or shipment.otpCode != null) and (shipment.status == null or shipment.status.name() != 'COMPLETED')}">
+                    <div class="eyebrow" style="color:var(--accent-gold)">MÃ XÁC THỰC BÀN GIAO (OTP 6 SỐ)</div>
                     <h2 class="serif sw-section-heading mt8 mb8">Mã nhận rượu bảo mật</h2>
-                    <p class="small" style="color:#dfd3c3;margin:0">Chỉ đọc mã này cho tài xế khi bạn đã kiểm tra đúng chủng loại và tem niêm phong chai vang.</p>
-                    <div class="otp-code" id="otpCodeDisplay" th:text="${shipment.otpCode}">------</div>
+                    <p class="small" style="color:var(--text-secondary);margin:0">
+                        Chỉ đọc mã này cho tài xế khi bạn đã kiểm tra đúng chủng loại và tem niêm phong chai vang.
+                    </p>
+                    <div class="otp-code" id="otpCodeDisplay"
+                         th:text="${decryptedOtp != null ? decryptedOtp : shipment.otpCode}">------</div>
                     <button type="button" class="btn btn-gold btn-sm w100" id="btnCopyOtp">
                         <span id="copyOtpText">Sao chép mã OTP</span>
                     </button>
                 </div>
 
                 <div class="panel" th:if="${shipment != null and shipment.status != null and shipment.status.name() == 'COMPLETED'}">
-                    <span class="badge badge-ok mb8">ĐÃ XÁC THỰC OTP THÀNH CÔNG</span>
+                    <span class="badge badge-ok mb8">
+                        <th:block th:replace="~{fragments/icons :: icon('check')}"></th:block>
+                        <span>ĐÃ XÁC THỰC OTP THÀNH CÔNG</span>
+                    </span>
                     <h2 class="serif sw-section-heading mb8">Đơn hàng đã bàn giao hoàn tất</h2>
                     <p class="muted small mb0">Cảm ơn bạn đã tin chọn StrongWine. Chúc bạn có những khoảnh khắc thưởng thức rượu vang trọn vẹn!</p>
+                </div>
+
+                <div class="panel stack">
+                    <div class="eyebrow">CHỨNG TỪ &amp; THAO TÁC NHANH</div>
+                    <div class="stack gap8">
+                        <a th:href="@{/orders/{id}/invoice(id=${order.id}, format='pdf')}"
+                           class="btn btn-outline btn-sm w100"
+                           rel="noopener">
+                            <th:block th:replace="~{fragments/icons :: icon('wax-seal')}"></th:block>
+                            <span>Hóa đơn PDF</span>
+                        </a>
+                        <a th:href="@{/orders/{id}/invoice(id=${order.id}, format='xlsx')}"
+                           class="btn btn-outline btn-sm w100"
+                           rel="noopener">
+                            <th:block th:replace="~{fragments/icons :: icon('decanter')}"></th:block>
+                            <span>Hóa đơn Excel</span>
+                        </a>
+                        <form th:action="@{/orders/{id}/reorder(id=${order.id})}" method="post">
+                            <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                            <button type="submit" class="btn btn-gold btn-sm w100">
+                                <th:block th:replace="~{fragments/icons :: icon('cart')}"></th:block>
+                                <span>Mua lại đơn này</span>
+                            </button>
+                        </form>
+                    </div>
                 </div>
 
                 <div class="panel" th:if="${!isAdmin and order.paymentStatus != null and order.paymentStatus.name() != 'SUCCESS' and order.status != null and order.status.name() != 'CANCELLED' and order.paymentMethod != null and order.paymentMethod.name() != 'COD'}">
                     <div class="eyebrow">THANH TOÁN ĐƠN HÀNG</div>
                     <h2 class="serif sw-section-heading mt8 mb12">Hoàn tất thanh toán trực tuyến</h2>
                     <form th:action="@{/orders/{id}/pay(id=${order.id})}" method="post">
-                        <button type="submit" class="btn w100">Thanh toán ngay &rarr;</button>
+                        <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                        <button type="submit" class="btn w100">Thanh toán ngay</button>
                     </form>
+                </div>
+
+                <div class="panel"
+                     th:if="${!isAdmin and order.status != null and order.status.name() == 'PAID' and shipment != null and shipment.status != null and shipment.status.name() == 'COMPLETED'}">
+                    <div class="eyebrow">ĐỔI TRẢ &amp; BẢO HÀNH HẦM VANG</div>
+                    <h2 class="serif sw-section-heading mt8 mb8">Yêu cầu trả hàng / hoàn tiền</h2>
+                    <p class="small muted mb12">Nếu chai vang bị rò rỉ nút bần hoặc sai chủng loại khi nhận hàng, bạn có thể gửi yêu cầu kiểm duyệt.</p>
+                    <button type="button" class="btn btn-outline btn-sm w100" data-dialog-open="returnModal">
+                        Gửi yêu cầu trả hàng
+                    </button>
+                </div>
+
+                <div class="panel"
+                     th:if="${order.status != null and (order.status.name() == 'RETURN_REQUESTED' or order.status.name() == 'RETURN_APPROVED' or order.status.name() == 'REFUNDED')}">
+                    <span class="badge badge-warn mb8" th:text="${@enumDisplayService.orderStatus(order.status)}">Yêu cầu trả hàng</span>
+                    <p class="small muted mb0">Yêu cầu đổi trả / hoàn tiền cho đơn hàng này đã được ghi nhận trên hệ thống StrongWine.</p>
                 </div>
 
                 <div class="panel" th:if="${!isAdmin and order.status != null and order.status.name() == 'PENDING' and order.paymentStatus != null and order.paymentStatus.name() != 'SUCCESS' and shipment == null}">
                     <div class="eyebrow">HỦY ĐƠN</div>
-                    <p class="small mt8 mb12" style="color:var(--sw-ink)">Đơn chưa thanh toán và chưa chuyển vận chuyển có thể hủy. Số lượng rượu sẽ được hoàn lại kho.</p>
-                    <form th:action="@{/orders/{id}/cancel(id=${order.id})}" method="post"
-                          onsubmit="return confirm('Hủy đơn hàng này?');">
-                        <button type="submit" class="btn btn-sm w100">Hủy đơn hàng</button>
-                    </form>
+                    <p class="small muted mt8 mb12">Đơn chưa thanh toán và chưa bàn giao vận chuyển có thể hủy. Số lượng rượu sẽ được hoàn lại kho.</p>
+                    <button type="button" class="btn btn-danger btn-sm w100" data-dialog-open="cancelOrderModal">
+                        Hủy đơn hàng
+                    </button>
                 </div>
             </aside>
         </div>
     </div>
 </main>
 
-<!-- Realtime SSE Toast -->
-<div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index:1100">
-    <div id="liveTrackingToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
-        <div class="toast-header" style="background:var(--sw-plum);color:#fff">
-            <strong class="me-auto" id="liveToastTitle">Cập nhật vận đơn</strong>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Đóng"></button>
+<!-- Native Return Request Dialog -->
+<dialog id="returnModal" class="sw-dialog" closedby="any" aria-labelledby="returnModalTitle"
+        th:if="${!isAdmin and order.status != null and order.status.name() == 'PAID' and shipment != null and shipment.status != null and shipment.status.name() == 'COMPLETED'}">
+    <div class="dialog-surface">
+        <div class="dialog-head">
+            <div>
+                <div class="eyebrow">ĐỔI TRẢ &amp; BẢO HÀNH</div>
+                <h2 class="serif sw-section-heading mt4" id="returnModalTitle" th:text="'Yêu cầu trả đơn #' + ${order.id}">Yêu cầu trả hàng</h2>
+            </div>
+            <button type="button" class="close-btn" data-dialog-close aria-label="Đóng hộp thoại">
+                <th:block th:replace="~{fragments/icons :: icon('close')}"></th:block>
+            </button>
         </div>
-        <div class="toast-body" id="liveToastMessage" style="background:var(--sw-paper);color:var(--sw-ink)">
-            Trạng thái đơn hàng vừa được cập nhật.
+        <form id="returnRequestForm" th:action="@{/orders/{id}/returns(id=${order.id})}" method="post" class="dialog-body stack">
+            <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <div>
+                <label class="label mb8" for="returnReasonInput">Lý do yêu cầu trả hàng / hoàn tiền *</label>
+                <textarea id="returnReasonInput" name="reason" rows="4" class="textarea w100"
+                          placeholder="Ví dụ: Niêm phong nắp chai bị hở, chai có dấu hiệu hư hỏng trong lúc giao..." required></textarea>
+            </div>
+            <div class="display-flex gap10" style="justify-content:flex-end">
+                <button type="button" class="btn btn-outline btn-sm" data-dialog-close>Đóng</button>
+                <button type="submit" class="btn btn-sm">Gửi yêu cầu</button>
+            </div>
+        </form>
+    </div>
+</dialog>
+
+<!-- Native Cancel Order Dialog -->
+<dialog id="cancelOrderModal" class="sw-dialog" closedby="any" aria-labelledby="cancelOrderModalTitle"
+        th:if="${!isAdmin and order.status != null and order.status.name() == 'PENDING' and order.paymentStatus != null and order.paymentStatus.name() != 'SUCCESS' and shipment == null}">
+    <div class="dialog-surface">
+        <div class="dialog-head">
+            <div>
+                <div class="eyebrow">XÁC NHẬN HỦY ĐƠN</div>
+                <h2 class="serif sw-section-heading mt4" id="cancelOrderModalTitle" th:text="'Hủy đơn hàng #' + ${order.id} + '?'">Hủy đơn hàng?</h2>
+            </div>
+            <button type="button" class="close-btn" data-dialog-close aria-label="Đóng hộp thoại">
+                <th:block th:replace="~{fragments/icons :: icon('close')}"></th:block>
+            </button>
+        </div>
+        <div class="dialog-body stack">
+            <p class="muted mb0">Số lượng rượu vang trong đơn sẽ được hoàn trả về hầm kho ngay sau khi xác nhận hủy.</p>
+            <form th:action="@{/orders/{id}/cancel(id=${order.id})}" method="post" class="display-flex gap10" style="justify-content:flex-end">
+                <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                <button type="button" class="btn btn-outline btn-sm" data-dialog-close>Giữ lại đơn</button>
+                <button type="submit" class="btn btn-danger btn-sm">Xác nhận hủy đơn</button>
+            </form>
         </div>
     </div>
-</div>
+</dialog>
 
 <div th:replace="~{fragments/store-shell :: footer}"></div>
-<script th:src="@{/js/order-tracking-realtime.js}"></script>
-<script th:src="@{/js/order-tracking-page.js}"></script>
+<script defer th:src="@{/js/order-tracking-realtime.js}"></script>
+<script defer th:src="@{/js/order-tracking-page.js}"></script>
 </body>
 </html>

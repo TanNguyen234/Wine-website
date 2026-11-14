@@ -1,43 +1,47 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<html xmlns:th="http://www.thymeleaf.org" lang="vi" data-theme="cellar">
 <head th:replace="~{fragments/store-shell :: head('Cổng Thanh Toán Bảo Mật · StrongWine')}"></head>
 <body>
 <div th:replace="~{fragments/store-shell :: header('orders')}"></div>
 
 <main class="section">
-    <div class="sw-container" style="max-width:720px">
-        <div th:if="${error}" class="alert-sw danger mb16" th:text="${error}"></div>
+    <div class="sw-container" style="max-width:720px;">
+        <div th:if="${error}" class="alert-sw danger mb16" role="alert" th:text="${error}"></div>
 
-        <div class="panel" style="padding:36px">
-            <div class="between mb16">
+        <div class="panel" style="padding:36px;">
+            <div class="between mb16" style="flex-wrap:wrap;gap:12px;">
                 <div>
                     <div class="eyebrow">CỔNG THANH TOÁN TRỰC TUYẾN</div>
-                    <h1 class="serif mt8 mb0" style="font-size:2rem">Xác nhận giao dịch</h1>
+                    <h1 class="serif mt8 mb0" style="font-size:2rem;">Xác nhận giao dịch</h1>
                 </div>
-                <span class="badge badge-gold" th:if="${payment != null}" th:text="${@enumDisplayService.paymentMethod(payment.method)}">ONLINE</span>
+                <span class="badge badge-gold" th:if="${payment != null}">
+                    <th:block th:replace="~{fragments/icons :: icon('shield')}"/>
+                    <span th:text="${@enumDisplayService.paymentMethod(payment.method)}">ONLINE</span>
+                </span>
             </div>
 
             <div class="panel-soft mb24" th:if="${order != null}">
                 <div class="between mb10">
                     <span class="muted">Mã đơn hàng</span>
-                    <strong th:text="'#' + ${order.id}">#1</strong>
+                    <strong class="tabular-nums" th:text="'#' + ${order.id}">#1</strong>
                 </div>
                 <div class="between mb10" th:if="${payment != null}">
                     <span class="muted">Mã phiên giao dịch</span>
-                    <code th:text="${payment.paymentReference != null ? payment.paymentReference : payment.id}">TXN</code>
+                    <code class="mono" th:text="${payment.paymentReference != null ? payment.paymentReference : payment.id}">TXN</code>
                 </div>
-                <div class="between pt12" style="border-top:1px solid var(--sw-line)">
+                <div class="between pt12" style="border-top:1px solid var(--border-hairline);">
                     <strong>Số tiền thanh toán</strong>
-                    <strong class="price" th:text="${#numbers.formatDecimal(order.totalPrice, 0, 'COMMA', 0, 'POINT')} + ' ₫'">0 ₫</strong>
+                    <strong class="price tabular-nums"
+                            th:text="${order.totalPrice != null ? #numbers.formatDecimal(order.totalPrice, 0, 'COMMA', 0, 'POINT') + ' ₫' : '0 ₫'}">0 ₫</strong>
                 </div>
             </div>
 
-            <p class="muted small mb20">Chọn thao tác xác nhận thanh toán bên dưới để hoàn tất phiên giao dịch cho đơn hàng của bạn:</p>
+            <p class="muted mb20" style="font-size:13.5px;">Chọn thao tác xác nhận thanh toán bên dưới để hoàn tất phiên giao dịch cho đơn hàng của bạn:</p>
 
             <div class="stack">
                 <a th:if="${successUrl != null}" th:href="${successUrl}" class="btn w100">Xác nhận thanh toán thành công &rarr;</a>
                 <div class="grid-2">
-                    <a th:if="${failedUrl != null}" th:href="${failedUrl}" class="btn btn-danger w100">Giả lập lỗi thanh toán</a>
+                    <a th:if="${failedUrl != null}" th:href="${failedUrl}" class="btn btn-danger w100">Báo lỗi giao dịch</a>
                     <a th:if="${cancelUrl != null}" th:href="${cancelUrl}" class="btn btn-outline w100">Huỷ và quay lại</a>
                 </div>
             </div>

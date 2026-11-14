@@ -1,20 +1,23 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<html xmlns:th="http://www.thymeleaf.org" lang="vi" data-theme="cellar">
 <head th:replace="~{fragments/store-shell :: head('Đặt Hàng Thành Công · StrongWine')}"></head>
 <body data-order-confirmation="true">
 <div th:replace="~{fragments/store-shell :: header('orders')}"></div>
 
 <main class="section">
-    <div class="sw-container" style="max-width:760px">
-        <div class="panel text-center" style="padding:44px 32px">
-            <span class="badge badge-ok mb12">ĐẶT HÀNG THÀNH CÔNG</span>
-            <h1 class="serif mb12" style="font-size:2.3rem">Cảm ơn bạn đã tin chọn StrongWine</h1>
+    <div class="sw-container" style="max-width:760px;">
+        <div class="panel text-center" style="padding:40px 28px;">
+            <div class="display-flex gap8 mb12" style="justify-content:center;">
+                <th:block th:replace="~{fragments/icons :: icon('wax-seal')}"/>
+                <span class="badge badge-ok">ĐẶT HÀNG THÀNH CÔNG</span>
+            </div>
+            <h1 class="serif mb12" style="font-size:2.2rem;">Cảm ơn bạn đã tin chọn StrongWine</h1>
             <p class="muted mb24">Đơn đặt hàng của quý khách đã được ghi nhận vào hệ thống và khởi tạo quy trình điều phối bảo ôn chuyên biệt.</p>
 
-            <div class="panel-soft text-start mb24" style="text-align:left">
+            <div class="panel-soft mb24" style="text-align:left;">
                 <div class="between mb12">
                     <span class="muted">Mã đơn hàng</span>
-                    <strong class="serif" style="font-size:1.2rem" th:text="'#' + ${orderId}">#1</strong>
+                    <strong class="serif tabular-nums" style="font-size:1.2rem;" th:text="'#' + ${orderId}">#1</strong>
                 </div>
                 <div class="between mb12" th:if="${fullName != null}">
                     <span class="muted">Người nhận</span>
@@ -22,11 +25,11 @@
                 </div>
                 <div class="between mb12" th:if="${phone != null}">
                     <span class="muted">Số điện thoại</span>
-                    <strong th:text="${phone}">0900000000</strong>
+                    <strong class="tabular-nums" th:text="${phone}">0900000000</strong>
                 </div>
                 <div class="between mb12" th:if="${address != null}">
                     <span class="muted">Địa chỉ giao nhận</span>
-                    <strong th:text="${address}">Địa chỉ</strong>
+                    <strong th:text="${address}" style="text-align:right;max-width:65%;">Địa chỉ</strong>
                 </div>
                 <div class="between mb12" th:if="${orderStatus != null}">
                     <span class="muted">Trạng thái đơn hàng</span>
@@ -38,7 +41,7 @@
                 </div>
             </div>
 
-            <div class="display-flex gap12" style="justify-content:center;flex-wrap:wrap">
+            <div class="display-flex gap12" style="justify-content:center;flex-wrap:wrap;">
                 <a th:if="${orderId != null}" th:href="@{/orders/{id}(id=${orderId})}" class="btn">Theo dõi đơn &amp; Xem mã OTP &rarr;</a>
                 <a th:href="@{/orders}" class="btn btn-outline">Danh sách đơn hàng</a>
                 <a th:href="@{/wines}" class="btn btn-outline">Tiếp tục mua sắm</a>

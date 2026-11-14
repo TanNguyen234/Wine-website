@@ -1,19 +1,27 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<html xmlns:th="http://www.thymeleaf.org" lang="vi" data-theme="cellar">
 <head th:replace="~{fragments/store-shell :: head('Đăng Ký Thành Viên · StrongWine')}"></head>
 <body>
 <div class="auth-layout">
     <aside class="auth-brand">
-        <a class="logo" th:href="@{/home}" style="color:#fff">
-            <span class="logo-mark">S</span>
-            <span class="logo-txt" style="color:#fff">StrongWine</span>
-        </a>
-        <div>
-            <div class="eyebrow" style="color:var(--sw-champagne)">THÀNH VIÊN HẦM RƯỢU</div>
-            <h1 class="serif mt12 mb16" style="font-size:2.5rem;line-height:1.1">Khởi tạo tài khoản thưởng thức rượu vang.</h1>
-            <p style="color:#dfd3c3;max-width:46ch">Lưu trữ lịch sử đơn hàng, nhận tư vấn kết hợp ẩm thực chuyên sâu và theo dõi hành trình giao nhận bảo ôn theo thời gian thực.</p>
+        <div class="between gap12">
+            <a class="logo" th:href="@{/home}">
+                <span class="logo-mark" aria-hidden="true">S</span>
+                <span class="logo-txt">StrongWine</span>
+            </a>
+            <button type="button" class="icon-btn" data-theme-toggle aria-label="Chuyển chế độ giao diện" style="border-color:rgba(226,190,114,0.35);color:#f0e8da;background:rgba(255,255,255,0.06);">
+                <th:block th:replace="~{fragments/icons :: icon('sun')}"/>
+            </button>
         </div>
-        <div class="small" style="color:#c9b899">Dành cho khách hàng đủ 18 tuổi trở lên theo quy định pháp luật.</div>
+        <div>
+            <div class="eyebrow" style="color:#e2be72;">THÀNH VIÊN HẦM RƯỢU</div>
+            <h1 class="serif">Khởi tạo tài khoản thưởng thức rượu vang.</h1>
+            <p style="color:#dfd3c3;max-width:46ch;line-height:1.65;">Lưu trữ lịch sử đơn hàng, danh sách yêu thích, sổ địa chỉ giao nhận và theo dõi hành trình bảo ôn thời gian thực.</p>
+        </div>
+        <div class="display-flex gap8" style="color:#c9b899;font-size:13px;">
+            <th:block th:replace="~{fragments/icons :: icon('shield')}"/>
+            <span>Dành cho khách hàng đủ 18 tuổi trở lên theo quy định pháp luật.</span>
+        </div>
     </aside>
 
     <main class="auth-form-wrap">
@@ -21,40 +29,43 @@
             <div class="eyebrow">ĐĂNG KÝ MỚI</div>
             <h2 class="serif mt8 mb16" style="font-size:2rem">Tạo tài khoản</h2>
 
-            <div th:if="${message}" class="alert-sw success mb16" th:text="${message}"></div>
-            <div th:if="${error}" class="alert-sw danger mb16" th:text="${error}"></div>
+            <div th:if="${success}" class="alert-sw success mb16" role="status" th:text="${success}"></div>
+            <div th:if="${message}" class="alert-sw success mb16" role="status" th:text="${message}"></div>
+            <div th:if="${error}" class="alert-sw danger mb16" role="alert" th:text="${error}"></div>
 
             <form th:action="@{/register}" method="post" class="stack">
+                <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
                 <div>
                     <label class="label" for="username">Tên đăng nhập *</label>
-                    <input type="text" id="username" name="username" class="field" required
+                    <input type="text" id="username" name="username" class="field" required autocomplete="username"
                            th:value="${username}" placeholder="Ví dụ: nguyenvana">
                 </div>
                 <div>
                     <label class="label" for="email">Địa chỉ Email *</label>
-                    <input type="email" id="email" name="email" class="field" required
+                    <input type="email" id="email" name="email" class="field" required autocomplete="email"
                            th:value="${email}" placeholder="khachhang@example.com">
                 </div>
                 <div class="grid-2">
                     <div>
                         <label class="label" for="password">Mật khẩu *</label>
-                        <input type="password" id="password" name="password" class="field" required placeholder="Tối thiểu 6 ký tự">
+                        <input type="password" id="password" name="password" class="field" required autocomplete="new-password" placeholder="Tối thiểu 6 ký tự">
                     </div>
                     <div>
                         <label class="label" for="confirmPassword">Xác nhận mật khẩu *</label>
-                        <input type="password" id="confirmPassword" name="confirmPassword" class="field" required placeholder="Nhập lại mật khẩu">
+                        <input type="password" id="confirmPassword" name="confirmPassword" class="field" required autocomplete="new-password" placeholder="Nhập lại mật khẩu">
                     </div>
                 </div>
                 <button type="submit" class="btn w100 mt8">Hoàn tất đăng ký &rarr;</button>
             </form>
 
-            <div class="mt20 pt16 text-center small muted" style="border-top:1px solid var(--sw-line)">
+            <div class="mt20 pt16 text-center muted" style="font-size:13px;border-top:1px solid var(--border-hairline);">
                 Đã có tài khoản?
-                <a th:href="@{/login}" style="color:var(--sw-bordeaux);font-weight:700">Đăng nhập</a>
-                · <a th:href="@{/home}">Về trang chủ</a>
+                <a th:href="@{/login}" style="color:var(--accent-gold-ink);font-weight:700;">Đăng nhập</a>
+                · <a th:href="@{/home}" style="color:var(--text-secondary);">Về trang chủ</a>
             </div>
         </div>
     </main>
 </div>
+<script th:src="@{/js/theme-toggle.js}" defer></script>
 </body>
 </html>

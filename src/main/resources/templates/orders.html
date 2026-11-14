@@ -7,6 +7,7 @@
 <main class="section">
     <div class="sw-container">
         <div th:if="${message}" class="alert-sw success mb16" th:text="${message}"></div>
+        <div th:if="${success}" class="alert-sw success mb16" th:text="${success}"></div>
         <div th:if="${error}" class="alert-sw danger mb16" th:text="${error}"></div>
 
         <div class="section-head">
@@ -14,27 +15,37 @@
                 <div class="eyebrow">LỊCH SỬ MUA SẮM &amp; THEO DÕI VẬN ĐƠN</div>
                 <h1 class="section-title">Đơn hàng của tôi</h1>
             </div>
-            <a th:href="@{/wines}" class="btn btn-outline btn-sm">+ Đặt thêm rượu vang</a>
+            <a th:href="@{/wines}" class="btn btn-outline btn-sm">
+                <th:block th:replace="~{fragments/icons :: icon('wine-glass')}"></th:block>
+                <span>Khám phá thêm rượu vang</span>
+            </a>
         </div>
 
-        <div th:if="${orders == null or orders.isEmpty()}" class="panel text-center" style="padding:48px 24px">
+        <div th:if="${orders == null or orders.isEmpty()}" class="panel text-center" style="padding:52px 24px">
+            <div class="display-flex mb12" style="justify-content:center;color:var(--accent-gold)">
+                <th:block th:replace="~{fragments/icons :: icon('decanter')}"></th:block>
+            </div>
             <h2 class="serif sw-section-heading mb8">Bạn chưa có đơn hàng nào</h2>
-            <p class="muted mb20">Các đơn đặt hàng và trạng thái vận chuyển thời gian thực sẽ xuất hiện tại đây.</p>
-            <a th:href="@{/wines}" class="btn">Khám phá bộ sưu tập &rarr;</a>
+            <p class="muted mb20">Các đơn đặt hàng, hóa đơn điện tử và hành trình giao nhận chuẩn 14&deg;C sẽ hiển thị tại đây.</p>
+            <a th:href="@{/wines}" class="btn">Khám phá bộ sưu tập</a>
         </div>
 
         <div class="stack" th:if="${orders != null and !orders.isEmpty()}">
             <article class="panel" th:each="order : ${orders}"
                      th:with="shipment=${shipmentByOrderId != null ? shipmentByOrderId.get(order.id) : null}">
-                <div class="between" style="flex-wrap:wrap;gap:12px;padding-bottom:14px;border-bottom:1px solid var(--sw-line)">
-                    <div class="display-flex gap12" style="flex-wrap:wrap">
-                        <strong class="serif" style="font-size:1.25rem" th:text="'Đơn hàng #' + ${order.id}">Đơn hàng #1</strong>
-                        <span class="badge badge-wine" th:text="${@enumDisplayService.orderStatus(order.status)}">Chờ xử lý</span>
+                <div class="between pb12" style="flex-wrap:wrap;gap:12px;border-bottom:1px solid var(--border-hairline)">
+                    <div class="display-flex gap10" style="flex-wrap:wrap">
+                        <strong class="serif" style="font-size:1.3rem" th:text="'Đơn hàng #' + ${order.id}">Đơn hàng #1</strong>
+                        <span class="badge badge-wine"
+                              th:text="${order.status != null ? @enumDisplayService.orderStatus(order.status) : 'Đang xử lý'}">Chờ xử lý</span>
                         <span class="badge"
                               th:classappend="${order.paymentStatus != null and order.paymentStatus.name() == 'SUCCESS'} ? 'badge-ok' : 'badge-warn'"
-                              th:text="${@enumDisplayService.paymentStatus(order.paymentStatus)}">Thanh toán</span>
-                        <span th:if="${shipment != null}" class="badge badge-info"
+                              th:text="${order.paymentStatus != null ? @enumDisplayService.paymentStatus(order.paymentStatus) : 'Chờ thanh toán'}">Thanh toán</span>
+                        <span th:if="${shipment != null and shipment.status != null}" class="badge badge-info"
                               th:text="'Vận đơn: ' + ${@enumDisplayService.shipmentStatus(shipment.status)}">Vận đơn</span>
+                        <span th:if="${order.voucherCode != null and !#strings.isEmpty(order.voucherCode)}"
+                              class="badge badge-gold"
+                              th:text="'Mã ưu đãi: ' + ${order.voucherCode}">VOUCHER</span>
                     </div>
                     <div class="small muted" th:if="${order.orderDate != null}"
                          th:text="'Ngày đặt: ' + ${#temporals.format(order.orderDate, 'dd/MM/yyyy HH:mm')}">10/10/2026</div>
@@ -51,29 +62,50 @@
                     </div>
 
                     <div style="text-align:right">
-                        <div class="small muted">Tổng giá trị đơn hàng</div>
-                        <div class="price mt8" th:text="${#numbers.formatDecimal(order.totalPrice, 0, 'COMMA', 0, 'POINT')} + ' ₫'">0 ₫</div>
+                        <div class="small muted">Tổng thanh toán</div>
+                        <div class="price mt8"
+                             th:text="${order.totalPrice != null ? #numbers.formatDecimal(order.totalPrice, 0, 'COMMA', 0, 'POINT') + ' ₫' : '0 ₫'}">0 ₫</div>
+                        <div class="small muted mt4"
+                             th:if="${order.paymentMethod != null}"
+                             th:text="${@enumDisplayService.paymentMethod(order.paymentMethod)}">COD</div>
                     </div>
                 </div>
 
-                <div class="between mt16 pt12" style="border-top:1px dashed var(--sw-line);flex-wrap:wrap;gap:10px">
-                    <div class="small muted">
+                <div class="between mt16 pt12" style="border-top:1px dashed var(--border-hairline);flex-wrap:wrap;gap:12px">
+                    <div class="display-flex gap8 small muted">
+                        <th:block th:replace="~{fragments/icons :: icon('truck')}"></th:block>
                         <span th:if="${shipment != null and shipment.shipper != null}"
                               th:text="'Tài xế phụ trách: ' + ${shipment.shipper.name} + ' (' + ${shipment.shipper.phone} + ')'">Tài xế</span>
-                        <span th:if="${shipment == null or shipment.shipper == null}">Hầm rượu đang chuẩn bị và điều phối tài xế</span>
+                        <span th:if="${shipment == null or shipment.shipper == null}">Hầm rượu đang chuẩn bị và điều phối tài xế bảo ôn</span>
                     </div>
 
-                    <div class="display-flex gap10">
+                    <div class="display-flex gap8" style="flex-wrap:wrap">
+                        <a th:href="@{/orders/{id}/invoice(id=${order.id}, format='pdf')}"
+                           class="btn btn-outline btn-sm"
+                           rel="noopener">Hóa đơn PDF</a>
+                        <a th:href="@{/orders/{id}/invoice(id=${order.id}, format='xlsx')}"
+                           class="btn btn-outline btn-sm"
+                           rel="noopener">Hóa đơn Excel</a>
+
+                        <form th:action="@{/orders/{id}/reorder(id=${order.id})}" method="post" class="d-inline">
+                            <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                            <button type="submit" class="btn btn-outline btn-sm">Mua lại</button>
+                        </form>
+
                         <form th:if="${order.paymentStatus != null and order.paymentStatus.name() != 'SUCCESS' and order.status != null and order.status.name() != 'CANCELLED' and order.paymentMethod != null and order.paymentMethod.name() != 'COD'}"
                               th:action="@{/orders/{id}/pay(id=${order.id})}" method="post" class="d-inline">
+                            <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
                             <button type="submit" class="btn btn-gold btn-sm">Thanh toán lại</button>
                         </form>
-                        <form th:if="${order.status != null and order.status.name() == 'PENDING' and order.paymentStatus != null and order.paymentStatus.name() != 'SUCCESS' and shipment == null}"
-                              th:action="@{/orders/{id}/cancel(id=${order.id})}" method="post" class="d-inline"
-                              onsubmit="return confirm('Hủy đơn hàng này? Số lượng rượu sẽ được hoàn lại kho.');">
-                            <button type="submit" class="btn btn-sm">Hủy đơn</button>
-                        </form>
-                        <a th:href="@{/orders/{id}(id=${order.id})}" class="btn btn-sm">Theo dõi &amp; Xem OTP &rarr;</a>
+
+                        <button type="button"
+                                class="btn btn-danger btn-sm js-open-cancel-order"
+                                th:if="${order.status != null and order.status.name() == 'PENDING' and order.paymentStatus != null and order.paymentStatus.name() != 'SUCCESS' and shipment == null}"
+                                th:attr="data-cancel-url=@{/orders/{id}/cancel(id=${order.id})}, data-order-id=${order.id}">
+                            Hủy đơn
+                        </button>
+
+                        <a th:href="@{/orders/{id}(id=${order.id})}" class="btn btn-sm">Theo dõi &amp; Xem OTP</a>
                     </div>
                 </div>
             </article>
@@ -81,6 +113,55 @@
     </div>
 </main>
 
+<dialog id="cancelOrderModal" class="sw-dialog" closedby="any" aria-labelledby="cancelOrderModalTitle">
+    <div class="dialog-surface">
+        <div class="dialog-head">
+            <div>
+                <div class="eyebrow">XÁC NHẬN HỦY ĐƠN HÀNG</div>
+                <h2 class="serif sw-section-heading mt4" id="cancelOrderModalTitle">Hủy đơn hàng</h2>
+            </div>
+            <button type="button" class="close-btn" data-dialog-close aria-label="Đóng hộp thoại">
+                <th:block th:replace="~{fragments/icons :: icon('close')}"></th:block>
+            </button>
+        </div>
+        <div class="dialog-body stack">
+            <p class="muted mb0" id="cancelOrderModalDesc">Số lượng rượu trong đơn sẽ được hoàn trả về hầm kho ngay sau khi hủy.</p>
+            <form id="cancelOrderModalForm" method="post" class="display-flex gap10" style="justify-content:flex-end">
+                <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                <button type="button" class="btn btn-outline btn-sm" data-dialog-close>Giữ lại đơn</button>
+                <button type="submit" class="btn btn-danger btn-sm">Xác nhận hủy đơn</button>
+            </form>
+        </div>
+    </div>
+</dialog>
+
 <div th:replace="~{fragments/store-shell :: footer}"></div>
+<script defer>
+(function (window, document) {
+    "use strict";
+    document.addEventListener("click", function (event) {
+        var btn = event.target.closest(".js-open-cancel-order");
+        if (!btn) {
+            return;
+        }
+        var cancelUrl = btn.getAttribute("data-cancel-url");
+        var orderId = btn.getAttribute("data-order-id") || "";
+        var form = document.getElementById("cancelOrderModalForm");
+        var title = document.getElementById("cancelOrderModalTitle");
+        var dialog = document.getElementById("cancelOrderModal");
+        if (form && cancelUrl) {
+            form.setAttribute("action", cancelUrl);
+        }
+        if (title) {
+            title.textContent = orderId ? ("Hủy đơn hàng #" + orderId + "?") : "Hủy đơn hàng?";
+        }
+        if (window.SwDialog && typeof window.SwDialog.open === "function") {
+            window.SwDialog.open("cancelOrderModal", btn);
+        } else if (dialog && typeof dialog.showModal === "function") {
+            dialog.showModal();
+        }
+    });
+})(window, document);
+</script>
 </body>
 </html>
