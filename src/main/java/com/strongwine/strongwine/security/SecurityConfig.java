@@ -1,5 +1,6 @@
 package com.strongwine.strongwine.security;
 
+import jakarta.servlet.DispatcherType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -61,6 +62,8 @@ public class SecurityConfig {
                 )
             )
             .authorizeHttpRequests(authz -> authz
+                // Permit internal Servlet ASYNC & ERROR dispatches so SseEmitter completion after logout/timeout never throws AccessDenied
+                .dispatcherTypeMatchers(DispatcherType.ASYNC, DispatcherType.ERROR).permitAll()
                 // Block direct web access to private user shipping profiles and proof-of-delivery files
                 .requestMatchers("/uploads/profiles/**", "/uploads/pods/**").denyAll()
                 // Admin only pages
@@ -78,7 +81,7 @@ public class SecurityConfig {
                     "/", "/home", "/wines", "/wines/**", "/cart/**",
                     "/register", "/login", "/forgot-password", "/reset-password",
                     "/css/**", "/js/**", "/images/**", "/uploads/**",
-                    "/manifest.webmanifest", "/sw-shipper.js",
+                    "/manifest.webmanifest", "/sw-shipper.js", "/favicon.svg", "/favicon.ico",
                     "/payment/webhook", "/api/payments/vnpay/**"
                 ).permitAll()
                 // API Auth & public assistant endpoint

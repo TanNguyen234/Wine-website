@@ -22,12 +22,16 @@ public class WebConfig implements WebMvcConfigurer {
                 .addResourceLocations("file:" + uploadPath + "/")
                 .setCacheControl(CacheControl.maxAge(1, TimeUnit.DAYS).cachePublic());
 
-        registry.addResourceHandler("/css/**", "/js/**")
-                .addResourceLocations("classpath:/static/css/", "classpath:/static/js/")
+        registry.addResourceHandler("/css/**")
+                .addResourceLocations("classpath:/static/css/")
                 .setCacheControl(CacheControl.maxAge(7, TimeUnit.DAYS).cachePublic());
 
-        registry.addResourceHandler("/manifest.webmanifest", "/sw-shipper.js")
-                .addResourceLocations("classpath:/static/manifest.webmanifest", "classpath:/static/sw-shipper.js")
+        registry.addResourceHandler("/js/**")
+                .addResourceLocations("classpath:/static/js/")
+                .setCacheControl(CacheControl.maxAge(7, TimeUnit.DAYS).cachePublic());
+
+        registry.addResourceHandler("/manifest.webmanifest", "/sw-shipper.js", "/favicon.svg")
+                .addResourceLocations("classpath:/static/")
                 .setCacheControl(CacheControl.noCache());
     }
 }

@@ -74,7 +74,7 @@
                             <td data-label="Địa chỉ giao">
                                 <div class="small" th:text="${s.shippingAddress ?: '—'}">Quận 1, TP.HCM</div>
                                 <a th:if="${s.shippingLatitude != null and s.shippingLongitude != null}"
-                                   th:href="${@enumDisplayService.googleMapsUrl(s.shippingLatitude, s.shippingLongitude)}"
+                                   th:href="${@enumDisplayService.googleMapsUrl(s.shippingLatitude, s.shippingLongitude, s.shippingAddress)}"
                                    target="_blank" rel="noopener noreferrer"
                                    class="small text-decoration-underline">Mở bản đồ</a>
                             </td>

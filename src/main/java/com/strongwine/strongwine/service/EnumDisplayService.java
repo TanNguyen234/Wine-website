@@ -284,6 +284,10 @@ public class EnumDisplayService {
         return new DisplayBadge(otpDeliveryStatus(status), otpDeliveryStatusTone(status), otpDeliveryStatusBadgeClass(status));
     }
 
+    public String googleMapsUrl(Double lat, Double lng) {
+        return googleMapsUrl(lat, lng, null);
+    }
+
     /**
      * Generates a valid, robust Google Maps navigation URL.
      * Strips legacy [GPS: ...] tags and ensures driving navigation opens cleanly.
