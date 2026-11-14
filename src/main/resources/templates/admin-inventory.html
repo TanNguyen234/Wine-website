@@ -1,107 +1,113 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="vi">
-<head th:replace="~{fragments/admin-shell :: head('Quản Lý Tồn Kho · StrongWine Control Center')}"></head>
-<body>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/admin-shell :: head('Quản lý tồn kho')}"></head>
+<body class="admin-body">
 <div class="admin-shell">
     <aside th:replace="~{fragments/admin-shell :: sidebar('inventory')}"></aside>
 
-    <div class="admin-main">
+    <div class="admin-main-wrap">
         <header th:replace="~{fragments/admin-shell :: topbar}"></header>
 
-        <main class="admin-content">
-            <div th:if="${message}" class="alert-sw success mb16" th:text="${message}"></div>
-            <div th:if="${error}" class="alert-sw danger mb16" th:text="${error}"></div>
-
-            <div class="admin-head">
+        <main class="admin-main" id="main-content">
+            <div class="admin-page-header">
                 <div>
-                    <div class="eyebrow">QUẢN TRỊ HẦM RƯỢU &amp; KHO VẬN</div>
-                    <h1>Tồn kho &amp; Lịch sử xuất nhập</h1>
-                    <p>Điều chỉnh nhập/xuất tồn kho theo thời gian thực và trích xuất báo cáo Excel.</p>
+                    <h1 class="admin-page-title">Quản lý kho đa điểm</h1>
+                    <p class="admin-page-subtitle">Theo dõi tồn kho vật lý, số lượng đặt giữ, ngưỡng cảnh báo và nhật ký nhập xuất theo từng kho.</p>
                 </div>
-                <div class="display-flex gap10" style="flex-wrap:wrap">
-                    <a th:href="@{/api/admin/excel/export/inventory}" class="btn btn-outline btn-sm" style="display:inline-flex;align-items:center;gap:6px">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                            <polyline points="7 10 12 15 17 10"></polyline>
-                            <line x1="12" y1="15" x2="12" y2="3"></line>
-                        </svg>
-                        <span>Xuất báo cáo Excel (.xlsx)</span>
-                    </a>
-                    <a th:href="@{/admin/wines/import}" class="btn btn-sm" style="display:inline-flex;align-items:center;gap:6px">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                            <polyline points="17 8 12 3 7 8"></polyline>
-                            <line x1="12" y1="3" x2="12" y2="15"></line>
-                        </svg>
-                        <span>Nhập hàng loạt từ Excel</span>
-                    </a>
+                <div class="d-flex flex-wrap gap-2">
+                    <a th:href="@{/admin/wines/import}" class="btn btn-outline-gold btn-sm">Nhập kho bằng Excel</a>
+                    <a th:href="@{/api/admin/excel/export/inventory}" class="btn btn-secondary btn-sm">Xuất báo cáo kho (.xlsx)</a>
                 </div>
             </div>
 
-            <!-- Inventory Table -->
-            <section class="admin-card mb20">
-                <div class="admin-card-head mb12">
-                    <h3>Danh sách tồn kho hiện tại</h3>
-                    <span class="status info" th:text="'Tổng ' + (${totalEntries != null ? totalEntries : 0}) + ' bản ghi kho'">0 bản ghi</span>
+            <div th:if="${success != null or message != null}" class="admin-card mb-3" role="status" style="border-left: 4px solid var(--status-ok-ink);">
+                <strong class="status ok">Thành công</strong>
+                <span class="ms-2" th:text="${success != null ? success : message}">Đã cập nhật tồn kho.</span>
+            </div>
+            <div th:if="${error != null}" class="admin-card mb-3" role="alert" style="border-left: 4px solid var(--status-danger-ink);">
+                <strong class="status bad">Lỗi</strong>
+                <span class="ms-2" th:text="${error}">Thao tác thất bại.</span>
+            </div>
+
+            <!-- Warehouse Inventory Overview -->
+            <section class="admin-card mb-4">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                    <div>
+                        <h2 class="h5 mb-1">Tồn kho hiện tại theo kho</h2>
+                        <p class="small text-secondary mb-0">
+                            <span th:if="${defaultWarehouse != null}">
+                                Kho mặc định: <strong th:text="${defaultWarehouse.name}">Main Warehouse</strong>
+                                <span th:if="${defaultWarehouse.location != null}" th:text="' (' + ${defaultWarehouse.location} + ')'"></span>
+                            </span>
+                            <span th:if="${defaultWarehouse == null}">Tổng hợp tất cả điểm kho đang hoạt động.</span>
+                        </p>
+                    </div>
+                    <span class="status neutral" th:text="'Tổng ' + ${totalEntries != null ? totalEntries : (inventories != null ? #lists.size(inventories) : 0)} + ' bản ghi'">0 bản ghi</span>
                 </div>
 
-                <div class="table-scroll">
-                    <table class="sw-table">
+                <div class="table-container">
+                    <table class="admin-table admin-table--responsive">
                         <thead>
                         <tr>
-                            <th style="width:50px">Ảnh</th>
-                            <th>Mã</th>
-                            <th>Tên rượu vang</th>
-                            <th>Kho lưu trữ</th>
-                            <th>Tổng tồn</th>
-                            <th>Đang giữ chỗ</th>
+                            <th>Sản phẩm rượu</th>
+                            <th>Kho hàng</th>
+                            <th>Tồn thực tế</th>
+                            <th>Đang giữ đơn</th>
                             <th>Khả dụng</th>
-                            <th>Cập nhật lúc</th>
-                            <th>Điều chỉnh kho</th>
+                            <th>Trạng thái</th>
+                            <th>Điều chỉnh</th>
                         </tr>
                         </thead>
                         <tbody>
-                        <tr th:if="${inventories == null or inventories.isEmpty()}">
-                            <td colspan="9" class="text-center muted">Chưa có dữ liệu tồn kho.</td>
+                        <tr th:if="${inventories == null or #lists.isEmpty(inventories)}">
+                            <td colspan="7" class="text-secondary">Chưa có dữ liệu tồn kho nào.</td>
                         </tr>
                         <tr th:each="inv : ${inventories}">
-                            <td>
-                                <div class="admin-wine-thumb-box">
-                                    <img th:if="${inv.wine != null and inv.wine.imageUrl != null}"
-                                         th:src="${inv.wine.imageUrl}"
-                                         th:alt="${inv.wine.name}"
-                                         class="admin-wine-thumb"
-                                         loading="lazy">
-                                    <span th:unless="${inv.wine != null and inv.wine.imageUrl != null}" class="admin-wine-thumb-placeholder">
-                                        <i class="fa-solid fa-wine-bottle"></i>
-                                    </span>
-                                </div>
+                            <td data-label="Sản phẩm rượu">
+                                <strong th:text="${inv.wine != null ? inv.wine.name : 'Rượu vang'}">Château Margaux</strong>
+                                <div class="small text-secondary" th:if="${inv.wine != null and inv.wine.type != null}"
+                                     th:text="${@enumDisplayService.wineType(inv.wine.type)}">Vang đỏ</div>
                             </td>
-                            <td><strong th:text="${inv.wine != null ? '#' + inv.wine.id : '-'}">#1</strong></td>
-                            <td>
-                                <strong th:text="${inv.wine != null ? inv.wine.name : 'Sản phẩm'}">Tên rượu</strong>
-                                <div class="small muted" th:if="${inv.wine != null}" th:text="${inv.wine.country + ' · ' + @enumDisplayService.wineType(inv.wine.type) + ' · Niên vụ ' + inv.wine.year}">Pháp</div>
+                            <td data-label="Kho hàng">
+                                <span th:text="${inv.warehouse != null ? inv.warehouse.name : 'Kho mặc định'}">Main Warehouse</span>
+                                <div class="small text-secondary" th:if="${inv.warehouse != null and inv.warehouse.location != null}"
+                                     th:text="${inv.warehouse.location}">HCM</div>
                             </td>
-                            <td th:text="${inv.warehouse != null ? inv.warehouse.name : 'Kho mặc định'}">Kho</td>
-                            <td><strong th:text="${inv.currentQuantity}">0</strong></td>
-                            <td th:text="${inv.reservedQuantity}">0</td>
-                            <td>
-                                <span class="status"
-                                      th:classappend="${inv.availableQuantity <= 0} ? 'bad' : (${inv.availableQuantity <= 10} ? 'warn' : 'ok')"
-                                      th:text="${inv.availableQuantity} + ' chai'">0 chai</span>
+                            <td data-label="Tồn thực tế" class="admin-num" th:text="${inv.currentQuantity ?: 0}">0</td>
+                            <td data-label="Đang giữ đơn" class="admin-num" th:text="${inv.reservedQuantity ?: 0}">0</td>
+                            <td data-label="Khả dụng" class="admin-num">
+                                <strong th:text="${(inv.currentQuantity ?: 0) - (inv.reservedQuantity ?: 0)}">0</strong>
                             </td>
-                            <td class="small" th:text="${inv.updatedAt != null ? #temporals.format(inv.updatedAt, 'dd/MM/yyyy HH:mm') : '-'}">10/10/2026</td>
-                            <td>
-                                <div class="display-flex gap8" th:if="${inv.wine != null and inv.warehouse != null}">
-                                    <button type="button" class="btn btn-sm"
-                                            th:attr="data-wine-id=${inv.wine.id},data-wine-name=${inv.wine.name},data-warehouse-id=${inv.warehouse.id}"
-                                            onclick="openInventoryModal(this.getAttribute('data-wine-id'), this.getAttribute('data-wine-name'), 'import', this.getAttribute('data-warehouse-id'))">
-                                        + Nhập
+                            <td data-label="Trạng thái">
+                                <span th:with="avail=${(inv.currentQuantity ?: 0) - (inv.reservedQuantity ?: 0)}, lvl=${inv.reorderLevel ?: 10}">
+                                    <span th:if="${avail <= 0}" class="status bad">Hết hàng</span>
+                                    <span th:if="${avail > 0 and avail <= lvl}" class="status warn">Sắp hết</span>
+                                    <span th:if="${avail > lvl}" class="status ok">Ổn định</span>
+                                </span>
+                            </td>
+                            <td data-label="Điều chỉnh">
+                                <div class="d-flex flex-wrap gap-2">
+                                    <button type="button"
+                                            class="btn btn-primary btn-sm"
+                                            data-inventory-action="import"
+                                            th:attr="data-action='import',
+                                                     data-wine-id=${inv.wine != null ? inv.wine.id : ''},
+                                                     data-wine-name=${inv.wine != null ? inv.wine.name : 'Sản phẩm'},
+                                                     data-warehouse-id=${inv.warehouse != null ? inv.warehouse.id : (defaultWarehouse != null ? defaultWarehouse.id : 1)},
+                                                     data-warehouse-name=${inv.warehouse != null ? inv.warehouse.name : 'Kho mặc định'},
+                                                     data-available=${(inv.currentQuantity ?: 0) - (inv.reservedQuantity ?: 0)}">
+                                        Nhập kho
                                     </button>
-                                    <button type="button" class="btn btn-outline btn-sm"
-                                            th:attr="data-wine-id=${inv.wine.id},data-wine-name=${inv.wine.name},data-warehouse-id=${inv.warehouse.id}"
-                                            onclick="openInventoryModal(this.getAttribute('data-wine-id'), this.getAttribute('data-wine-name'), 'export', this.getAttribute('data-warehouse-id'))">
-                                        - Xuất
+                                    <button type="button"
+                                            class="btn btn-secondary btn-sm"
+                                            data-inventory-action="export"
+                                            th:attr="data-action='export',
+                                                     data-wine-id=${inv.wine != null ? inv.wine.id : ''},
+                                                     data-wine-name=${inv.wine != null ? inv.wine.name : 'Sản phẩm'},
+                                                     data-warehouse-id=${inv.warehouse != null ? inv.warehouse.id : (defaultWarehouse != null ? defaultWarehouse.id : 1)},
+                                                     data-warehouse-name=${inv.warehouse != null ? inv.warehouse.name : 'Kho mặc định'},
+                                                     data-available=${(inv.currentQuantity ?: 0) - (inv.reservedQuantity ?: 0)}">
+                                        Xuất kho
                                     </button>
                                 </div>
                             </td>
@@ -115,36 +121,37 @@
 
             <!-- Recent Inventory Transactions -->
             <section class="admin-card">
-                <div class="admin-card-head mb12">
-                    <h3>Nhật ký giao dịch kho gần đây</h3>
-                </div>
-                <div class="table-scroll">
-                    <table class="sw-table">
+                <h2 class="h5 mb-3">Nhật ký nhập / xuất kho gần đây</h2>
+                <div class="table-container">
+                    <table class="admin-table admin-table--responsive">
                         <thead>
                         <tr>
-                            <th>Mã GD</th>
+                            <th>Thời gian</th>
                             <th>Sản phẩm</th>
                             <th>Kho</th>
-                            <th>Loại GD</th>
+                            <th>Loại nghiệp vụ</th>
                             <th>Số lượng</th>
+                            <th>Tham chiếu</th>
                             <th>Ghi chú</th>
-                            <th>Thời gian</th>
                         </tr>
                         </thead>
                         <tbody>
-                        <tr th:if="${inventoryTransactions == null or inventoryTransactions.isEmpty()}">
-                            <td colspan="7" class="text-center muted">Chưa có giao dịch xuất/nhập kho.</td>
+                        <tr th:if="${inventoryTransactions == null or #lists.isEmpty(inventoryTransactions)}">
+                            <td colspan="7" class="text-secondary">Chưa ghi nhận giao dịch kho nào.</td>
                         </tr>
                         <tr th:each="tx : ${inventoryTransactions}">
-                            <td th:text="'#' + ${tx.id}">#1</td>
-                            <td th:text="${tx.wine != null ? tx.wine.name : '-'}">Tên rượu</td>
-                            <td th:text="${tx.userId != null ? ('User #' + tx.userId) : 'Hệ thống'}">Hệ thống</td>
-                            <td>
-                                <span class="status info" th:text="${@enumDisplayService.inventoryOperation(tx.operationType)}">Nhập kho</span>
+                            <td data-label="Thời gian" class="admin-num"
+                                th:text="${tx.createdAt != null ? #temporals.format(tx.createdAt, 'dd/MM/yyyy HH:mm') : '—'}">—</td>
+                            <td data-label="Sản phẩm" th:text="${tx.wine != null ? tx.wine.name : 'N/A'}">Rượu</td>
+                            <td data-label="Kho" th:text="${tx.warehouse != null ? tx.warehouse.name : 'Kho mặc định'}">Kho</td>
+                            <td data-label="Loại nghiệp vụ">
+                                <span th:class="'status ' + ${@enumDisplayService.inventoryOperationBadgeClass(tx.operationType)}"
+                                      th:text="${@enumDisplayService.inventoryOperation(tx.operationType)}">Nhập kho</span>
                             </td>
-                            <td><strong th:text="${tx.quantity}">0</strong></td>
-                            <td class="small muted" th:text="${!#strings.isEmpty(tx.note) ? tx.note : @enumDisplayService.inventoryReferenceType(tx.referenceType) + (tx.referenceId != null ? (' #' + tx.referenceId) : '')}">Ghi chú</td>
-                            <td class="small" th:text="${tx.createdAt != null ? #temporals.format(tx.createdAt, 'dd/MM/yyyy HH:mm') : '-'}">10/10/2026</td>
+                            <td data-label="Số lượng" class="admin-num" th:text="${tx.quantity ?: 0}">0</td>
+                            <td data-label="Tham chiếu"
+                                th:text="${tx.referenceType != null ? @enumDisplayService.inventoryReferenceType(tx.referenceType) : 'Thủ công'}">Thủ công</td>
+                            <td data-label="Ghi chú" class="small text-secondary" th:text="${tx.note ?: '—'}">—</td>
                         </tr>
                         </tbody>
                     </table>
@@ -154,59 +161,48 @@
     </div>
 </div>
 
-<!-- Inventory Adjustment Modal -->
-<div class="modal fade" id="inventoryModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content" style="border-radius:12px">
-            <form id="inventoryForm" method="post" th:action="@{/admin/inventory/import/1}">
-                <div class="modal-header">
-                    <h5 class="modal-title serif" id="inventoryModalTitle">Điều chỉnh tồn kho</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
-                </div>
-                <div class="modal-body stack">
-                    <input type="hidden" id="modalWarehouseId" name="warehouseId" th:value="${defaultWarehouse != null ? defaultWarehouse.id : 1}">
-                    <div>
-                        <label class="label">Sản phẩm</label>
-                        <input type="text" id="modalWineName" class="field" readonly>
-                    </div>
-                    <div>
-                        <label class="label" for="modalQuantity">Số lượng chai *</label>
-                        <input type="number" id="modalQuantity" name="quantity" class="field" min="1" value="6" required>
-                    </div>
-                    <div>
-                        <label class="label" for="modalNote">Ghi chú chứng từ / lý do</label>
-                        <input type="text" id="modalNote" name="note" class="field" placeholder="Nhập lô mới / Xuất điều chuyển...">
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline btn-sm" data-bs-dismiss="modal">Huỷ</button>
-                    <button type="submit" class="btn btn-sm">Xác nhận cập nhật</button>
-                </div>
-            </form>
+<!-- Native Dialog for Manual Import/Export -->
+<dialog id="inventoryModal" class="sw-dialog" closedby="any" aria-labelledby="inventoryModalLabel">
+    <div class="sw-dialog-head">
+        <div>
+            <h2 id="inventoryModalLabel" class="sw-dialog-title">Điều chỉnh tồn kho</h2>
+            <p id="inventoryModalSubtitle" class="small text-secondary mb-0">Nhập số lượng biến động và lý do thực hiện.</p>
         </div>
+        <button type="button" class="btn btn-secondary btn-sm" data-dialog-close="inventoryModal" aria-label="Đóng hộp thoại">Đóng</button>
     </div>
-</div>
+    <form id="inventoryActionForm" method="post" class="sw-dialog-body">
+        <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+        <input type="hidden" id="inventoryWarehouseId" name="warehouseId"
+               th:value="${defaultWarehouse != null ? defaultWarehouse.id : 1}"/>
+
+        <div class="admin-card mb-3 p-3">
+            <div class="small text-secondary">Sản phẩm</div>
+            <div id="inventoryWineName" class="fw-bold mb-2">—</div>
+            <div class="d-flex justify-content-between small">
+                <span class="text-secondary">Kho áp dụng: <strong id="inventoryWarehouseName">Kho mặc định</strong></span>
+                <span class="text-secondary">Khả dụng: <strong id="inventoryCurrentAvailable">0 chai</strong></span>
+            </div>
+        </div>
+
+        <div class="form-group mb-3">
+            <label for="inventoryQuantity" class="form-label">Số lượng chai</label>
+            <input type="number" id="inventoryQuantity" name="quantity" class="form-control" min="1" value="1" required/>
+        </div>
+
+        <div class="form-group mb-4">
+            <label for="inventoryNote" class="form-label">Ghi chú nghiệp vụ</label>
+            <input type="text" id="inventoryNote" name="note" class="form-control"
+                   placeholder="Ví dụ: Kiểm kê định kỳ, nhập lô mới từ nhà phân phối"/>
+        </div>
+
+        <div class="d-flex justify-content-end gap-2">
+            <button type="button" class="btn btn-secondary" data-dialog-close="inventoryModal">Hủy</button>
+            <button type="submit" id="inventorySubmitBtn" class="btn btn-primary">Xác nhận</button>
+        </div>
+    </form>
+</dialog>
 
 <div th:replace="~{fragments/admin-shell :: scripts}"></div>
-<script>
-    function openInventoryModal(wineId, wineName, actionType, warehouseId) {
-        var form = document.getElementById('inventoryForm');
-        var title = document.getElementById('inventoryModalTitle');
-        var wineNameInput = document.getElementById('modalWineName');
-        var warehouseInput = document.getElementById('modalWarehouseId');
-        if (form) {
-            form.action = '/admin/inventory/' + actionType + '/' + wineId;
-        }
-        if (title) {
-            title.textContent = (actionType === 'import' ? 'Nhập thêm tồn kho: ' : 'Xuất kho sản phẩm: ') + wineName;
-        }
-        if (wineNameInput) wineNameInput.value = wineName || '';
-        if (warehouseInput && warehouseId) warehouseInput.value = warehouseId;
-        var modalEl = document.getElementById('inventoryModal');
-        if (modalEl && window.bootstrap && window.bootstrap.Modal) {
-            window.bootstrap.Modal.getOrCreateInstance(modalEl).show();
-        }
-    }
-</script>
+<script th:src="@{/js/admin-inventory.js}" defer></script>
 </body>
 </html>

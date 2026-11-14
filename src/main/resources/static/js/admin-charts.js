@@ -1,196 +1,365 @@
 (function () {
     "use strict";
 
-    function drawFallbackBarChart(canvas, labels, values) {
-        const ctx = canvas.getContext("2d");
-        if (!ctx) return;
-        const w = (canvas.width = canvas.parentElement ? canvas.parentElement.clientWidth || 640 : 640);
-        const h = (canvas.height = 240);
-        ctx.clearRect(0, 0, w, h);
+    var charts = [];
 
-        const maxVal = Math.max(1, ...values.map((v) => Number(v) || 0));
-        const padLeft = 56;
-        const padBottom = 34;
-        const padTop = 20;
-        const chartW = w - padLeft - 20;
-        const chartH = h - padTop - padBottom;
+    function readCssToken(name, fallback) {
+        try {
+            var val = window.getComputedStyle(document.documentElement).getPropertyValue(name);
+            return val && val.trim() ? val.trim() : fallback;
+        } catch (_e) {
+            return fallback;
+        }
+    }
 
-        ctx.strokeStyle = "#e8e2d8";
-        ctx.lineWidth = 1;
-        for (let i = 0; i <= 4; i++) {
-            const y = padTop + (chartH / 4) * i;
-            ctx.beginPath();
-            ctx.moveTo(padLeft, y);
-            ctx.lineTo(w - 20, y);
-            ctx.stroke();
+    function parseJsonArray(raw, fallback) {
+        if (!raw) {
+            return fallback;
+        }
+        try {
+            var parsed = JSON.parse(raw);
+            return Array.isArray(parsed) ? parsed : fallback;
+        } catch (_e) {
+            return fallback;
+        }
+    }
+
+    function getThemePalette() {
+        var theme = (document.documentElement.getAttribute("data-theme") || "cellar").toLowerCase();
+        var isIvory = theme === "ivory";
+
+        return {
+            isIvory: isIvory,
+            textPrimary: readCssToken("--text-primary", isIvory ? "#1e1612" : "#f4ede2"),
+            textSecondary: readCssToken("--text-secondary", isIvory ? "#5f5249" : "#b7ab9a"),
+            gridLine: readCssToken("--border-hairline", isIvory ? "rgba(30,22,18,0.1)" : "rgba(255,255,255,0.1)"),
+            surfaceElevated: readCssToken("--surface-elevated", isIvory ? "#ffffff" : "#181310"),
+            crimson: readCssToken("--accent-crimson", "#8b1a1a"),
+            gold: readCssToken("--accent-gold", "#c9a84c"),
+            goldInk: readCssToken("--accent-gold-ink", isIvory ? "#8d6b20" : "#e2be72"),
+            fontSans: readCssToken("--font-sans", "'Plus Jakarta Sans', system-ui, sans-serif"),
+            fontMono: readCssToken("--font-mono", "ui-monospace, monospace"),
+            slicePalette: [
+                readCssToken("--accent-crimson", "#8b1a1a"),
+                readCssToken("--accent-gold", "#c9a84c"),
+                isIvory ? "#b96e62" : "#c78b7d",
+                isIvory ? "#7d5b24" : "#d9b970",
+                isIvory ? "#52323a" : "#70424c"
+            ]
+        };
+    }
+
+    function destroyChartForCanvas(canvas) {
+        for (var i = charts.length - 1; i >= 0; i--) {
+            if (charts[i].canvas === canvas) {
+                try {
+                    charts[i].instance.destroy();
+                } catch (_e) {
+                    // ignore already destroyed chart
+                }
+                charts.splice(i, 1);
+            }
+        }
+    }
+
+    function formatCurrencyVnd(value) {
+        var num = Number(value) || 0;
+        return new Intl.NumberFormat("vi-VN").format(num) + " d";
+    }
+
+    function drawCanvasFallbackRevenue(canvas, labels, values, palette) {
+        var ctx = canvas.getContext("2d");
+        if (!ctx) {
+            return;
+        }
+        var dpr = window.devicePixelRatio || 1;
+        var width = canvas.clientWidth || 560;
+        var height = canvas.clientHeight || 280;
+        canvas.width = Math.round(width * dpr);
+        canvas.height = Math.round(height * dpr);
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        ctx.clearRect(0, 0, width, height);
+
+        if (!values.length) {
+            ctx.fillStyle = palette.textSecondary;
+            ctx.font = "13px " + palette.fontSans;
+            ctx.fillText("Chưa có dữ liệu doanh thu.", 24, height / 2);
+            return;
         }
 
-        const step = chartW / Math.max(1, labels.length);
-        const barW = Math.min(44, Math.max(6, step * 0.58));
-        const skipStep = labels.length > 21 ? 3 : (labels.length > 12 ? 2 : 1);
-        labels.forEach((lbl, idx) => {
-            const val = Number(values[idx]) || 0;
-            const bh = (val / maxVal) * (chartH - 10);
-            const x = padLeft + idx * step + (step - barW) / 2;
-            const y = padTop + chartH - bh;
+        var padL = 68;
+        var padR = 20;
+        var padT = 22;
+        var padB = 38;
+        var plotW = Math.max(120, width - padL - padR);
+        var plotH = Math.max(80, height - padT - padB);
+        var maxVal = Math.max.apply(null, values.concat([1]));
 
-            ctx.fillStyle = "#742c3d";
+        ctx.strokeStyle = palette.gridLine;
+        ctx.lineWidth = 1;
+        for (var g = 0; g <= 4; g++) {
+            var y = padT + (plotH * g) / 4;
             ctx.beginPath();
-            ctx.roundRect(x, y, barW, bh, [4, 4, 0, 0]);
-            ctx.fill();
+            ctx.moveTo(padL, y);
+            ctx.lineTo(padL + plotW, y);
+            ctx.stroke();
 
-            if (idx % skipStep === 0 || idx === labels.length - 1) {
-                ctx.fillStyle = "#79717a";
-                ctx.font = labels.length > 14 ? "9px sans-serif" : "11px sans-serif";
-                ctx.textAlign = "center";
-                ctx.fillText(String(lbl), x + barW / 2, h - 12);
+            var labelVal = Math.round(maxVal * (1 - g / 4));
+            ctx.fillStyle = palette.textSecondary;
+            ctx.font = "11px " + palette.fontMono;
+            ctx.fillText(new Intl.NumberFormat("vi-VN").format(labelVal), 6, y + 4);
+        }
+
+        ctx.beginPath();
+        var stepX = values.length > 1 ? plotW / (values.length - 1) : plotW / 2;
+        var pts = values.map(function (v, idx) {
+            return {
+                x: padL + (values.length > 1 ? idx * stepX : plotW / 2),
+                y: padT + plotH - ((Number(v) || 0) / maxVal) * plotH
+            };
+        });
+
+        pts.forEach(function (pt, idx) {
+            if (idx === 0) {
+                ctx.moveTo(pt.x, pt.y);
+            } else {
+                ctx.lineTo(pt.x, pt.y);
             }
+        });
+        ctx.strokeStyle = palette.gold;
+        ctx.lineWidth = 2.5;
+        ctx.stroke();
+
+        pts.forEach(function (pt, idx) {
+            ctx.beginPath();
+            ctx.arc(pt.x, pt.y, 4, 0, Math.PI * 2);
+            ctx.fillStyle = palette.gold;
+            ctx.fill();
+            ctx.strokeStyle = palette.crimson;
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+
+            ctx.fillStyle = palette.textSecondary;
+            ctx.font = "11px " + palette.fontSans;
+            var lbl = String(labels[idx] || "");
+            ctx.fillText(lbl, Math.max(padL, pt.x - 16), height - 12);
         });
     }
 
-    function drawFallbackDoughnut(canvas, labels, values) {
-        const ctx = canvas.getContext("2d");
-        if (!ctx) return;
-        const w = (canvas.width = canvas.parentElement ? canvas.parentElement.clientWidth || 340 : 340);
-        const h = (canvas.height = 220);
-        ctx.clearRect(0, 0, w, h);
+    function drawCanvasFallbackCategory(canvas, labels, values, palette) {
+        var ctx = canvas.getContext("2d");
+        if (!ctx) {
+            return;
+        }
+        var dpr = window.devicePixelRatio || 1;
+        var width = canvas.clientWidth || 340;
+        var height = canvas.clientHeight || 280;
+        canvas.width = Math.round(width * dpr);
+        canvas.height = Math.round(height * dpr);
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        ctx.clearRect(0, 0, width, height);
 
-        const colors = ["#742c3d", "#b08c59", "#356a54", "#ae793d", "#3b1825", "#8f5b66"];
-        const total = Math.max(1, values.reduce((acc, v) => acc + (Number(v) || 0), 0));
-        const cx = w * 0.36;
-        const cy = h * 0.5;
-        const r = Math.min(cx, cy) - 22;
-        let angle = -Math.PI / 2;
+        var total = values.reduce(function (sum, v) {
+            return sum + (Number(v) || 0);
+        }, 0);
+        if (total <= 0) {
+            ctx.fillStyle = palette.textSecondary;
+            ctx.font = "13px " + palette.fontSans;
+            ctx.fillText("Chưa có dữ liệu phân loại rượu.", 24, height / 2);
+            return;
+        }
 
-        values.forEach((v, idx) => {
-            const slice = ((Number(v) || 0) / total) * Math.PI * 2;
+        var cx = Math.min(width * 0.34, 120);
+        var cy = height * 0.5;
+        var r = Math.min(cx - 18, height * 0.36);
+        var startAngle = -Math.PI / 2;
+
+        values.forEach(function (v, idx) {
+            var val = Number(v) || 0;
+            var angle = (val / total) * Math.PI * 2;
             ctx.beginPath();
             ctx.moveTo(cx, cy);
-            ctx.arc(cx, cy, r, angle, angle + slice);
+            ctx.arc(cx, cy, r, startAngle, startAngle + angle);
             ctx.closePath();
-            ctx.fillStyle = colors[idx % colors.length];
+            ctx.fillStyle = palette.slicePalette[idx % palette.slicePalette.length];
             ctx.fill();
-            angle += slice;
+            startAngle += angle;
         });
 
         ctx.beginPath();
         ctx.arc(cx, cy, r * 0.58, 0, Math.PI * 2);
-        ctx.fillStyle = "#fffdf8";
+        ctx.fillStyle = palette.surfaceElevated;
         ctx.fill();
 
-        labels.forEach((lbl, idx) => {
-            const lx = w * 0.66;
-            const ly = 44 + idx * 26;
-            ctx.fillStyle = colors[idx % colors.length];
-            ctx.fillRect(lx, ly - 9, 12, 12);
-            ctx.fillStyle = "#272128";
-            ctx.font = "12px sans-serif";
-            ctx.textAlign = "left";
-            ctx.fillText(`${lbl} (${values[idx] || 0})`, lx + 18, ly + 1);
+        var legendX = cx + r + 24;
+        var legendY = Math.max(24, cy - (labels.length * 22) / 2);
+        labels.forEach(function (lbl, idx) {
+            var y = legendY + idx * 24;
+            ctx.fillStyle = palette.slicePalette[idx % palette.slicePalette.length];
+            ctx.fillRect(legendX, y, 10, 10);
+            ctx.fillStyle = palette.textPrimary;
+            ctx.font = "12px " + palette.fontSans;
+            ctx.fillText(String(lbl) + ": " + String(values[idx] || 0), legendX + 16, y + 9);
         });
     }
 
-    function showEmptyState(canvas, message) {
-        const holder = canvas.parentElement;
-        if (!holder) return;
-        canvas.hidden = true;
-        const note = document.createElement("p");
-        note.className = "chart-empty-note";
-        note.setAttribute("role", "status");
-        note.textContent = message;
-        holder.appendChild(note);
-    }
+    function renderRevenueChart(palette) {
+        var canvas = document.getElementById("revenueChart");
+        if (!canvas) {
+            return;
+        }
+        var labels = parseJsonArray(canvas.dataset.labels || canvas.dataset.revenueLabels, []);
+        var values = parseJsonArray(canvas.dataset.values || canvas.dataset.revenueValues, []);
 
-    function initializeCharts() {
-        const revCanvas = document.getElementById("revenueChart");
-        if (revCanvas) {
-            let labels = ["T5", "T6", "T7", "T8", "T9", "T10"];
-            let values = [0, 0, 0, 0, 0, 0];
-            try {
-                if (revCanvas.dataset.labels) labels = JSON.parse(revCanvas.dataset.labels);
-                if (revCanvas.dataset.values) values = JSON.parse(revCanvas.dataset.values);
-            } catch (_) {}
+        destroyChartForCanvas(canvas);
 
-            const hasRevenue = values.some((value) => Number(value) > 0);
-            if (!hasRevenue) {
-                showEmptyState(revCanvas, "Chưa có doanh thu trong giai đoạn đã chọn.");
-            } else if (typeof Chart !== "undefined") {
-                new Chart(revCanvas, {
-                    type: "bar",
-                    data: {
-                        labels: labels,
-                        datasets: [{
-                            label: "Doanh thu (triệu VNĐ)",
-                            data: values,
-                            backgroundColor: "#742c3d",
-                            hoverBackgroundColor: "#8b1a1a",
-                            borderRadius: 6
-                        }]
+        if (typeof window.Chart !== "function") {
+            drawCanvasFallbackRevenue(canvas, labels, values, palette);
+            return;
+        }
+
+        var ctx = canvas.getContext("2d");
+        var gradient = ctx.createLinearGradient(0, 0, 0, 280);
+        gradient.addColorStop(0, palette.isIvory ? "rgba(139, 26, 26, 0.22)" : "rgba(201, 168, 76, 0.28)");
+        gradient.addColorStop(1, "rgba(201, 168, 76, 0.0)");
+
+        var instance = new window.Chart(canvas, {
+            type: "line",
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: "Doanh thu (VND)",
+                    data: values,
+                    borderColor: palette.gold,
+                    backgroundColor: gradient,
+                    borderWidth: 2.5,
+                    pointBackgroundColor: palette.gold,
+                    pointBorderColor: palette.crimson,
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    fill: true,
+                    tension: 0.34
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
                     },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: { display: false },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(context) {
-                                        const v = context.parsed.y || 0;
-                                        return "Doanh thu: " + (v * 1000000).toLocaleString("vi-VN") + " ₫";
-                                    }
-                                }
-                            }
-                        },
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                ticks: {
-                                    callback: function(v) {
-                                        return v + " tr";
-                                    }
-                                }
+                    tooltip: {
+                        backgroundColor: palette.surfaceElevated,
+                        titleColor: palette.textPrimary,
+                        bodyColor: palette.goldInk,
+                        borderColor: palette.gridLine,
+                        borderWidth: 1,
+                        padding: 10,
+                        callbacks: {
+                            label: function (context) {
+                                return " Doanh thu: " + formatCurrencyVnd(context.parsed.y);
                             }
                         }
                     }
-                });
-            } else {
-                drawFallbackBarChart(revCanvas, labels, values);
-            }
-        }
-
-        const typeCanvas = document.getElementById("categoryPieChart");
-        if (typeCanvas) {
-            let labels = ["Vang đỏ", "Vang trắng", "Sparkling"];
-            let values = [1, 1, 1];
-            try {
-                if (typeCanvas.dataset.labels) labels = JSON.parse(typeCanvas.dataset.labels);
-                if (typeCanvas.dataset.values) values = JSON.parse(typeCanvas.dataset.values);
-            } catch (_) {}
-
-            if (typeof Chart !== "undefined") {
-                new Chart(typeCanvas, {
-                    type: "doughnut",
-                    data: {
-                        labels: labels,
-                        datasets: [{
-                            data: values,
-                            backgroundColor: ["#742c3d", "#b08c59", "#356a54", "#ae793d", "#3b1825"]
-                        }]
+                },
+                scales: {
+                    x: {
+                        grid: { color: palette.gridLine, drawBorder: false },
+                        ticks: {
+                            color: palette.textSecondary,
+                            font: { family: palette.fontSans, size: 11 }
+                        }
                     },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: palette.gridLine, drawBorder: false },
+                        ticks: {
+                            color: palette.textSecondary,
+                            font: { family: palette.fontMono, size: 11 },
+                            callback: function (value) {
+                                return new Intl.NumberFormat("vi-VN").format(value);
+                            }
+                        }
                     }
-                });
-            } else {
-                drawFallbackDoughnut(typeCanvas, labels, values);
+                }
             }
-        }
+        });
+
+        charts.push({ canvas: canvas, instance: instance });
     }
 
-    if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", initializeCharts, { once: true });
-    } else {
-        initializeCharts();
+    function renderCategoryChart(palette) {
+        var canvas = document.getElementById("categoryChart");
+        if (!canvas) {
+            return;
+        }
+        var labels = parseJsonArray(canvas.dataset.labels || canvas.dataset.categoryLabels, []);
+        var values = parseJsonArray(canvas.dataset.values || canvas.dataset.categoryValues, []);
+
+        destroyChartForCanvas(canvas);
+
+        if (typeof window.Chart !== "function") {
+            drawCanvasFallbackCategory(canvas, labels, values, palette);
+            return;
+        }
+
+        var instance = new window.Chart(canvas, {
+            type: "doughnut",
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: values,
+                    backgroundColor: labels.map(function (_l, i) {
+                        return palette.slicePalette[i % palette.slicePalette.length];
+                    }),
+                    borderColor: palette.surfaceElevated,
+                    borderWidth: 2,
+                    hoverOffset: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: "66%",
+                plugins: {
+                    legend: {
+                        position: "bottom",
+                        labels: {
+                            color: palette.textPrimary,
+                            padding: 14,
+                            usePointStyle: true,
+                            pointStyle: "circle",
+                            font: { family: palette.fontSans, size: 12 }
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: palette.surfaceElevated,
+                        titleColor: palette.textPrimary,
+                        bodyColor: palette.goldInk,
+                        borderColor: palette.gridLine,
+                        borderWidth: 1,
+                        padding: 10
+                    }
+                }
+            }
+        });
+
+        charts.push({ canvas: canvas, instance: instance });
     }
+
+    function renderAllCharts() {
+        var palette = getThemePalette();
+        renderRevenueChart(palette);
+        renderCategoryChart(palette);
+    }
+
+    document.addEventListener("DOMContentLoaded", renderAllCharts);
+    document.addEventListener("sw:themechange", function () {
+        if (typeof window.requestAnimationFrame === "function") {
+            window.requestAnimationFrame(renderAllCharts);
+        } else {
+            window.setTimeout(renderAllCharts, 20);
+        }
+    });
 })();

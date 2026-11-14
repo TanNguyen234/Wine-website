@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -58,9 +59,34 @@ public class ReturnController {
     }
 
     @GetMapping("/admin/returns")
+    public String listReturnRequestsPage(@RequestParam(required = false) ReturnStatus status, Model model) {
+        List<ReturnRequest> filtered = safeList(returnRequestService.getReturnRequestsByStatus(status));
+        List<ReturnRequest> all = status == null
+                ? filtered
+                : safeList(returnRequestService.getReturnRequestsByStatus(null));
+        if (status != null && all.isEmpty() && !filtered.isEmpty()) {
+            all = filtered;
+        }
+
+        long requestedCount = all.stream().filter(r -> r.getStatus() == ReturnStatus.REQUESTED).count();
+        long approvedCount = all.stream().filter(r -> r.getStatus() == ReturnStatus.APPROVED).count();
+        long refundedCount = all.stream().filter(r -> r.getStatus() == ReturnStatus.REFUNDED).count();
+        long rejectedCount = all.stream().filter(r -> r.getStatus() == ReturnStatus.REJECTED).count();
+
+        model.addAttribute("returns", filtered);
+        model.addAttribute("returnStatuses", ReturnStatus.values());
+        model.addAttribute("selectedStatus", status);
+        model.addAttribute("requestedCount", requestedCount);
+        model.addAttribute("approvedCount", approvedCount);
+        model.addAttribute("refundedCount", refundedCount);
+        model.addAttribute("rejectedCount", rejectedCount);
+        return "admin-returns";
+    }
+
+    @GetMapping("/api/admin/returns")
     @ResponseBody
     public List<Map<String, Object>> listReturnRequests(@RequestParam(required = false) ReturnStatus status) {
-        return returnRequestService.getReturnRequestsByStatus(status).stream()
+        return safeList(returnRequestService.getReturnRequestsByStatus(status)).stream()
                 .map(this::toSummary)
                 .toList();
     }
@@ -68,6 +94,7 @@ public class ReturnController {
     @PostMapping("/admin/returns/{id}/approve")
     public String approveReturn(@PathVariable Long id,
                                 @RequestParam(required = false) String adminNote,
+                                @RequestParam(required = false) String returnTo,
                                 Authentication authentication,
                                 RedirectAttributes redirectAttributes) {
         try {
@@ -76,12 +103,13 @@ public class ReturnController {
         } catch (Exception ex) {
             redirectAttributes.addFlashAttribute("error", "Lỗi khi duyệt yêu cầu trả hàng: " + ex.getMessage());
         }
-        return "redirect:/admin/orders";
+        return resolveRedirect(returnTo);
     }
 
     @PostMapping("/admin/returns/{id}/reject")
     public String rejectReturn(@PathVariable Long id,
                                @RequestParam(required = false) String adminNote,
+                               @RequestParam(required = false) String returnTo,
                                Authentication authentication,
                                RedirectAttributes redirectAttributes) {
         try {
@@ -90,12 +118,13 @@ public class ReturnController {
         } catch (Exception ex) {
             redirectAttributes.addFlashAttribute("error", "Lỗi khi từ chối yêu cầu trả hàng: " + ex.getMessage());
         }
-        return "redirect:/admin/orders";
+        return resolveRedirect(returnTo);
     }
 
     @PostMapping("/admin/returns/{id}/refund")
     public String completeRefund(@PathVariable Long id,
                                  @RequestParam(required = false) String adminNote,
+                                 @RequestParam(required = false) String returnTo,
                                  Authentication authentication,
                                  RedirectAttributes redirectAttributes) {
         try {
@@ -104,7 +133,15 @@ public class ReturnController {
         } catch (Exception ex) {
             redirectAttributes.addFlashAttribute("error", "Lỗi khi hoàn tiền yêu cầu trả hàng: " + ex.getMessage());
         }
-        return "redirect:/admin/orders";
+        return resolveRedirect(returnTo);
+    }
+
+    private String resolveRedirect(String returnTo) {
+        return "returns".equalsIgnoreCase(returnTo) ? "redirect:/admin/returns" : "redirect:/admin/orders";
+    }
+
+    private List<ReturnRequest> safeList(List<ReturnRequest> items) {
+        return items != null ? items : List.of();
     }
 
     private Map<String, Object> toSummary(ReturnRequest request) {

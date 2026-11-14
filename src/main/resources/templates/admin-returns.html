@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/admin-shell :: head('Quản lý yêu cầu trả hàng')}"></head>
+<body class="admin-body">
+<div class="admin-shell">
+    <aside th:replace="~{fragments/admin-shell :: sidebar('returns')}"></aside>
+
+    <div class="admin-main-wrap">
+        <header th:replace="~{fragments/admin-shell :: topbar}"></header>
+
+        <main class="admin-main" id="main-content">
+            <div class="admin-page-header">
+                <div>
+                    <h1 class="admin-page-title">Quản lý Trả hàng &amp; Hoàn kho</h1>
+                    <p class="admin-page-subtitle">Tiếp nhận yêu cầu trả hàng từ khách, phê duyệt, hoàn tiền và tự động cộng trả tồn kho.</p>
+                </div>
+                <div class="d-flex flex-wrap gap-2">
+                    <a th:href="@{/admin/orders}" class="btn btn-secondary btn-sm">Xem danh sách đơn hàng</a>
+                    <a th:href="@{/api/admin/returns}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-secondary btn-sm">JSON API</a>
+                </div>
+            </div>
+
+            <div th:if="${message != null or success != null}" class="admin-card mb-3" role="status" style="border-left: 4px solid var(--status-ok-ink);">
+                <strong class="status ok">Cập nhật</strong>
+                <span class="ms-2" th:text="${success != null ? success : message}">Đã cập nhật yêu cầu trả hàng.</span>
+            </div>
+            <div th:if="${error != null}" class="admin-card mb-3" role="alert" style="border-left: 4px solid var(--status-danger-ink);">
+                <strong class="status bad">Lỗi</strong>
+                <span class="ms-2" th:text="${error}">Thao tác thất bại.</span>
+            </div>
+
+            <section class="kpi-grid mb-4">
+                <article class="kpi-card">
+                    <span class="kpi-label">Chờ phê duyệt</span>
+                    <strong class="kpi-value admin-num" th:text="${requestedCount ?: 0}">0</strong>
+                    <span class="kpi-meta">Yêu cầu mới cần xem xét</span>
+                </article>
+                <article class="kpi-card">
+                    <span class="kpi-label">Đã duyệt trả hàng</span>
+                    <strong class="kpi-value admin-num" th:text="${approvedCount ?: 0}">0</strong>
+                    <span class="kpi-meta">Chờ hoàn tất hoàn tiền &amp; nhập kho</span>
+                </article>
+                <article class="kpi-card">
+                    <span class="kpi-label">Đã hoàn tiền</span>
+                    <strong class="kpi-value admin-num" th:text="${refundedCount ?: 0}">0</strong>
+                    <span class="kpi-meta">Hoàn tất nghiệp vụ trả hàng</span>
+                </article>
+                <article class="kpi-card">
+                    <span class="kpi-label">Đã từ chối</span>
+                    <strong class="kpi-value admin-num" th:text="${rejectedCount ?: 0}">0</strong>
+                    <span class="kpi-meta">Không đủ điều kiện hoàn trả</span>
+                </article>
+            </section>
+
+            <nav class="admin-quick-tabs mb-4" aria-label="Lọc yêu cầu trả hàng theo trạng thái">
+                <a th:href="@{/admin/returns}"
+                   class="admin-quick-tab"
+                   th:classappend="${selectedStatus == null ? ' is-active' : ''}">Tất cả yêu cầu</a>
+                <a th:each="st : ${returnStatuses != null ? returnStatuses : T(com.strongwine.strongwine.entity.ReturnStatus).values()}"
+                   th:href="@{/admin/returns(status=${st.name()})}"
+                   class="admin-quick-tab"
+                   th:classappend="${selectedStatus == st ? ' is-active' : ''}"
+                   th:text="${@enumDisplayService.returnStatus(st)}">Trạng thái</a>
+            </nav>
+
+            <section class="admin-card">
+                <div class="table-container">
+                    <table class="admin-table admin-table--responsive">
+                        <thead>
+                        <tr>
+                            <th>Mã YC</th>
+                            <th>Đơn hàng</th>
+                            <th>Khách hàng</th>
+                            <th>Lý do trả hàng</th>
+                            <th>Tiền hoàn dự kiến</th>
+                            <th>Trạng thái</th>
+                            <th>Ghi chú xử lý</th>
+                            <th>Thao tác</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:if="${returns == null or #lists.isEmpty(returns)}">
+                            <td colspan="8" class="text-secondary">Không có yêu cầu trả hàng nào phù hợp bộ lọc.</td>
+                        </tr>
+                        <tr th:each="r : ${returns}">
+                            <td data-label="Mã YC" class="admin-num">
+                                <strong th:text="'#' + ${r.id}">#1</strong>
+                                <div class="small text-secondary" th:if="${r.createdAt != null}"
+                                     th:text="${#temporals.format(r.createdAt, 'dd/MM HH:mm')}">—</div>
+                            </td>
+                            <td data-label="Đơn hàng" class="admin-num">
+                                <strong th:text="${r.order != null ? ('Đơn #' + r.order.id) : '—'}">Đơn #10</strong>
+                            </td>
+                            <td data-label="Khách hàng">
+                                <span th:text="${r.user != null ? r.user.username : 'Khách hàng'}">demo</span>
+                            </td>
+                            <td data-label="Lý do trả hàng" th:text="${r.reason ?: '—'}">Chai vỡ nút bần</td>
+                            <td data-label="Tiền hoàn" class="admin-num">
+                                <strong th:text="${r.refundAmount != null ? (#numbers.formatDecimal(r.refundAmount, 0, 'COMMA', 0, 'POINT') + ' ₫') : '0 ₫'}">0 ₫</strong>
+                            </td>
+                            <td data-label="Trạng thái">
+                                <span th:class="'status ' + ${@enumDisplayService.returnStatusBadgeClass(r.status)}"
+                                      th:text="${@enumDisplayService.returnStatus(r.status)}">Chờ duyệt</span>
+                            </td>
+                            <td data-label="Ghi chú xử lý" class="small text-secondary">
+                                <div th:if="${r.adminNote != null}" th:text="${r.adminNote}">Ghi chú</div>
+                                <div th:if="${r.resolvedBy != null}" th:text="'Bởi: ' + ${r.resolvedBy}">admin</div>
+                                <span th:if="${r.adminNote == null and r.resolvedBy == null}">—</span>
+                            </td>
+                            <td data-label="Thao tác">
+                                <div th:if="${r.status != null and r.status.name() == 'REQUESTED'}" class="d-flex flex-column gap-2">
+                                    <form th:action="@{/admin/returns/{id}/approve(id=${r.id})}" method="post" class="d-flex flex-wrap gap-2 align-items-center">
+                                        <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                        <input type="hidden" name="returnTo" value="returns"/>
+                                        <input type="text" name="adminNote" class="form-control form-control-sm" placeholder="Ghi chú duyệt" style="max-width: 140px;"/>
+                                        <button type="submit" class="btn btn-primary btn-sm">Duyệt trả</button>
+                                    </form>
+                                    <form th:action="@{/admin/returns/{id}/reject(id=${r.id})}" method="post" class="d-flex flex-wrap gap-2 align-items-center">
+                                        <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                        <input type="hidden" name="returnTo" value="returns"/>
+                                        <input type="text" name="adminNote" class="form-control form-control-sm" placeholder="Lý do từ chối" style="max-width: 140px;" required/>
+                                        <button type="submit" class="btn btn-danger btn-sm">Từ chối</button>
+                                    </form>
+                                </div>
+
+                                <div th:if="${r.status != null and r.status.name() == 'APPROVED'}">
+                                    <form th:action="@{/admin/returns/{id}/refund(id=${r.id})}" method="post" class="d-flex flex-wrap gap-2 align-items-center">
+                                        <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                        <input type="hidden" name="returnTo" value="returns"/>
+                                        <input type="text" name="adminNote" class="form-control form-control-sm" placeholder="Ghi chú hoàn tiền" style="max-width: 150px;"/>
+                                        <button type="submit" class="btn btn-outline-gold btn-sm">Hoàn tiền &amp; nhập kho</button>
+                                    </form>
+                                </div>
+
+                                <div th:if="${r.status != null and (r.status.name() == 'REFUNDED' or r.status.name() == 'REJECTED')}" class="small text-secondary">
+                                    <span th:text="${r.resolvedAt != null ? ('Hoàn tất ' + #temporals.format(r.resolvedAt, 'dd/MM/yyyy HH:mm')) : 'Đã đóng'}">Đã đóng</span>
+                                </div>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+</div>
+
+<div th:replace="~{fragments/admin-shell :: scripts}"></div>
+</body>
+</html>

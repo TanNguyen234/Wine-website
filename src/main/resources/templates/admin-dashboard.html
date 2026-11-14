@@ -1,221 +1,203 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="vi">
-<head th:replace="~{fragments/admin-shell :: head('Dashboard Quản Trị · StrongWine Control Center')}"></head>
-<body>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/admin-shell :: head('Bảng điều khiển quản trị')}"></head>
+<body class="admin-body">
 <div class="admin-shell">
     <aside th:replace="~{fragments/admin-shell :: sidebar('dashboard')}"></aside>
 
-    <div class="admin-main">
+    <div class="admin-main-wrap">
         <header th:replace="~{fragments/admin-shell :: topbar}"></header>
 
-        <main class="admin-content">
-            <div th:if="${success}" class="alert-sw success mb16" th:text="${success}"></div>
-            <div th:if="${message}" class="alert-sw success mb16" th:text="${message}"></div>
-            <div th:if="${error}" class="alert-sw danger mb16" th:text="${error}"></div>
-
-            <div class="admin-head">
+        <main class="admin-main" id="main-content">
+            <div class="admin-page-header">
                 <div>
-                    <div class="eyebrow">STRONGWINE CONTROL CENTER</div>
-                    <h1>Tổng quan vận hành &amp; doanh thu</h1>
-                    <p>Giám sát chỉ số kinh doanh, tồn kho hầm rượu và tiến độ giao nhận theo thời gian thực.</p>
+                    <h1 class="admin-page-title">Trung tâm điều hành Maison de Vins</h1>
+                    <p class="admin-page-subtitle">Toàn cảnh doanh thu, trạng thái vận hành, cảnh báo hoàn tiền, bảng kê COD và tồn kho đa kho.</p>
                 </div>
-                <div class="display-flex gap10" style="flex-wrap:wrap">
-                    <a th:href="@{/admin/wines/import}" class="btn btn-outline btn-sm" style="display:inline-flex;align-items:center;gap:6px">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                            <polyline points="17 8 12 3 7 8"></polyline>
-                            <line x1="12" y1="3" x2="12" y2="15"></line>
-                        </svg>
-                        <span>Nhập rượu từ Excel</span>
+                <div class="d-flex flex-wrap gap-2">
+                    <a th:href="@{/admin/wines/create}" class="btn btn-primary btn-sm">
+                        <span th:replace="~{fragments/icons :: icon('verified-bottle')}"></span>
+                        Thêm sản phẩm rượu
                     </a>
-                    <a th:href="@{/wines/admin/create}" class="btn btn-sm">+ Thêm sản phẩm mới</a>
+                    <a th:href="@{/admin/wines/import}" class="btn btn-outline-gold btn-sm">Nhập Excel</a>
+                    <a th:href="@{/api/admin/excel/export/revenue}" class="btn btn-secondary btn-sm">Xuất doanh thu (.xlsx)</a>
+                    <a th:href="@{/api/admin/excel/export/orders}" class="btn btn-secondary btn-sm">Xuất đơn hàng (.xlsx)</a>
+                    <a th:href="@{/api/admin/excel/export/inventory}" class="btn btn-secondary btn-sm">Xuất tồn kho (.xlsx)</a>
                 </div>
             </div>
 
-            <!-- KPI Cards Grid -->
-            <div class="kpi-grid mb20">
-                <div class="kpi-card">
-                    <span>TỔNG DOANH THU</span>
-                    <strong th:text="${totalRevenue != null ? #numbers.formatDecimal(totalRevenue, 0, 'COMMA', 0, 'POINT') + ' ₫' : '0 ₫'}">0 ₫</strong>
-                    <small class="up">Luỹ kế đơn hàng hợp lệ</small>
-                </div>
-                <div class="kpi-card">
-                    <span>TỔNG ĐƠN HÀNG</span>
-                    <strong th:text="${totalOrders != null ? totalOrders : 0}">0</strong>
-                    <small class="up" th:text="'Đang chờ thanh toán: ' + (${pendingPayments != null ? pendingPayments : 0})">Đơn hàng</small>
-                </div>
-                <div class="kpi-card">
-                    <span>DANH MỤC RƯỢU VANG</span>
-                    <strong th:text="${totalWines != null ? totalWines : 0}">0</strong>
-                    <small th:classappend="${lowStockCount != null and lowStockCount > 0} ? 'warn' : 'up'"
-                           th:text="${lowStockCount != null and lowStockCount > 0 ? (lowStockCount + ' mã sắp hết tồn kho') : 'Tồn kho ổn định'}">Tồn kho</small>
-                </div>
-                <div class="kpi-card">
-                    <span>VẬN ĐƠN &amp; KHÁCH HÀNG</span>
-                    <strong th:text="${(totalShipments != null ? totalShipments : 0) + ' / ' + (totalUsers != null ? totalUsers : 0)}">0 / 0</strong>
-                    <small class="up">Vận đơn / Thành viên</small>
-                </div>
+            <div th:if="${success != null or message != null}" class="admin-card mb-3" role="status" style="border-left: 4px solid var(--status-ok-ink);">
+                <strong class="status ok">Thành công</strong>
+                <span class="ms-2" th:text="${success != null ? success : message}">Thao tác hoàn tất.</span>
+            </div>
+            <div th:if="${error != null}" class="admin-card mb-3" role="alert" style="border-left: 4px solid var(--status-danger-ink);">
+                <strong class="status bad">Lỗi</strong>
+                <span class="ms-2" th:text="${error}">Đã xảy ra lỗi.</span>
             </div>
 
-            <!-- Charts Row -->
-            <div class="chart-grid mb20">
-                <section class="admin-card">
-                    <div class="admin-card-head" style="flex-wrap: wrap; gap: 12px; align-items: flex-start;">
+            <!-- Actionable Operational Alerts -->
+            <section class="kpi-grid mb-4" aria-label="Cảnh báo vận hành cần xử lý">
+                <a th:href="@{/admin/payments(status='REFUND_REQUIRED')}" class="kpi-card text-decoration-none"
+                   th:style="${(refundRequiredCount ?: 0) > 0 ? 'border-color: var(--status-danger-border);' : ''}">
+                    <span class="kpi-label">Cần hoàn tiền (REFUND_REQUIRED)</span>
+                    <strong class="kpi-value admin-num" th:text="${refundRequiredCount ?: 0}">0</strong>
+                    <span class="kpi-meta" th:text="${(refundRequiredCount ?: 0) > 0 ? 'Ưu tiên xử lý đối soát hoàn tiền ngay' : 'Không có giao dịch chờ hoàn tiền'}">Không có</span>
+                </a>
+
+                <a th:href="@{/admin/returns}" class="kpi-card text-decoration-none"
+                   th:style="${(pendingReturnsCount ?: 0) > 0 ? 'border-color: var(--status-warn-border);' : ''}">
+                    <span class="kpi-label">Yêu cầu trả hàng chờ duyệt</span>
+                    <strong class="kpi-value admin-num" th:text="${pendingReturnsCount ?: 0}">0</strong>
+                    <span class="kpi-meta" th:text="${(pendingReturnsCount ?: 0) > 0 ? 'Kiểm tra lý do &amp; phê duyệt hoàn kho' : 'Tất cả yêu cầu trả hàng đã xử lý'}">Ổn định</span>
+                </a>
+
+                <a th:href="@{/admin/shippers/cod-batches}" class="kpi-card text-decoration-none"
+                   th:style="${(pendingCodBatchesCount ?: 0) > 0 ? 'border-color: var(--status-warn-border);' : ''}">
+                    <span class="kpi-label">Bảng kê COD chờ đối soát</span>
+                    <strong class="kpi-value admin-num" th:text="${pendingCodBatchesCount ?: 0}">0</strong>
+                    <span class="kpi-meta" th:text="${(pendingCodBatchesCount ?: 0) > 0 ? 'Xác nhận tiền thu hộ từ shipper' : 'Đã quyết toán đầy đủ bảng kê COD'}">Ổn định</span>
+                </a>
+
+                <a th:href="@{/admin/inventory}" class="kpi-card text-decoration-none">
+                    <span class="kpi-label">Cảnh báo tồn kho thấp</span>
+                    <strong class="kpi-value admin-num" th:text="${lowStockCount ?: 0}">0</strong>
+                    <span class="kpi-meta">Số SKU chạm ngưỡng tối thiểu đa kho</span>
+                </a>
+            </section>
+
+            <!-- Core Commerce KPIs -->
+            <section class="kpi-grid mb-4" aria-label="Chỉ số kinh doanh chính">
+                <article class="kpi-card">
+                    <span class="kpi-label">Doanh thu đã thanh toán</span>
+                    <strong class="kpi-value admin-num"
+                            th:text="${paidRevenue != null ? (#numbers.formatDecimal(paidRevenue, 0, 'COMMA', 0, 'POINT') + ' ₫') : '0 ₫'}">0 ₫</strong>
+                    <span class="kpi-meta">Tổng giá trị đơn hàng đã xác nhận thu tiền</span>
+                </article>
+
+                <article class="kpi-card">
+                    <span class="kpi-label">Tổng đơn hàng</span>
+                    <strong class="kpi-value admin-num" th:text="${totalOrders ?: 0}">0</strong>
+                    <span class="kpi-meta">
+                        <span th:text="${ordersPending ?: 0}">0</span> đơn chờ xử lý
+                    </span>
+                </article>
+
+                <article class="kpi-card">
+                    <span class="kpi-label">Vận đơn đang giao</span>
+                    <strong class="kpi-value admin-num" th:text="${shippingActive ?: 0}">0</strong>
+                    <span class="kpi-meta">Đơn hàng đang trên tuyến giao nhận</span>
+                </article>
+
+                <article class="kpi-card">
+                    <span class="kpi-label">Danh mục rượu vang</span>
+                    <strong class="kpi-value admin-num" th:text="${totalWines ?: 0}">0</strong>
+                    <span class="kpi-meta">SKU đang mở bán tại Maison de Vins</span>
+                </article>
+            </section>
+
+            <!-- Analytics Charts + Live Operations Feed -->
+            <section class="chart-grid mb-4">
+                <article class="chart-card">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
                         <div>
-                            <div style="display:flex; align-items:center; gap:8px;">
-                                <h3 style="margin:0;">Doanh thu theo ngày (<span th:text="${selectedDays}">7</span> ngày)</h3>
-                                <span class="status ok" style="font-size:11px;">Dữ liệu thực</span>
-                            </div>
-                            <span class="muted small" style="display:block; margin-top:4px;">
-                                Giai đoạn: <strong th:text="${rangeDateText}">04/11/2026 - 10/11/2026</strong> &bull; Tổng thu: <strong style="color:var(--sw-bordeaux, #742c3d);" th:text="${#numbers.formatDecimal(rangeRevenue, 0, 'COMMA', 0, 'POINT')} + ' ₫'">0 ₫</strong>
-                            </span>
+                            <h2 class="h5 mb-1">Biểu đồ doanh thu theo tháng</h2>
+                            <p class="small text-secondary mb-0">Dữ liệu thực từ các đơn hàng đã hoàn tất thanh toán</p>
                         </div>
-
-                        <!-- Filter Controls -->
-                        <div style="display:flex; flex-wrap:wrap; align-items:center; gap:8px;">
-                            <!-- Quick Buttons -->
-                            <div style="display:inline-flex; border:1px solid var(--sw-line, #e8e2d8); border-radius:6px; overflow:hidden; background:#fff;">
-                                <a th:href="@{/admin(days=7)}"
-                                   class="btn btn-sm"
-                                   th:style="${selectedDays == 7 and param.fromDate == null} ? 'background:var(--sw-bordeaux, #742c3d); color:#ffffff; font-weight:600; padding:4px 10px; border-radius:0;' : 'background:transparent; color:var(--sw-ink, #272128); padding:4px 10px; border-radius:0; border-right:1px solid var(--sw-line, #e8e2d8);'">7 ngày</a>
-                                <a th:href="@{/admin(days=14)}"
-                                   class="btn btn-sm"
-                                   th:style="${selectedDays == 14 and param.fromDate == null} ? 'background:var(--sw-bordeaux, #742c3d); color:#ffffff; font-weight:600; padding:4px 10px; border-radius:0;' : 'background:transparent; color:var(--sw-ink, #272128); padding:4px 10px; border-radius:0; border-right:1px solid var(--sw-line, #e8e2d8);'">14 ngày</a>
-                                <a th:href="@{/admin(days=30)}"
-                                   class="btn btn-sm"
-                                   th:style="${selectedDays == 30 and param.fromDate == null} ? 'background:var(--sw-bordeaux, #742c3d); color:#ffffff; font-weight:600; padding:4px 10px; border-radius:0;' : 'background:transparent; color:var(--sw-ink, #272128); padding:4px 10px; border-radius:0;'">30 ngày</a>
-                            </div>
-
-                            <!-- Custom Date Range Form -->
-                            <form th:action="@{/admin}" method="get" style="display:inline-flex; align-items:center; gap:4px;">
-                                <input type="date" name="fromDate" th:value="${startDate}" required
-                                       style="padding:4px 8px; font-size:12px; background:#fff; border:1px solid var(--sw-line, #e8e2d8); border-radius:6px; color:var(--sw-ink, #272128);" />
-                                <span class="muted small">&rarr;</span>
-                                <input type="date" name="toDate" th:value="${endDate}" required
-                                       style="padding:4px 8px; font-size:12px; background:#fff; border:1px solid var(--sw-line, #e8e2d8); border-radius:6px; color:var(--sw-ink, #272128);" />
-                                <button type="submit" class="btn btn-sm btn-outline" style="padding:4px 10px; font-size:12px; font-weight:600;">Lọc</button>
-                            </form>
-
-                            <!-- Export Excel Button -->
-                            <a th:href="@{/api/admin/excel/export/revenue(days=${selectedDays}, fromDate=${startDate}, toDate=${endDate})}"
-                               class="btn btn-sm btn-gold"
-                               style="display:inline-flex; align-items:center; gap:6px; font-weight:600; padding:5px 12px;"
-                               title="Xuất báo cáo doanh thu Excel theo khoảng ngày đang xem">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                    <polyline points="7 10 12 15 17 10"></polyline>
-                                    <line x1="12" y1="15" x2="12" y2="3"></line>
-                                </svg>
-                                Xuất Excel
-                            </a>
-                        </div>
+                        <span class="status gold">Real-time Ledger</span>
                     </div>
-                    <div style="height:260px;padding-top:12px">
+                    <div style="position: relative; height: 280px;">
                         <canvas id="revenueChart"
-                                th:attr="data-labels=${revenueLabelsJson},data-values=${revenueValuesJson}"></canvas>
+                                th:attr="data-labels=${revenueLabelsJson != null ? revenueLabelsJson : '[]'},data-values=${revenueValuesJson != null ? revenueValuesJson : '[]'}"></canvas>
                     </div>
-                </section>
+                </article>
 
-                <section class="admin-card">
-                    <div class="admin-card-head">
+                <article class="chart-card">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
                         <div>
-                            <h3>Cơ cấu dòng rượu vang</h3>
-                            <span class="muted small">Phân bổ SKU theo chủng loại rượu</span>
+                            <h2 class="h5 mb-1">Cơ cấu dòng rượu</h2>
+                            <p class="small text-secondary mb-0">Phân bổ danh mục Red / White / Rosé / Sparkling / Traditional</p>
                         </div>
                     </div>
-                    <div style="height:260px;padding-top:12px">
-                        <canvas id="categoryPieChart"
-                                th:attr="data-labels=${categoryLabelsJson},data-values=${categoryValuesJson}"></canvas>
+                    <div style="position: relative; height: 280px;">
+                        <canvas id="categoryChart"
+                                th:attr="data-labels=${categoryLabelsJson != null ? categoryLabelsJson : '[]'},data-values=${categoryValuesJson != null ? categoryValuesJson : '[]'}"></canvas>
                     </div>
-                </section>
-            </div>
+                </article>
+            </section>
 
-            <!-- Recent Orders & Low Stock Alerts -->
-            <div class="chart-grid">
-                <section class="admin-card">
-                    <div class="admin-card-head mb12">
-                        <div>
-                            <h3>Đơn đặt hàng gần đây</h3>
-                            <span class="muted small">5 đơn hàng mới nhất trên hệ thống</span>
-                        </div>
-                        <a th:href="@{/admin/orders}" class="btn btn-outline btn-sm">Xem tất cả &rarr;</a>
-                    </div>
-                    <div class="table-scroll">
-                        <table class="sw-table">
-                            <thead>
-                            <tr>
-                                <th>Mã đơn</th>
-                                <th>Khách nhận</th>
-                                <th>Tổng tiền</th>
-                                <th>Trạng thái</th>
-                                <th>Thanh toán</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            <tr th:if="${recentOrders == null or recentOrders.isEmpty()}">
-                                <td colspan="5" class="muted text-center">Chưa có dữ liệu đơn hàng.</td>
-                            </tr>
-                            <tr th:each="ord : ${recentOrders}">
-                                <td><a th:href="@{/orders/{id}(id=${ord.id})}"><strong th:text="'#' + ${ord.id}">#1</strong></a></td>
-                                <td>
-                                    <strong th:text="${ord.shippingFullName != null ? ord.shippingFullName : 'Khách hàng'}">Khách</strong>
-                                    <div class="small muted" th:text="${ord.shippingPhone}">0900</div>
-                                </td>
-                                <td><strong th:text="${#numbers.formatDecimal(ord.totalPrice, 0, 'COMMA', 0, 'POINT')} + ' ₫'">0 ₫</strong></td>
-                                <td><span class="status info" th:text="${@enumDisplayService.orderStatus(ord.status)}">Trạng thái</span></td>
-                                <td>
-                                    <span class="status"
-                                          th:classappend="${ord.paymentStatus != null and ord.paymentStatus.name() == 'SUCCESS'} ? 'ok' : 'warn'"
-                                          th:text="${@enumDisplayService.paymentStatus(ord.paymentStatus)}">Thanh toán</span>
-                                </td>
-                            </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </section>
+            <section class="admin-card mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h2 class="h5 mb-0">Nhật ký sự kiện trực tuyến (SSE)</h2>
+                    <a th:href="@{/admin/audit-logs}" class="btn btn-secondary btn-sm">Xem nhật ký kiểm toán</a>
+                </div>
+                <ul id="dashboardLiveActivityList" class="list-unstyled mb-0">
+                    <li class="text-secondary small" data-empty-placeholder="true">Đang lắng nghe các sự kiện đơn hàng, thanh toán và cảnh báo tồn kho theo thời gian thực...</li>
+                </ul>
+            </section>
 
-                <section class="admin-card">
-                    <div class="admin-card-head mb12">
-                        <div>
-                            <h3>Cảnh báo tồn kho thấp</h3>
-                            <span class="muted small">Các mã rượu có tồn khả dụng &le; 10 chai</span>
-                        </div>
-                        <a th:href="@{/admin/inventory}" class="btn btn-outline btn-sm">Quản lý kho &rarr;</a>
+            <!-- Quick Wine Catalog Preview -->
+            <section class="admin-card">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                    <div>
+                        <h2 class="h5 mb-1">Quản lý nhanh danh mục rượu</h2>
+                        <p class="small text-secondary mb-0">Truy cập đầy đủ bộ lọc tại mục Sản phẩm rượu hoặc chỉnh sửa nhanh tại đây.</p>
                     </div>
-                    <div class="stack">
-                        <div th:if="${lowStockItems == null or lowStockItems.isEmpty()}" class="muted small">
-                            Tất cả mặt hàng đều có lượng tồn kho an toàn.
-                        </div>
-                        <div class="between" style="padding:10px 12px;border:1px solid #e6e0d8;border-radius:8px"
-                             th:each="inv : ${lowStockItems}">
-                            <div style="display:flex;align-items:center;gap:12px">
-                                <div class="admin-wine-thumb-box" style="width:34px;height:44px">
-                                    <img th:if="${inv.wine != null and inv.wine.imageUrl != null}"
-                                         th:src="${inv.wine.imageUrl}"
-                                         th:alt="${inv.wine.name}"
-                                         class="admin-wine-thumb"
-                                         loading="lazy">
-                                    <span th:unless="${inv.wine != null and inv.wine.imageUrl != null}" class="admin-wine-thumb-placeholder">
-                                        <i class="fa-solid fa-wine-bottle"></i>
-                                    </span>
+                    <a th:href="@{/admin/wines}" class="btn btn-outline-secondary btn-sm">Mở danh mục đầy đủ</a>
+                </div>
+
+                <div class="table-container">
+                    <table class="admin-table admin-table--responsive">
+                        <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Tên chai rượu</th>
+                            <th>Dòng rượu</th>
+                            <th>Niên vụ</th>
+                            <th>Giá niêm yết</th>
+                            <th>Khả dụng</th>
+                            <th>Thao tác</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:if="${wines == null or #lists.isEmpty(wines)}">
+                            <td colspan="7" class="text-secondary">Chưa có sản phẩm rượu nào trong hệ thống.</td>
+                        </tr>
+                        <tr th:each="w : ${wines}">
+                            <td data-label="ID" class="admin-num" th:text="${w.id}">1</td>
+                            <td data-label="Tên chai rượu">
+                                <strong th:text="${w.name}">Château Margaux</strong>
+                                <div class="small text-secondary" th:if="${w.country != null}" th:text="${w.country}">France</div>
+                            </td>
+                            <td data-label="Dòng rượu">
+                                <span class="status wine" th:text="${@enumDisplayService.wineType(w.type)}">Vang đỏ</span>
+                            </td>
+                            <td data-label="Niên vụ" class="admin-num" th:text="${w.year}">2018</td>
+                            <td data-label="Giá niêm yết" class="admin-num"
+                                th:text="${w.price != null ? (#numbers.formatDecimal(w.price, 0, 'COMMA', 0, 'POINT') + ' ₫') : '0 ₫'}">0 ₫</td>
+                            <td data-label="Khả dụng" class="admin-num"
+                                th:text="${availableStockByWineId != null and w.id != null ? (availableStockByWineId[w.id] ?: 0) : 0}">0</td>
+                            <td data-label="Thao tác">
+                                <div class="d-flex flex-wrap gap-2">
+                                    <a th:href="@{/admin/wines/edit/{id}(id=${w.id})}" class="btn btn-secondary btn-sm">Sửa</a>
+                                    <form th:action="@{/admin/wines/delete/{id}(id=${w.id})}" method="post" class="d-inline">
+                                        <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                        <button type="submit" class="btn btn-danger btn-sm">Xóa</button>
+                                    </form>
                                 </div>
-                                <div>
-                                    <strong style="font-size:13px" th:text="${inv.wine != null ? inv.wine.name : 'Sản phẩm'}">Tên rượu</strong>
-                                    <div class="small muted" th:text="${inv.warehouse != null ? inv.warehouse.name : 'Kho trung tâm'}">Kho</div>
-                                </div>
-                            </div>
-                            <span class="status"
-                                  th:classappend="${inv.availableQuantity <= 0} ? 'bad' : 'warn'"
-                                  th:text="'Còn ' + ${inv.availableQuantity} + ' chai'">Còn 0 chai</span>
-                        </div>
-                    </div>
-                </section>
-            </div>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div th:replace="~{fragments/pagination :: pagination('/admin')}"></div>
+            </section>
         </main>
     </div>
 </div>
 
 <div th:replace="~{fragments/admin-shell :: scripts}"></div>
-<script th:src="@{/js/admin-charts.js}"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
+<script th:src="@{/js/admin-charts.js}" defer></script>
 </body>
 </html>

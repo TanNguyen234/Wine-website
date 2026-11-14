@@ -1,59 +1,64 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="vi">
-<head th:replace="~{fragments/admin-shell :: head('Quản Lý Người Dùng · StrongWine Control Center')}"></head>
-<body>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/admin-shell :: head('Quản lý người dùng')}"></head>
+<body class="admin-body">
 <div class="admin-shell">
     <aside th:replace="~{fragments/admin-shell :: sidebar('users')}"></aside>
 
-    <div class="admin-main">
+    <div class="admin-main-wrap">
         <header th:replace="~{fragments/admin-shell :: topbar}"></header>
 
-        <main class="admin-content">
-            <div th:if="${success}" class="alert-sw success mb16" th:text="${success}"></div>
-            <div th:if="${error}" class="alert-sw danger mb16" th:text="${error}"></div>
-
-            <div class="admin-head">
+        <main class="admin-main" id="main-content">
+            <div class="admin-page-header">
                 <div>
-                    <div class="eyebrow">PHÂN QUYỀN &amp; BẢO MẬT TÀI KHOẢN</div>
-                    <h1>Danh sách người dùng hệ thống</h1>
-                    <p>Quản lý tài khoản khách hàng, quản trị viên và nhân sự giao nhận.</p>
+                    <h1 class="admin-page-title">Quản lý tài khoản &amp; phân quyền</h1>
+                    <p class="admin-page-subtitle">Quản trị tài khoản khách hàng, shipper giao nhận và quản trị viên hệ thống.</p>
                 </div>
-                <a th:href="@{/admin/users/create}" class="btn btn-sm">+ Tạo tài khoản mới</a>
+                <a th:href="@{/admin/users/create}" class="btn btn-primary btn-sm">+ Thêm người dùng</a>
+            </div>
+
+            <div th:if="${success != null}" class="admin-card mb-3" role="status" style="border-left: 4px solid var(--status-ok-ink);">
+                <strong class="status ok">Thành công</strong>
+                <span class="ms-2" th:text="${success}">Đã cập nhật người dùng.</span>
+            </div>
+            <div th:if="${error != null}" class="admin-card mb-3" role="alert" style="border-left: 4px solid var(--status-danger-ink);">
+                <strong class="status bad">Lỗi</strong>
+                <span class="ms-2" th:text="${error}">Thao tác thất bại.</span>
             </div>
 
             <section class="admin-card">
-                <div class="table-scroll">
-                    <table class="sw-table">
+                <div class="table-container">
+                    <table class="admin-table admin-table--responsive">
                         <thead>
                         <tr>
                             <th>ID</th>
                             <th>Tên đăng nhập</th>
                             <th>Email</th>
-                            <th>Vai trò (Role)</th>
-                            <th>Ngày tạo</th>
+                            <th>Vai trò</th>
                             <th>Thao tác</th>
                         </tr>
                         </thead>
                         <tbody>
-                        <tr th:if="${users == null or users.isEmpty()}">
-                            <td colspan="6" class="text-center muted">Chưa có người dùng nào.</td>
+                        <tr th:if="${users == null or #lists.isEmpty(users)}">
+                            <td colspan="5" class="text-secondary">Chưa có tài khoản nào trong danh sách.</td>
                         </tr>
                         <tr th:each="u : ${users}">
-                            <td th:text="'#' + ${u.id}">#1</td>
-                            <td><strong th:text="${u.username}">username</strong></td>
-                            <td th:text="${u.email}">email@example.com</td>
-                            <td>
-                                <span class="status"
-                                      th:classappend="${u.role == 'ADMIN'} ? 'bad' : (${u.role == 'SHIPPER'} ? 'info' : 'ok')"
-                                      th:text="${@enumDisplayService.userRole(u.role)}">Role</span>
+                            <td data-label="ID" class="admin-num" th:text="'#' + ${u.id}">#1</td>
+                            <td data-label="Tên đăng nhập">
+                                <strong th:text="${u.username}">demo</strong>
+                                <div class="small text-secondary" th:if="${u.fullName != null}" th:text="${u.fullName}">Họ tên</div>
                             </td>
-                            <td class="small muted">Đang hoạt động</td>
-                            <td>
-                                <div class="display-flex gap8">
-                                    <a th:href="@{/admin/users/edit/{id}(id=${u.id})}" class="btn btn-outline btn-sm">Sửa</a>
-                                    <form th:action="@{/admin/users/delete/{id}(id=${u.id})}" method="post"
-                                          onsubmit="return confirm('Xác nhận xoá người dùng này?');" class="d-inline">
-                                        <button type="submit" class="btn btn-danger btn-sm">Xoá</button>
+                            <td data-label="Email" th:text="${u.email ?: '—'}">demo@strongwine.vn</td>
+                            <td data-label="Vai trò">
+                                <span th:class="${u.role == 'ADMIN' ? 'status wine' : (u.role == 'SHIPPER' ? 'status gold' : 'status neutral')}"
+                                      th:text="${@enumDisplayService.userRole(u.role)}">Khách hàng</span>
+                            </td>
+                            <td data-label="Thao tác">
+                                <div class="d-flex flex-wrap gap-2">
+                                    <a th:href="@{/admin/users/edit/{id}(id=${u.id})}" class="btn btn-secondary btn-sm">Sửa</a>
+                                    <form th:action="@{/admin/users/delete/{id}(id=${u.id})}" method="post" class="d-inline">
+                                        <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                        <button type="submit" class="btn btn-danger btn-sm">Xóa</button>
                                     </form>
                                 </div>
                             </td>
@@ -67,6 +72,7 @@
         </main>
     </div>
 </div>
+
 <div th:replace="~{fragments/admin-shell :: scripts}"></div>
 </body>
 </html>

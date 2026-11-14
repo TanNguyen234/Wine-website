@@ -1,204 +1,139 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="vi">
-<head th:replace="~{fragments/admin-shell :: head('Điều Phối Vận Đơn & OTP · StrongWine Control Center')}"></head>
-<body>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/admin-shell :: head('Quản lý vận đơn')}"></head>
+<body class="admin-body">
 <div class="admin-shell">
     <aside th:replace="~{fragments/admin-shell :: sidebar('shipments')}"></aside>
 
-    <div class="admin-main">
+    <div class="admin-main-wrap">
         <header th:replace="~{fragments/admin-shell :: topbar}"></header>
 
-        <main class="admin-content">
-            <div th:if="${success}" class="alert-sw success mb16" th:text="${success}"></div>
-            <div th:if="${message}" class="alert-sw success mb16" th:text="${message}"></div>
-            <div th:if="${error}" class="alert-sw danger mb16" th:text="${error}"></div>
-
-            <div class="admin-head">
+        <main class="admin-main" id="main-content">
+            <div class="admin-page-header">
                 <div>
-                    <div class="eyebrow">LOGISTICS &amp; BẢO MẬT GIAO NHẬN OTP</div>
-                    <h1>Điều phối vận đơn thời gian thực</h1>
-                    <p>Quản lý trạng thái giao hàng, cấp lại mã xác thực OTP và giám sát đội ngũ tài xế.</p>
+                    <h1 class="admin-page-title">Điều phối vận đơn giao hàng</h1>
+                    <p class="admin-page-subtitle">Phân công shipper, theo dõi trạng thái xác thực giao nhận OTP bảo mật và tuyến đường Google Maps.</p>
                 </div>
-                <a th:href="@{/admin/shippers}" class="btn btn-outline btn-sm">Quản lý đội ngũ Shipper &rarr;</a>
-            </div>
-
-            <!-- Shipment KPIs -->
-            <div class="kpi-grid mb20" th:if="${shipmentStats != null}">
-                <div class="kpi-card">
-                    <span>CHỜ PHÂN CÔNG</span>
-                    <strong th:text="${shipmentStats[T(com.strongwine.strongwine.entity.ShipmentStatus).PENDING_ASSIGNMENT] ?: 0}">0</strong>
-                    <small class="warn">Chưa gán tài xế</small>
-                </div>
-                <div class="kpi-card">
-                    <span>ĐANG VẬN CHUYỂN</span>
-                    <strong th:text="${(shipmentStats[T(com.strongwine.strongwine.entity.ShipmentStatus).ASSIGNED] ?: 0) + (shipmentStats[T(com.strongwine.strongwine.entity.ShipmentStatus).PICKED_UP] ?: 0) + (shipmentStats[T(com.strongwine.strongwine.entity.ShipmentStatus).DELIVERING] ?: 0)}">0</strong>
-                    <small class="info" th:text="'Đang giao: ' + (${shipmentStats[T(com.strongwine.strongwine.entity.ShipmentStatus).DELIVERING] ?: 0})">0</small>
-                </div>
-                <div class="kpi-card">
-                    <span>ĐÃ GIAO THÀNH CÔNG</span>
-                    <strong th:text="${shipmentStats[T(com.strongwine.strongwine.entity.ShipmentStatus).COMPLETED] ?: 0}">0</strong>
-                    <small class="up">Đã xác thực OTP hợp lệ</small>
-                </div>
-                <div class="kpi-card">
-                    <span>GIAO THẤT BẠI</span>
-                    <strong th:text="${shipmentStats[T(com.strongwine.strongwine.entity.ShipmentStatus).FAILED] ?: 0}">0</strong>
-                    <small class="warn">Cần điều phối lại</small>
+                <div class="d-flex flex-wrap gap-2">
+                    <a th:href="@{/admin/shippers}" class="btn btn-outline-secondary btn-sm">Đội ngũ shipper</a>
+                    <a th:href="@{/admin/shippers/cod-batches}" class="btn btn-secondary btn-sm">Đối soát COD</a>
                 </div>
             </div>
 
-            <!-- Status Quick Tabs -->
-            <div class="admin-quick-tabs mb16">
+            <div th:if="${success != null}" class="admin-card mb-3" role="status" style="border-left: 4px solid var(--status-ok-ink);">
+                <strong class="status ok">Thành công</strong>
+                <span class="ms-2" th:text="${success}">Đã cập nhật vận đơn.</span>
+            </div>
+            <div th:if="${error != null}" class="admin-card mb-3" role="alert" style="border-left: 4px solid var(--status-danger-ink);">
+                <strong class="status bad">Lỗi</strong>
+                <span class="ms-2" th:text="${error}">Không thể thực hiện thao tác.</span>
+            </div>
+
+            <!-- Status Filter Tabs -->
+            <nav class="admin-quick-tabs mb-4" aria-label="Lọc vận đơn theo trạng thái"
+                 th:with="activeShipStatus=${filterStatus != null ? filterStatus : selectedStatus}">
                 <a th:href="@{/admin/shipments}"
-                   class="quick-tab"
-                   th:classappend="${filterStatus == null} ? 'active'">
-                    <i class="fa-solid fa-list-ul"></i>
-                    <span>Tất cả vận đơn</span>
-                </a>
-                <a th:href="@{/admin/shipments(status='PENDING_ASSIGNMENT')}"
-                   class="quick-tab"
-                   th:classappend="${filterStatus != null and filterStatus.name() == 'PENDING_ASSIGNMENT'} ? 'active'">
-                    <i class="fa-solid fa-user-clock"></i>
-                    <span>Chờ phân công</span>
-                    <span class="tab-badge warn" th:if="${shipmentStats != null}" th:text="${shipmentStats[T(com.strongwine.strongwine.entity.ShipmentStatus).PENDING_ASSIGNMENT] ?: 0}">0</span>
-                </a>
-                <a th:href="@{/admin/shipments(status='DELIVERING')}"
-                   class="quick-tab"
-                   th:classappend="${filterStatus != null and filterStatus.name() == 'DELIVERING'} ? 'active'">
-                    <i class="fa-solid fa-truck-fast"></i>
-                    <span>Đang giao hàng</span>
-                    <span class="tab-badge info" th:if="${shipmentStats != null}" th:text="${shipmentStats[T(com.strongwine.strongwine.entity.ShipmentStatus).DELIVERING] ?: 0}">0</span>
-                </a>
-                <a th:href="@{/admin/shipments(status='COMPLETED')}"
-                   class="quick-tab"
-                   th:classappend="${filterStatus != null and filterStatus.name() == 'COMPLETED'} ? 'active'">
-                    <i class="fa-solid fa-circle-check"></i>
-                    <span>Giao thành công</span>
-                    <span class="tab-badge success" th:if="${shipmentStats != null}" th:text="${shipmentStats[T(com.strongwine.strongwine.entity.ShipmentStatus).COMPLETED] ?: 0}">0</span>
-                </a>
-                <a th:href="@{/admin/shipments(status='FAILED')}"
-                   class="quick-tab"
-                   th:classappend="${filterStatus != null and filterStatus.name() == 'FAILED'} ? 'active'">
-                    <i class="fa-solid fa-triangle-exclamation"></i>
-                    <span>Giao thất bại</span>
-                    <span class="tab-badge danger" th:if="${shipmentStats != null}" th:text="${shipmentStats[T(com.strongwine.strongwine.entity.ShipmentStatus).FAILED] ?: 0}">0</span>
-                </a>
-            </div>
+                   class="admin-quick-tab"
+                   th:classappend="${activeShipStatus == null ? ' is-active' : ''}">Tất cả vận đơn</a>
+                <a th:each="st : ${T(com.strongwine.strongwine.entity.ShipmentStatus).values()}"
+                   th:href="@{/admin/shipments(status=${st.name()})}"
+                   class="admin-quick-tab"
+                   th:classappend="${activeShipStatus == st ? ' is-active' : ''}"
+                   th:text="${@enumDisplayService.shipmentStatus(st)}">Trạng thái</a>
+            </nav>
 
-            <!-- Filter Bar -->
-            <section class="admin-card mb20">
-                <form th:action="@{/admin/shipments}" method="get" class="grid-3" style="align-items:end">
-                    <div>
-                        <label class="label">Từ khoá (Mã vận đơn / Người nhận / SĐT)</label>
-                        <input type="text" name="keyword" class="field" placeholder="Nhập tên, SĐT hoặc địa chỉ..." th:value="${filterKeyword}">
-                    </div>
-                    <div>
-                        <label class="label">Trạng thái vận đơn</label>
-                        <select name="status" class="select">
-                            <option value="">Tất cả trạng thái</option>
-                            <option th:each="st : ${statuses}"
-                                    th:value="${st.name()}"
-                                    th:text="${@enumDisplayService.shipmentStatus(st)}"
-                                    th:selected="${filterStatus != null and filterStatus == st}">Trạng thái</option>
-                        </select>
-                    </div>
-                    <div class="display-flex gap8">
-                        <div style="flex:1">
-                            <label class="label">Nhân viên giao hàng</label>
-                            <select name="shipperId" class="select">
-                                <option value="">Tất cả tài xế</option>
-                                <option th:each="sh : ${shippers}"
-                                        th:value="${sh.id}"
-                                        th:text="${sh.name + ' (' + sh.phone + ')'}"
-                                        th:selected="${filterShipperId != null and filterShipperId == sh.id}">Shipper</option>
-                            </select>
-                        </div>
-                        <button type="submit" class="btn btn-sm" style="min-height:44px">Lọc</button>
-                        <a th:href="@{/admin/shipments}" class="btn btn-outline btn-sm" style="min-height:44px">Xoá lọc</a>
-                    </div>
-                </form>
-            </section>
-
-            <!-- Shipments Table -->
             <section class="admin-card">
-                <div class="table-scroll">
-                    <table class="sw-table">
+                <div class="table-container">
+                    <table class="admin-table admin-table--responsive">
                         <thead>
                         <tr>
                             <th>Vận đơn</th>
                             <th>Đơn hàng</th>
-                            <th>Khách nhận &amp; Địa chỉ</th>
+                            <th>Địa chỉ giao</th>
                             <th>Shipper phụ trách</th>
-                            <th>Trạng thái OTP</th>
                             <th>Trạng thái</th>
-                            <th>Chuyển trạng thái nhanh</th>
+                            <th>Trạng thái OTP</th>
                             <th>Thao tác</th>
                         </tr>
                         </thead>
                         <tbody>
-                        <tr th:if="${shipments == null or shipments.isEmpty()}">
-                            <td colspan="8" class="text-center muted">Không có vận đơn phù hợp điều kiện lọc.</td>
+                        <tr th:if="${shipments == null or #lists.isEmpty(shipments)}">
+                            <td colspan="7" class="text-secondary">Chưa có vận đơn nào phù hợp bộ lọc.</td>
                         </tr>
-                        <tr th:each="s : ${shipments}"
-                            th:with="transitions=${allowedTransitionsByShipmentId != null ? allowedTransitionsByShipmentId.get(s.id) : null}">
-                            <td><strong th:text="'#' + ${s.id}">#1</strong></td>
-                            <td>
-                                <a th:if="${s.order != null}" th:href="@{/orders/{id}(id=${s.order.id})}">
-                                    <strong th:text="'Đơn #' + ${s.order.id}">Đơn #1</strong>
-                                </a>
+                        <tr th:each="s : ${shipments}">
+                            <td data-label="Vận đơn" class="admin-num">
+                                <strong th:text="'#' + ${s.id}">#50</strong>
+                                <div class="small text-secondary" th:if="${s.assignedAt != null}"
+                                     th:text="${#temporals.format(s.assignedAt, 'dd/MM HH:mm')}">—</div>
                             </td>
-                            <td>
-                                <strong th:text="${s.shippingName}">Khách</strong>
-                                <div class="small muted" th:text="${s.shippingPhone}">0900</div>
-                                <div class="small muted" th:text="${s.shippingAddress}">Địa chỉ</div>
-                                <div class="mt4" th:if="${s.shippingAddress != null and !#strings.isEmpty(#strings.trim(s.shippingAddress))}">
-                                    <a class="small" style="color:var(--sw-bordeaux);font-weight:600"
-                                       target="_blank" rel="noopener noreferrer"
-                                       th:href="${@enumDisplayService.googleMapsUrl(s.shippingLatitude, s.shippingLongitude, s.shippingAddress)}">
-                                        &#9873; Maps
-                                    </a>
+                            <td data-label="Đơn hàng" class="admin-num">
+                                <div th:text="${s.order != null ? ('Đơn #' + s.order.id) : '—'}">Đơn #10</div>
+                                <div class="small text-secondary" th:if="${s.shippingName != null}"
+                                     th:text="${s.shippingName}">Khách hàng</div>
+                            </td>
+                            <td data-label="Địa chỉ giao">
+                                <div class="small" th:text="${s.shippingAddress ?: '—'}">Quận 1, TP.HCM</div>
+                                <a th:if="${s.shippingLatitude != null and s.shippingLongitude != null}"
+                                   th:href="${@enumDisplayService.googleMapsUrl(s.shippingLatitude, s.shippingLongitude)}"
+                                   target="_blank" rel="noopener noreferrer"
+                                   class="small text-decoration-underline">Mở bản đồ</a>
+                            </td>
+                            <td data-label="Shipper phụ trách">
+                                <div class="fw-bold mb-1" th:text="${s.shipper != null ? s.shipper.name : 'Chưa phân công'}">Shipper</div>
+                                <form th:if="${shippers != null and !#lists.isEmpty(shippers)}"
+                                      th:action="@{/admin/shipments/{id}/assign(id=${s.id})}" method="post"
+                                      class="d-flex gap-2 align-items-center">
+                                    <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                    <select name="shipperId" class="form-select form-select-sm" style="max-width: 170px;" aria-label="Chọn shipper">
+                                        <option value="">-- Chọn shipper --</option>
+                                        <option th:each="sp : ${shippers}"
+                                                th:value="${sp.id}"
+                                                th:selected="${s.shipper != null and s.shipper.id == sp.id}"
+                                                th:text="${sp.name}">Shipper</option>
+                                    </select>
+                                    <button type="submit" class="btn btn-secondary btn-sm">Gán</button>
+                                </form>
+                            </td>
+                            <td data-label="Trạng thái">
+                                <span th:class="'status ' + ${@enumDisplayService.shipmentStatusBadgeClass(s.status)}"
+                                      th:text="${@enumDisplayService.shipmentStatus(s.status)}">Đang giao</span>
+                            </td>
+                            <td data-label="Trạng thái OTP">
+                                <div class="d-flex flex-column gap-1">
+                                    <span th:if="${s.status != null and s.status.name() == 'COMPLETED' and s.otpVerified}"
+                                          class="status ok">Đã xác thực</span>
+                                    <span th:if="${s.status != null and s.status.name() == 'COMPLETED' and (s.otpVerified == null or !s.otpVerified)}"
+                                          class="status warn">Hoàn tất thủ công</span>
+                                    <span th:if="${s.status == null or s.status.name() != 'COMPLETED'}"
+                                          th:class="'status ' + ${@enumDisplayService.otpDeliveryStatusBadgeClass(s.otpDeliveryStatus)}"
+                                          th:text="${@enumDisplayService.otpDeliveryStatus(s.otpDeliveryStatus)}">Chờ gửi OTP</span>
+                                    <form th:if="${s.status == null or s.status.name() != 'COMPLETED'}"
+                                          th:action="@{/admin/shipments/{id}/resend-otp(id=${s.id})}" method="post" class="mt-1">
+                                        <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                        <button type="submit" class="btn btn-outline-secondary btn-sm">Gửi lại OTP</button>
+                                    </form>
                                 </div>
                             </td>
-                            <td>
-                                <span th:if="${s.shipper != null}" th:text="${s.shipper.name}">Tài xế</span>
-                                <span th:if="${s.shipper == null}" class="status warn">Chưa phân công</span>
-                            </td>
-                            <td>
-                                <span class="small muted"
-                                      th:if="${s.status != null and s.status.name() == 'COMPLETED' and s.otpVerified}">Đã xác thực</span>
-                                <span class="small muted"
-                                      th:if="${s.status != null and s.status.name() == 'COMPLETED' and !s.otpVerified}">Hoàn tất thủ công</span>
-                                <span class="small muted"
-                                      th:if="${s.status == null or s.status.name() != 'COMPLETED'}"
-                                      th:text="${s.otpDeliveryStatus == null ? 'Chưa gửi' : (s.otpDeliveryStatus.name() == 'SENT' ? 'Đã gửi' : (s.otpDeliveryStatus.name() == 'FAILED' ? 'Gửi thất bại' : 'Đang chờ gửi'))}">Chưa gửi</span>
-                                <div class="small muted" th:if="${s.otpAttemptCount != null and s.otpAttemptCount > 0}"
-                                     th:text="'Sai OTP: ' + ${s.otpAttemptCount} + ' lần'"></div>
-                            </td>
-                            <td>
-                                <span class="status"
-                                      th:classappend="${s.status != null and s.status.name() == 'COMPLETED'} ? 'ok' : (${s.status != null and (s.status.name() == 'FAILED' or s.status.name() == 'CANCELLED')} ? 'bad' : 'info')"
-                                      th:text="${@enumDisplayService.shipmentStatus(s.status)}">Trạng thái</span>
-                            </td>
-                            <td>
-                                <form th:if="${transitions != null and !transitions.isEmpty()}"
-                                      th:action="@{/admin/shipments/{id}/status(id=${s.id})}" method="post" class="display-flex gap8">
-                                    <select name="targetStatus" class="select" style="min-height:34px;padding:4px 8px;width:auto">
-                                        <option th:each="tr : ${transitions}"
-                                                th:value="${tr.name()}"
-                                                th:text="${@enumDisplayService.shipmentStatus(tr)}">Next</option>
-                                    </select>
-                                    <input type="hidden" name="overrideReason" value="Admin điều phối từ bảng vận đơn">
-                                    <input type="hidden" name="failureNote" value="Cập nhật bởi quản trị viên">
-                                    <button type="submit" class="btn btn-sm">Cập nhật</button>
-                                </form>
-                                <span th:if="${transitions == null or transitions.isEmpty()}" class="small muted">Đã kết thúc</span>
-                            </td>
-                            <td>
-                                <div class="display-flex gap8">
-                                    <a th:href="@{/admin/shipments/edit/{id}(id=${s.id})}" class="btn btn-outline btn-sm">Sửa</a>
-                                    <form th:if="${s.status == null or (s.status.name() != 'COMPLETED' and s.status.name() != 'CANCELLED')}"
-                                          th:action="@{/admin/shipments/{id}/resend-otp(id=${s.id})}" method="post" class="d-inline">
-                                        <button type="submit" class="btn btn-gold btn-sm" title="Cấp mã OTP mới">OTP mới</button>
+                            <td data-label="Thao tác">
+                                <div class="d-flex flex-column gap-2">
+                                    <form th:action="@{/admin/shipments/{id}/status(id=${s.id})}" method="post"
+                                          class="d-flex flex-wrap gap-2 align-items-center">
+                                        <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                        <select name="targetStatus" class="form-select form-select-sm" style="max-width: 170px;" aria-label="Đổi trạng thái vận đơn">
+                                            <option th:each="st : ${T(com.strongwine.strongwine.entity.ShipmentStatus).values()}"
+                                                    th:value="${st.name()}"
+                                                    th:selected="${s.status == st}"
+                                                    th:text="${@enumDisplayService.shipmentStatus(st)}">Trạng thái</option>
+                                        </select>
+                                        <button type="submit" class="btn btn-primary btn-sm">Cập nhật</button>
                                     </form>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        <a th:href="@{/admin/shipments/edit/{id}(id=${s.id})}" class="btn btn-secondary btn-sm">Chi tiết</a>
+                                        <form th:action="@{/admin/shipments/{id}/delete(id=${s.id})}" method="post" class="d-inline">
+                                            <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                            <button type="submit" class="btn btn-danger btn-sm">Xóa</button>
+                                        </form>
+                                    </div>
                                 </div>
                             </td>
                         </tr>
@@ -211,6 +146,7 @@
         </main>
     </div>
 </div>
+
 <div th:replace="~{fragments/admin-shell :: scripts}"></div>
 </body>
 </html>

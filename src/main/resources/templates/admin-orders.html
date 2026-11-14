@@ -1,124 +1,112 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="vi">
-<head th:replace="~{fragments/admin-shell :: head('Quản Lý Đơn Hàng · StrongWine Control Center')}"></head>
-<body>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/admin-shell :: head('Quản lý đơn hàng')}"></head>
+<body class="admin-body">
 <div class="admin-shell">
     <aside th:replace="~{fragments/admin-shell :: sidebar('orders')}"></aside>
 
-    <div class="admin-main">
+    <div class="admin-main-wrap">
         <header th:replace="~{fragments/admin-shell :: topbar}"></header>
 
-        <main class="admin-content">
-            <div th:if="${message}" class="alert-sw success mb16" th:text="${message}"></div>
-            <div th:if="${error}" class="alert-sw danger mb16" th:text="${error}"></div>
-
-            <div class="admin-head">
+        <main class="admin-main" id="main-content">
+            <div class="admin-page-header">
                 <div>
-                    <div class="eyebrow">VẬN HÀNH ĐƠN HÀNG</div>
-                    <h1>Danh sách đơn đặt hàng</h1>
-                    <p>Theo dõi trạng thái đơn, thông tin người nhận và điều phối vận đơn tương ứng.</p>
+                    <h1 class="admin-page-title">Quản lý đơn hàng</h1>
+                    <p class="admin-page-subtitle">Theo dõi trạng thái thanh toán, đối soát COD, hủy đơn và xuất hóa đơn PDF/Excel.</p>
                 </div>
-                <div class="display-flex gap8">
-                    <a th:href="@{/api/admin/excel/export/orders}" class="btn btn-outline btn-sm" style="display:inline-flex;align-items:center;gap:6px">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                            <polyline points="7 10 12 15 17 10"></polyline>
-                            <line x1="12" y1="15" x2="12" y2="3"></line>
-                        </svg>
-                        <span>Xuất Excel Đơn hàng</span>
-                    </a>
-                    <a th:href="@{/admin/shipments}" class="btn btn-outline btn-sm">Điều phối vận đơn &rarr;</a>
+                <div class="d-flex flex-wrap gap-2">
+                    <a th:href="@{/admin/returns}" class="btn btn-outline-secondary btn-sm">Quản lý trả hàng</a>
+                    <a th:href="@{/api/admin/excel/export/orders}" class="btn btn-secondary btn-sm">Xuất đơn hàng (.xlsx)</a>
                 </div>
             </div>
 
-            <!-- Status Quick Tabs -->
-            <div class="admin-quick-tabs mb16">
-                <a th:href="@{/admin/orders}"
-                   class="quick-tab"
-                   th:classappend="${currentStatus == null} ? 'active'">
-                    <i class="fa-solid fa-list-ul"></i>
-                    <span>Tất cả</span>
-                    <span class="tab-badge" th:text="${totalAllOrders != null ? totalAllOrders : 0}">0</span>
-                </a>
-                <a th:href="@{/admin/orders(status='PENDING')}"
-                   class="quick-tab"
-                   th:classappend="${currentStatus != null and currentStatus.name() == 'PENDING'} ? 'active'">
-                    <i class="fa-solid fa-clock-rotate-left"></i>
-                    <span>Chờ xử lý</span>
-                    <span class="tab-badge warn" th:text="${pendingCount != null ? pendingCount : 0}">0</span>
-                </a>
-                <a th:href="@{/admin/orders(status='PAID')}"
-                   class="quick-tab"
-                   th:classappend="${currentStatus != null and currentStatus.name() == 'PAID'} ? 'active'">
-                    <i class="fa-solid fa-circle-check"></i>
-                    <span>Đã thanh toán</span>
-                    <span class="tab-badge success" th:text="${paidCount != null ? paidCount : 0}">0</span>
-                </a>
-                <a th:href="@{/admin/orders(status='CANCELLED')}"
-                   class="quick-tab"
-                   th:classappend="${currentStatus != null and currentStatus.name() == 'CANCELLED'} ? 'active'">
-                    <i class="fa-solid fa-ban"></i>
-                    <span>Đã hủy</span>
-                    <span class="tab-badge danger" th:text="${cancelledCount != null ? cancelledCount : 0}">0</span>
-                </a>
+            <div th:if="${message != null or success != null}" class="admin-card mb-3" role="status" style="border-left: 4px solid var(--status-ok-ink);">
+                <strong class="status ok">Cập nhật</strong>
+                <span class="ms-2" th:text="${success != null ? success : message}">Đã cập nhật đơn hàng.</span>
             </div>
+            <div th:if="${error != null}" class="admin-card mb-3" role="alert" style="border-left: 4px solid var(--status-danger-ink);">
+                <strong class="status bad">Lỗi</strong>
+                <span class="ms-2" th:text="${error}">Không thể xử lý yêu cầu.</span>
+            </div>
+
+            <nav class="admin-quick-tabs mb-4" aria-label="Lọc theo trạng thái đơn hàng"
+                 th:with="activeOrderStatus=${currentStatus != null ? currentStatus : selectedStatus}">
+                <a th:href="@{/admin/orders}"
+                   class="admin-quick-tab"
+                   th:classappend="${activeOrderStatus == null ? ' is-active' : ''}">Tất cả đơn</a>
+                <a th:each="st : ${T(com.strongwine.strongwine.entity.OrderStatus).values()}"
+                   th:href="@{/admin/orders(status=${st.name()})}"
+                   class="admin-quick-tab"
+                   th:classappend="${activeOrderStatus == st ? ' is-active' : ''}"
+                   th:text="${@enumDisplayService.orderStatus(st)}">Trạng thái</a>
+            </nav>
 
             <section class="admin-card">
-                <div class="table-scroll">
-                    <table class="sw-table">
+                <div class="table-container">
+                    <table class="admin-table admin-table--responsive">
                         <thead>
                         <tr>
                             <th>Mã đơn</th>
                             <th>Khách hàng</th>
-                            <th>Người nhận &amp; Địa chỉ</th>
-                            <th>Ngày đặt</th>
-                            <th>Tổng tiền</th>
-                            <th>Trạng thái đơn</th>
                             <th>Thanh toán</th>
-                            <th>Thao tác</th>
+                            <th>Tổng tiền</th>
+                            <th>Trạng thái</th>
+                            <th>Ngày tạo</th>
+                            <th>Hóa đơn</th>
+                            <th>Xử lý đơn</th>
                         </tr>
                         </thead>
                         <tbody>
-                        <tr th:if="${orders == null or orders.isEmpty()}">
-                            <td colspan="8" class="text-center muted">Chưa có đơn hàng nào.</td>
+                        <tr th:if="${orders == null or #lists.isEmpty(orders)}">
+                            <td colspan="8" class="text-secondary">Không tìm thấy đơn hàng nào phù hợp.</td>
                         </tr>
-                        <tr th:each="order : ${orders}">
-                            <td><strong th:text="'#' + ${order.id}">#1</strong></td>
-                            <td th:text="${order.user != null ? order.user.username : 'Khách vãng lai'}">user</td>
-                            <td>
-                                <strong th:text="${order.shippingFullName}">Người nhận</strong>
-                                <div class="small muted" th:text="${order.shippingPhone}">0900</div>
-                                <div class="small muted" th:text="${order.shippingAddress}">Địa chỉ</div>
-                                <div class="mt4" th:if="${order.shippingAddress != null and !#strings.isEmpty(#strings.trim(order.shippingAddress))}">
-                                    <a class="small" style="color:var(--sw-bordeaux);font-weight:600"
-                                       target="_blank" rel="noopener noreferrer"
-                                       th:href="${@enumDisplayService.googleMapsUrl(order.shippingLatitude, order.shippingLongitude, order.shippingAddress)}">
-                                        &#9873; Maps
-                                    </a>
+                        <tr th:each="o : ${orders}">
+                            <td data-label="Mã đơn" class="admin-num">
+                                <strong th:text="'#' + ${o.id}">#101</strong>
+                            </td>
+                            <td data-label="Khách hàng">
+                                <div class="fw-bold" th:text="${o.shippingFullName ?: (o.user != null ? o.user.username : 'Khách lẻ')}">Khách hàng</div>
+                                <div class="small text-secondary" th:if="${o.shippingPhone != null}" th:text="${o.shippingPhone}">0900000000</div>
+                            </td>
+                            <td data-label="Thanh toán">
+                                <span class="status neutral"
+                                      th:text="${o.paymentMethod != null ? @enumDisplayService.paymentMethod(o.paymentMethod) : 'Chưa rõ'}">COD</span>
+                            </td>
+                            <td data-label="Tổng tiền" class="admin-num">
+                                <strong th:text="${o.totalPrice != null ? (#numbers.formatDecimal(o.totalPrice, 0, 'COMMA', 0, 'POINT') + ' ₫') : '0 ₫'}">0 ₫</strong>
+                            </td>
+                            <td data-label="Trạng thái">
+                                <span th:class="'status ' + ${@enumDisplayService.orderStatusBadgeClass(o.status)}"
+                                      th:text="${@enumDisplayService.orderStatus(o.status)}">Chờ xử lý</span>
+                            </td>
+                            <td data-label="Ngày tạo" class="admin-num"
+                                th:text="${o.orderDate != null ? #temporals.format(o.orderDate, 'dd/MM/yyyy HH:mm') : '—'}">—</td>
+                            <td data-label="Hóa đơn">
+                                <div class="d-flex flex-wrap gap-2">
+                                    <a th:href="@{/admin/orders/{id}/invoice(id=${o.id}, format='pdf')}" class="btn btn-secondary btn-sm">PDF</a>
+                                    <a th:href="@{/admin/orders/{id}/invoice(id=${o.id}, format='xlsx')}" class="btn btn-secondary btn-sm">Excel</a>
                                 </div>
                             </td>
-                            <td class="small" th:text="${order.orderDate != null ? #temporals.format(order.orderDate, 'dd/MM/yyyy HH:mm') : '-'}">10/10/2026</td>
-                            <td><strong th:text="${#numbers.formatDecimal(order.totalPrice, 0, 'COMMA', 0, 'POINT')} + ' ₫'">0 ₫</strong></td>
-                            <td>
-                                <span class="status info" th:text="${@enumDisplayService.orderStatus(order.status)}">Trạng thái</span>
-                            </td>
-                            <td>
-                                <span class="status"
-                                      th:classappend="${order.paymentStatus != null and order.paymentStatus.name() == 'SUCCESS'} ? 'ok' : 'warn'"
-                                      th:text="${@enumDisplayService.paymentStatus(order.paymentStatus)}">Thanh toán</span>
-                            </td>
-                            <td>
-                                <div class="display-flex gap8" style="flex-wrap:wrap">
-                                    <a th:href="@{/orders/{id}(id=${order.id})}" class="btn btn-outline btn-sm" target="_blank">Chi tiết</a>
-                                    <form th:if="${order.paymentStatus != null and order.paymentStatus.name() != 'SUCCESS' and order.status != null and order.status.name() != 'CANCELLED'}"
-                                          th:action="@{/admin/orders/{id}/mark-paid(id=${order.id})}" method="post" style="display:inline">
-                                        <button type="submit" class="btn btn-gold btn-sm" onclick="return confirm('Xác nhận đã nhận thanh toán cho đơn hàng #' + [[${order.id}]] + '?')">Duyệt TT</button>
+                            <td data-label="Xử lý đơn">
+                                <div class="d-flex flex-wrap gap-2 align-items-center">
+                                    <form th:if="${o.status != null and o.status.name() == 'PENDING'}"
+                                          th:action="@{/admin/orders/{id}/mark-paid(id=${o.id})}" method="post" class="d-inline">
+                                        <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                        <button type="submit" class="btn btn-primary btn-sm">Xác nhận đã thu tiền</button>
                                     </form>
-                                    <form th:if="${order.status != null and order.status.name() != 'CANCELLED' and (order.paymentStatus == null or order.paymentStatus.name() != 'SUCCESS')}"
-                                          th:action="@{/admin/orders/{id}/cancel(id=${order.id})}" method="post" style="display:inline">
-                                        <button type="submit" class="btn btn-outline btn-sm" style="color:var(--sw-crimson);border-color:var(--sw-crimson)" onclick="return confirm('Bạn có chắc chắn muốn hủy đơn hàng #' + [[${order.id}]] + '?')">Hủy đơn</button>
+
+                                    <form th:if="${o.status != null and o.status.name() == 'PENDING' and o.paymentMethod != null and o.paymentMethod.name() == 'COD'}"
+                                          th:action="@{/admin/orders/{id}/settle-cod(id=${o.id})}" method="post" class="d-inline">
+                                        <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                        <button type="submit" class="btn btn-outline-gold btn-sm">Quyết toán COD</button>
                                     </form>
-                                    <a th:href="@{/admin/shipments(orderId=${order.id})}" class="btn btn-sm">Vận đơn</a>
+
+                                    <form th:if="${o.status != null and (o.status.name() == 'PENDING' or o.status.name() == 'PAID')}"
+                                          th:action="@{/admin/orders/{id}/cancel(id=${o.id})}" method="post" class="d-flex flex-wrap gap-2 align-items-center">
+                                        <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                        <input type="text" name="reason" class="form-control form-control-sm" placeholder="Lý do hủy" style="max-width: 150px;" required/>
+                                        <button type="submit" class="btn btn-danger btn-sm">Hủy đơn</button>
+                                    </form>
                                 </div>
                             </td>
                         </tr>
@@ -126,11 +114,12 @@
                     </table>
                 </div>
 
-                <div th:replace="~{fragments/pagination :: pagination(${currentStatus != null} ? @{/admin/orders(status=${currentStatus})} : '/admin/orders')}"></div>
+                <div th:replace="~{fragments/pagination :: pagination('/admin/orders')}"></div>
             </section>
         </main>
     </div>
 </div>
+
 <div th:replace="~{fragments/admin-shell :: scripts}"></div>
 </body>
 </html>

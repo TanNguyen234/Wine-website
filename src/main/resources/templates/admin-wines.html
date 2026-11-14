@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/admin-shell :: head('Danh mục sản phẩm rượu')}"></head>
+<body class="admin-body">
+<div class="admin-shell">
+    <aside th:replace="~{fragments/admin-shell :: sidebar('wines')}"></aside>
+
+    <div class="admin-main-wrap">
+        <header th:replace="~{fragments/admin-shell :: topbar}"></header>
+
+        <main class="admin-main" id="main-content">
+            <div class="admin-page-header">
+                <div>
+                    <h1 class="admin-page-title">Danh mục sản phẩm rượu</h1>
+                    <p class="admin-page-subtitle">Tìm kiếm, lọc theo dòng rượu, theo dõi tồn kho khả dụng và cập nhật sản phẩm.</p>
+                </div>
+                <div class="d-flex flex-wrap gap-2">
+                    <a th:href="@{/admin/wines/import}" class="btn btn-outline-gold btn-sm">Nhập Excel</a>
+                    <a th:href="@{/admin/wines/create}" class="btn btn-primary btn-sm">+ Thêm chai rượu mới</a>
+                </div>
+            </div>
+
+            <div th:if="${success != null or message != null}" class="admin-card mb-3" role="status" style="border-left: 4px solid var(--status-ok-ink);">
+                <strong class="status ok">Thành công</strong>
+                <span class="ms-2" th:text="${success != null ? success : message}">Thao tác thành công.</span>
+            </div>
+            <div th:if="${error != null}" class="admin-card mb-3" role="alert" style="border-left: 4px solid var(--status-danger-ink);">
+                <strong class="status bad">Lỗi</strong>
+                <span class="ms-2" th:text="${error}">Đã xảy ra lỗi.</span>
+            </div>
+
+            <!-- Type Filter Pills -->
+            <nav class="admin-quick-tabs mb-3" aria-label="Lọc theo dòng rượu">
+                <a th:href="@{/admin/wines(keyword=${keyword})}"
+                   class="admin-quick-tab"
+                   th:classappend="${type == null or #strings.isEmpty(type) ? ' is-active' : ''}">Tất cả</a>
+                <a th:each="t : ${types != null ? types : {'Red', 'White', 'Rose', 'Sparkling', 'Traditional'}}"
+                   th:href="@{/admin/wines(type=${t}, keyword=${keyword})}"
+                   class="admin-quick-tab"
+                   th:classappend="${type != null and #strings.equalsIgnoreCase(type, t) ? ' is-active' : ''}"
+                   th:text="${@enumDisplayService.wineType(t)}">Dòng rượu</a>
+            </nav>
+
+            <!-- Search & Sort Toolbar -->
+            <section class="admin-card mb-4">
+                <form th:action="@{/admin/wines}" method="get" class="admin-form-grid">
+                    <div class="form-group">
+                        <label for="wineSearchKeyword" class="form-label">Từ khóa (Tên / Quốc gia)</label>
+                        <input type="text" id="wineSearchKeyword" name="keyword" class="form-control"
+                               th:value="${keyword}" placeholder="Nhập tên chai rượu hoặc xuất xứ..."/>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="wineFilterType" class="form-label">Dòng rượu</label>
+                        <select id="wineFilterType" name="type" class="form-select">
+                            <option value="">Tất cả dòng rượu</option>
+                            <option th:each="t : ${types != null ? types : {'Red', 'White', 'Rose', 'Sparkling', 'Traditional'}}"
+                                    th:value="${t}"
+                                    th:selected="${type != null and #strings.equalsIgnoreCase(type, t)}"
+                                    th:text="${@enumDisplayService.wineType(t)}">Vang đỏ</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="wineSortBy" class="form-label">Sắp xếp theo</label>
+                        <select id="wineSortBy" name="sortBy" class="form-select">
+                            <option value="id" th:selected="${sortBy == null or sortBy == 'id'}">Mới thêm nhất (ID)</option>
+                            <option value="name" th:selected="${sortBy == 'name'}">Tên sản phẩm</option>
+                            <option value="price" th:selected="${sortBy == 'price'}">Giá bán</option>
+                            <option value="year" th:selected="${sortBy == 'year'}">Niên vụ</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group d-flex align-items-end gap-2">
+                        <button type="submit" class="btn btn-primary">Áp dụng bộ lọc</button>
+                        <a th:href="@{/admin/wines}" class="btn btn-secondary">Đặt lại</a>
+                    </div>
+                </form>
+            </section>
+
+            <section class="admin-card">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2 class="h5 mb-0">Danh sách rượu vang</h2>
+                    <span class="status neutral" th:text="'Tổng ' + ${totalEntries ?: 0} + ' sản phẩm'">0 sản phẩm</span>
+                </div>
+
+                <div class="table-container">
+                    <table class="admin-table admin-table--responsive">
+                        <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Sản phẩm</th>
+                            <th>Dòng rượu</th>
+                            <th>Quốc gia</th>
+                            <th>Niên vụ</th>
+                            <th>Giá bán</th>
+                            <th>Khả dụng</th>
+                            <th>Thao tác</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:if="${wines == null or #lists.isEmpty(wines)}">
+                            <td colspan="8" class="text-secondary">Không tìm thấy chai rượu nào phù hợp tiêu chí lọc.</td>
+                        </tr>
+                        <tr th:each="w : ${wines}">
+                            <td data-label="ID" class="admin-num" th:text="'#' + ${w.id}">#1</td>
+                            <td data-label="Sản phẩm">
+                                <div class="d-flex align-items-center gap-2">
+                                    <img th:if="${w.imageUrl != null and !#strings.isEmpty(w.imageUrl)}"
+                                         th:src="${w.imageUrl}" th:alt="${w.name}"
+                                         style="width: 38px; height: 48px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border-hairline);"/>
+                                    <div>
+                                        <strong th:text="${w.name}">Château Margaux</strong>
+                                        <div class="small text-secondary" th:if="${w.description != null}"
+                                             th:text="${#strings.abbreviate(w.description, 48)}">Mô tả</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td data-label="Dòng rượu">
+                                <span class="status wine" th:text="${@enumDisplayService.wineType(w.type)}">Vang đỏ</span>
+                            </td>
+                            <td data-label="Quốc gia" th:text="${w.country ?: '—'}">Pháp</td>
+                            <td data-label="Niên vụ" class="admin-num" th:text="${w.year ?: '—'}">2018</td>
+                            <td data-label="Giá bán" class="admin-num">
+                                <strong th:text="${w.price != null ? (#numbers.formatDecimal(w.price, 0, 'COMMA', 0, 'POINT') + ' ₫') : '0 ₫'}">0 ₫</strong>
+                            </td>
+                            <td data-label="Khả dụng" class="admin-num">
+                                <span th:with="stock=${availableStockByWineId != null and w.id != null ? (availableStockByWineId[w.id] ?: 0) : 0}"
+                                      th:class="${stock <= 5 ? 'status warn' : 'status ok'}"
+                                      th:text="${stock} + ' chai'">0 chai</span>
+                            </td>
+                            <td data-label="Thao tác">
+                                <div class="d-flex flex-wrap gap-2">
+                                    <a th:href="@{/wines/{id}(id=${w.id})}" class="btn btn-outline-secondary btn-sm">Xem</a>
+                                    <a th:href="@{/admin/wines/edit/{id}(id=${w.id})}" class="btn btn-secondary btn-sm">Sửa</a>
+                                    <form th:action="@{/admin/wines/delete/{id}(id=${w.id})}" method="post" class="d-inline">
+                                        <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                        <button type="submit" class="btn btn-danger btn-sm">Xóa</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div th:replace="~{fragments/pagination :: pagination('/admin/wines')}"></div>
+            </section>
+        </main>
+    </div>
+</div>
+
+<div th:replace="~{fragments/admin-shell :: scripts}"></div>
+</body>
+</html>

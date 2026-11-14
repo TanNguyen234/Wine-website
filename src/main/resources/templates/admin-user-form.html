@@ -1,68 +1,73 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="vi">
-<head th:replace="~{fragments/admin-shell :: head((${editingUser != null and editingUser.id != null} ? 'Chỉnh Sửa Người Dùng' : 'Tạo Người Dùng Mới') + ' · StrongWine')}"></head>
-<body>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/admin-shell :: head('Thông tin người dùng')}"></head>
+<body class="admin-body">
 <div class="admin-shell">
     <aside th:replace="~{fragments/admin-shell :: sidebar('users')}"></aside>
 
-    <div class="admin-main">
+    <div class="admin-main-wrap">
         <header th:replace="~{fragments/admin-shell :: topbar}"></header>
 
-        <main class="admin-content" style="max-width:780px">
-            <div th:if="${error}" class="alert-sw danger mb16" th:text="${error}"></div>
-
-            <div class="admin-head">
+        <main class="admin-main" id="main-content" th:with="isEditing=${editingUser != null}">
+            <div class="admin-page-header">
                 <div>
-                    <div class="eyebrow">QUẢN TRỊ TÀI KHOẢN</div>
-                    <h1 th:text="${editingUser != null and editingUser.id != null ? 'Cập nhật thông tin tài khoản' : 'Tạo tài khoản mới'}">User Form</h1>
+                    <h1 class="admin-page-title"
+                        th:text="${isEditing ? ('Chỉnh sửa tài khoản #' + editingUser.id) : 'Tạo tài khoản mới'}">Tài khoản người dùng</h1>
+                    <p class="admin-page-subtitle">Cấu hình thông tin đăng nhập, email và phân quyền truy cập hệ thống.</p>
                 </div>
-                <a th:href="@{/admin/users}" class="btn btn-outline btn-sm">&larr; Quay lại danh sách</a>
+                <a th:href="@{/admin/users}" class="btn btn-secondary btn-sm">Quay lại danh sách</a>
+            </div>
+
+            <div th:if="${error != null}" class="admin-card mb-3" role="alert" style="border-left: 4px solid var(--status-danger-ink);">
+                <strong class="status bad">Lỗi</strong>
+                <span class="ms-2" th:text="${error}">Không thể lưu người dùng.</span>
             </div>
 
             <section class="admin-card">
-                <form th:action="${editingUser != null and editingUser.id != null} ? @{/admin/users/edit/{id}(id=${editingUser.id})} : @{/admin/users/create}"
-                      method="post" class="stack">
-                    <div class="grid-2">
-                        <div>
-                            <label class="label" for="username">Tên đăng nhập *</label>
-                            <input type="text" id="username" name="username" class="field" required
-                                   th:value="${editingUser != null ? editingUser.username : ''}">
-                        </div>
-                        <div>
-                            <label class="label" for="email">Địa chỉ Email *</label>
-                            <input type="email" id="email" name="email" class="field" required
-                                   th:value="${editingUser != null ? editingUser.email : ''}">
-                        </div>
+                <form th:action="${isEditing ? '/admin/users/edit/' + editingUser.id : '/admin/users/create'}"
+                      method="post" class="admin-form-grid">
+                    <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+                    <div class="form-group">
+                        <label for="userUsername" class="form-label">Tên đăng nhập</label>
+                        <input type="text" id="userUsername" name="username" class="form-control"
+                               th:value="${isEditing ? editingUser.username : ''}" required/>
                     </div>
 
-                    <div class="grid-2">
-                        <div>
-                            <label class="label" for="password"
-                                   th:text="${editingUser != null and editingUser.id != null ? 'Mật khẩu mới (để trống nếu giữ nguyên)' : 'Mật khẩu khởi tạo *'}">Mật khẩu</label>
-                            <input type="password" id="password" name="password" class="field"
-                                   th:required="${editingUser == null or editingUser.id == null}"
-                                   placeholder="••••••••">
-                        </div>
-                        <div>
-                            <label class="label" for="role">Phân quyền hệ thống *</label>
-                            <select id="role" name="role" class="select" required>
-                                <option th:each="r : ${roles}"
-                                        th:value="${r}"
-                                        th:text="${@enumDisplayService.userRole(r)}"
-                                        th:selected="${editingUser != null ? editingUser.role == r : r == 'USER'}">USER</option>
-                            </select>
-                        </div>
+                    <div class="form-group">
+                        <label for="userEmail" class="form-label">Email</label>
+                        <input type="email" id="userEmail" name="email" class="form-control"
+                               th:value="${isEditing ? editingUser.email : ''}" placeholder="demo@strongwine.vn"/>
                     </div>
 
-                    <div class="between pt16" style="border-top:1px solid var(--sw-line)">
-                        <a th:href="@{/admin/users}" class="btn btn-outline">Huỷ</a>
-                        <button type="submit" class="btn">Lưu tài khoản</button>
+                    <div class="form-group">
+                        <label for="userPassword" class="form-label"
+                               th:text="${isEditing ? 'Mật khẩu mới (để trống nếu giữ nguyên)' : 'Mật khẩu'}">Mật khẩu</label>
+                        <input type="password" id="userPassword" name="password" class="form-control"
+                               th:required="${!isEditing}"/>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="userRoleSelect" class="form-label">Vai trò</label>
+                        <select id="userRoleSelect" name="role" class="form-select">
+                            <option th:each="r : ${roles != null ? roles : {'USER', 'ADMIN', 'SHIPPER'}}"
+                                    th:value="${r}"
+                                    th:selected="${editingUser != null ? editingUser.role == r : r == 'USER'}"
+                                    th:text="${@enumDisplayService.userRole(r)}">Khách hàng</option>
+                        </select>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2" style="grid-column: 1 / -1;">
+                        <a th:href="@{/admin/users}" class="btn btn-secondary">Hủy</a>
+                        <button type="submit" class="btn btn-primary"
+                                th:text="${isEditing ? 'Cập nhật tài khoản' : 'Tạo tài khoản'}">Lưu người dùng</button>
                     </div>
                 </form>
             </section>
         </main>
     </div>
 </div>
+
 <div th:replace="~{fragments/admin-shell :: scripts}"></div>
 </body>
 </html>

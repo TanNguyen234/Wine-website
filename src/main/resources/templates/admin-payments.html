@@ -1,68 +1,135 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="vi">
-<head th:replace="~{fragments/admin-shell :: head('Quản Lý Thanh Toán · StrongWine Control Center')}"></head>
-<body>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/admin-shell :: head('Quản lý thanh toán')}"></head>
+<body class="admin-body">
 <div class="admin-shell">
     <aside th:replace="~{fragments/admin-shell :: sidebar('payments')}"></aside>
 
-    <div class="admin-main">
+    <div class="admin-main-wrap">
         <header th:replace="~{fragments/admin-shell :: topbar}"></header>
 
-        <main class="admin-content">
-            <div class="admin-head">
+        <main class="admin-main" id="main-content">
+            <div class="admin-page-header">
                 <div>
-                    <div class="eyebrow">ĐỐI SOÁT TÀI CHÍNH</div>
-                    <h1>Quản lý thanh toán &amp; giao dịch</h1>
-                    <p>Theo dõi trạng thái thanh toán đơn hàng và lịch sử đối soát cổng thanh toán.</p>
+                    <h1 class="admin-page-title">Đối soát thanh toán &amp; Hoàn tiền</h1>
+                    <p class="admin-page-subtitle">Theo dõi mã giao dịch cổng thanh toán, hàng đợi REFUND_REQUIRED và lịch sử ledger giao dịch.</p>
                 </div>
-                <div class="display-flex gap8">
-                    <a th:href="@{/api/admin/excel/export/revenue}" class="btn btn-outline btn-sm" style="display:inline-flex;align-items:center;gap:6px">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                            <polyline points="7 10 12 15 17 10"></polyline>
-                            <line x1="12" y1="15" x2="12" y2="3"></line>
-                        </svg>
-                        <span>Xuất Báo Cáo Doanh Thu</span>
-                    </a>
+                <div class="d-flex flex-wrap gap-2">
+                    <span class="status bad" th:if="${(refundRequiredCount ?: 0) > 0}"
+                          th:text="${refundRequiredCount} + ' giao dịch REFUND_REQUIRED'">1 giao dịch REFUND_REQUIRED</span>
+                    <span class="status neutral" th:text="'Tổng ' + ${totalItems != null ? totalItems : 0} + ' thanh toán'">0 thanh toán</span>
                 </div>
             </div>
 
-            <section class="admin-card mb20">
-                <div class="admin-card-head mb12">
-                    <h3>Danh sách phiếu thanh toán</h3>
-                    <span class="status info" th:text="'Tổng ' + (${totalItems != null ? totalItems : 0}) + ' giao dịch'">0</span>
+            <div th:if="${success != null or message != null}" class="admin-card mb-3" role="status" style="border-left: 4px solid var(--status-ok-ink);">
+                <strong class="status ok">Thành công</strong>
+                <span class="ms-2" th:text="${success != null ? success : message}">Đã xử lý thanh toán.</span>
+            </div>
+            <div th:if="${error != null}" class="admin-card mb-3" role="alert" style="border-left: 4px solid var(--status-danger-ink);">
+                <strong class="status bad">Lỗi</strong>
+                <span class="ms-2" th:text="${error}">Không thể cập nhật thanh toán.</span>
+            </div>
+
+            <!-- Priority REFUND_REQUIRED Queue -->
+            <section class="admin-card mb-4"
+                     th:if="${refundRequiredPayments != null and !#lists.isEmpty(refundRequiredPayments)}"
+                     style="border-left: 4px solid var(--status-danger-ink);">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h2 class="h5 mb-1">Hàng đợi cần hoàn tiền (REFUND_REQUIRED)</h2>
+                        <p class="small text-secondary mb-0">Các đơn đã thu tiền trước khi hủy hoặc trả hàng thành công — cần chuyển khoản/hoàn tiền cổng thanh toán và ghi nhận mã tham chiếu.</p>
+                    </div>
+                    <span class="status bad" th:text="${refundRequiredCount ?: #lists.size(refundRequiredPayments)} + ' chờ xử lý'">0</span>
                 </div>
-                <div class="table-scroll">
-                    <table class="sw-table">
+
+                <div class="table-container">
+                    <table class="admin-table admin-table--responsive">
                         <thead>
                         <tr>
-                            <th>ID</th>
-                            <th>Mã đơn hàng</th>
-                            <th>Phương thức</th>
-                            <th>Mã tham chiếu</th>
-                            <th>Trạng thái</th>
-                            <th>Ngày thanh toán</th>
+                            <th>Mã TT</th>
+                            <th>Đơn hàng</th>
+                            <th>Kênh TT</th>
+                            <th>Số tiền</th>
+                            <th>Mã tham chiếu gốc</th>
+                            <th>Xác nhận hoàn tiền</th>
                         </tr>
                         </thead>
                         <tbody>
-                        <tr th:if="${payments == null or payments.isEmpty()}">
-                            <td colspan="6" class="text-center muted">Chưa có bản ghi thanh toán.</td>
+                        <tr th:each="rp : ${refundRequiredPayments}">
+                            <td data-label="Mã TT" class="admin-num" th:text="'#' + ${rp.id}">#1</td>
+                            <td data-label="Đơn hàng" class="admin-num"
+                                th:text="${rp.order != null ? ('Đơn #' + rp.order.id) : '—'}">Đơn #1</td>
+                            <td data-label="Kênh TT" th:text="${rp.method != null ? @enumDisplayService.paymentMethod(rp.method) : '—'}">STRIPE</td>
+                            <td data-label="Số tiền" class="admin-num"
+                                th:text="${rp.amount != null ? (#numbers.formatDecimal(rp.amount, 0, 'COMMA', 0, 'POINT') + ' ₫') : '0 ₫'}">0 ₫</td>
+                            <td data-label="Mã tham chiếu gốc">
+                                <code th:text="${rp.paymentReference ?: '—'}">pi_test_98765</code>
+                            </td>
+                            <td data-label="Xác nhận hoàn tiền">
+                                <form th:action="@{/admin/payments/{id}/mark-refunded(id=${rp.id})}" method="post" class="d-flex flex-wrap gap-2 align-items-center">
+                                    <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                    <input type="text" name="externalRefundRef" class="form-control form-control-sm"
+                                           placeholder="Mã GD hoàn (VD: re_...)" style="max-width: 170px;"/>
+                                    <input type="text" name="refundNote" class="form-control form-control-sm"
+                                           placeholder="Ghi chú hoàn tiền" style="max-width: 170px;"/>
+                                    <button type="submit" class="btn btn-primary btn-sm">Đánh dấu đã hoàn tiền</button>
+                                </form>
+                            </td>
                         </tr>
-                        <tr th:each="pay : ${payments}">
-                            <td th:text="'#' + ${pay.id}">#1</td>
-                            <td>
-                                <a th:if="${pay.order != null}" th:href="@{/orders/{id}(id=${pay.order.id})}">
-                                    <strong th:text="'Đơn #' + ${pay.order.id}">Đơn #1</strong>
-                                </a>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Payments List -->
+            <section class="admin-card mb-4">
+                <h2 class="h5 mb-3">Danh sách giao dịch thanh toán</h2>
+                <div class="table-container">
+                    <table class="admin-table admin-table--responsive">
+                        <thead>
+                        <tr>
+                            <th>Mã TT</th>
+                            <th>Đơn hàng</th>
+                            <th>Phương thức</th>
+                            <th>Số tiền</th>
+                            <th>Mã tham chiếu cổng</th>
+                            <th>Trạng thái</th>
+                            <th>Thời gian</th>
+                            <th>Thao tác</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:if="${payments == null or #lists.isEmpty(payments)}">
+                            <td colspan="8" class="text-secondary">Chưa có giao dịch thanh toán nào.</td>
+                        </tr>
+                        <tr th:each="p : ${payments}">
+                            <td data-label="Mã TT" class="admin-num" th:text="'#' + ${p.id}">#1</td>
+                            <td data-label="Đơn hàng" class="admin-num"
+                                th:text="${p.order != null ? ('Đơn #' + p.order.id) : '—'}">Đơn #1</td>
+                            <td data-label="Phương thức">
+                                <span class="status neutral"
+                                      th:text="${p.method != null ? @enumDisplayService.paymentMethod(p.method) : '—'}">STRIPE</span>
                             </td>
-                            <td><span class="badge badge-gold" th:text="${@enumDisplayService.paymentMethod(pay.method)}">COD</span></td>
-                            <td><code th:text="${pay.paymentReference != null ? pay.paymentReference : '-'}">TXN</code></td>
-                            <td>
-                                <span class="status"
-                                      th:classappend="${pay.status != null and pay.status.name() == 'SUCCESS'} ? 'ok' : 'warn'"
-                                      th:text="${@enumDisplayService.paymentStatus(pay.status)}">Trạng thái</span>
+                            <td data-label="Số tiền" class="admin-num"
+                                th:text="${p.amount != null ? (#numbers.formatDecimal(p.amount, 0, 'COMMA', 0, 'POINT') + ' ₫') : '0 ₫'}">0 ₫</td>
+                            <td data-label="Mã tham chiếu cổng">
+                                <code th:text="${p.paymentReference ?: '—'}">pi_test_98765</code>
                             </td>
-                            <td class="small" th:text="${pay.createdAt != null ? #temporals.format(pay.createdAt, 'dd/MM/yyyy HH:mm') : '-'}">10/10/2026</td>
+                            <td data-label="Trạng thái">
+                                <span th:class="'status ' + ${@enumDisplayService.paymentStatusBadgeClass(p.status)}"
+                                      th:text="${@enumDisplayService.paymentStatus(p.status)}">Thành công</span>
+                            </td>
+                            <td data-label="Thời gian" class="admin-num"
+                                th:text="${p.createdAt != null ? #temporals.format(p.createdAt, 'dd/MM/yyyy HH:mm') : '—'}">—</td>
+                            <td data-label="Thao tác">
+                                <form th:if="${p.status != null and p.status.name() == 'REFUND_REQUIRED'}"
+                                      th:action="@{/admin/payments/{id}/mark-refunded(id=${p.id})}" method="post" class="d-flex flex-wrap gap-2 align-items-center">
+                                    <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                    <input type="text" name="externalRefundRef" class="form-control form-control-sm" placeholder="Mã hoàn tiền" style="max-width: 140px;"/>
+                                    <button type="submit" class="btn btn-primary btn-sm">Đánh dấu đã hoàn tiền</button>
+                                </form>
+                                <span th:unless="${p.status != null and p.status.name() == 'REFUND_REQUIRED'}" class="small text-secondary">Đã đồng bộ</span>
+                            </td>
                         </tr>
                         </tbody>
                     </table>
@@ -71,33 +138,42 @@
                 <div th:replace="~{fragments/pagination :: pagination('/admin/payments')}"></div>
             </section>
 
+            <!-- Payment Transactions Ledger -->
             <section class="admin-card">
-                <div class="admin-card-head mb12">
-                    <h3>Nhật ký phản hồi cổng thanh toán (Payment Transactions)</h3>
-                </div>
-                <div class="table-scroll">
-                    <table class="sw-table">
+                <h2 class="h5 mb-3">Sổ cái chi tiết giao dịch (Payment Transactions)</h2>
+                <div class="table-container">
+                    <table class="admin-table admin-table--responsive">
                         <thead>
                         <tr>
                             <th>ID</th>
-                            <th>Phương thức</th>
-                            <th>Số tiền</th>
+                            <th>Đơn hàng</th>
+                            <th>Loại GD</th>
+                            <th>Mã tham chiếu</th>
                             <th>Trạng thái</th>
-                            <th>Mã phản hồi</th>
+                            <th>Payload / Chi tiết</th>
                             <th>Thời gian</th>
                         </tr>
                         </thead>
                         <tbody>
-                        <tr th:if="${paymentTransactions == null or paymentTransactions.isEmpty()}">
-                            <td colspan="6" class="text-center muted">Chưa có nhật ký giao dịch chi tiết.</td>
+                        <tr th:if="${paymentTransactions == null or #lists.isEmpty(paymentTransactions)}">
+                            <td colspan="7" class="text-secondary">Chưa có log giao dịch chi tiết.</td>
                         </tr>
-                        <tr th:each="pt : ${paymentTransactions}">
-                            <td th:text="'#' + ${pt.id}">#1</td>
-                            <td th:text="${@enumDisplayService.paymentTransactionType(pt.transactionType)}">STRIPE_SESSION</td>
-                            <td><code>Webhook / Session</code></td>
-                            <td><span class="status info" th:text="${@enumDisplayService.paymentTransactionStatus(pt.status)}">Status</span></td>
-                            <td class="small muted" th:text="${pt.payload != null ? #strings.abbreviate(pt.payload, 80) : '-'}">OK</td>
-                            <td class="small" th:text="${pt.createdAt != null ? #temporals.format(pt.createdAt, 'dd/MM/yyyy HH:mm:ss') : '-'}">10/10/2026</td>
+                        <tr th:each="t : ${paymentTransactions}">
+                            <td data-label="ID" class="admin-num" th:text="${t.id}">1</td>
+                            <td data-label="Đơn hàng" class="admin-num"
+                                th:text="${t.payment != null and t.payment.order != null ? ('Đơn #' + t.payment.order.id) : '—'}">—</td>
+                            <td data-label="Loại GD"
+                                th:text="${t.transactionType != null ? @enumDisplayService.paymentTransactionType(t.transactionType) : '—'}">Thanh toán</td>
+                            <td data-label="Mã tham chiếu">
+                                <code th:text="${t.payment != null and t.payment.paymentReference != null ? t.payment.paymentReference : '—'}">pi_test_98765</code>
+                            </td>
+                            <td data-label="Trạng thái">
+                                <span th:class="'status ' + ${@enumDisplayService.paymentTransactionStatusBadgeClass(t.status)}"
+                                      th:text="${@enumDisplayService.paymentTransactionStatus(t.status)}">Thành công</span>
+                            </td>
+                            <td data-label="Payload / Chi tiết" class="small text-secondary" th:text="${t.payload ?: '—'}">—</td>
+                            <td data-label="Thời gian" class="admin-num"
+                                th:text="${t.createdAt != null ? #temporals.format(t.createdAt, 'dd/MM/yyyy HH:mm') : '—'}">—</td>
                         </tr>
                         </tbody>
                     </table>
@@ -106,6 +182,7 @@
         </main>
     </div>
 </div>
+
 <div th:replace="~{fragments/admin-shell :: scripts}"></div>
 </body>
 </html>

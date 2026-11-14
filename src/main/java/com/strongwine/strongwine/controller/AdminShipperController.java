@@ -2,6 +2,7 @@ package com.strongwine.strongwine.controller;
 
 import com.strongwine.strongwine.entity.CodBatchStatus;
 import com.strongwine.strongwine.entity.Shipper;
+import com.strongwine.strongwine.entity.ShipperCodBatch;
 import com.strongwine.strongwine.entity.ShipperStatus;
 import com.strongwine.strongwine.service.ShipperCodBatchService;
 import com.strongwine.strongwine.service.ShipperService;
@@ -155,36 +156,41 @@ public class AdminShipperController {
 
     @GetMapping("/cod-batches")
     public String listCodBatches(@RequestParam(required = false) CodBatchStatus status, Model model) {
-        org.springframework.data.domain.PageRequest pageable = org.springframework.data.domain.PageRequest.of(
-                0, 10, org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "id"));
-        org.springframework.data.domain.Page<Shipper> shipperPage = shipperService.getShippersPage(pageable);
-        model.addAttribute("shippers", shipperPage.getContent());
-        model.addAttribute("activeLoadByShipperId", shipperService.getActiveLoadByShipperId(shipperPage.getContent()));
-        model.addAttribute("shipperStats", shipperService.getShipperOverviewStats());
-        model.addAttribute("currentPage", 0);
-        model.addAttribute("pageSize", 10);
-        model.addAttribute("sortBy", "id");
-        model.addAttribute("sortDir", "desc");
-        model.addAttribute("totalPages", shipperPage.getTotalPages());
-        model.addAttribute("hasNext", shipperPage.hasNext());
-        model.addAttribute("hasPrevious", shipperPage.hasPrevious());
-        model.addAttribute("totalEntries", shipperPage.getTotalElements());
+        List<ShipperCodBatch> allBatches = shipperCodBatchService == null
+                ? List.of()
+                : safeBatchList(shipperCodBatchService.getAllBatches());
+        List<ShipperCodBatch> filteredBatches = status == null
+                ? allBatches
+                : (shipperCodBatchService == null
+                        ? List.of()
+                        : safeBatchList(shipperCodBatchService.getBatchesByStatus(status)));
+        if (status != null && allBatches.isEmpty() && !filteredBatches.isEmpty()) {
+            allBatches = filteredBatches;
+        }
+
+        long pendingCount = allBatches.stream().filter(b -> b.getStatus() == CodBatchStatus.PENDING_SETTLEMENT).count();
+        long verifiedCount = allBatches.stream().filter(b -> b.getStatus() == CodBatchStatus.VERIFIED).count();
+        long disputedCount = allBatches.stream().filter(b -> b.getStatus() == CodBatchStatus.DISPUTED).count();
+
+        model.addAttribute("codBatches", filteredBatches);
         model.addAttribute("codBatchStatuses", CodBatchStatus.values());
         model.addAttribute("filterBatchStatus", status);
-        model.addAttribute("codBatches", shipperCodBatchService == null
-                ? List.of()
-                : shipperCodBatchService.getBatchesByStatus(status));
-        return "admin-shippers";
+        model.addAttribute("pendingCount", pendingCount);
+        model.addAttribute("verifiedCount", verifiedCount);
+        model.addAttribute("disputedCount", disputedCount);
+        model.addAttribute("totalBatches", allBatches.size());
+        return "admin-cod-batches";
     }
 
     @PostMapping("/cod-batches/{id}/verify")
     public String verifyCodBatch(@PathVariable Long id,
                                  @RequestParam(required = false) String note,
+                                 @RequestParam(required = false) String returnTo,
                                  Authentication authentication,
                                  RedirectAttributes redirectAttributes) {
         if (shipperCodBatchService == null) {
             redirectAttributes.addFlashAttribute("error", "Dịch vụ bảng kê COD chưa sẵn sàng");
-            return "redirect:/admin/shippers";
+            return resolveCodBatchRedirect(returnTo);
         }
         try {
             String actor = authentication == null ? "admin" : authentication.getName();
@@ -193,17 +199,18 @@ public class AdminShipperController {
         } catch (Exception ex) {
             redirectAttributes.addFlashAttribute("error", "Xác nhận bảng kê COD thất bại: " + ex.getMessage());
         }
-        return "redirect:/admin/shippers";
+        return resolveCodBatchRedirect(returnTo);
     }
 
     @PostMapping("/cod-batches/{id}/dispute")
     public String disputeCodBatch(@PathVariable Long id,
                                   @RequestParam String reason,
+                                  @RequestParam(required = false) String returnTo,
                                   Authentication authentication,
                                   RedirectAttributes redirectAttributes) {
         if (shipperCodBatchService == null) {
             redirectAttributes.addFlashAttribute("error", "Dịch vụ bảng kê COD chưa sẵn sàng");
-            return "redirect:/admin/shippers";
+            return resolveCodBatchRedirect(returnTo);
         }
         try {
             String actor = authentication == null ? "admin" : authentication.getName();
@@ -212,6 +219,14 @@ public class AdminShipperController {
         } catch (Exception ex) {
             redirectAttributes.addFlashAttribute("error", "Cập nhật tranh chấp thất bại: " + ex.getMessage());
         }
-        return "redirect:/admin/shippers";
+        return resolveCodBatchRedirect(returnTo);
+    }
+
+    private String resolveCodBatchRedirect(String returnTo) {
+        return "cod-batches".equalsIgnoreCase(returnTo) ? "redirect:/admin/shippers/cod-batches" : "redirect:/admin/shippers";
+    }
+
+    private List<ShipperCodBatch> safeBatchList(List<ShipperCodBatch> batches) {
+        return batches != null ? batches : List.of();
     }
 }

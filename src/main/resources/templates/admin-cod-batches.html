@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/admin-shell :: head('Đối soát bảng kê COD')}"></head>
+<body class="admin-body">
+<div class="admin-shell">
+    <aside th:replace="~{fragments/admin-shell :: sidebar('cod-batches')}"></aside>
+
+    <div class="admin-main-wrap">
+        <header th:replace="~{fragments/admin-shell :: topbar}"></header>
+
+        <main class="admin-main" id="main-content">
+            <div class="admin-page-header">
+                <div>
+                    <h1 class="admin-page-title">Đối soát Bảng kê COD Shipper</h1>
+                    <p class="admin-page-subtitle">Kiểm tra chênh lệch tiền thu hộ thực tế từ shipper, xác nhận quyết toán hoặc ghi nhận tranh chấp.</p>
+                </div>
+                <a th:href="@{/admin/shippers}" class="btn btn-secondary btn-sm">Danh sách shipper</a>
+            </div>
+
+            <div th:if="${success != null}" class="admin-card mb-3" role="status" style="border-left: 4px solid var(--status-ok-ink);">
+                <strong class="status ok">Thành công</strong>
+                <span class="ms-2" th:text="${success}">Đã cập nhật bảng kê COD.</span>
+            </div>
+            <div th:if="${error != null}" class="admin-card mb-3" role="alert" style="border-left: 4px solid var(--status-danger-ink);">
+                <strong class="status bad">Lỗi</strong>
+                <span class="ms-2" th:text="${error}">Không thể xử lý bảng kê COD.</span>
+            </div>
+
+            <section class="kpi-grid mb-4">
+                <article class="kpi-card">
+                    <span class="kpi-label">Tổng bảng kê COD</span>
+                    <strong class="kpi-value admin-num" th:text="${totalBatches ?: 0}">0</strong>
+                    <span class="kpi-meta">Tất cả phiên nộp tiền COD</span>
+                </article>
+                <article class="kpi-card">
+                    <span class="kpi-label">Chờ đối soát</span>
+                    <strong class="kpi-value admin-num" th:text="${pendingCount ?: 0}">0</strong>
+                    <span class="kpi-meta">Cần kế toán/admin kiểm quỹ</span>
+                </article>
+                <article class="kpi-card">
+                    <span class="kpi-label">Đã quyết toán</span>
+                    <strong class="kpi-value admin-num" th:text="${verifiedCount ?: 0}">0</strong>
+                    <span class="kpi-meta">Khớp số liệu thu hộ</span>
+                </article>
+                <article class="kpi-card">
+                    <span class="kpi-label">Đang tranh chấp</span>
+                    <strong class="kpi-value admin-num" th:text="${disputedCount ?: 0}">0</strong>
+                    <span class="kpi-meta">Có sai lệch chờ làm rõ</span>
+                </article>
+            </section>
+
+            <nav class="admin-quick-tabs mb-4" aria-label="Lọc bảng kê COD theo trạng thái">
+                <a th:href="@{/admin/shippers/cod-batches}"
+                   class="admin-quick-tab"
+                   th:classappend="${filterBatchStatus == null ? ' is-active' : ''}">Tất cả bảng kê</a>
+                <a th:each="st : ${codBatchStatuses != null ? codBatchStatuses : T(com.strongwine.strongwine.entity.CodBatchStatus).values()}"
+                   th:href="@{/admin/shippers/cod-batches(status=${st.name()})}"
+                   class="admin-quick-tab"
+                   th:classappend="${filterBatchStatus == st ? ' is-active' : ''}"
+                   th:text="${@enumDisplayService.codBatchStatus(st)}">Trạng thái</a>
+            </nav>
+
+            <section class="admin-card">
+                <div class="table-container">
+                    <table class="admin-table admin-table--responsive">
+                        <thead>
+                        <tr>
+                            <th>Mã bảng kê</th>
+                            <th>Shipper</th>
+                            <th>Số đơn</th>
+                            <th>Phải thu dự kiến</th>
+                            <th>Shipper nộp</th>
+                            <th>Trạng thái</th>
+                            <th>Thông tin đối soát</th>
+                            <th>Thao tác</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:if="${codBatches == null or #lists.isEmpty(codBatches)}">
+                            <td colspan="8" class="text-secondary">Chưa có bảng kê COD nào theo tiêu chí lọc.</td>
+                        </tr>
+                        <tr th:each="b : ${codBatches}">
+                            <td data-label="Mã bảng kê" class="admin-num">
+                                <strong th:text="${b.batchCode}">COD-2026-001</strong>
+                                <div class="small text-secondary" th:if="${b.submittedAt != null}"
+                                     th:text="${#temporals.format(b.submittedAt, 'dd/MM/yyyy HH:mm')}">—</div>
+                            </td>
+                            <td data-label="Shipper">
+                                <div class="fw-bold" th:text="${b.shipper != null ? b.shipper.name : 'Shipper'}">Shipper</div>
+                                <div class="small text-secondary" th:if="${b.shipper != null and b.shipper.phone != null}"
+                                     th:text="${b.shipper.phone}">0900000000</div>
+                            </td>
+                            <td data-label="Số đơn" class="admin-num" th:text="${b.orderCount ?: 0}">0</td>
+                            <td data-label="Phải thu dự kiến" class="admin-num"
+                                th:text="${b.totalExpectedAmount != null ? (#numbers.formatDecimal(b.totalExpectedAmount, 0, 'COMMA', 0, 'POINT') + ' ₫') : '0 ₫'}">0 ₫</td>
+                            <td data-label="Shipper nộp" class="admin-num">
+                                <strong th:text="${b.totalSubmittedAmount != null ? (#numbers.formatDecimal(b.totalSubmittedAmount, 0, 'COMMA', 0, 'POINT') + ' ₫') : '0 ₫'}">0 ₫</strong>
+                                <div class="small" th:if="${b.totalExpectedAmount != null and b.totalSubmittedAmount != null and b.totalExpectedAmount.compareTo(b.totalSubmittedAmount) != 0}">
+                                    <span class="status warn">Lệch số</span>
+                                </div>
+                            </td>
+                            <td data-label="Trạng thái">
+                                <span th:class="'status ' + ${@enumDisplayService.codBatchStatusBadgeClass(b.status)}"
+                                      th:text="${@enumDisplayService.codBatchStatus(b.status)}">Chờ đối soát</span>
+                            </td>
+                            <td data-label="Thông tin đối soát" class="small text-secondary">
+                                <div th:if="${b.note != null}" th:text="${b.note}">Ghi chú</div>
+                                <div th:if="${b.verifiedBy != null}" th:text="'Bởi: ' + ${b.verifiedBy}">admin</div>
+                                <div th:if="${b.verifiedAt != null}" th:text="${#temporals.format(b.verifiedAt, 'dd/MM HH:mm')}">—</div>
+                            </td>
+                            <td data-label="Thao tác">
+                                <div th:if="${b.status != null and b.status.name() == 'PENDING_SETTLEMENT'}" class="d-flex flex-column gap-2">
+                                    <form th:action="@{/admin/shippers/cod-batches/{id}/verify(id=${b.id})}" method="post" class="d-flex flex-wrap gap-2 align-items-center">
+                                        <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                        <input type="hidden" name="returnTo" value="cod-batches"/>
+                                        <input type="text" name="note" class="form-control form-control-sm" placeholder="Ghi chú duyệt" style="max-width: 140px;"/>
+                                        <button type="submit" class="btn btn-primary btn-sm">Xác nhận khớp</button>
+                                    </form>
+                                    <form th:action="@{/admin/shippers/cod-batches/{id}/dispute(id=${b.id})}" method="post" class="d-flex flex-wrap gap-2 align-items-center">
+                                        <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                        <input type="hidden" name="returnTo" value="cod-batches"/>
+                                        <input type="text" name="reason" class="form-control form-control-sm" placeholder="Lý do chênh lệch" style="max-width: 140px;" required/>
+                                        <button type="submit" class="btn btn-danger btn-sm">Tranh chấp</button>
+                                    </form>
+                                </div>
+                                <span th:unless="${b.status != null and b.status.name() == 'PENDING_SETTLEMENT'}" class="small text-secondary">Đã đối soát</span>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+</div>
+
+<div th:replace="~{fragments/admin-shell :: scripts}"></div>
+</body>
+</html>

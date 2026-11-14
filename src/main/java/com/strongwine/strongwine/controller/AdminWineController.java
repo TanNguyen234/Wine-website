@@ -3,9 +3,14 @@ package com.strongwine.strongwine.controller;
 import com.strongwine.strongwine.entity.Wine;
 import com.strongwine.strongwine.service.AdminAuditLogService;
 import com.strongwine.strongwine.service.FileStorageService;
+import com.strongwine.strongwine.service.InventoryService;
 import com.strongwine.strongwine.service.WineService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -19,8 +24,11 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 
@@ -28,11 +36,17 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 @RequestMapping("/admin/wines")
 public class AdminWineController {
 
+    private static final List<String> ADMIN_WINE_TYPES = List.of("Red", "White", "Rose", "Sparkling", "Traditional");
+    private static final Set<String> ALLOWED_SORT_FIELDS = Set.of("id", "name", "type", "country", "year", "price", "createdAt");
+
     private final WineService wineService;
     private final FileStorageService fileStorageService;
 
     @Autowired(required = false)
     private AdminAuditLogService adminAuditLogService;
+
+    @Autowired(required = false)
+    private InventoryService inventoryService;
 
     @Autowired
     public AdminWineController(WineService wineService, FileStorageService fileStorageService) {
@@ -41,8 +55,59 @@ public class AdminWineController {
     }
 
     @GetMapping({"", "/"})
-    public String redirectToAdminCatalog() {
-        return "redirect:/admin";
+    public String listWines(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String type,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir,
+            Model model) {
+
+        int safePage = Math.max(0, page);
+        int safeSize = Math.min(Math.max(size, 1), 100);
+        String safeSortBy = (sortBy != null && ALLOWED_SORT_FIELDS.contains(sortBy)) ? sortBy : "id";
+        String safeSortDir = "asc".equalsIgnoreCase(sortDir) ? "asc" : "desc";
+        Sort.Direction direction = "asc".equalsIgnoreCase(safeSortDir) ? Sort.Direction.ASC : Sort.Direction.DESC;
+        Pageable pageable = PageRequest.of(safePage, safeSize, Sort.by(direction, safeSortBy));
+
+        String trimmedKeyword = (keyword != null && !keyword.isBlank()) ? keyword.trim() : null;
+        String trimmedType = (type != null && !type.isBlank()) ? type.trim() : null;
+
+        Page<Wine> winePage = (trimmedKeyword == null && trimmedType == null)
+                ? wineService.getAllWinesPage(pageable)
+                : wineService.searchWinesPage(trimmedKeyword, trimmedType, null, null, null, null, pageable);
+
+        if (winePage == null) {
+            winePage = Page.empty(pageable);
+        }
+
+        List<Wine> wines = winePage.getContent();
+        Map<Long, Integer> availableStockByWineId = Collections.emptyMap();
+        if (inventoryService != null && !wines.isEmpty()) {
+            List<Long> wineIds = wines.stream()
+                    .map(Wine::getId)
+                    .filter(Objects::nonNull)
+                    .toList();
+            if (!wineIds.isEmpty()) {
+                availableStockByWineId = inventoryService.getAvailableStockByWineIds(wineIds);
+            }
+        }
+
+        model.addAttribute("wines", wines);
+        model.addAttribute("availableStockByWineId", availableStockByWineId);
+        model.addAttribute("currentPage", winePage.getNumber());
+        model.addAttribute("pageSize", winePage.getSize());
+        model.addAttribute("sortBy", safeSortBy);
+        model.addAttribute("sortDir", safeSortDir);
+        model.addAttribute("totalPages", winePage.getTotalPages());
+        model.addAttribute("hasNext", winePage.hasNext());
+        model.addAttribute("hasPrevious", winePage.hasPrevious());
+        model.addAttribute("totalEntries", winePage.getTotalElements());
+        model.addAttribute("keyword", trimmedKeyword);
+        model.addAttribute("type", trimmedType);
+        model.addAttribute("types", ADMIN_WINE_TYPES);
+        return "admin-wines";
     }
 
     @GetMapping("/create")

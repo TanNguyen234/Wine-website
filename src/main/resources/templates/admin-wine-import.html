@@ -1,134 +1,139 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="vi">
-<head th:replace="~{fragments/admin-shell :: head('Nhập Sản Phẩm Từ Excel · StrongWine Control Center')}"></head>
-<body>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/admin-shell :: head('Nhập dữ liệu rượu từ Excel')}"></head>
+<body class="admin-body">
 <div class="admin-shell">
-    <aside th:replace="~{fragments/admin-shell :: sidebar('import')}"></aside>
+    <aside th:replace="~{fragments/admin-shell :: sidebar('wine-import')}"></aside>
 
-    <div class="admin-main">
+    <div class="admin-main-wrap">
         <header th:replace="~{fragments/admin-shell :: topbar}"></header>
 
-        <main class="admin-content">
-            <div class="admin-head">
+        <main class="admin-main" id="main-content">
+            <div class="admin-page-header">
                 <div>
-                    <div class="eyebrow">CÔNG CỤ ĐỒNG BỘ DỮ LIỆU HÀNG LOẠT</div>
-                    <h1>Nhập danh mục &amp; tồn kho từ Excel (.xlsx)</h1>
-                    <p>Quy trình 3 bước an toàn: Tải file mẫu chuẩn &rarr; Kiểm thử Dry-Run từng dòng &rarr; Xác nhận ghi vào cơ sở dữ liệu.</p>
+                    <h1 class="admin-page-title">Nhập danh mục rượu &amp; tồn kho từ Excel</h1>
+                    <p class="admin-page-subtitle">Tải tệp mẫu chuẩn, kiểm tra lỗi từng ô dữ liệu trước khi ghi giao dịch vào cơ sở dữ liệu.</p>
                 </div>
-                <div class="display-flex gap10">
-                    <a th:href="@{/api/admin/excel/template}" class="btn btn-outline btn-sm" style="display:inline-flex;align-items:center;gap:6px">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                            <polyline points="7 10 12 15 17 10"></polyline>
-                            <line x1="12" y1="15" x2="12" y2="3"></line>
-                        </svg>
-                        <span>Tải file Excel mẫu (.xlsx)</span>
-                    </a>
-                    <a th:href="@{/wines}" class="btn btn-outline btn-sm">Xem danh mục</a>
+                <div class="d-flex flex-wrap gap-2">
+                    <a th:href="@{/api/admin/excel/template}" class="btn btn-outline-gold btn-sm">Tải file mẫu Excel (.xlsx)</a>
+                    <a th:href="@{/admin/wines}" class="btn btn-secondary btn-sm">Xem danh mục rượu</a>
                 </div>
             </div>
 
-            <!-- Alerts -->
-            <div id="importSuccessAlert" class="alert-sw success mb16 d-none"></div>
-            <div id="importErrorAlert" class="alert-sw danger mb16 d-none"></div>
-
-            <!-- Step 1: Dropzone -->
-            <section class="admin-card mb20">
-                <div class="admin-card-head mb12">
-                    <div>
-                        <h3>Bước 1 · Tải lên bảng tính Excel (.xlsx)</h3>
-                        <span class="muted small">Hỗ trợ kiểm tra định dạng cột, giá bán, niên vụ và số lượng tồn kho tự động</span>
+            <section class="admin-card mb-4">
+                <div class="admin-form-grid mb-4">
+                    <div class="form-group">
+                        <label for="inventoryModeSelect" class="form-label">Chế độ cập nhật tồn kho</label>
+                        <select id="inventoryModeSelect" class="form-select">
+                            <option value="DELTA" selected>Cộng dồn số lượng mới (DELTA)</option>
+                            <option value="ABSOLUTE">Ghi đè tồn kho tuyệt đối (ABSOLUTE)</option>
+                        </select>
                     </div>
-                    <span class="status info">Dry-Run Validation</span>
+
+                    <div class="form-group">
+                        <label for="warehouseIdSelect" class="form-label">Kho nhận hàng</label>
+                        <select id="warehouseIdSelect" class="form-select">
+                            <option th:if="${defaultWarehouse != null}"
+                                    th:value="${defaultWarehouse.id}"
+                                    th:text="${defaultWarehouse.name + (defaultWarehouse.location != null ? ' — ' + defaultWarehouse.location : '')}"
+                                    selected>Main Warehouse</option>
+                            <option th:if="${defaultWarehouse == null}" value="1" selected>Kho mặc định (#1)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group d-flex align-items-end">
+                        <label class="d-flex align-items-center gap-2 mb-2">
+                            <input type="checkbox" id="strictModeCheckbox"/>
+                            <span>Strict mode: Chặn nhập nếu còn bất kỳ dòng lỗi nào</span>
+                        </label>
+                    </div>
                 </div>
 
-                <div class="dropzone" id="excelDropZone">
-                    <input type="file" id="excelFileInput" accept=".xlsx" class="d-none">
-                    <div class="eyebrow">KÉO THẢ HOẶC NHẤN ĐỂ CHỌN FILE EXCEL</div>
-                    <h3 class="serif mt8 mb8" id="filePromptText">Chọn file .xlsx từ máy tính của bạn</h3>
-                    <p class="muted small mb12">Dung lượng tối đa 10MB · Định dạng chuẩn Microsoft Excel (.xlsx)</p>
-                    <span id="selectedFileBadge" class="badge badge-gold d-none">file.xlsx</span>
-                    <div id="dryRunSpinner" class="mt12 d-none">
-                        <span class="status warn">&#9679; Đang phân tích và kiểm tra dữ liệu từng dòng...</span>
+                <!-- Drop Zone -->
+                <div id="excelDropZone" class="dropzone mb-3" tabindex="0" role="button" aria-label="Chọn hoặc kéo thả tệp Excel .xlsx">
+                    <div class="mb-2">
+                        <span th:replace="~{fragments/icons :: icon('oak-barrel')}"></span>
                     </div>
+                    <strong class="d-block mb-1">Kéo thả tệp Excel (.xlsx) vào đây hoặc nhấp để chọn tệp</strong>
+                    <div class="small text-secondary mb-2">Hỗ trợ tệp .xlsx tối đa 10MB theo đúng cột chuẩn của Maison de Vins.</div>
+                    <div id="selectedFileName" class="status neutral">Chưa có tệp nào được chọn</div>
+                </div>
+                <input type="file" id="excelFileInput" accept=".xlsx" class="d-none"/>
+                <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+                <div class="d-flex flex-wrap gap-2">
+                    <button type="button" id="previewBtn" class="btn btn-primary" disabled>Xem trước &amp; kiểm tra</button>
+                    <button type="button" id="commitImportBtn" class="btn btn-outline-gold" disabled>Xác nhận nhập vào hệ thống</button>
+                    <button type="button" id="clearExcelFileBtn" class="btn btn-secondary d-none">Xóa tệp đã chọn</button>
                 </div>
             </section>
 
-            <!-- Step 2 & 3: Dry-run Preview & Commit -->
-            <div id="previewContainer" class="d-none">
-                <div class="kpi-grid mb20">
-                    <div class="kpi-card">
-                        <span>TỔNG SỐ DÒNG ĐỌC ĐƯỢC</span>
-                        <strong id="statTotalRows">0</strong>
-                        <small class="muted" id="statInsertCount">0 thêm mới</small>
-                    </div>
-                    <div class="kpi-card">
-                        <span>DÒNG HỢP LỆ (SẴN SÀNG NHẬP)</span>
-                        <strong id="statValidRows" style="color:var(--sw-success)">0</strong>
-                        <small class="up" id="statUpdateCount">0 cập nhật</small>
-                    </div>
-                    <div class="kpi-card">
-                        <span>DÒNG BÁO LỖI ĐỊNH DẠNG</span>
-                        <strong id="statErrorRows" style="color:var(--sw-danger)">0</strong>
-                        <small class="warn">Các dòng lỗi sẽ bị bỏ qua</small>
-                    </div>
-                    <div class="kpi-card">
-                        <span>CHẾ ĐỘ CẬP NHẬT KHO</span>
-                        <div class="mt8">
-                            <label class="check-line small mb8">
-                                <input type="radio" name="inventoryMode" id="modeAdd" value="ADD" checked>
-                                <span>Cộng dồn tồn kho (ADD)</span>
-                            </label>
-                            <label class="check-line small">
-                                <input type="radio" name="inventoryMode" id="modeReplace" value="REPLACE">
-                                <span>Ghi đè tồn kho (REPLACE)</span>
-                            </label>
-                        </div>
-                    </div>
+            <!-- Validation Preview -->
+            <section id="previewSection" class="admin-card mb-4 d-none">
+                <h2 class="h5 mb-3">Kết quả kiểm tra trước khi nhập</h2>
+                <div class="kpi-grid mb-3">
+                    <article class="kpi-card">
+                        <span class="kpi-label">Tổng dòng đọc được</span>
+                        <strong id="previewTotalRows" class="kpi-value admin-num">0</strong>
+                    </article>
+                    <article class="kpi-card">
+                        <span class="kpi-label">Dòng hợp lệ</span>
+                        <strong id="previewValidRows" class="kpi-value admin-num">0</strong>
+                    </article>
+                    <article class="kpi-card">
+                        <span class="kpi-label">Dòng có lỗi</span>
+                        <strong id="previewErrorRows" class="kpi-value admin-num">0</strong>
+                    </article>
                 </div>
 
-                <section class="admin-card mb20">
-                    <div class="admin-card-head mb12" style="flex-wrap:wrap;gap:12px">
-                        <div>
-                            <h3>Bước 2 · Kết quả kiểm tra trước khi nhập (Dry-Run Preview)</h3>
-                            <span id="cleanSection" class="small" style="color:var(--sw-success)">&#10003; Tất cả dòng dữ liệu đều hợp lệ!</span>
-                            <span id="errorSection" class="small d-none" style="color:var(--sw-danger)">&#9888; Phát hiện một số dòng có lỗi dữ liệu — xem cột Chi tiết bên dưới.</span>
-                        </div>
-                        <div class="display-flex gap10">
-                            <select id="warehouseSelect" class="select" style="width:auto;min-height:38px">
-                                <option th:each="wh : ${warehouses}" th:value="${wh.id}" th:text="${wh.name}">Kho trung tâm</option>
-                                <option th:if="${warehouses == null or warehouses.isEmpty()}" value="1">Kho Trung Tâm StrongWine</option>
-                            </select>
-                            <button type="button" id="btnExecuteImport" class="btn btn-sm">
-                                Xác nhận nhập vào CSDL
-                            </button>
-                        </div>
-                    </div>
+                <div id="previewSuccessNote" class="admin-card p-3 mb-3 d-none" style="border-left: 4px solid var(--status-ok-ink);">
+                    <strong class="status ok">Sẵn sàng nhập</strong>
+                    <span class="ms-2">Tất cả dòng dữ liệu đều hợp lệ và sẵn sàng ghi vào hệ thống.</span>
+                </div>
 
-                    <div class="table-scroll">
-                        <table class="sw-table">
-                            <thead>
-                            <tr>
-                                <th>Dòng</th>
-                                <th>Trạng thái</th>
-                                <th>Tên rượu vang</th>
-                                <th>Phân loại</th>
-                                <th>Quốc gia &amp; Niên vụ</th>
-                                <th>Giá bán</th>
-                                <th>Số lượng kho</th>
-                                <th>Chi tiết kiểm tra</th>
-                            </tr>
-                            </thead>
-                            <tbody id="previewTableBody">
-                            </tbody>
-                        </table>
-                    </div>
-                </section>
-            </div>
+                <div id="previewErrorsWrap" class="table-container d-none">
+                    <table class="admin-table admin-table--responsive">
+                        <thead>
+                        <tr>
+                            <th>Dòng</th>
+                            <th>Trường lỗi</th>
+                            <th>Giá trị lỗi</th>
+                            <th>Mô tả chi tiết</th>
+                        </tr>
+                        </thead>
+                        <tbody id="previewErrorsBody"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Import Commit Summary -->
+            <section id="importResultPanel" class="admin-card d-none" role="status">
+                <h2 id="importResultTitle" class="h5 mb-2">Kết quả nhập dữ liệu</h2>
+                <div id="importResultBody"></div>
+            </section>
         </main>
     </div>
 </div>
+
+<!-- Native Confirmation Dialog -->
+<dialog id="confirmExcelImportDialog" class="sw-dialog" closedby="any" aria-labelledby="confirmExcelImportTitle">
+    <div class="sw-dialog-head">
+        <div>
+            <h2 id="confirmExcelImportTitle" class="sw-dialog-title">Xác nhận ghi dữ liệu Excel</h2>
+            <p class="small text-secondary mb-0">Hành động này sẽ tạo mới hoặc cập nhật sản phẩm và tồn kho.</p>
+        </div>
+        <button type="button" class="btn btn-secondary btn-sm" data-dialog-close="confirmExcelImportDialog" aria-label="Đóng">Đóng</button>
+    </div>
+    <div class="sw-dialog-body">
+        <p id="confirmExcelImportSummary" class="mb-4">Bạn có chắc chắn muốn thực hiện nhập dữ liệu?</p>
+        <div class="d-flex justify-content-end gap-2">
+            <button type="button" class="btn btn-secondary" data-dialog-close="confirmExcelImportDialog">Hủy</button>
+            <button type="button" id="confirmExcelImportProceedBtn" class="btn btn-primary">Tiến hành nhập</button>
+        </div>
+    </div>
+</dialog>
+
 <div th:replace="~{fragments/admin-shell :: scripts}"></div>
-<script th:src="@{/js/admin-excel-import.js}"></script>
+<script th:src="@{/js/admin-excel-import.js}" defer></script>
 </body>
 </html>

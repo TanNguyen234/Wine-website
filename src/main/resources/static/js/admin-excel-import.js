@@ -1,223 +1,394 @@
-/**
- * StrongWine — Admin Excel Bulk Import & Dry-Run Preview Controller
- */
-document.addEventListener('DOMContentLoaded', () => {
-    const csrfHeaderName = document.querySelector('meta[name="_csrf_header"]')?.content || 'X-CSRF-TOKEN';
-    const csrfToken = document.querySelector('meta[name="_csrf"]')?.content || '';
-    const csrfHeaders = csrfToken ? { [csrfHeaderName]: csrfToken } : {};
-    const dropZone = document.getElementById('excelDropZone');
-    const fileInput = document.getElementById('excelFileInput');
-    const previewContainer = document.getElementById('previewContainer');
-    const previewTableBody = document.getElementById('previewTableBody');
-    const btnExecuteImport = document.getElementById('btnExecuteImport');
-    const importSuccessAlert = document.getElementById('importSuccessAlert');
-    const importErrorAlert = document.getElementById('importErrorAlert');
-    const dryRunSpinner = document.getElementById('dryRunSpinner');
-    const filePromptText = document.getElementById('filePromptText');
-    const selectedFileBadge = document.getElementById('selectedFileBadge');
+(function () {
+    "use strict";
 
-    let currentFile = null;
+    var selectedFile = null;
+    var lastPreviewValidCount = 0;
 
-    if (dropZone && fileInput) {
-        // Click to open file dialog
-        dropZone.addEventListener('click', (e) => {
-            if (e.target.tagName !== 'BUTTON' && !e.target.closest('button')) {
+    function notify(title, message, tone) {
+        if (window.SwToast && typeof window.SwToast.show === "function") {
+            window.SwToast.show({
+                title: title,
+                message: message,
+                tone: tone || "info",
+                duration: 4800
+            });
+        }
+    }
+
+    function getCsrfHeaders() {
+        var headers = {};
+        var tokenMeta = document.querySelector("meta[name='_csrf']");
+        var headerMeta = document.querySelector("meta[name='_csrf_header']");
+        var tokenInput = document.querySelector("input[name='_csrf']");
+        var token = tokenMeta ? tokenMeta.getAttribute("content") : (tokenInput ? tokenInput.value : "");
+        var headerName = headerMeta ? headerMeta.getAttribute("content") : "X-CSRF-TOKEN";
+        if (token && headerName) {
+            headers[headerName] = token;
+        }
+        return headers;
+    }
+
+    function clearElement(el) {
+        if (!el) {
+            return;
+        }
+        while (el.firstChild) {
+            el.removeChild(el.firstChild);
+        }
+    }
+
+    function renderErrorMessageRow(tbody, text, isNeutral) {
+        clearElement(tbody);
+        var tr = document.createElement("tr");
+        var td = document.createElement("td");
+        td.colSpan = 4;
+        td.className = isNeutral ? "text-secondary" : "text-danger";
+        td.textContent = text;
+        tr.appendChild(td);
+        tbody.appendChild(tr);
+    }
+
+    function renderImportResult(panel, titleEl, bodyEl, isSuccess, titleText, summaryLines) {
+        if (!panel || !titleEl || !bodyEl) {
+            return;
+        }
+        panel.classList.remove("d-none");
+        panel.dataset.state = isSuccess ? "success" : "error";
+        titleEl.textContent = titleText;
+        clearElement(bodyEl);
+
+        summaryLines.forEach(function (line) {
+            var p = document.createElement("p");
+            p.className = "mb-2";
+            p.textContent = line;
+            bodyEl.appendChild(p);
+        });
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        var dropZone = document.getElementById("excelDropZone");
+        var fileInput = document.getElementById("excelFileInput");
+        var selectedFileName = document.getElementById("selectedFileName");
+        var clearBtn = document.getElementById("clearExcelFileBtn");
+        var previewBtn = document.getElementById("previewBtn");
+        var commitBtn = document.getElementById("commitImportBtn");
+        var inventoryModeSelect = document.getElementById("inventoryModeSelect");
+        var warehouseIdSelect = document.getElementById("warehouseIdSelect");
+        var strictModeCheckbox = document.getElementById("strictModeCheckbox");
+
+        var previewSection = document.getElementById("previewSection");
+        var previewTotalRows = document.getElementById("previewTotalRows");
+        var previewValidRows = document.getElementById("previewValidRows");
+        var previewErrorRows = document.getElementById("previewErrorRows");
+        var previewErrorsWrap = document.getElementById("previewErrorsWrap");
+        var previewErrorsBody = document.getElementById("previewErrorsBody");
+        var previewSuccessNote = document.getElementById("previewSuccessNote");
+
+        var resultPanel = document.getElementById("importResultPanel");
+        var resultTitle = document.getElementById("importResultTitle");
+        var resultBody = document.getElementById("importResultBody");
+
+        var confirmDialog = document.getElementById("confirmExcelImportDialog");
+        var confirmSummary = document.getElementById("confirmExcelImportSummary");
+        var confirmProceedBtn = document.getElementById("confirmExcelImportProceedBtn");
+
+        if (!dropZone || !fileInput) {
+            return;
+        }
+
+        function resetFileState() {
+            selectedFile = null;
+            lastPreviewValidCount = 0;
+            fileInput.value = "";
+            if (selectedFileName) {
+                selectedFileName.textContent = "Chưa có tệp nào được chọn";
+            }
+            if (previewBtn) {
+                previewBtn.disabled = true;
+            }
+            if (commitBtn) {
+                commitBtn.disabled = true;
+            }
+            if (clearBtn) {
+                clearBtn.classList.add("d-none");
+            }
+            if (previewSection) {
+                previewSection.classList.add("d-none");
+            }
+            if (resultPanel) {
+                resultPanel.classList.add("d-none");
+            }
+            clearElement(previewErrorsBody);
+        }
+
+        function acceptFile(file) {
+            if (!file) {
+                return;
+            }
+            var lowerName = (file.name || "").toLowerCase();
+            if (!lowerName.endsWith(".xlsx")) {
+                notify("Định dạng không hợp lệ", "Vui lòng chọn tệp Excel đúng định dạng .xlsx.", "bad");
+                return;
+            }
+            if (file.size > 10 * 1024 * 1024) {
+                notify("Tệp vượt quá dung lượng", "Dung lượng tệp tối đa là 10MB.", "bad");
+                return;
+            }
+            selectedFile = file;
+            lastPreviewValidCount = 0;
+            if (selectedFileName) {
+                var sizeKb = Math.max(1, Math.round(file.size / 1024));
+                selectedFileName.textContent = file.name + " (" + sizeKb + " KB)";
+            }
+            if (previewBtn) {
+                previewBtn.disabled = false;
+            }
+            if (commitBtn) {
+                commitBtn.disabled = true;
+            }
+            if (clearBtn) {
+                clearBtn.classList.remove("d-none");
+            }
+            if (previewSection) {
+                previewSection.classList.add("d-none");
+            }
+            if (resultPanel) {
+                resultPanel.classList.add("d-none");
+            }
+        }
+
+        function buildFormData() {
+            var fd = new FormData();
+            fd.append("file", selectedFile);
+            fd.append("inventoryMode", inventoryModeSelect ? inventoryModeSelect.value : "DELTA");
+            fd.append("warehouseId", warehouseIdSelect ? warehouseIdSelect.value : "1");
+            fd.append("strictMode", strictModeCheckbox && strictModeCheckbox.checked ? "true" : "false");
+            return fd;
+        }
+
+        dropZone.addEventListener("click", function () {
+            fileInput.click();
+        });
+
+        dropZone.addEventListener("keydown", function (event) {
+            if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
                 fileInput.click();
             }
         });
 
-        // Drag & drop visual feedback
-        ['dragenter', 'dragover'].forEach(eventName => {
-            dropZone.addEventListener(eventName, (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                dropZone.classList.add('border-gold');
-                dropZone.style.background = 'rgba(201, 168, 76, 0.08)';
-            }, false);
+        dropZone.addEventListener("dragover", function (event) {
+            event.preventDefault();
+            dropZone.classList.add("is-dragover");
         });
 
-        ['dragleave', 'drop'].forEach(eventName => {
-            dropZone.addEventListener(eventName, (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                dropZone.classList.remove('border-gold');
-                dropZone.style.background = '';
-            }, false);
+        dropZone.addEventListener("dragleave", function () {
+            dropZone.classList.remove("is-dragover");
         });
 
-        // Drop event
-        dropZone.addEventListener('drop', (e) => {
-            const dt = e.dataTransfer;
-            if (dt && dt.files && dt.files.length > 0) {
-                const file = dt.files[0];
-                validateAndProcessFile(file);
+        dropZone.addEventListener("drop", function (event) {
+            event.preventDefault();
+            dropZone.classList.remove("is-dragover");
+            var files = event.dataTransfer ? event.dataTransfer.files : null;
+            if (files && files.length > 0) {
+                acceptFile(files[0]);
             }
         });
 
-        // Input change
-        fileInput.addEventListener('change', () => {
+        fileInput.addEventListener("change", function () {
             if (fileInput.files && fileInput.files.length > 0) {
-                validateAndProcessFile(fileInput.files[0]);
+                acceptFile(fileInput.files[0]);
             }
         });
-    }
 
-    function validateAndProcessFile(file) {
-        if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
-            alert('Vui lòng chọn tệp bảng tính Excel có định dạng .xlsx hoặc .xls');
-            return;
-        }
-
-        currentFile = file;
-        if (selectedFileBadge) {
-            selectedFileBadge.textContent = `${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
-            selectedFileBadge.classList.remove('d-none');
-        }
-        if (filePromptText) {
-            filePromptText.textContent = 'Đã chọn tệp: ' + file.name;
-        }
-
-        // Run dry-run preview automatically
-        runDryRunPreview(file);
-    }
-
-    async function runDryRunPreview(file) {
-        if (dryRunSpinner) dryRunSpinner.classList.remove('d-none');
-        if (previewContainer) previewContainer.classList.add('d-none');
-        if (importSuccessAlert) importSuccessAlert.classList.add('d-none');
-        if (importErrorAlert) importErrorAlert.classList.add('d-none');
-
-        const formData = new FormData();
-        formData.append('file', file);
-
-        try {
-            const res = await fetch('/api/admin/excel/preview', {
-                method: 'POST',
-                headers: csrfHeaders,
-                body: formData
+        if (clearBtn) {
+            clearBtn.addEventListener("click", function (event) {
+                event.stopPropagation();
+                resetFileState();
             });
-
-            if (res.ok) {
-                const data = await res.json();
-                renderDryRunSummary(data);
-                if (previewContainer) previewContainer.classList.remove('d-none');
-            } else {
-                const errJson = await res.json().catch(() => ({}));
-                alert('Không thể đọc file Excel. ' + (errJson.message || 'Vui lòng kiểm tra cấu trúc tiêu đề cột theo mẫu chuẩn.'));
-            }
-        } catch (err) {
-            console.error('Lỗi khi gọi dry-run preview', err);
-            alert('Lỗi kết nối máy chủ khi phân tích file Excel.');
-        } finally {
-            if (dryRunSpinner) dryRunSpinner.classList.add('d-none');
-        }
-    }
-
-    function renderDryRunSummary(data) {
-        document.getElementById('statTotalRows').textContent = data.totalRows || 0;
-        document.getElementById('statValidRows').textContent = data.validRowsCount || 0;
-        document.getElementById('statErrorRows').textContent = data.errorRowsCount || 0;
-        document.getElementById('statInsertCount').textContent = data.insertCount || 0;
-        document.getElementById('statUpdateCount').textContent = data.updateCount || 0;
-
-        const errorSection = document.getElementById('errorSection');
-        const cleanSection = document.getElementById('cleanSection');
-
-        if (previewTableBody) {
-            previewTableBody.innerHTML = '';
-            if (data.errors && data.errors.length > 0) {
-                if (errorSection) errorSection.classList.remove('d-none');
-                if (cleanSection) cleanSection.classList.add('d-none');
-
-                data.errors.forEach(err => {
-                    const tr = document.createElement('tr');
-                    tr.className = 'table-danger';
-                    tr.innerHTML = `
-                        <td style="font-weight:700">Dòng ${err.rowNumber}</td>
-                        <td><span class="badge text-bg-danger">${escapeHtml(err.fieldName || 'Dữ liệu')}</span></td>
-                        <td class="text-danger">${escapeHtml(err.errorMessage || 'Lỗi không xác định')}</td>
-                        <td><code style="color:var(--gold-light)">${escapeHtml(err.invalidValue || 'Rỗng')}</code></td>
-                    `;
-                    previewTableBody.appendChild(tr);
-                });
-            } else {
-                if (errorSection) errorSection.classList.add('d-none');
-                if (cleanSection) cleanSection.classList.remove('d-none');
-            }
         }
 
-        // Enable execution button if there is at least 1 valid row
-        if (btnExecuteImport) {
-            btnExecuteImport.disabled = (data.validRowsCount || 0) === 0;
-        }
-    }
+        if (previewBtn) {
+            previewBtn.addEventListener("click", async function () {
+                if (!selectedFile) {
+                    return;
+                }
+                previewBtn.disabled = true;
+                previewBtn.textContent = "Đang kiểm tra...";
+                if (commitBtn) {
+                    commitBtn.disabled = true;
+                }
+                try {
+                    var response = await window.fetch("/api/admin/excel/preview", {
+                        method: "POST",
+                        headers: getCsrfHeaders(),
+                        body: buildFormData()
+                    });
+                    var data = await response.json();
+                    if (!response.ok) {
+                        throw new Error((data && data.message) ? data.message : ("HTTP " + response.status));
+                    }
 
-    // Execute Import into Database
-    if (btnExecuteImport) {
-        btnExecuteImport.addEventListener('click', async () => {
-            if (!currentFile) {
-                alert('Vui lòng chọn file Excel trước.');
+                    var totalRows = Number(data.totalRows) || 0;
+                    var validCount = Number(data.validCount) || 0;
+                    var errorCount = Number(data.errorCount) || 0;
+                    lastPreviewValidCount = validCount;
+
+                    if (previewSection) {
+                        previewSection.classList.remove("d-none");
+                    }
+                    if (previewTotalRows) {
+                        previewTotalRows.textContent = String(totalRows);
+                    }
+                    if (previewValidRows) {
+                        previewValidRows.textContent = String(validCount);
+                    }
+                    if (previewErrorRows) {
+                        previewErrorRows.textContent = String(errorCount);
+                    }
+
+                    clearElement(previewErrorsBody);
+                    var errors = Array.isArray(data.errors) ? data.errors : [];
+                    if (errors.length > 0) {
+                        if (previewErrorsWrap) {
+                            previewErrorsWrap.classList.remove("d-none");
+                        }
+                        if (previewSuccessNote) {
+                            previewSuccessNote.classList.add("d-none");
+                        }
+                        errors.forEach(function (err) {
+                            var tr = document.createElement("tr");
+
+                            var tdRow = document.createElement("td");
+                            tdRow.setAttribute("data-label", "Dòng");
+                            tdRow.className = "admin-num";
+                            tdRow.textContent = "Dòng " + (err.rowNumber != null ? String(err.rowNumber) : "?");
+
+                            var tdField = document.createElement("td");
+                            tdField.setAttribute("data-label", "Trường lỗi");
+                            var badge = document.createElement("span");
+                            badge.className = "status bad";
+                            badge.textContent = err.column || "Dữ liệu";
+                            tdField.appendChild(badge);
+
+                            var tdVal = document.createElement("td");
+                            tdVal.setAttribute("data-label", "Giá trị lỗi");
+                            var code = document.createElement("code");
+                            code.textContent = err.invalidValue != null && err.invalidValue !== "" ? String(err.invalidValue) : "(trống)";
+                            tdVal.appendChild(code);
+
+                            var tdMsg = document.createElement("td");
+                            tdMsg.setAttribute("data-label", "Mô tả");
+                            tdMsg.textContent = err.errorMessage || "Giá trị không hợp lệ";
+
+                            tr.appendChild(tdRow);
+                            tr.appendChild(tdField);
+                            tr.appendChild(tdVal);
+                            tr.appendChild(tdMsg);
+                            previewErrorsBody.appendChild(tr);
+                        });
+                    } else {
+                        if (previewErrorsWrap) {
+                            previewErrorsWrap.classList.add("d-none");
+                        }
+                        if (previewSuccessNote) {
+                            previewSuccessNote.classList.remove("d-none");
+                        }
+                    }
+
+                    var strictEnabled = Boolean(strictModeCheckbox && strictModeCheckbox.checked);
+                    var canCommit = validCount > 0 && (!strictEnabled || errorCount === 0);
+                    if (commitBtn) {
+                        commitBtn.disabled = !canCommit;
+                    }
+                    notify(
+                        "Hoàn tất kiểm tra tệp",
+                        "Hợp lệ " + validCount + "/" + totalRows + " dòng" + (errorCount > 0 ? (", có " + errorCount + " lỗi") : "."),
+                        errorCount > 0 ? "warn" : "good"
+                    );
+                } catch (err) {
+                    if (previewSection) {
+                        previewSection.classList.remove("d-none");
+                    }
+                    if (previewErrorsWrap) {
+                        previewErrorsWrap.classList.remove("d-none");
+                    }
+                    if (previewSuccessNote) {
+                        previewSuccessNote.classList.add("d-none");
+                    }
+                    renderErrorMessageRow(previewErrorsBody, "Lỗi kiểm tra dữ liệu: " + (err.message || "Không xác định"), false);
+                    notify("Không thể đọc tệp Excel", err.message || "Vui lòng kiểm tra lại định dạng tệp.", "bad");
+                } finally {
+                    previewBtn.disabled = false;
+                    previewBtn.textContent = "Xem trước & kiểm tra";
+                }
+            });
+        }
+
+        async function executeCommitImport() {
+            if (!selectedFile || !commitBtn) {
                 return;
             }
-
-            const inventoryMode = document.querySelector('input[name="inventoryMode"]:checked')?.value || 'ADD';
-            const warehouseSelect = document.getElementById('warehouseSelect');
-            const warehouseId = warehouseSelect ? warehouseSelect.value : '1';
-
-            const confirmMsg = `Xác nhận nhập dữ liệu vào hầm rượu?\n- Chế độ tồn kho: ${inventoryMode === 'ADD' ? 'Cộng dồn' : 'Ghi đè'}\n- Dữ liệu hợp lệ sẽ được lưu vào CSDL ngay lập tức.`;
-            if (!confirm(confirmMsg)) return;
-
-            btnExecuteImport.disabled = true;
-            btnExecuteImport.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i>Đang lưu vào CSDL...';
-
-            const formData = new FormData();
-            formData.append('file', currentFile);
-            formData.append('inventoryMode', inventoryMode);
-            formData.append('warehouseId', warehouseId);
-
+            commitBtn.disabled = true;
+            commitBtn.textContent = "Đang nhập dữ liệu...";
             try {
-                const res = await fetch('/api/admin/excel/import', {
-                    method: 'POST',
-                    headers: csrfHeaders,
-                    body: formData
+                var response = await window.fetch("/api/admin/excel/import", {
+                    method: "POST",
+                    headers: getCsrfHeaders(),
+                    body: buildFormData()
                 });
-
-                if (res.ok) {
-                    const result = await res.json();
-                    if (importSuccessAlert) {
-                        importSuccessAlert.innerHTML = `
-                            <i class="fa-solid fa-circle-check me-2 fs-5"></i>
-                            <div>
-                                <strong>Nhập dữ liệu thành công!</strong>
-                                <div>Đã xử lý <strong>${result.validRowsCount}</strong> dòng (${result.insertCount} rượu mới, ${result.updateCount} cập nhật).</div>
-                            </div>
-                        `;
-                        importSuccessAlert.classList.remove('d-none');
-                    }
-                    if (previewContainer) previewContainer.classList.add('d-none');
-                    btnExecuteImport.innerHTML = '<i class="fa-solid fa-check me-2"></i>Đã Hoàn Tất Nhập';
-                } else {
-                    const err = await res.json().catch(() => ({}));
-                    if (importErrorAlert) {
-                        importErrorAlert.innerHTML = `<i class="fa-solid fa-triangle-exclamation me-2"></i>Lỗi: ${err.message || 'Không thể lưu vào CSDL.'}`;
-                        importErrorAlert.classList.remove('d-none');
-                    }
-                    btnExecuteImport.disabled = false;
-                    btnExecuteImport.innerHTML = '<i class="fa-solid fa-upload me-2"></i>Thử Lại';
+                var data = await response.json();
+                if (!response.ok) {
+                    throw new Error((data && data.message) ? data.message : ("HTTP " + response.status));
                 }
-            } catch (e) {
-                console.error('Lỗi khi import file Excel', e);
-                alert('Lỗi kết nối khi gửi yêu cầu nhập dữ liệu.');
-                btnExecuteImport.disabled = false;
-                btnExecuteImport.innerHTML = '<i class="fa-solid fa-upload me-2"></i>Xác Nhận Nhập';
-            }
-        });
-    }
 
-    function escapeHtml(str) {
-        if (!str) return '';
-        const div = document.createElement('div');
-        div.textContent = str;
-        return div.innerHTML;
-    }
-});
+                var lines = [
+                    "Tổng dòng đã đọc: " + (data.totalRows != null ? data.totalRows : 0),
+                    "Sản phẩm tạo mới: " + (data.insertedCount != null ? data.insertedCount : 0),
+                    "Sản phẩm cập nhật: " + (data.updatedCount != null ? data.updatedCount : 0),
+                    "Dòng bỏ qua / lỗi: " + (data.skippedCount != null ? data.skippedCount : 0),
+                    "Tồn kho đã xử lý: " + (data.inventoryProcessedCount != null ? data.inventoryProcessedCount : 0)
+                ];
+                renderImportResult(resultPanel, resultTitle, resultBody, true, "Nhập dữ liệu rượu thành công", lines);
+                notify("Nhập Excel thành công", "Đã tạo mới " + (data.insertedCount || 0) + " và cập nhật " + (data.updatedCount || 0) + " sản phẩm.", "good");
+            } catch (err) {
+                renderImportResult(resultPanel, resultTitle, resultBody, false, "Nhập dữ liệu thất bại", [
+                    err.message || "Không thể ghi dữ liệu vào hệ thống."
+                ]);
+                notify("Nhập Excel thất bại", err.message || "Lỗi hệ thống", "bad");
+            } finally {
+                commitBtn.disabled = false;
+                commitBtn.textContent = "Xác nhận nhập vào hệ thống";
+            }
+        }
+
+        if (commitBtn) {
+            commitBtn.addEventListener("click", function () {
+                if (!selectedFile || commitBtn.disabled) {
+                    return;
+                }
+                if (confirmDialog && window.SwDialog && typeof window.SwDialog.open === "function") {
+                    if (confirmSummary) {
+                        var modeLabel = inventoryModeSelect && inventoryModeSelect.value === "ABSOLUTE"
+                            ? "Ghi đè tồn kho tuyệt đối (ABSOLUTE)"
+                            : "Cộng dồn tồn kho (DELTA)";
+                        confirmSummary.textContent = "Bạn sắp nhập " + lastPreviewValidCount + " dòng hợp lệ từ tệp \""
+                            + selectedFile.name + "\" với chế độ: " + modeLabel + ".";
+                    }
+                    window.SwDialog.open(confirmDialog, commitBtn);
+                } else {
+                    executeCommitImport();
+                }
+            });
+        }
+
+        if (confirmProceedBtn) {
+            confirmProceedBtn.addEventListener("click", function () {
+                if (confirmDialog && window.SwDialog && typeof window.SwDialog.close === "function") {
+                    window.SwDialog.close(confirmDialog);
+                }
+                executeCommitImport();
+            });
+        }
+    });
+})();
