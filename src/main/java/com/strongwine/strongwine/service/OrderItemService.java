@@ -1,11 +1,14 @@
 package com.strongwine.strongwine.service;
 
+import com.strongwine.strongwine.entity.Order;
 import com.strongwine.strongwine.entity.OrderItem;
+import com.strongwine.strongwine.entity.Wine;
 import com.strongwine.strongwine.repository.OrderItemRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -61,6 +64,25 @@ public class OrderItemService {
             throw new RuntimeException("OrderItem not found with id: " + id);
         }
         orderItemRepository.deleteById(id);
+    }
+
+    @Transactional(readOnly = true)
+    public List<OrderItem> getOrderItems(Order order) {
+        if (order == null || order.getOrderItems() == null) {
+            return List.of();
+        }
+        return List.copyOf(order.getOrderItems());
+    }
+
+    public boolean isReorderableWine(Wine wine, int availableStock) {
+        return wine != null && wine.getId() != null && !wine.isDeleted() && availableStock > 0;
+    }
+
+    public BigDecimal calculateLineTotal(OrderItem item) {
+        if (item == null || item.getPrice() == null || item.getQuantity() == null || item.getQuantity() <= 0) {
+            return BigDecimal.ZERO;
+        }
+        return item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity()));
     }
 }
 

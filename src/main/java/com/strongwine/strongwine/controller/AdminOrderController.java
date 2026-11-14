@@ -72,11 +72,29 @@ public class AdminOrderController {
         return "redirect:/admin/orders";
     }
 
+    @PostMapping("/{id}/settle-cod")
+    public String settleCodOrder(@PathVariable Long id,
+                                 Authentication authentication,
+                                 RedirectAttributes redirectAttributes) {
+        try {
+            String actor = authentication != null ? authentication.getName() : "admin";
+            orderService.settleCodOrder(id, actor);
+            redirectAttributes.addFlashAttribute("message", "Đã xác nhận thu hộ COD thành công cho đơn #" + id);
+        } catch (Exception ex) {
+            redirectAttributes.addFlashAttribute("error", "Lỗi khi xác nhận thu hộ COD: " + ex.getMessage());
+        }
+        return "redirect:/admin/orders";
+    }
+
     @PostMapping("/{id}/cancel")
     public String cancelOrder(@PathVariable Long id,
+                              @RequestParam(required = false) String reason,
+                              Authentication authentication,
                               RedirectAttributes redirectAttributes) {
         try {
-            orderService.cancelPendingOrder(id);
+            String actor = authentication != null ? authentication.getName() : "admin";
+            String effectiveReason = (reason != null && !reason.isBlank()) ? reason.trim() : "ADMIN_CANCEL";
+            orderService.cancelPendingOrder(id, actor, effectiveReason);
             redirectAttributes.addFlashAttribute("message", "Đã hủy đơn hàng #" + id + " thành công");
         } catch (Exception ex) {
             redirectAttributes.addFlashAttribute("error", "Lỗi khi hủy đơn hàng: " + ex.getMessage());

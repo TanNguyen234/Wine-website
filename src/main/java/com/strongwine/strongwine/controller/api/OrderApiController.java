@@ -3,6 +3,7 @@ package com.strongwine.strongwine.controller.api;
 import com.strongwine.strongwine.dto.OrderDto;
 import com.strongwine.strongwine.entity.Order;
 import com.strongwine.strongwine.entity.User;
+import com.strongwine.strongwine.exception.ResourceNotFoundException;
 import com.strongwine.strongwine.repository.UserRepository;
 import com.strongwine.strongwine.service.OrderDeletionResult;
 import com.strongwine.strongwine.service.OrderService;
@@ -13,6 +14,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -138,6 +140,33 @@ public class OrderApiController {
             case NOT_FOUND -> ResponseEntity.notFound().build();
             case CONFLICT -> ResponseEntity.status(HttpStatus.CONFLICT).build();
         };
+    }
+
+    @PostMapping("/{id}/reorder")
+    public ResponseEntity<Map<String, Object>> reorderOrder(@PathVariable Long id, Authentication authentication) {
+        User currentUser = resolveCurrentUser(authentication);
+        if (currentUser == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        try {
+            OrderService.ReorderSummary summary = orderService.reorderOrder(id, currentUser.getId());
+            Map<String, Object> body = new LinkedHashMap<>();
+            body.put("orderId", summary.orderId());
+            body.put("addedCount", summary.addedCount());
+            body.put("skippedCount", summary.skippedItems().size());
+            body.put("addedQuantities", summary.addedQuantities());
+            body.put("addedItems", summary.addedItems());
+            body.put("skippedItems", summary.skippedItems());
+            body.put("redirectUrl", "/cart");
+            body.put("message", summary.addedCount() > 0
+                    ? "Đã thêm " + summary.addedCount() + " sản phẩm vào giỏ hàng"
+                    : "Không có sản phẩm nào còn khả dụng để đặt lại");
+            return ResponseEntity.ok(body);
+        } catch (ResourceNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", ex.getMessage()));
+        } catch (SecurityException ex) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", ex.getMessage()));
+        }
     }
 
     private User resolveCurrentUser(Authentication authentication) {

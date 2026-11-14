@@ -6,12 +6,16 @@ import com.strongwine.strongwine.entity.PaymentMethod;
 import com.strongwine.strongwine.entity.PaymentStatus;
 import com.strongwine.strongwine.entity.Shipment;
 import com.strongwine.strongwine.entity.User;
+import com.strongwine.strongwine.exception.ResourceNotFoundException;
 import com.strongwine.strongwine.repository.UserRepository;
 import com.strongwine.strongwine.service.OrderService;
 import com.strongwine.strongwine.service.PaymentService;
 import com.strongwine.strongwine.service.ShipmentService;
+import com.strongwine.strongwine.service.port.ShipmentOrderLifecyclePort;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -41,8 +45,12 @@ public class OrderController {
     @Autowired
     private PaymentService paymentService;
 
-    @Autowired
+    @Autowired(required = false)
     private ShipmentService shipmentService;
+
+    @Lazy
+    @Autowired(required = false)
+    private ShipmentOrderLifecyclePort shipmentOrderLifecyclePort;
 
     @GetMapping("/orders")
     public String myOrders(Authentication authentication, Model model) {
@@ -53,7 +61,7 @@ public class OrderController {
 
         List<Order> orders = orderService.getOrdersByUserId(currentUser.getId());
         List<Long> orderIds = orders.stream().map(Order::getId).toList();
-        Map<Long, Shipment> shipmentByOrderId = shipmentService.getShipmentMapByOrderIds(orderIds);
+        Map<Long, Shipment> shipmentByOrderId = resolveShipmentMapByOrderIds(orderIds);
 
         model.addAttribute("orders", orders);
         model.addAttribute("shipmentByOrderId", shipmentByOrderId);
@@ -69,7 +77,8 @@ public class OrderController {
             return "redirect:/login";
         }
 
-        Optional<Order> orderOpt = isAdmin(currentUser)
+        boolean admin = isAdmin(currentUser);
+        Optional<Order> orderOpt = admin
                 ? orderService.getOrderById(orderId)
                 : orderService.getOrderByIdForUser(orderId, currentUser.getId());
         if (orderOpt.isEmpty()) {
@@ -77,9 +86,18 @@ public class OrderController {
         }
 
         Order order = orderOpt.get();
-        model.addAttribute("isAdmin", isAdmin(currentUser));
-        model.addAttribute("shipment", shipmentService.getShipmentByOrderId(orderId).orElse(null));
+        Shipment shipment = resolveShipmentByOrderId(orderId).orElse(null);
+        boolean isOwner = order.getUser() != null
+                && currentUser.getId() != null
+                && currentUser.getId().equals(order.getUser().getId());
+
+        model.addAttribute("isAdmin", admin);
+        model.addAttribute("shipment", shipment);
         model.addAttribute("order", order);
+        if (!admin && isOwner && shipment != null && shipmentOrderLifecyclePort != null) {
+            shipmentOrderLifecyclePort.decryptOtpForOrderView(shipment)
+                    .ifPresent(otp -> model.addAttribute("decryptedOtp", otp));
+        }
         return "order-detail";
     }
     
@@ -186,14 +204,75 @@ public class OrderController {
         }
 
         Order order = orderOpt.get();
-        if (!isCancellableByCustomer(order) || shipmentService.getShipmentByOrderId(orderId).isPresent()) {
+        if (!isCancellableByCustomer(order) || resolveShipmentByOrderId(orderId).isPresent()) {
             redirectAttributes.addFlashAttribute("error", "Đơn hàng này không thể hủy vì đã thanh toán hoặc đã được chuyển vận chuyển");
             return "redirect:/orders/" + orderId;
         }
 
-        orderService.cancelPendingOrder(orderId);
+        orderService.cancelPendingOrder(orderId, currentUser.getUsername(), "CUSTOMER_CANCEL");
         redirectAttributes.addFlashAttribute("message", "Đã hủy đơn hàng #" + orderId + ". Số lượng rượu đã được hoàn lại kho.");
         return "redirect:/orders";
+    }
+
+    @PostMapping("/orders/{id}/reorder")
+    public String reorderOrder(@PathVariable("id") Long orderId,
+                               Authentication authentication,
+                               HttpSession session,
+                               RedirectAttributes redirectAttributes) {
+        User currentUser = requireCurrentUser(authentication);
+        if (currentUser == null) {
+            redirectAttributes.addFlashAttribute("error", "Vui lòng đăng nhập để đặt lại đơn hàng");
+            return "redirect:/login";
+        }
+
+        try {
+            OrderService.ReorderSummary summary = orderService.reorderOrder(orderId, currentUser.getId());
+            if (summary.addedCount() == 0) {
+                String skipped = String.join(", ", summary.skippedItems());
+                redirectAttributes.addFlashAttribute("error",
+                        skipped.isEmpty()
+                                ? "Không có sản phẩm nào trong đơn hàng #" + orderId + " còn khả dụng để đặt lại."
+                                : "Các sản phẩm đã ngừng bán hoặc hết hàng: " + skipped);
+                return "redirect:/orders/" + orderId;
+            }
+
+            if (session != null) {
+                session.setAttribute("reorderCartItems", summary.addedItems());
+            }
+            redirectAttributes.addFlashAttribute("reorderItems", summary.addedItems());
+            redirectAttributes.addFlashAttribute("reorderSkippedItems", summary.skippedItems());
+            redirectAttributes.addFlashAttribute("message",
+                    "Đã thêm " + summary.addedCount() + " sản phẩm từ đơn hàng #" + orderId + " vào giỏ hàng.");
+            if (!summary.skippedItems().isEmpty()) {
+                redirectAttributes.addFlashAttribute("warning",
+                        "Một số sản phẩm đã hết hàng hoặc ngừng kinh doanh và được bỏ qua: "
+                                + String.join(", ", summary.skippedItems()));
+            }
+            return "redirect:/cart";
+        } catch (ResourceNotFoundException | SecurityException ex) {
+            redirectAttributes.addFlashAttribute("error", ex.getMessage());
+            return "redirect:/orders";
+        }
+    }
+
+    private Map<Long, Shipment> resolveShipmentMapByOrderIds(List<Long> orderIds) {
+        if (shipmentOrderLifecyclePort != null) {
+            return shipmentOrderLifecyclePort.getShipmentMapByOrderIds(orderIds);
+        }
+        if (shipmentService != null) {
+            return shipmentService.getShipmentMapByOrderIds(orderIds);
+        }
+        return Map.of();
+    }
+
+    private Optional<Shipment> resolveShipmentByOrderId(Long orderId) {
+        if (shipmentOrderLifecyclePort != null) {
+            return shipmentOrderLifecyclePort.getShipmentByOrderId(orderId);
+        }
+        if (shipmentService != null) {
+            return shipmentService.getShipmentByOrderId(orderId);
+        }
+        return Optional.empty();
     }
 
     private boolean isCancellableByCustomer(Order order) {
