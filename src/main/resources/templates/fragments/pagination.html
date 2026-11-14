@@ -1,40 +1,77 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<html xmlns:th="http://www.thymeleaf.org">
 <body>
-<div th:fragment="pagination(baseUrl)" class="sw-pagination"
-     th:with="curPage=${currentPage != null ? currentPage : 0},
-              pgSize=${pageSize != null ? pageSize : 12},
-              totEntries=${totalEntries != null ? totalEntries : 0},
-              totPages=${totalPages != null ? totalPages : 1},
-              hasPrev=${hasPrevious != null ? hasPrevious : (curPage > 0)},
-              hasNxt=${hasNext != null ? hasNext : (curPage + 1 < totPages)}">
-    <div class="muted small">
-        Hiển thị <strong th:text="${totEntries == 0 ? 0 : (curPage * pgSize) + 1}">0</strong> &ndash;
-        <strong th:text="${(curPage * pgSize) + pgSize > totEntries ? totEntries : (curPage * pgSize) + pgSize}">0</strong>
-        trong tổng số <strong th:text="${totEntries}">0</strong> kết quả
+
+<!-- ======================================================================
+     StrongWine — Maison de Vins V3 Accessible Pagination Fragment
+     Null-safe under both servlet WebEngineContext and standalone SpringTemplateEngine
+     Preserves existing pagination(baseUrl) signature and avoids duplicate query params
+     ====================================================================== -->
+
+<th:block th:fragment="pagination(baseUrl)"
+          th:with="pCurrent=${currentPage != null ? currentPage : 0},
+                   pSize=${pageSize != null ? pageSize : 12},
+                   pTotalEntries=${totalEntries != null ? totalEntries : 0},
+                   pTotalPages=${totalPages != null ? totalPages : 0},
+                   pHasPrev=${hasPrevious != null ? hasPrevious : false},
+                   pHasNext=${hasNext != null ? hasNext : false},
+                   pParams=${param},
+                   pSafeBase=${baseUrl != null ? baseUrl : ''},
+                   pName=${!#strings.contains(pSafeBase, 'name=') and pParams != null and pParams['name'] != null ? pParams['name'][0] : null},
+                   pType=${!#strings.contains(pSafeBase, 'type=') and pParams != null and pParams['type'] != null ? pParams['type'][0] : null},
+                   pCountry=${!#strings.contains(pSafeBase, 'country=') and pParams != null and pParams['country'] != null ? pParams['country'][0] : null},
+                   pYear=${!#strings.contains(pSafeBase, 'year=') and pParams != null and pParams['year'] != null ? pParams['year'][0] : null},
+                   pMinPrice=${!#strings.contains(pSafeBase, 'minPrice=') and pParams != null and pParams['minPrice'] != null ? pParams['minPrice'][0] : null},
+                   pMaxPrice=${!#strings.contains(pSafeBase, 'maxPrice=') and pParams != null and pParams['maxPrice'] != null ? pParams['maxPrice'][0] : null},
+                   pInStock=${!#strings.contains(pSafeBase, 'inStock=') and pParams != null and pParams['inStock'] != null ? pParams['inStock'][0] : null},
+                   pKeyword=${!#strings.contains(pSafeBase, 'keyword=') and pParams != null and pParams['keyword'] != null ? pParams['keyword'][0] : null},
+                   pStatus=${!#strings.contains(pSafeBase, 'status=') and pParams != null and pParams['status'] != null ? pParams['status'][0] : null},
+                   pShipperId=${!#strings.contains(pSafeBase, 'shipperId=') and pParams != null and pParams['shipperId'] != null ? pParams['shipperId'][0] : null},
+                   pAction=${!#strings.contains(pSafeBase, 'action=') and pParams != null and pParams['action'] != null ? pParams['action'][0] : null},
+                   pActor=${!#strings.contains(pSafeBase, 'actor=') and pParams != null and pParams['actor'] != null ? pParams['actor'][0] : null}">
+
+  <nav th:if="${pTotalPages > 1}"
+       class="sw-pagination"
+       aria-label="Phân trang">
+
+    <div class="sw-pagination-summary" style="font-size:13px;color:var(--text-secondary);">
+      Trang <strong class="tabular-nums" th:text="${pCurrent + 1}">1</strong>
+      / <strong class="tabular-nums" th:text="${pTotalPages}">1</strong>
+      (<span class="tabular-nums" th:text="${pTotalEntries}">0</span> mục)
     </div>
 
-    <nav aria-label="Phân trang danh sách" th:if="${totPages > 1}">
-        <ul class="sw-page-list">
-            <li class="sw-page-item" th:classappend="${!hasPrev} ? 'disabled'">
-                <a class="sw-page-link"
-                   th:href="@{${baseUrl}(page=${curPage - 1},size=${pgSize},sortBy=${sortBy},sortDir=${sortDir})}"
-                   aria-label="Trang trước">&larr;</a>
-            </li>
-            <li class="sw-page-item"
-                th:each="i : ${#numbers.sequence(0, totPages - 1)}"
-                th:classappend="${curPage == i} ? 'active'">
-                <a class="sw-page-link"
-                   th:href="@{${baseUrl}(page=${i},size=${pgSize},sortBy=${sortBy},sortDir=${sortDir})}"
-                   th:text="${i + 1}">1</a>
-            </li>
-            <li class="sw-page-item" th:classappend="${!hasNxt} ? 'disabled'">
-                <a class="sw-page-link"
-                   th:href="@{${baseUrl}(page=${curPage + 1},size=${pgSize},sortBy=${sortBy},sortDir=${sortDir})}"
-                   aria-label="Trang kế tiếp">&rarr;</a>
-            </li>
-        </ul>
-    </nav>
-</div>
+    <ul class="sw-page-list sw-pagination-list">
+      <li class="sw-page-item" th:classappend="${!pHasPrev} ? ' disabled' : ''">
+        <a class="sw-page-link"
+           th:classappend="${!pHasPrev} ? ' is-disabled' : ''"
+           th:attr="aria-disabled=${!pHasPrev} ? 'true' : null"
+           th:href="${pHasPrev} ? @{${pSafeBase}(page=${pCurrent - 1}, size=${pSize}, sortBy=${sortBy}, sortDir=${sortDir}, name=${pName}, type=${pType}, country=${pCountry}, year=${pYear}, minPrice=${pMinPrice}, maxPrice=${pMaxPrice}, inStock=${pInStock}, keyword=${pKeyword}, status=${pStatus}, shipperId=${pShipperId}, action=${pAction}, actor=${pActor})} : '#'">
+          &lsaquo; Trước
+        </a>
+      </li>
+
+      <li th:each="pageIndex : ${#numbers.sequence(0, pTotalPages - 1)}"
+          th:if="${pageIndex == 0 or pageIndex == pTotalPages - 1 or (pageIndex >= pCurrent - 2 and pageIndex <= pCurrent + 2)}"
+          class="sw-page-item"
+          th:classappend="${pageIndex == pCurrent} ? ' active' : ''">
+        <a class="sw-page-link"
+           th:classappend="${pageIndex == pCurrent} ? ' is-active' : ''"
+           th:attr="aria-current=${pageIndex == pCurrent} ? 'page' : null"
+           th:href="@{${pSafeBase}(page=${pageIndex}, size=${pSize}, sortBy=${sortBy}, sortDir=${sortDir}, name=${pName}, type=${pType}, country=${pCountry}, year=${pYear}, minPrice=${pMinPrice}, maxPrice=${pMaxPrice}, inStock=${pInStock}, keyword=${pKeyword}, status=${pStatus}, shipperId=${pShipperId}, action=${pAction}, actor=${pActor})}"
+           th:text="${pageIndex + 1}">1</a>
+      </li>
+
+      <li class="sw-page-item" th:classappend="${!pHasNext} ? ' disabled' : ''">
+        <a class="sw-page-link"
+           th:classappend="${!pHasNext} ? ' is-disabled' : ''"
+           th:attr="aria-disabled=${!pHasNext} ? 'true' : null"
+           th:href="${pHasNext} ? @{${pSafeBase}(page=${pCurrent + 1}, size=${pSize}, sortBy=${sortBy}, sortDir=${sortDir}, name=${pName}, type=${pType}, country=${pCountry}, year=${pYear}, minPrice=${pMinPrice}, maxPrice=${pMaxPrice}, inStock=${pInStock}, keyword=${pKeyword}, status=${pStatus}, shipperId=${pShipperId}, action=${pAction}, actor=${pActor})} : '#'">
+          Sau &rsaquo;
+        </a>
+      </li>
+    </ul>
+  </nav>
+</th:block>
+
 </body>
 </html>

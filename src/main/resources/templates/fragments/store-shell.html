@@ -1,216 +1,283 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="vi">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      lang="vi"
+      data-theme="cellar">
 
-<head th:fragment="head(pageTitle)">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="_csrf" th:content="${_csrf.token}">
-    <meta name="_csrf_header" th:content="${_csrf.headerName}">
-    <title th:text="${pageTitle}">StrongWine · Maison de Vins</title>
-    <link rel="icon" type="image/svg+xml" th:href="@{/favicon.svg}">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800&family=Lato:wght@400;700;900&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" th:href="@{/css/app.css}">
-</head>
+<!-- ======================================================================
+     StrongWine — Maison de Vins V3 Storefront Shell Fragment
+     Preserves fragment signatures: head(pageTitle), header(activePage),
+     bottleSvg(className), footer
+     Zero Bootstrap / Zero FontAwesome
+     ====================================================================== -->
 
-<body>
+<th:block th:fragment="head(pageTitle)">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="dark light">
+  <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+  <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : 'X-CSRF-TOKEN'}">
+  <title th:text="${pageTitle != null ? pageTitle : 'StrongWine — Maison de Vins'}">StrongWine — Maison de Vins</title>
+  <link rel="icon" type="image/svg+xml" th:href="@{/favicon.svg}">
+  <script>
+    (function () {
+      try {
+        var saved = localStorage.getItem("sw_theme");
+        var theme = saved === "ivory" || saved === "cellar" ? saved : "cellar";
+        document.documentElement.setAttribute("data-theme", theme);
+      } catch (_) {
+        document.documentElement.setAttribute("data-theme", "cellar");
+      }
+    })();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" th:href="@{/css/tokens.css}">
+  <link rel="stylesheet" th:href="@{/css/storefront.css}">
+</th:block>
 
-<!-- STOREFRONT HEADER + ANNOUNCEMENT BAR -->
-<div th:fragment="header(activePage)">
-    <div class="announcement">
-        TINH TUYỂN BỘ SƯU TẬP RƯỢU VANG · DÀNH CHO KHÁCH HÀNG ĐỦ TUỔI THEO QUY ĐỊNH
-    </div>
-    <header class="site-header">
-        <div class="sw-container site-header-inner">
-            <a class="logo" th:href="@{/home}">
-                <span class="logo-mark">S</span>
-                <span class="logo-txt">StrongWine</span>
-            </a>
+<header th:fragment="header(activePage)" class="site-header">
+  <div class="sw-container site-header-inner">
+    <a th:href="@{/}" class="logo">
+      <span class="logo-mark" aria-hidden="true">S</span>
+      <span class="logo-txt">StrongWine</span>
+    </a>
 
-            <button type="button" class="mobile-nav-toggle" aria-expanded="false" aria-controls="siteNav" aria-label="Mở menu điều hướng">
-                <svg class="mini-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
-            </button>
+    <nav id="siteNav" class="site-nav" aria-label="Điều hướng chính">
+      <a th:href="@{/}" class="nav-link" th:classappend="${activePage == 'home'} ? ' active' : ''">Trang chủ</a>
+      <a th:href="@{/wines}" class="nav-link" th:classappend="${activePage == 'wines'} ? ' active' : ''">Bộ sưu tập</a>
+      <a th:href="@{/wines(type='Traditional')}" class="nav-link" th:classappend="${activePage == 'traditional'} ? ' active' : ''">Rượu truyền thống</a>
+      <a th:href="@{/orders}" class="nav-link" sec:authorize="isAuthenticated()" th:classappend="${activePage == 'orders'} ? ' active' : ''">Đơn hàng</a>
+      <a th:href="@{/profile}" class="nav-link" sec:authorize="isAuthenticated()" th:classappend="${activePage == 'profile'} ? ' active' : ''">Hồ sơ</a>
+      <a th:href="@{/admin/dashboard}" class="nav-link" sec:authorize="hasRole('ADMIN')">Quản trị</a>
+      <a th:href="@{/shipper/dashboard}" class="nav-link" sec:authorize="hasRole('SHIPPER')">Giao hàng</a>
 
-            <nav class="site-nav" id="siteNav" aria-label="Điều hướng chính">
-                <a class="nav-link" th:classappend="${activePage == 'home'} ? 'active'" th:href="@{/home}">Trang chủ</a>
-                <a class="nav-link" th:classappend="${activePage == 'catalog'} ? 'active'" th:href="@{/wines}">Bộ sưu tập</a>
-                <a class="nav-link" th:href="@{/wines(type='Red')}">Vang đỏ</a>
-                <a class="nav-link" th:href="@{/wines(type='White')}">Vang trắng</a>
-                <a class="nav-link" th:classappend="${activePage == 'orders'} ? 'active'" th:href="@{/orders}" sec:authorize="isAuthenticated()">Đơn hàng</a>
-                <a class="nav-link" th:classappend="${activePage == 'profile'} ? 'active'" th:href="@{/profile}" sec:authorize="isAuthenticated()">Tài khoản</a>
-                <a class="nav-link" th:href="@{/admin}" sec:authorize="hasRole('ADMIN')">Quản trị</a>
-                <a class="nav-link" th:href="@{/shipper/dashboard}" sec:authorize="hasRole('SHIPPER')">Giao hàng</a>
-                <a class="nav-link mobile-nav-account" th:href="@{/profile}" sec:authorize="isAuthenticated()">Tài khoản của tôi</a>
-                <a class="nav-link mobile-nav-account" th:href="@{/login}" sec:authorize="!isAuthenticated()">Đăng nhập</a>
-                <a class="nav-link mobile-nav-account" th:href="@{/register}" sec:authorize="!isAuthenticated()">Tạo tài khoản</a>
-                <form th:action="@{/logout}" method="post" class="mobile-nav-logout" sec:authorize="isAuthenticated()">
-                    <button type="submit" class="nav-link">Đăng xuất</button>
-                </form>
-            </nav>
+      <div class="mobile-nav-account" sec:authorize="isAnonymous()">
+        <a th:href="@{/login}" class="nav-link">Đăng nhập</a>
+        <a th:href="@{/register}" class="nav-link">Đăng ký</a>
+      </div>
+      <form th:action="@{/logout}" method="post" class="mobile-nav-logout" sec:authorize="isAuthenticated()">
+        <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+        <button type="submit" class="nav-link">Đăng xuất</button>
+      </form>
+    </nav>
 
-            <div class="header-actions">
-                <a class="icon-btn" th:href="@{/wines}" title="Tìm kiếm rượu vang" aria-label="Tìm kiếm rượu vang">
-                    <svg class="mini-icon" viewBox="0 0 24 24"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 5 5"/></svg>
-                </a>
+    <div class="header-actions">
+      <button type="button"
+              class="btn-outline"
+              data-theme-toggle="true"
+              aria-pressed="false"
+              aria-label="Chuyển giao diện sáng Ivory hoặc tối Cellar"
+              style="padding: 8px 12px; min-height: 40px;">
+        <span data-theme-icon="sun"><th:block th:replace="~{fragments/icons :: icon('sun')}"/></span>
+        <span data-theme-icon="moon" hidden><th:block th:replace="~{fragments/icons :: icon('moon')}"/></span>
+      </button>
 
-                <a class="icon-btn" th:href="@{/login}" sec:authorize="!isAuthenticated()" title="Đăng nhập" aria-label="Đăng nhập">
-                    <svg class="mini-icon" viewBox="0 0 24 24"><circle cx="12" cy="7.5" r="4"/><path d="M4.5 21c0-5 3-7 7.5-7s7.5 2 7.5 7"/></svg>
-                </a>
+      <a th:href="@{/profile#wishlist}"
+         class="btn-outline"
+         sec:authorize="isAuthenticated()"
+         aria-label="Danh sách yêu thích"
+         style="padding: 8px 12px; min-height: 40px;">
+        <th:block th:replace="~{fragments/icons :: icon('heart')}"/>
+        <span class="js-wishlist-count tabular-nums" th:text="${wishlistCount != null ? wishlistCount : 0}">0</span>
+      </a>
 
-                <div class="display-flex gap8" sec:authorize="isAuthenticated()">
-                    <a class="icon-btn" th:href="@{/profile}" title="Tài khoản của tôi" aria-label="Tài khoản của tôi">
-                        <svg class="mini-icon" viewBox="0 0 24 24"><circle cx="12" cy="7.5" r="4"/><path d="M4.5 21c0-5 3-7 7.5-7s7.5 2 7.5 7"/></svg>
-                    </a>
-                    <a class="btn btn-outline btn-sm" th:href="@{/orders}" title="Đơn hàng">Đơn hàng</a>
-                    <form th:action="@{/logout}" method="post" class="d-inline">
-                        <button type="submit" class="btn btn-outline btn-sm" title="Đăng xuất">Đăng xuất</button>
-                    </form>
-                </div>
+      <button type="button"
+              id="notifBellBtn"
+              class="btn-outline"
+              sec:authorize="isAuthenticated()"
+              popovertarget="notifBellMenu"
+              aria-label="Thông báo"
+              style="padding: 8px 12px; min-height: 40px;">
+        <th:block th:replace="~{fragments/icons :: icon('bell')}"/>
+        <span id="notifBadgeCount" class="js-notif-count tabular-nums" th:text="${unreadNotificationCount != null ? unreadNotificationCount : 0}">0</span>
+      </button>
 
-                <button type="button" class="icon-btn js-open-cart-drawer" title="Giỏ hàng" aria-label="Mở giỏ hàng">
-                    <svg class="mini-icon" viewBox="0 0 24 24"><path d="M4 8h16l-1.3 13H5.3L4 8Z"/><path d="M9 9V6a3 3 0 0 1 6 0v3"/></svg>
-                    <span class="num-bubble js-cart-count" th:text="${cartCount != null ? cartCount : 0}">0</span>
-                </button>
-            </div>
-        </div>
-    </header>
-</div>
+      <button type="button"
+              class="btn-gold js-open-cart-drawer"
+              aria-label="Mở giỏ hàng"
+              style="padding: 9px 14px; min-height: 40px;">
+        <th:block th:replace="~{fragments/icons :: icon('cart')}"/>
+        <span class="js-cart-count tabular-nums" th:text="${cartCount != null ? cartCount : 0}">0</span>
+      </button>
 
-<!-- REUSABLE BOTTLE SVG FALLBACK -->
-<div th:fragment="bottleSvg(className)">
-    <svg th:class="${className}" viewBox="0 0 150 430" aria-label="Hình minh họa chai vang" role="img" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-            <linearGradient id="swGlassGrad" x1="0" x2="1">
-                <stop stop-color="#070f0c"/>
-                <stop offset=".22" stop-color="#4b1b2d"/>
-                <stop offset=".46" stop-color="#0d1210"/>
-                <stop offset=".73" stop-color="#4b1b2d"/>
-                <stop offset="1" stop-color="#090d0b"/>
-            </linearGradient>
-            <linearGradient id="swFoilGrad" x1="0" x2="1">
-                <stop stop-color="#9f753e"/>
-                <stop offset=".4" stop-color="#e0c28a"/>
-                <stop offset=".7" stop-color="#b78a49"/>
-                <stop offset="1" stop-color="#856139"/>
-            </linearGradient>
-        </defs>
-        <path d="M56 22Q55 17 60 16H90Q95 17 94 22L92 104Q91 126 104 138Q122 154 125 187L129 389Q129 408 109 410H42Q21 409 22 389L25 188Q27 156 45 137Q57 124 57 104Z" fill="url(#swGlassGrad)" stroke="#080a09" stroke-width="2"/>
-        <path d="M58 24H92V99H58Z" fill="url(#swFoilGrad)"/>
-        <path d="M57 31h35M57 43h35M57 55h35" stroke="#f4dfb1" stroke-opacity=".34"/>
-        <path d="M34 190c2-18 11-34 23-45" stroke="#ffffff" opacity=".09" stroke-width="11" fill="none"/>
-        <rect x="34" y="206" width="82" height="120" rx="2" fill="#efe4ce" stroke="#b7a58e"/>
-        <path d="M40 215h70" stroke="#c9b899"/>
-        <text x="75" y="239" text-anchor="middle" font-family="Georgia" font-size="8" letter-spacing="2.5" fill="#64434c">STRONGWINE</text>
-        <path d="M75 250c-7 7-7 11 0 21 7-10 7-14 0-21Z" fill="#742c3d"/>
-        <text x="75" y="286" text-anchor="middle" font-family="Georgia" font-size="10" fill="#493039">GRAND CRU</text>
-        <text x="75" y="309" text-anchor="middle" font-family="Georgia" font-size="8" fill="#8a7773">MAISON DE VINS</text>
-        <ellipse cx="75" cy="404" rx="48" ry="5" fill="#000" opacity=".2"/>
-    </svg>
-</div>
-
-<!-- SLIDE-OUT CART DRAWER + AI ASSISTANT + FOOTER -->
-<div th:fragment="footer">
-    <!-- Slide-out Cart Drawer -->
-    <div class="cart-drawer" id="cartDrawer" aria-hidden="true">
-        <aside class="cart-sheet" role="dialog" aria-label="Giỏ hàng của bạn">
-            <div class="between">
-                <div>
-                    <div class="eyebrow">ĐẶT HÀNG THẬT DỄ DÀNG</div>
-                    <h3 class="serif">Giỏ hàng của bạn</h3>
-                </div>
-                <button type="button" class="close-btn js-close-cart-drawer" aria-label="Đóng giỏ hàng">&times;</button>
-            </div>
-            <div class="cart-lines" id="cartDrawerItems">
-                <p class="muted">Chưa có sản phẩm trong giỏ hàng.</p>
-            </div>
-            <div>
-                <div class="between">
-                    <strong>Tạm tính</strong>
-                    <strong style="color:var(--sw-bordeaux)" id="cartDrawerSubtotal">0 ₫</strong>
-                </div>
-                <p class="muted small mt8">Phí vận chuyển và tồn kho được xác thực trên máy chủ khi thanh toán.</p>
-                <div class="stack mt20">
-                    <a class="btn w100" th:href="@{/cart/checkout}">Tiến hành thanh toán &rarr;</a>
-                    <a class="btn btn-outline w100" th:href="@{/cart}">Xem giỏ hàng đầy đủ</a>
-                </div>
-            </div>
-        </aside>
-    </div>
-
-    <!-- AI Sommelier Assistant -->
-    <button type="button" class="ai-floating" id="aiToggle" aria-label="Mở trợ lý tư vấn rượu vang">
-        <svg class="mini-icon" viewBox="0 0 24 24"><path d="m12 2 2 8 8 2-8 2-2 8-2-8-8-2 8-2z"/></svg>
-    </button>
-    <div class="ai-box" id="aiPanel" role="dialog" aria-label="Trợ lý chọn vang StrongWine">
-        <div class="ai-box-header between">
-            <b>&#10023; Trợ lý chọn vang</b>
-            <button type="button" class="close-btn" id="aiClose" aria-label="Đóng trợ lý">&times;</button>
-        </div>
-        <div class="ai-box-feed" id="aiFeed">
-            <div class="mb10">
-                <b>Xin chào! Tôi có thể giúp bạn tìm chai vang phù hợp.</b>
-                <p class="mt8 muted">Gợi ý nhanh theo món ăn, dịp biếu tặng hoặc ngân sách:</p>
-            </div>
-            <div class="display-flex gap8" style="flex-wrap:wrap;margin-bottom:12px">
-                <button type="button" class="chip" data-ai-question="Gợi ý vang đỏ dùng với bít tết bò">Vang cho bít tết &#8599;</button>
-                <button type="button" class="chip" data-ai-question="Tư vấn rượu vang trắng thanh mát dưới 2 triệu">Dưới 2 triệu &#8599;</button>
-                <button type="button" class="chip" data-ai-question="Chọn vang sủi cho tiệc kỷ niệm">Vang dự tiệc &#8599;</button>
-            </div>
-        </div>
-        <form class="ai-box-bottom" id="aiForm">
-            <input type="text" class="field" id="aiPrompt" placeholder="Hỏi về rượu vang..." style="min-height:36px;padding:6px 10px" aria-label="Câu hỏi tư vấn rượu vang">
-            <button type="submit" class="btn btn-sm">Gửi</button>
+      <div class="display-flex" style="display:flex;align-items:center;gap:8px;">
+        <a th:href="@{/login}" class="btn-outline" sec:authorize="isAnonymous()" style="padding:8px 14px;min-height:40px;">Đăng nhập</a>
+        <form th:action="@{/logout}" method="post" sec:authorize="isAuthenticated()" style="margin:0;">
+          <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+          <button type="submit" class="btn-outline" style="padding:8px 14px;min-height:40px;">Đăng xuất</button>
         </form>
+      </div>
+
+      <button type="button"
+              id="mobileNavToggle"
+              class="mobile-nav-toggle"
+              aria-controls="siteNav"
+              aria-expanded="false"
+              aria-label="Mở menu điều hướng">
+        <th:block th:replace="~{fragments/icons :: icon('menu')}"/>
+      </button>
+    </div>
+  </div>
+
+  <div id="notifBellMenu" popover="auto" class="notif-popover" sec:authorize="isAuthenticated()">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px;">
+      <strong style="font-family:var(--font-display);font-size:1rem;">Thông báo của bạn</strong>
+      <button type="button" class="btn-outline" id="notifMarkAllBtn" style="padding:4px 10px;font-size:12px;">Đánh dấu đã đọc</button>
+    </div>
+    <div id="notifBellList" style="display:flex;flex-direction:column;gap:8px;font-size:13px;color:var(--text-secondary);">
+      <span>Đang tải thông báo...</span>
+    </div>
+  </div>
+</header>
+
+<svg th:fragment="bottleSvg(className)"
+     th:class="${className != null ? className : 'wine-svg'}"
+     viewBox="0 0 120 280"
+     fill="none"
+     xmlns="http://www.w3.org/2000/svg"
+     aria-hidden="true">
+  <defs>
+    <linearGradient id="swBottleGlass" x1="28" y1="60" x2="92" y2="260" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#35191d"/>
+      <stop offset="48%" stop-color="#170c0e"/>
+      <stop offset="100%" stop-color="#2c1216"/>
+    </linearGradient>
+    <linearGradient id="swBottleFoil" x1="48" y1="16" x2="72" y2="66" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#e2be72"/>
+      <stop offset="50%" stop-color="#c9a84c"/>
+      <stop offset="100%" stop-color="#8b6b23"/>
+    </linearGradient>
+    <linearGradient id="swBottleLabel" x1="34" y1="142" x2="86" y2="220" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#f7f1e5"/>
+      <stop offset="100%" stop-color="#e5dac4"/>
+    </linearGradient>
+  </defs>
+  <ellipse cx="60" cy="266" rx="34" ry="7" fill="rgba(0,0,0,0.42)"/>
+  <path d="M51 18h18v12l-1 40c0 12 22 24 22 50v130c0 10-8 16-30 16s-30-6-30-16V120c0-26 22-38 22-50l-1-40V18Z"
+        fill="url(#swBottleGlass)"
+        stroke="#c9a84c"
+        stroke-opacity="0.45"
+        stroke-width="1.2"/>
+  <rect x="49" y="14" width="22" height="42" rx="3" fill="url(#swBottleFoil)"/>
+  <rect x="48" y="22" width="24" height="5" rx="2" fill="#8b1a1a"/>
+  <path d="M40 124c2-12 7-20 9-36" stroke="rgba(255,255,255,0.22)" stroke-width="3" stroke-linecap="round"/>
+  <rect x="36" y="140" width="48" height="78" rx="4" fill="url(#swBottleLabel)" stroke="#c9a84c" stroke-width="1"/>
+  <path d="M44 156h32M48 168h24" stroke="#7c1818" stroke-width="1.4" stroke-linecap="round"/>
+  <circle cx="60" cy="189" r="9" fill="#8b1a1a"/>
+  <circle cx="60" cy="189" r="5.5" stroke="#e2be72" stroke-width="1"/>
+  <path d="M44 206h32" stroke="#5b4d3f" stroke-width="1.1" stroke-linecap="round"/>
+</svg>
+
+<footer th:fragment="footer" class="site-footer">
+  <div class="sw-container">
+    <div class="footer-grid" style="display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:28px;padding-bottom:32px;border-bottom:1px solid rgba(201,168,76,0.18);">
+      <div>
+        <a th:href="@{/}" class="logo" style="margin-bottom:12px;">
+          <span class="logo-mark" aria-hidden="true">S</span>
+          <span class="logo-txt">StrongWine</span>
+        </a>
+        <p style="font-size:13px;line-height:1.65;color:#c7bba8;max-width:320px;">
+          Maison de Vins — Tuyển chọn vang Grand Cru và tinh hoa rượu truyền thống Việt bảo quản hầm lạnh chuẩn quốc tế.
+        </p>
+      </div>
+
+      <div>
+        <h4 style="font-size:13px;text-transform:uppercase;letter-spacing:0.12em;color:#e2be72;margin-bottom:12px;">Hầm rượu</h4>
+        <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:8px;font-size:13px;">
+          <li><a th:href="@{/wines}">Tất cả chai vang</a></li>
+          <li><a th:href="@{/wines(type='Red')}">Vang Đỏ</a></li>
+          <li><a th:href="@{/wines(type='White')}">Vang Trắng</a></li>
+          <li><a th:href="@{/wines(type='Traditional')}">Rượu truyền thống</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h4 style="font-size:13px;text-transform:uppercase;letter-spacing:0.12em;color:#e2be72;margin-bottom:12px;">Dịch vụ</h4>
+        <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:8px;font-size:13px;">
+          <li><a th:href="@{/orders}">Theo dõi đơn hàng</a></li>
+          <li><a th:href="@{/cart}">Giỏ hàng &amp; Checkout</a></li>
+          <li><a th:href="@{/profile}">Hồ sơ &amp; Địa chỉ</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h4 style="font-size:13px;text-transform:uppercase;letter-spacing:0.12em;color:#e2be72;margin-bottom:12px;">Cam kết</h4>
+        <p style="font-size:13px;line-height:1.6;color:#c7bba8;margin:0;">
+          Giao hàng bảo quản lạnh trong ngày, kiểm tra niêm phong &amp; xác thực OTP 6 chữ số khi nhận hàng.
+        </p>
+      </div>
     </div>
 
-    <!-- Site Footer -->
-    <footer class="site-footer">
-        <div class="sw-container">
-            <div class="footer-grid">
-                <div>
-                    <a class="logo" th:href="@{/home}">
-                        <span class="logo-mark">S</span>
-                        <span class="logo-txt">StrongWine</span>
-                    </a>
-                    <p>Tinh hoa vang thượng hạng thế giới — kết hợp nghệ thuật thưởng thức đỉnh cao và dịch vụ giao nhận bảo ôn tiêu chuẩn quốc tế.</p>
-                </div>
-                <div>
-                    <h4>KHÁM PHÁ</h4>
-                    <a th:href="@{/wines}">Bộ sưu tập rượu vang</a>
-                    <a th:href="@{/wines(type='Red')}">Vang đỏ (Red Wine)</a>
-                    <a th:href="@{/wines(type='White')}">Vang trắng (White Wine)</a>
-                    <a th:href="@{/wines(type='Sparkling')}">Vang sủi &amp; Champagne</a>
-                </div>
-                <div>
-                    <h4>DỊCH VỤ KHÁCH HÀNG</h4>
-                    <a th:href="@{/orders}">Theo dõi đơn hàng</a>
-                    <a th:href="@{/cart}">Giỏ hàng của bạn</a>
-                    <a th:href="@{/cart/checkout}">Thanh toán bảo mật</a>
-                </div>
-                <div>
-                    <h4>TÀI KHOẢN</h4>
-                    <a th:href="@{/login}" sec:authorize="!isAuthenticated()">Đăng nhập</a>
-                    <a th:href="@{/register}" sec:authorize="!isAuthenticated()">Tạo tài khoản</a>
-                    <a th:href="@{/forgot-password}">Khôi phục mật khẩu</a>
-                    <a th:href="@{/admin}" sec:authorize="hasRole('ADMIN')">Trung tâm Quản trị</a>
-                </div>
-            </div>
-            <div class="footer-bottom">
-                <span>&copy; 2026 STRONGWINE · MAISON DE VINS · BẢN QUYỀN ĐƯỢC BẢO LƯU</span>
-                <span>THƯỞNG THỨC CÓ TRÁCH NHIỆM · DÀNH CHO NGƯỜI ĐỦ 18 TUỔI TRỞ LÊN</span>
-            </div>
+    <div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;padding-top:20px;font-size:12px;color:#9e9180;">
+      <span>&copy; 2026 StrongWine — Maison de Vins. Uống có trách nhiệm (18+).</span>
+      <span>Luxury Dark Wine Cellar Architecture</span>
+    </div>
+  </div>
+
+  <!-- Native Slide-Over Cart Drawer Dialog (synced with cart-drawer.js + dialog-kit.js) -->
+  <dialog id="cartDrawer" class="cart-drawer" closedby="any" aria-labelledby="cartDrawerTitle">
+    <div class="cart-sheet">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding-bottom:14px;border-bottom:1px solid var(--border-hairline);">
+        <h3 id="cartDrawerTitle" style="margin:0;font-family:var(--font-display);font-size:1.35rem;">Giỏ hàng của bạn</h3>
+        <button type="button" class="close-btn js-close-cart-drawer" data-dialog-close="cartDrawer" aria-label="Đóng giỏ hàng">
+          <th:block th:replace="~{fragments/icons :: icon('close')}"/>
+        </button>
+      </div>
+
+      <div id="cartDrawerItems" class="cart-lines">
+        <p style="color:var(--text-muted);font-size:14px;">Giỏ hàng hiện đang trống.</p>
+      </div>
+
+      <div style="padding-top:14px;border-top:1px solid var(--border-hairline);display:flex;flex-direction:column;gap:12px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;font-weight:700;">
+          <span>Tạm tính</span>
+          <span id="cartDrawerSubtotal" class="tabular-nums" style="color:var(--accent-gold-ink);">0 ₫</span>
         </div>
-    </footer>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <a th:href="@{/cart}" class="btn-outline" style="justify-content:center;">Xem giỏ hàng</a>
+          <a th:href="@{/checkout}" class="btn-crimson" style="justify-content:center;">Thanh toán</a>
+        </div>
+      </div>
+    </div>
+  </dialog>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script th:src="@{/js/store-nav.js}"></script>
-    <script th:src="@{/js/cart-client.js}"></script>
-    <script th:src="@{/js/cart-drawer.js}"></script>
-    <script th:src="@{/js/ai-assistant.js}"></script>
-</div>
+  <!-- Native AI Sommelier Dialog Panel (synced with ai-assistant.js + dialog-kit.js) -->
+  <button type="button" id="aiToggle" class="ai-floating" aria-label="Mở trợ lý Sommelier AI">
+    <th:block th:replace="~{fragments/icons :: icon('decanter')}"/>
+  </button>
 
-</body>
+  <dialog id="aiPanel" class="ai-box" closedby="any" aria-labelledby="aiPanelTitle">
+    <div class="ai-box-header" style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <th:block th:replace="~{fragments/icons :: icon('wine-glass')}"/>
+        <strong id="aiPanelTitle" style="font-family:var(--font-display);font-size:0.98rem;">Sommelier AI</strong>
+      </div>
+      <button type="button" id="aiClose" class="close-btn" data-dialog-close="aiPanel" aria-label="Đóng Sommelier AI" style="color:#f0e8da;">
+        <th:block th:replace="~{fragments/icons :: icon('close')}"/>
+      </button>
+    </div>
+    <div id="aiFeed" class="ai-box-feed">
+      <p>Xin chào! Hãy hỏi tôi gợi ý vang theo món ăn, ngân sách hoặc dịp đặc biệt.</p>
+    </div>
+    <form id="aiForm" class="ai-box-bottom">
+      <input type="text" id="aiPrompt" class="sw-input" placeholder="Gợi ý vang kèm bò bít tết..." autocomplete="off" style="flex:1;min-height:38px;">
+      <button type="submit" class="btn-gold" style="padding:8px 14px;min-height:38px;">Gửi</button>
+    </form>
+  </dialog>
+
+  <!-- Popover Manual Toast Region -->
+  <div id="swToastRegion" class="sw-toast-region" popover="manual" role="status" aria-live="polite"></div>
+
+  <script th:src="@{/js/theme-toggle.js}" defer></script>
+  <script th:src="@{/js/dialog-kit.js}" defer></script>
+  <script th:src="@{/js/store-nav.js}" defer></script>
+  <script th:src="@{/js/cart-client.js}" defer></script>
+  <script th:src="@{/js/cart-drawer.js}" defer></script>
+  <script th:src="@{/js/ai-assistant.js}" defer></script>
+  <script th:src="@{/js/notifications-client.js}" defer></script>
+  <script th:src="@{/js/wishlist.js}" defer></script>
+</footer>
+
 </html>

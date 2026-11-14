@@ -1,0 +1,20 @@
+{
+  "name": "StrongWine Shipper — Maison de Vins",
+  "short_name": "SW Shipper",
+  "description": "Ứng dụng giao nhận rượu vang & rượu truyền thống cao cấp StrongWine",
+  "start_url": "/shipper/dashboard",
+  "scope": "/shipper/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#0c0a08",
+  "background_color": "#0c0a08",
+  "lang": "vi",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
