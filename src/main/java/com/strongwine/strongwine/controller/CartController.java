@@ -313,6 +313,12 @@ public class CartController {
                     appliedVoucherCode = voucherResult.code() != null ? voucherResult.code() : candidateCode;
                 }
 
+                java.math.BigDecimal finalPayableTotal = subtotal
+                        .subtract(discountAmount)
+                        .max(java.math.BigDecimal.ZERO)
+                        .add(finalShippingFee);
+                PaymentService.validateGatewayAmount(normalizedPaymentMethod, finalPayableTotal);
+
                 order = orderService.createPendingOrder(
                         userId,
                         itemsMap,

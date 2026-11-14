@@ -43,6 +43,39 @@ public class PaymentService {
     private static final int MAX_GATEWAY_RESPONSE_LENGTH = 2000;
     private static final int MAX_TRANSACTION_PAYLOAD_LENGTH = 2000;
     private static final Set<String> ZERO_DECIMAL_CURRENCIES = Set.of("VND");
+    private static final BigDecimal STRIPE_MIN_VND = new BigDecimal("15000");
+    private static final BigDecimal VNPAY_MIN_VND = new BigDecimal("5000");
+    private static final BigDecimal VNPAY_MAX_VND = new BigDecimal("1000000000");
+
+    public static void validateGatewayAmount(String method, BigDecimal amount) {
+        if (method == null || method.isBlank() || "COD".equalsIgnoreCase(method.trim())) {
+            return;
+        }
+        try {
+            validateGatewayAmount(PaymentMethod.valueOf(method.trim().toUpperCase()), amount);
+        } catch (IllegalArgumentException ex) {
+            if (ex.getMessage() != null && ex.getMessage().startsWith("Thanh toán qua ")) {
+                throw ex;
+            }
+            throw new IllegalArgumentException("Phương thức thanh toán chưa được hỗ trợ: " + method, ex);
+        }
+    }
+
+    public static void validateGatewayAmount(PaymentMethod paymentMethod, BigDecimal amount) {
+        if (paymentMethod == null || paymentMethod == PaymentMethod.COD) {
+            return;
+        }
+        BigDecimal total = amount != null ? amount : BigDecimal.ZERO;
+        if (paymentMethod == PaymentMethod.STRIPE && total.compareTo(STRIPE_MIN_VND) < 0) {
+            throw new IllegalArgumentException(
+                    "Thanh toán qua Stripe yêu cầu tổng đơn hàng tối thiểu 15.000đ. Vui lòng chọn COD cho đơn hàng giá trị nhỏ hơn.");
+        }
+        if (paymentMethod == PaymentMethod.VNPAY
+                && (total.compareTo(VNPAY_MIN_VND) < 0 || total.compareTo(VNPAY_MAX_VND) >= 0)) {
+            throw new IllegalArgumentException(
+                    "Thanh toán qua VNPay yêu cầu tổng đơn hàng từ 5.000đ đến dưới 1.000.000.000đ. Vui lòng chọn COD cho đơn hàng ngoài mức này.");
+        }
+    }
 
     private enum FinalizationOutcome {
         FINALIZED,
@@ -107,6 +140,8 @@ public class PaymentService {
             }
             return baseUrl + "/orders/" + order.getId();
         }
+
+        validateGatewayAmount(paymentMethod, order != null ? order.getTotalPrice() : null);
 
         Payment payment = self.createInitialPayment(order, paymentMethod);
 

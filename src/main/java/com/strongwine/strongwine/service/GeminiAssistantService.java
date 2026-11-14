@@ -30,6 +30,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -85,6 +86,9 @@ public class GeminiAssistantService {
     @Value("${app.omni.model:gemini-2.5-flash}")
     private String omniModel;
 
+    @Value("${app.gemini.timeout-ms:12000}")
+    private long geminiTimeoutMs = 12_000L;
+
     public GeminiAssistantService() {
         this.objectMapper = new ObjectMapper();
         this.httpClient = HttpClient.newBuilder()
@@ -102,8 +106,10 @@ public class GeminiAssistantService {
 
         CatalogSnapshot snapshot = loadCatalogSnapshot();
 
-        // 1. Prioritize Omni Route on Vercel if configured and enabled
-        if (omniEnabled && omniBaseUrl != null && !omniBaseUrl.isBlank()) {
+        // 1. Prioritize Omni Route on Vercel only when an API key is configured
+        if (omniEnabled
+                && omniBaseUrl != null && !omniBaseUrl.isBlank()
+                && omniApiKey != null && !omniApiKey.isBlank()) {
             try {
                 String omniAnswer = sendOmniGatewayRequest(normalizedPrompt, normalizedContext, snapshot);
                 if (omniAnswer != null && !omniAnswer.isBlank()) {
@@ -114,7 +120,7 @@ public class GeminiAssistantService {
             }
         }
 
-        // 2. Direct Google Gemini API call
+        // 2. Direct Google Gemini API call with per-model timeout & fallback isolation
         if (geminiApiKey != null && !geminiApiKey.trim().isEmpty()) {
             try {
                 String fullPrompt = buildPrompt(normalizedPrompt, normalizedContext, snapshot);
@@ -125,33 +131,38 @@ public class GeminiAssistantService {
                         )),
                         "generationConfig", Map.of(
                                 "temperature", 0.5,
-                                "maxOutputTokens", 700
+                                "maxOutputTokens", 4096
                         )
                 );
 
                 String requestBody = objectMapper.writeValueAsString(payload);
-                String primaryModel = resolveModel();
-                GeminiHttpResult result = sendGeminiRequest(requestBody, primaryModel);
+                List<String> candidateModels = buildCandidateModels(resolveModel());
+                GeminiHttpResult lastFailure = null;
+                Exception lastException = null;
 
-                if (!result.isSuccess()) {
-                    List<String> fallbacks = List.of("gemini-2.5-flash", "gemini-2.5-pro", "gemini-2.0-flash");
-                    for (String fallback : fallbacks) {
-                        if (!fallback.equalsIgnoreCase(primaryModel)) {
-                            logger.info("Retry Gemini with fallback model {}. previousStatus={}", fallback, result.statusCode());
-                            result = sendGeminiRequest(requestBody, fallback);
-                            if (result.isSuccess()) {
-                                break;
-                            }
+                for (String candidateModel : candidateModels) {
+                    try {
+                        GeminiHttpResult result = sendGeminiRequest(requestBody, candidateModel);
+                        if (result.isSuccess()) {
+                            String rawText = parseAssistantResponse(result.body());
+                            return parseStructuredLlmResponse(rawText, snapshot);
                         }
+                        lastFailure = result;
+                        logger.warn("Gemini model {} returned status {}: {}. Trying next fallback.",
+                                candidateModel, result.statusCode(), abbreviateForLog(result.body()));
+                    } catch (Exception modelEx) {
+                        lastException = modelEx;
+                        logger.warn("Gemini request failed for model {}: {}. Trying next fallback.",
+                                candidateModel, modelEx.getMessage());
                     }
                 }
 
-                if (result.isSuccess()) {
-                    String rawText = parseAssistantResponse(result.body());
-                    return parseStructuredLlmResponse(rawText, snapshot);
-                } else {
+                if (lastFailure != null) {
                     logger.error("!!! GEMINI API ERROR !!! Status: {}, Model: {}, Body: {}",
-                            result.statusCode(), result.model(), abbreviateForLog(result.body()));
+                            lastFailure.statusCode(), lastFailure.model(), abbreviateForLog(lastFailure.body()));
+                } else if (lastException != null) {
+                    logger.error("!!! GEMINI API CONNECTION FAILED !!! model={}, baseUrl={}, error={}",
+                            resolveModel(), resolveBaseUrl(), lastException.getMessage());
                 }
             } catch (Exception ex) {
                 logger.error("!!! GEMINI API CONNECTION FAILED !!! model={}, baseUrl={}, error={}",
@@ -308,13 +319,109 @@ public class GeminiAssistantService {
             }
         }
 
-        List<Long> mentionedIds = snapshot.wines().stream()
-                .filter(w -> w.getId() != null && w.getName() != null
-                        && trimmed.toLowerCase(Locale.ROOT).contains(w.getName().toLowerCase(Locale.ROOT)))
-                .map(Wine::getId)
-                .toList();
+        List<Long> mentionedIds = extractWineIdsFromText(trimmed, snapshot);
+        String recoveredAnswer = recoverTruncatedJsonAnswer(trimmed);
+        if (recoveredAnswer != null && !recoveredAnswer.isBlank()) {
+            List<WineRecommendationCard> recoveredCards = resolveVerifiedCards(
+                    mentionedIds, snapshot.wines(), snapshot.stockByWineId());
+            return new StructuredAssistantResponse(recoveredAnswer, recoveredAnswer, recoveredCards, true);
+        }
+
+        if (trimmed.startsWith("{") && trimmed.contains("\"answer\"")) {
+            return buildLocalAdviceStructured("", "", snapshot);
+        }
+
         List<WineRecommendationCard> cards = resolveVerifiedCards(mentionedIds, snapshot.wines(), snapshot.stockByWineId());
         return new StructuredAssistantResponse(trimmed, trimmed, cards, true);
+    }
+
+    private String recoverTruncatedJsonAnswer(String trimmed) {
+        String cleaned = FENCE_PATTERN.matcher(trimmed).replaceAll("").trim();
+        Matcher answerKey = Pattern.compile("\"answer\"\\s*:\\s*\"").matcher(cleaned);
+        if (!answerKey.find()) {
+            return null;
+        }
+        StringBuilder raw = new StringBuilder();
+        boolean escaped = false;
+        for (int i = answerKey.end(); i < cleaned.length(); i++) {
+            char ch = cleaned.charAt(i);
+            if (escaped) {
+                raw.append('\\').append(ch);
+                escaped = false;
+                continue;
+            }
+            if (ch == '\\') {
+                escaped = true;
+                continue;
+            }
+            if (ch == '"') {
+                break;
+            }
+            raw.append(ch);
+        }
+        String decoded = unescapeJsonFragment(raw.toString()).trim();
+        if (decoded.isBlank()) {
+            return null;
+        }
+        // Trim incomplete trailing fragment only if cutoff ended mid-clause without terminal punctuation
+        if (!decoded.endsWith(".") && !decoded.endsWith("!") && !decoded.endsWith("?")) {
+            int lastBreak = Math.max(decoded.lastIndexOf('\n'), decoded.lastIndexOf(". "));
+            if (lastBreak > Math.max(40, decoded.length() / 2)) {
+                decoded = decoded.substring(0, decoded.charAt(lastBreak) == '.' ? lastBreak + 1 : lastBreak).trim();
+            }
+        }
+        return decoded;
+    }
+
+    private String unescapeJsonFragment(String raw) {
+        StringBuilder sb = new StringBuilder(raw.length());
+        for (int i = 0; i < raw.length(); i++) {
+            char ch = raw.charAt(i);
+            if (ch == '\\' && i + 1 < raw.length()) {
+                char next = raw.charAt(++i);
+                switch (next) {
+                    case 'n' -> sb.append('\n');
+                    case 'r' -> sb.append('\r');
+                    case 't' -> sb.append('\t');
+                    case '"' -> sb.append('"');
+                    case '\\' -> sb.append('\\');
+                    case '/' -> sb.append('/');
+                    case 'u' -> {
+                        if (i + 4 < raw.length()) {
+                            String hex = raw.substring(i + 1, i + 5);
+                            try {
+                                sb.append((char) Integer.parseInt(hex, 16));
+                                i += 4;
+                            } catch (NumberFormatException ignored) {
+                            }
+                        }
+                    }
+                    default -> sb.append(next);
+                }
+            } else if (ch != '\\') {
+                sb.append(ch);
+            }
+        }
+        return sb.toString();
+    }
+
+    private List<Long> extractWineIdsFromText(String text, CatalogSnapshot snapshot) {
+        Set<Long> ids = new LinkedHashSet<>();
+        Matcher idTagMatcher = Pattern.compile("\\[ID\\s*#?(\\d+)]", Pattern.CASE_INSENSITIVE).matcher(text);
+        while (idTagMatcher.find()) {
+            try {
+                ids.add(Long.parseLong(idTagMatcher.group(1)));
+            } catch (NumberFormatException ignored) {
+            }
+        }
+        String lower = text.toLowerCase(Locale.ROOT);
+        for (Wine w : snapshot.wines()) {
+            if (w.getId() != null && w.getName() != null
+                    && lower.contains(w.getName().toLowerCase(Locale.ROOT))) {
+                ids.add(w.getId());
+            }
+        }
+        return List.copyOf(ids);
     }
 
     private String extractJsonObject(String text) {
@@ -342,6 +449,9 @@ public class GeminiAssistantService {
 
         StringBuilder textBuilder = new StringBuilder();
         for (JsonNode part : parts) {
+            if (part.path("thought").asBoolean(false)) {
+                continue;
+            }
             String text = part.path("text").asText("").trim();
             if (!text.isEmpty()) {
                 if (!textBuilder.isEmpty()) {
@@ -368,7 +478,7 @@ public class GeminiAssistantService {
                 .append("3. Trả lời bằng tiếng Việt, phong cách lịch sự, chuyên nghiệp, sử dụng 'StrongWine' để xưng hô thay vì 'tôi'.\n")
                 .append("4. Chỉ sử dụng danh mục sản phẩm và số lượng tồn kho thực tế dưới đây để tư vấn; tuyệt đối không tự bịa ra sản phẩm hoặc ID mới:\n")
                 .append(getStoreKnowledge(snapshot))
-                .append("\n5. Trả về đúng một JSON object hợp lệ (không bọc markdown) có dạng: ")
+                .append("\n5. Trả lời súc tích trong 2–4 câu (tối đa khoảng 120 từ) và trả về đúng một JSON object hợp lệ (không bọc markdown) có dạng: ")
                 .append("{\"answer\":\"<câu trả lời tiếng Việt chi tiết>\",\"recommendedIds\":[<danh sách ID số nguyên thực tế phù hợp nhất, tối đa 4 ID>]}.\n");
 
         if (!context.isEmpty()) {
@@ -411,11 +521,25 @@ public class GeminiAssistantService {
         return normalizedBaseUrl + "/models/" + model + ":generateContent?key=" + encodedKey;
     }
 
+    private List<String> buildCandidateModels(String primaryModel) {
+        Map<String, String> ordered = new LinkedHashMap<>();
+        for (String candidate : List.of(primaryModel, "gemini-2.5-flash", "gemini-3-flash-preview", "gemini-2.5-pro")) {
+            if (candidate != null && !candidate.isBlank()) {
+                ordered.putIfAbsent(candidate.trim().toLowerCase(Locale.ROOT), candidate.trim());
+            }
+        }
+        return List.copyOf(ordered.values());
+    }
+
+    private long resolveGeminiTimeoutMs() {
+        return geminiTimeoutMs >= 100L ? geminiTimeoutMs : 12_000L;
+    }
+
     private GeminiHttpResult sendGeminiRequest(String requestBody, String model) throws Exception {
         String endpoint = buildEndpoint(model);
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(endpoint))
-                .timeout(Duration.ofSeconds(25))
+                .timeout(Duration.ofMillis(resolveGeminiTimeoutMs()))
                 .header("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(requestBody))
                 .build();
@@ -486,7 +610,7 @@ public class GeminiAssistantService {
                         Map.of("role", "user", "content", userContent)
                 ),
                 "temperature", 0.5,
-                "max_tokens", 700
+                "max_tokens", 2048
         );
 
         String requestBody = objectMapper.writeValueAsString(payload);
