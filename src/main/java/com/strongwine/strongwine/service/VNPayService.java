@@ -10,10 +10,12 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
@@ -53,16 +55,23 @@ public class VNPayService {
     @Value("${vnpay.expireMinutes:15}")
     private int expireMinutes;
 
+    public boolean isConfigured() {
+        return tmnCode != null && !tmnCode.isBlank()
+                && hashSecret != null && !hashSecret.isBlank()
+                && payUrl != null && !payUrl.isBlank();
+    }
+
     public String createPaymentUrl(Payment payment, String baseUrl, String clientIp) {
         ensureConfigured();
 
+        LocalDateTime createdAt = nowInVietNam();
         Map<String, String> params = new HashMap<>();
         params.put("vnp_Version", trimOrDefault(version, "2.1.0"));
         params.put("vnp_Command", trimOrDefault(command, "pay"));
         params.put("vnp_TmnCode", tmnCode.trim());
         params.put("vnp_Amount", String.valueOf(toVnPayAmount(payment.getAmount())));
-        params.put("vnp_CreateDate", nowInVietNam().format(VNPAY_DATE_FORMAT));
-        params.put("vnp_ExpireDate", nowInVietNam().plusMinutes(Math.max(1, expireMinutes)).format(VNPAY_DATE_FORMAT));
+        params.put("vnp_CreateDate", createdAt.format(VNPAY_DATE_FORMAT));
+        params.put("vnp_ExpireDate", createdAt.plusMinutes(Math.max(1, expireMinutes)).format(VNPAY_DATE_FORMAT));
         params.put("vnp_CurrCode", "VND");
         params.put("vnp_IpAddr", normalizeClientIp(clientIp));
         params.put("vnp_Locale", trimOrDefault(locale, "vn"));
@@ -84,6 +93,9 @@ public class VNPayService {
         if (callbackParams == null || callbackParams.isEmpty() || hashSecret == null || hashSecret.isBlank()) {
             return false;
         }
+        if (callbackParams.containsKey("vnp_TmnCode") && !isValidTmnCode(callbackParams)) {
+            return false;
+        }
 
         String receivedHash = callbackParams.get("vnp_SecureHash");
         if (receivedHash == null || receivedHash.isBlank()) {
@@ -95,14 +107,23 @@ public class VNPayService {
         signData.remove("vnp_SecureHashType");
 
         String expectedHash = hmacSha512(hashSecret.trim(), toCanonicalQuery(signData));
-        return expectedHash.equalsIgnoreCase(receivedHash.trim());
+        return MessageDigest.isEqual(
+                expectedHash.toLowerCase(Locale.ROOT).getBytes(StandardCharsets.UTF_8),
+                receivedHash.trim().toLowerCase(Locale.ROOT).getBytes(StandardCharsets.UTF_8));
+    }
+
+    public boolean isValidTmnCode(Map<String, String> callbackParams) {
+        if (callbackParams == null || tmnCode == null || tmnCode.isBlank()) {
+            return false;
+        }
+        String receivedTmnCode = valueOf(callbackParams, "vnp_TmnCode");
+        return receivedTmnCode != null && tmnCode.trim().equals(receivedTmnCode);
     }
 
     public boolean isSuccessfulResponse(Map<String, String> callbackParams) {
         String responseCode = valueOf(callbackParams, "vnp_ResponseCode");
         String transactionStatus = valueOf(callbackParams, "vnp_TransactionStatus");
-        boolean transactionOk = transactionStatus == null || transactionStatus.isBlank() || "00".equals(transactionStatus);
-        return "00".equals(responseCode) && transactionOk;
+        return "00".equals(responseCode) && "00".equals(transactionStatus);
     }
 
     public String getTxnRef(Map<String, String> callbackParams) {

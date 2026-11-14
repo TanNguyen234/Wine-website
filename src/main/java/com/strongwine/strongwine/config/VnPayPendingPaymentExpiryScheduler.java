@@ -22,7 +22,10 @@ public class VnPayPendingPaymentExpiryScheduler {
     private final PaymentService paymentService;
 
     @Value("${app.payment.vnpay.pending-timeout-minutes:60}")
-    private long pendingTimeoutMinutes;
+    private long pendingTimeoutMinutes = 60;
+
+    @Value("${app.payment.stripe.pending-timeout-minutes:60}")
+    private long stripePendingTimeoutMinutes = 60;
 
     public VnPayPendingPaymentExpiryScheduler(PaymentService paymentService) {
         this.paymentService = paymentService;
@@ -30,10 +33,24 @@ public class VnPayPendingPaymentExpiryScheduler {
 
     @Scheduled(initialDelay = 120_000, fixedDelay = 300_000)
     public void expireAbandonedVnPayPayments() {
-        LocalDateTime cutoff = LocalDateTime.now().minusMinutes(Math.max(1, pendingTimeoutMinutes));
-        int expired = paymentService.expireStaleVnPayPayments(cutoff);
-        if (expired > 0) {
-            log.info("Expired {} abandoned VNPay payments and released their reserved stock", expired);
+        LocalDateTime vnPayCutoff = LocalDateTime.now().minusMinutes(Math.max(1, pendingTimeoutMinutes));
+        try {
+            int expiredVnPay = paymentService.expireStaleVnPayPayments(vnPayCutoff);
+            if (expiredVnPay > 0) {
+                log.info("Expired {} abandoned VNPay payments and released their reserved stock", expiredVnPay);
+            }
+        } catch (RuntimeException ex) {
+            log.error("Failed to run VNPay pending payment expiry sweep", ex);
+        }
+
+        LocalDateTime stripeCutoff = LocalDateTime.now().minusMinutes(Math.max(1, stripePendingTimeoutMinutes));
+        try {
+            int expiredStripe = paymentService.expireStaleStripePayments(stripeCutoff);
+            if (expiredStripe > 0) {
+                log.info("Expired {} abandoned Stripe payments and released their reserved stock", expiredStripe);
+            }
+        } catch (RuntimeException ex) {
+            log.error("Failed to run Stripe pending payment expiry sweep", ex);
         }
     }
 }
