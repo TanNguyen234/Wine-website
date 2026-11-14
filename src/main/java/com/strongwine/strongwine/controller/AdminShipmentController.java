@@ -49,6 +49,7 @@ public class AdminShipmentController {
         Map<ShipmentStatus, Long> shipmentStats = shipmentService.getShipmentStatusStats();
 
         model.addAttribute("shipments", shipmentPage.getContent());
+        model.addAttribute("allowedTransitionsByShipmentId", shipmentService.buildAllowedTransitionsMap(shipmentPage.getContent()));
         model.addAttribute("shipmentStats", shipmentStats);
         
         model.addAttribute("currentPage", page);
@@ -146,6 +147,24 @@ public class AdminShipmentController {
             redirectAttributes.addFlashAttribute("success", "Đã xóa đơn giao hàng ở trạng thái chờ phân công");
         } catch (Exception ex) {
             redirectAttributes.addFlashAttribute("error", "Xóa đơn giao hàng thất bại: " + ex.getMessage());
+        }
+        return "redirect:/admin/shipments";
+    }
+
+    @PostMapping("/{id}/assign")
+    public String assignShipper(@PathVariable Long id,
+                                @RequestParam Long shipperId,
+                                Authentication authentication,
+                                RedirectAttributes redirectAttributes) {
+        try {
+            shipmentService.assignShipperToShipment(
+                    id,
+                    shipperId,
+                    authentication == null ? null : authentication.getName()
+            );
+            redirectAttributes.addFlashAttribute("success", "Đã phân công shipper cho đơn giao hàng");
+        } catch (Exception ex) {
+            redirectAttributes.addFlashAttribute("error", "Phân công shipper thất bại: " + ex.getMessage());
         }
         return "redirect:/admin/shipments";
     }

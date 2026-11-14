@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 @Transactional
@@ -67,6 +68,43 @@ public class ShipperService {
     public Shipper getShipperById(Long id) {
         return shipperRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Shipper not found with id: " + id));
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<Shipper> findShipperByUsername(String username) {
+        String normalized = trimToNull(username);
+        if (normalized == null) {
+            return Optional.empty();
+        }
+        return userRepository.findByUsername(normalized)
+                .map(User::getId)
+                .flatMap(shipperRepository::findByUserId);
+    }
+
+    @Transactional(readOnly = true)
+    public Map<Long, Long> getActiveLoadByShipperId(List<Shipper> shippers) {
+        return shipmentService.getActiveLoadByShipperId(shippers);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Shipper> getAvailableActiveShippersSortedByDistance(Double targetLat, Double targetLng) {
+        return shipmentService.sortShippersForDispatch(
+                shipperRepository.findByStatusAndIsAvailableTrueOrderByNameAsc(ShipperStatus.ACTIVE),
+                targetLat,
+                targetLng
+        );
+    }
+
+    public Shipper updateShipperLocation(String username, Double latitude, Double longitude) {
+        Shipper shipper = findShipperByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("Shipper profile not found for user: " + username));
+        if (latitude != null && Double.isFinite(latitude) && longitude != null && Double.isFinite(longitude)) {
+            shipper.setCurrentLatitude(latitude);
+            shipper.setCurrentLongitude(longitude);
+            shipper.setUpdatedAt(LocalDateTime.now());
+            return shipperRepository.save(shipper);
+        }
+        return shipper;
     }
 
     @Transactional(readOnly = true)
@@ -143,6 +181,9 @@ public class ShipperService {
 
     public void deleteShipper(Long id) {
         Shipper shipper = getShipperById(id);
+        if (shipmentService.hasActiveShipmentsForShipper(id)) {
+            throw new IllegalStateException("Không thể xóa shipper đang phụ trách vận đơn chưa hoàn tất");
+        }
         shipperRepository.delete(shipper);
     }
 

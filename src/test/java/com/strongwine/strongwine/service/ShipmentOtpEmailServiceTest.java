@@ -115,6 +115,33 @@ class ShipmentOtpEmailServiceTest {
                 .hasMessageContaining("Email người nhận không hợp lệ");
     }
 
+    @Test
+    void sendShipmentOtp_decryptsEncryptedOtpWhenPlainOtpCodeIsNull() {
+        JavaMailSender mailSender = mock(JavaMailSender.class);
+        ShipmentOtpCryptoService cryptoService = new ShipmentOtpCryptoService("strongwine-test-secret-key-2026");
+        ShipmentOtpEmailService service = new ShipmentOtpEmailService(
+                mailSender,
+                true,
+                "no-reply@strongwine.local",
+                "",
+                false,
+                1,
+                0,
+                cryptoService
+        );
+
+        Shipment shipment = createShipment("checkout@example.com", null);
+        shipment.setOtpCode(null);
+        shipment.setOtpEncrypted(cryptoService.encrypt("654321"));
+
+        OtpDeliveryResult result = service.sendShipmentOtp(shipment);
+
+        assertThat(result.success()).isTrue();
+        ArgumentCaptor<SimpleMailMessage> captor = ArgumentCaptor.forClass(SimpleMailMessage.class);
+        verify(mailSender).send(captor.capture());
+        assertThat(captor.getValue().getText()).contains("654321");
+    }
+
     private Shipment createShipment(String shippingEmail, String userEmail) {
         User user = new User();
         user.setId(100L);

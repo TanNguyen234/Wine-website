@@ -7,12 +7,15 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import java.util.concurrent.locks.ReentrantLock;
+
 @Component
 public class ShipmentAutoDispatchScheduler {
 
     private static final Logger log = LoggerFactory.getLogger(ShipmentAutoDispatchScheduler.class);
 
     private final ShipmentService shipmentService;
+    private final ReentrantLock dispatchLock = new ReentrantLock();
 
     @Value("${app.shipment.dispatch.enabled:true}")
     private boolean dispatchEnabled;
@@ -26,13 +29,19 @@ public class ShipmentAutoDispatchScheduler {
             fixedDelayString = "${app.shipment.dispatch.fixed-delay-ms:60000}"
     )
     public void dispatchPendingShipments() {
-        if (!dispatchEnabled) {
+        if (!dispatchEnabled || !dispatchLock.tryLock()) {
             return;
         }
 
-        int processed = shipmentService.dispatchAutoShipmentQueue();
-        if (processed > 0) {
-            log.info("Auto dispatch assigned {} pending shipments", processed);
+        try {
+            int processed = shipmentService.dispatchAutoShipmentQueue();
+            if (processed > 0) {
+                log.info("Auto dispatch assigned {} pending shipments", processed);
+            }
+        } catch (Exception ex) {
+            log.warn("Auto dispatch execution failed: {}", ex.getMessage());
+        } finally {
+            dispatchLock.unlock();
         }
     }
 }

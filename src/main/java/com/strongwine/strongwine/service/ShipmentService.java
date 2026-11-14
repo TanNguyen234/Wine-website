@@ -3,19 +3,26 @@ package com.strongwine.strongwine.service;
 import com.strongwine.strongwine.entity.Order;
 import com.strongwine.strongwine.entity.OrderStatus;
 import com.strongwine.strongwine.entity.OtpDeliveryStatus;
-import com.strongwine.strongwine.entity.PaymentStatus;
 import com.strongwine.strongwine.entity.PaymentMethod;
+import com.strongwine.strongwine.entity.PaymentStatus;
 import com.strongwine.strongwine.entity.Shipment;
 import com.strongwine.strongwine.entity.ShipmentStatus;
 import com.strongwine.strongwine.entity.Shipper;
 import com.strongwine.strongwine.entity.ShipperStatus;
 import com.strongwine.strongwine.entity.User;
+import com.strongwine.strongwine.entity.Warehouse;
+import com.strongwine.strongwine.event.ShipmentLiveStatusEvent;
 import com.strongwine.strongwine.exception.OtpDeliveryException;
 import com.strongwine.strongwine.repository.OrderRepository;
 import com.strongwine.strongwine.repository.ShipmentRepository;
 import com.strongwine.strongwine.repository.ShipperRepository;
 import com.strongwine.strongwine.repository.UserRepository;
+import com.strongwine.strongwine.service.port.CodSettlementPort;
+import com.strongwine.strongwine.service.port.ShipmentOrderLifecyclePort;
 import com.strongwine.strongwine.util.AddressTextUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -23,8 +30,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -35,7 +45,7 @@ import java.util.Set;
 
 @Service
 @Transactional
-public class ShipmentService {
+public class ShipmentService implements ShipmentOrderLifecyclePort {
 
     private static final SecureRandom OTP_RANDOM = new SecureRandom();
 
@@ -60,6 +70,12 @@ public class ShipmentService {
     private final ShipmentOtpEmailService shipmentOtpEmailService;
     private final ShipmentOtpAuditService shipmentOtpAuditService;
     private final ShipmentStatusHistoryService shipmentStatusHistoryService;
+    private final ShipmentOtpStateService shipmentOtpStateService;
+    private final ShipmentOtpCryptoService shipmentOtpCryptoService;
+    private final ShippingFeeService shippingFeeService;
+    private final AdminAuditLogService adminAuditLogService;
+    private final CodSettlementPort codSettlementPort;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     public ShipmentService(ShipmentRepository shipmentRepository,
                            ShipperRepository shipperRepository,
@@ -68,6 +84,25 @@ public class ShipmentService {
                            ShipmentOtpEmailService shipmentOtpEmailService,
                            ShipmentOtpAuditService shipmentOtpAuditService,
                            ShipmentStatusHistoryService shipmentStatusHistoryService) {
+        this(shipmentRepository, shipperRepository, orderRepository, userRepository,
+                shipmentOtpEmailService, shipmentOtpAuditService, shipmentStatusHistoryService,
+                null, null, null, null, null, null);
+    }
+
+    @Autowired
+    public ShipmentService(ShipmentRepository shipmentRepository,
+                           ShipperRepository shipperRepository,
+                           OrderRepository orderRepository,
+                           UserRepository userRepository,
+                           ShipmentOtpEmailService shipmentOtpEmailService,
+                           ShipmentOtpAuditService shipmentOtpAuditService,
+                           ShipmentStatusHistoryService shipmentStatusHistoryService,
+                           @Autowired(required = false) ShipmentOtpStateService shipmentOtpStateService,
+                           @Autowired(required = false) ShipmentOtpCryptoService shipmentOtpCryptoService,
+                           @Autowired(required = false) ShippingFeeService shippingFeeService,
+                           @Autowired(required = false) AdminAuditLogService adminAuditLogService,
+                           @Autowired(required = false) @Lazy CodSettlementPort codSettlementPort,
+                           @Autowired(required = false) ApplicationEventPublisher applicationEventPublisher) {
         this.shipmentRepository = shipmentRepository;
         this.shipperRepository = shipperRepository;
         this.orderRepository = orderRepository;
@@ -75,6 +110,16 @@ public class ShipmentService {
         this.shipmentOtpEmailService = shipmentOtpEmailService;
         this.shipmentOtpAuditService = shipmentOtpAuditService;
         this.shipmentStatusHistoryService = shipmentStatusHistoryService;
+        this.shipmentOtpStateService = shipmentOtpStateService;
+        this.shipmentOtpCryptoService = shipmentOtpCryptoService != null
+                ? shipmentOtpCryptoService
+                : new ShipmentOtpCryptoService("");
+        this.shippingFeeService = shippingFeeService != null
+                ? shippingFeeService
+                : new ShippingFeeService();
+        this.adminAuditLogService = adminAuditLogService;
+        this.codSettlementPort = codSettlementPort;
+        this.applicationEventPublisher = applicationEventPublisher;
     }
 
     public enum EnsureShipmentResult {
@@ -164,12 +209,16 @@ public class ShipmentService {
         Shipment shipment = shipmentRepository.findByOrderId(orderId)
                 .orElseThrow(() -> new IllegalStateException("Không thể tạo đơn giao hàng cho đơn: " + orderId));
         if (shipment.getOtpDeliveryStatus() == OtpDeliveryStatus.SENT
-                && shipment.getOtpCode() != null
+                && hasOtpSecret(shipment)
                 && Boolean.FALSE.equals(shipment.getOtpVerified())) {
             return;
         }
 
         sendOtpForShipment(shipment.getId(), "system-order-paid", "ORDER_PAID:" + (paymentReference == null ? "N/A" : paymentReference));
+    }
+
+    public Shipment createOrReuseShipment(Order order) {
+        return createAutoShipmentForPaidOrder(order);
     }
 
     public Shipment createAutoShipmentForPaidOrder(Order order) {
@@ -183,7 +232,8 @@ public class ShipmentService {
             return existingShipment.get();
         }
 
-        Optional<Shipper> availableShipper = findAssignableShipper();
+        Double[] targetCoords = resolveTargetCoordinates(order);
+        Optional<Shipper> availableShipper = findAssignableShipper(targetCoords[0], targetCoords[1]);
 
         try {
             return availableShipper
@@ -199,9 +249,12 @@ public class ShipmentService {
         int processed = 0;
         while (processed < AUTO_DISPATCH_BATCH_LIMIT) {
             Optional<Shipment> pendingShipment = shipmentRepository.findFirstByStatusOrderByCreatedAtAsc(ShipmentStatus.PENDING_ASSIGNMENT);
-            Optional<Shipper> availableShipper = findAssignableShipper();
-
-            if (pendingShipment.isEmpty() || availableShipper.isEmpty()) {
+            if (pendingShipment.isEmpty()) {
+                break;
+            }
+            Double[] targetCoords = resolveTargetCoordinates(pendingShipment.get());
+            Optional<Shipper> availableShipper = findAssignableShipper(targetCoords[0], targetCoords[1]);
+            if (availableShipper.isEmpty()) {
                 break;
             }
 
@@ -242,16 +295,17 @@ public class ShipmentService {
     }
 
     /**
-     * Get all active shipments (not COMPLETED or FAILED) for Administrative monitoring.
+     * Get all active shipments (not terminal COMPLETED, FAILED, or CANCELLED) for Administrative monitoring.
      */
     @Transactional(readOnly = true)
     public List<Shipment> getActiveShipmentsForAdminView() {
         return shipmentRepository.findAll().stream()
-                .filter(s -> s.getStatus() != ShipmentStatus.COMPLETED && s.getStatus() != ShipmentStatus.FAILED)
+                .filter(s -> !isTerminalStatus(s.getStatus()))
                 .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
                 .collect(java.util.stream.Collectors.toList());
     }
 
+    @Override
     @Transactional(readOnly = true)
     public Optional<Shipment> getShipmentByOrderId(Long orderId) {
         if (orderId == null) {
@@ -260,6 +314,7 @@ public class ShipmentService {
         return shipmentRepository.findByOrderIdWithShipper(orderId);
     }
 
+    @Override
     @Transactional(readOnly = true)
     public Map<Long, Shipment> getShipmentMapByOrderIds(List<Long> orderIds) {
         if (orderIds == null || orderIds.isEmpty()) {
@@ -273,6 +328,134 @@ public class ShipmentService {
             }
         }
         return shipmentByOrderId;
+    }
+
+    @Override
+    public void cancelShipmentForOrder(Long orderId, String actorUsername, String reason) {
+        if (orderId == null) {
+            return;
+        }
+        Optional<Shipment> foundOpt = shipmentRepository.findByOrderId(orderId);
+        if (foundOpt.isEmpty()) {
+            return;
+        }
+        Shipment found = foundOpt.get();
+        Shipment shipment = found.getId() == null
+                ? found
+                : shipmentRepository.findByIdForUpdate(found.getId()).orElse(found);
+
+        if (shipment.getStatus() == ShipmentStatus.COMPLETED
+                || shipment.getStatus() == ShipmentStatus.CANCELLED) {
+            return;
+        }
+
+        ShipmentStatus previousStatus = shipment.getStatus();
+        Shipper assignedShipper = shipment.getShipper();
+        LocalDateTime now = LocalDateTime.now();
+        String normalizedReason = trimToNull(reason);
+        String resolvedReason = normalizedReason != null ? normalizedReason : "ORDER_CANCELLED";
+
+        shipment.setStatus(ShipmentStatus.CANCELLED);
+        shipment.setStatusReason(resolvedReason);
+        invalidateOtp(shipment, now, OtpDeliveryStatus.PENDING);
+
+        Shipment saved = shipmentRepository.save(shipment);
+
+        if (assignedShipper != null && assignedShipper.getId() != null) {
+            Shipper lockedShipper = shipperRepository.findByIdForUpdate(assignedShipper.getId())
+                    .orElse(assignedShipper);
+            int currentCount = lockedShipper.getActiveShipmentCount() == null ? 0 : lockedShipper.getActiveShipmentCount();
+            boolean hadActiveSlot = previousStatus == ShipmentStatus.ASSIGNED
+                    || previousStatus == ShipmentStatus.PICKED_UP
+                    || previousStatus == ShipmentStatus.DELIVERING;
+            int nextCount = hadActiveSlot ? Math.max(0, currentCount - 1) : Math.max(0, currentCount);
+            lockedShipper.setActiveShipmentCount(nextCount);
+            lockedShipper.setIsAvailable(lockedShipper.getStatus() == ShipperStatus.ACTIVE
+                    && nextCount < normalizeCapacity(lockedShipper));
+            lockedShipper.setUpdatedAt(now);
+            shipperRepository.save(lockedShipper);
+        }
+
+        recordStatusTransition(saved, previousStatus, resolvedReason, "source=order-cancel", actorUsername);
+        if (adminAuditLogService != null) {
+            String actor = trimToNull(actorUsername) != null ? actorUsername.trim() : "system";
+            adminAuditLogService.log(
+                    actor,
+                    "SHIPMENT_CANCELLED",
+                    "SHIPMENT",
+                    saved.getId(),
+                    Map.of("status", previousStatus == null ? "UNKNOWN" : previousStatus.name(), "orderId", orderId),
+                    Map.of("status", ShipmentStatus.CANCELLED.name(), "reason", resolvedReason),
+                    null
+            );
+        }
+        publishLiveStatusEvent(saved);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<String> decryptOtpForOrderView(Shipment shipment) {
+        if (shipment == null) {
+            return Optional.empty();
+        }
+        if (shipment.getOtpEncrypted() != null && !shipment.getOtpEncrypted().isBlank()) {
+            Optional<String> decrypted = shipmentOtpCryptoService.decrypt(shipment.getOtpEncrypted());
+            if (decrypted.isPresent() && !decrypted.get().isBlank()) {
+                return decrypted;
+            }
+            return Optional.empty();
+        }
+        if (shipment.getOtpCode() != null && !shipment.getOtpCode().isBlank()) {
+            return Optional.of(shipment.getOtpCode().trim());
+        }
+        return Optional.empty();
+    }
+
+    @Transactional(readOnly = true)
+    public boolean hasActiveShipmentsForShipper(Long shipperId) {
+        if (shipperId == null) {
+            return false;
+        }
+        return shipmentRepository.existsByShipperIdAndStatusIn(shipperId, IN_PROGRESS_STATUSES);
+    }
+
+    @Transactional(readOnly = true)
+    public List<ShipmentStatus> getAllowedManualTransitions(ShipmentStatus currentStatus) {
+        if (currentStatus == null) {
+            return List.of();
+        }
+        return switch (currentStatus) {
+            case PENDING_ASSIGNMENT -> List.of(ShipmentStatus.CANCELLED);
+            case ASSIGNED -> List.of(ShipmentStatus.PICKED_UP, ShipmentStatus.FAILED, ShipmentStatus.CANCELLED);
+            case PICKED_UP -> List.of(ShipmentStatus.DELIVERING, ShipmentStatus.FAILED, ShipmentStatus.CANCELLED);
+            case DELIVERING -> List.of(ShipmentStatus.COMPLETED, ShipmentStatus.FAILED, ShipmentStatus.CANCELLED);
+            default -> List.of();
+        };
+    }
+
+    @Transactional(readOnly = true)
+    public Map<Long, List<ShipmentStatus>> buildAllowedTransitionsMap(List<Shipment> shipments) {
+        if (shipments == null || shipments.isEmpty()) {
+            return Map.of();
+        }
+        Map<Long, List<ShipmentStatus>> map = new LinkedHashMap<>();
+        for (Shipment s : shipments) {
+            if (s != null && s.getId() != null) {
+                map.put(s.getId(), getAllowedManualTransitions(s.getStatus()));
+            }
+        }
+        return map;
+    }
+
+    public Shipment assignShipperToShipment(Long shipmentId, Long shipperId, String actorUsername) {
+        if (shipmentId == null || shipperId == null) {
+            throw new IllegalArgumentException("Thiếu mã vận đơn hoặc shipper");
+        }
+        Shipment shipment = shipmentRepository.findByIdForUpdate(shipmentId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đơn giao hàng: " + shipmentId));
+        Shipper shipper = lockAndValidateAssignableShipper(shipperId)
+                .orElseThrow(() -> new IllegalStateException("Shipper không hoạt động hoặc đã đạt giới hạn đơn đang giao"));
+        return assignShipmentToShipperInternal(shipment, shipper, true);
     }
 
     @Transactional(readOnly = true)
@@ -355,7 +538,9 @@ public class ShipmentService {
         generateNewOtp(shipment, LocalDateTime.now());
 
         if (shipperId != null) {
-            shipment.setShipper(getActiveShipper(shipperId));
+            Shipper assigned = lockAndValidateAssignableShipper(shipperId)
+                    .orElseThrow(() -> new IllegalStateException("Shipper không hoạt động hoặc đã đạt giới hạn đơn đang giao"));
+            shipment.setShipper(assigned);
             shipment.setStatus(ShipmentStatus.ASSIGNED);
             shipment.setAssignedAt(LocalDateTime.now());
             shipment.setStatusReason("ADMIN_CREATE_ASSIGNED");
@@ -373,6 +558,7 @@ public class ShipmentService {
         } else {
             dispatchAutoShipmentQueue();
         }
+        publishLiveStatusEvent(savedShipment);
         return savedShipment;
     }
 
@@ -428,6 +614,7 @@ public class ShipmentService {
                 "source=admin-edit",
                 actorUsername);
         reconcileShipperAvailabilityAfterMutation(savedShipment, previousStatus, previousShipperId, true);
+        publishLiveStatusEvent(savedShipment);
         return savedShipment;
     }
 
@@ -457,18 +644,22 @@ public class ShipmentService {
         Long previousShipperId = shipment.getShipper() == null ? null : shipment.getShipper().getId();
         ShipmentStatus previousStatus = shipment.getStatus();
         applyStrictTransition(shipment, targetStatus, failureNote);
-        if (targetStatus == ShipmentStatus.FAILED) {
-            invalidateOtp(shipment, LocalDateTime.now(), OtpDeliveryStatus.FAILED);
+        if (targetStatus == ShipmentStatus.FAILED || targetStatus == ShipmentStatus.CANCELLED) {
+            invalidateOtp(shipment, LocalDateTime.now(),
+                    targetStatus == ShipmentStatus.FAILED ? OtpDeliveryStatus.FAILED : OtpDeliveryStatus.PENDING);
         }
         shipment.setAdminOverride(false);
         shipment.setAdminOverrideReason(null);
         shipment.setUpdatedAt(LocalDateTime.now());
         Shipment savedShipment = shipmentRepository.save(shipment);
         recordStatusTransition(savedShipment, previousStatus,
-            targetStatus == ShipmentStatus.FAILED ? trimToNull(failureNote) : savedShipment.getStatusReason(),
+            (targetStatus == ShipmentStatus.FAILED || targetStatus == ShipmentStatus.CANCELLED)
+                    ? trimToNull(failureNote)
+                    : savedShipment.getStatusReason(),
             "source=admin-status",
             actorUsername);
         reconcileShipperAvailabilityAfterMutation(savedShipment, previousStatus, previousShipperId, true);
+        publishLiveStatusEvent(savedShipment);
         return savedShipment;
     }
 
@@ -482,27 +673,21 @@ public class ShipmentService {
 
         Long previousShipperId = shipment.getShipper() == null ? null : shipment.getShipper().getId();
         ShipmentStatus previousStatus = shipment.getStatus();
+        LocalDateTime now = LocalDateTime.now();
 
         applyStrictTransition(shipment, ShipmentStatus.COMPLETED, null);
         applyAdminOverrideState(shipment, resolveAdminOverrideReason(overrideReason));
+        populateCodCollectedAmountIfApplicable(shipment);
         clearSensitiveOtpAfterCompletion(shipment);
-        shipment.setUpdatedAt(LocalDateTime.now());
+        shipment.setUpdatedAt(now);
 
         Shipment savedShipment = shipmentRepository.save(shipment);
-        if (savedShipment.getOrder() != null) {
-            Order order = savedShipment.getOrder();
-            if (order.getPaymentMethod() == PaymentMethod.COD && order.getPaymentStatus() != PaymentStatus.SUCCESS) {
-                order.setPaymentStatus(PaymentStatus.SUCCESS);
-                order.setStatus(OrderStatus.PAID);
-                order.setPaidAt(LocalDateTime.now());
-                order.setUpdatedAt(LocalDateTime.now());
-                orderRepository.save(order);
-            }
-        }
+        settleCodOrderAfterCompletion(savedShipment, actorUsername, now);
         recordStatusTransition(savedShipment, previousStatus, savedShipment.getAdminOverrideReason(), "source=admin-override", actorUsername);
         shipmentOtpAuditService.log(savedShipment, "ADMIN_OVERRIDE_COMPLETED", "SUCCESS",
                 savedShipment.getAdminOverrideReason(), "source=admin-status", actorUsername);
         reconcileShipperAvailabilityAfterMutation(savedShipment, previousStatus, previousShipperId, true);
+        publishLiveStatusEvent(savedShipment);
         return savedShipment;
     }
 
@@ -515,7 +700,7 @@ public class ShipmentService {
             throw new IllegalStateException("Đơn giao hàng đã kết thúc, không thể gửi OTP");
         }
 
-        if (shipment.getOtpCode() == null || shipment.getOtpCode().isBlank()) {
+        if (!hasOtpSecret(shipment)) {
             generateNewOtp(shipment, LocalDateTime.now());
             shipmentRepository.save(shipment);
             shipmentOtpAuditService.log(shipment, "OTP_GENERATED", "SUCCESS", reason, "source=send-otp", actorUsername);
@@ -624,7 +809,8 @@ public class ShipmentService {
         Shipment shipment = shipmentRepository.findFirstByStatusOrderByCreatedAtAsc(ShipmentStatus.PENDING_ASSIGNMENT)
                 .orElseThrow(() -> new IllegalStateException("Không có đơn giao hàng chờ phân công"));
 
-        Shipper shipper = findAssignableShipper()
+        Double[] targetCoords = resolveTargetCoordinates(shipment);
+        Shipper shipper = findAssignableShipper(targetCoords[0], targetCoords[1])
                 .orElseThrow(() -> new IllegalStateException("Không có shipper đang hoạt động và sẵn sàng"));
 
         assignShipmentToShipperInternal(shipment, shipper, true);
@@ -638,6 +824,7 @@ public class ShipmentService {
         Shipment savedShipment = shipmentRepository.save(shipment);
         recordStatusTransition(savedShipment, previousStatus, null, "source=shipper-pickup", username);
         reconcileShipperAvailabilityAfterMutation(savedShipment, previousStatus, previousShipperId, true);
+        publishLiveStatusEvent(savedShipment);
     }
 
     public void startDelivering(Long shipmentId, String username) {
@@ -648,16 +835,90 @@ public class ShipmentService {
         Shipment savedShipment = shipmentRepository.save(shipment);
         recordStatusTransition(savedShipment, previousStatus, null, "source=shipper-start", username);
         reconcileShipperAvailabilityAfterMutation(savedShipment, previousStatus, previousShipperId, true);
+        publishLiveStatusEvent(savedShipment);
     }
 
-    public void completeDelivery(Long shipmentId, String username, String otp) {
-        Shipment shipment = getShipmentForShipper(shipmentId, username);
-        if (shipment.getStatus() != ShipmentStatus.DELIVERING) {
-            throw new IllegalStateException("Đơn giao hàng không ở trạng thái đang giao");
+    public Shipment verifyOtp(Long shipmentId, String otp) {
+        if (shipmentId == null) {
+            throw new IllegalArgumentException("Thiếu mã đơn giao hàng");
+        }
+        Shipment shipment = shipmentRepository.findById(shipmentId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đơn giao hàng: " + shipmentId));
+        if (isTerminalStatus(shipment.getStatus())) {
+            throw new IllegalStateException("Đơn giao hàng đã kết thúc, không thể xác thực OTP");
         }
 
         LocalDateTime now = LocalDateTime.now();
         validateOtpBeforeCompletion(shipment, otp, now);
+
+        Shipment locked = shipmentRepository.findByIdForUpdate(shipmentId)
+                .or(() -> shipmentRepository.findById(shipmentId))
+                .orElse(shipment);
+        locked.setOtpVerified(true);
+        locked.setOtpAttemptCount(0);
+        locked.setOtpLockedUntil(null);
+        locked.setUpdatedAt(now);
+        Shipment saved = shipmentRepository.save(locked);
+        shipmentOtpAuditService.log(saved, "OTP_VERIFY", "SUCCESS", "OTP_VERIFIED", null, null);
+        return saved;
+    }
+
+    public Shipment recordProofOfDelivery(Long shipmentId,
+                                          String username,
+                                          String proofOfDeliveryUrl,
+                                          String deliveryNote) {
+        Shipment shipment = getShipmentForShipper(shipmentId, username);
+        if (shipment.getStatus() != ShipmentStatus.PICKED_UP
+                && shipment.getStatus() != ShipmentStatus.DELIVERING
+                && shipment.getStatus() != ShipmentStatus.COMPLETED) {
+            throw new IllegalStateException("Chỉ đơn đã lấy hàng, đang giao hoặc đã hoàn tất mới tải ảnh giao hàng");
+        }
+        String normalizedUrl = requireText(proofOfDeliveryUrl, "Vui lòng tải lên ảnh bằng chứng giao hàng");
+        shipment.setProofOfDeliveryUrl(normalizedUrl);
+        String trimmedNote = trimToNull(deliveryNote);
+        if (trimmedNote != null) {
+            shipment.setStatusReason("POD_NOTE:" + trimmedNote);
+        }
+        shipment.setUpdatedAt(LocalDateTime.now());
+        Shipment saved = shipmentRepository.save(shipment);
+        if (adminAuditLogService != null) {
+            adminAuditLogService.log(
+                    username,
+                    "SHIPMENT_POD_UPLOADED",
+                    "SHIPMENT",
+                    saved.getId(),
+                    null,
+                    Map.of("proofOfDeliveryUrl", normalizedUrl),
+                    null
+            );
+        }
+        return saved;
+    }
+
+    public void completeDelivery(Long shipmentId, String username, String otp) {
+        completeDelivery(shipmentId, username, otp, null, null);
+    }
+
+    public void completeDelivery(Long shipmentId,
+                                 String username,
+                                 String otp,
+                                 String proofOfDeliveryUrl,
+                                 String deliveryNote) {
+        Shipment readableShipment = getReadableShipmentForShipper(shipmentId, username);
+        if (readableShipment.getStatus() != ShipmentStatus.DELIVERING) {
+            throw new IllegalStateException("Đơn giao hàng không ở trạng thái đang giao");
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        validateOtpBeforeCompletion(readableShipment, otp, now);
+
+        Shipment shipment = shipmentRepository.findByIdForUpdate(shipmentId)
+                .or(() -> shipmentRepository.findById(shipmentId))
+                .orElse(readableShipment);
+        validateShipperOwnership(shipment, username);
+        if (shipment.getStatus() != ShipmentStatus.DELIVERING) {
+            throw new IllegalStateException("Đơn giao hàng không ở trạng thái đang giao");
+        }
 
         Long previousShipperId = shipment.getShipper() == null ? null : shipment.getShipper().getId();
         ShipmentStatus previousStatus = shipment.getStatus();
@@ -665,23 +926,24 @@ public class ShipmentService {
         shipment.setOtpVerified(true);
         shipment.setAdminOverride(false);
         shipment.setAdminOverrideReason(null);
+        String normalizedPod = trimToNull(proofOfDeliveryUrl);
+        if (normalizedPod != null) {
+            shipment.setProofOfDeliveryUrl(normalizedPod);
+        }
+        String normalizedNote = trimToNull(deliveryNote);
+        if (normalizedNote != null) {
+            shipment.setStatusReason("POD_NOTE:" + normalizedNote);
+        }
+        populateCodCollectedAmountIfApplicable(shipment);
         clearSensitiveOtpAfterCompletion(shipment);
         shipment.setUpdatedAt(now);
 
         Shipment savedShipment = shipmentRepository.save(shipment);
-        if (savedShipment.getOrder() != null) {
-            Order order = savedShipment.getOrder();
-            if (order.getPaymentMethod() == PaymentMethod.COD && order.getPaymentStatus() != PaymentStatus.SUCCESS) {
-                order.setPaymentStatus(PaymentStatus.SUCCESS);
-                order.setStatus(OrderStatus.PAID);
-                order.setPaidAt(now);
-                order.setUpdatedAt(now);
-                orderRepository.save(order);
-            }
-        }
-        recordStatusTransition(savedShipment, previousStatus, null, "source=shipper-complete", username);
+        settleCodOrderAfterCompletion(savedShipment, username, now);
+        recordStatusTransition(savedShipment, previousStatus, normalizedNote, "source=shipper-complete", username);
         shipmentOtpAuditService.log(savedShipment, "OTP_VERIFIED_COMPLETED", "SUCCESS", "SHIPPER_COMPLETE", null, username);
         reconcileShipperAvailabilityAfterMutation(savedShipment, previousStatus, previousShipperId, true);
+        publishLiveStatusEvent(savedShipment);
     }
 
     public void markFailed(Long shipmentId, String username, String note) {
@@ -693,6 +955,7 @@ public class ShipmentService {
         Shipment savedShipment = shipmentRepository.save(shipment);
         recordStatusTransition(savedShipment, previousStatus, trimToNull(note), "source=shipper-fail", username);
         reconcileShipperAvailabilityAfterMutation(savedShipment, previousStatus, previousShipperId, true);
+        publishLiveStatusEvent(savedShipment);
     }
 
     private Shipment getShipmentForShipper(Long shipmentId, String username) {
@@ -701,6 +964,21 @@ public class ShipmentService {
         }
         Shipment shipment = shipmentRepository.findByIdForUpdate(shipmentId)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đơn giao hàng: " + shipmentId));
+        validateShipperOwnership(shipment, username);
+        return shipment;
+    }
+
+    private Shipment getReadableShipmentForShipper(Long shipmentId, String username) {
+        if (shipmentId == null) {
+            throw new IllegalArgumentException("Thiếu mã đơn giao hàng");
+        }
+        Shipment shipment = shipmentRepository.findById(shipmentId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đơn giao hàng: " + shipmentId));
+        validateShipperOwnership(shipment, username);
+        return shipment;
+    }
+
+    private void validateShipperOwnership(Shipment shipment, String username) {
         if (shipment.getShipper() == null || shipment.getShipper().getUser() == null) {
             throw new IllegalStateException("Đơn giao hàng chưa được gán shipper");
         }
@@ -708,7 +986,6 @@ public class ShipmentService {
         if (!ownerUsername.equals(username)) {
             throw new IllegalStateException("Đơn giao hàng không thuộc shipper hiện tại");
         }
-        return shipment;
     }
 
     private void applyStrictTransition(Shipment shipment, ShipmentStatus targetStatus, String failureNote) {
@@ -719,10 +996,10 @@ public class ShipmentService {
 
         boolean validTransition;
         switch (currentStatus) {
-            case PENDING_ASSIGNMENT -> validTransition = targetStatus == ShipmentStatus.ASSIGNED;
-            case ASSIGNED -> validTransition = targetStatus == ShipmentStatus.PICKED_UP || targetStatus == ShipmentStatus.FAILED;
-            case PICKED_UP -> validTransition = targetStatus == ShipmentStatus.DELIVERING || targetStatus == ShipmentStatus.FAILED;
-            case DELIVERING -> validTransition = targetStatus == ShipmentStatus.COMPLETED || targetStatus == ShipmentStatus.FAILED;
+            case PENDING_ASSIGNMENT -> validTransition = targetStatus == ShipmentStatus.ASSIGNED || targetStatus == ShipmentStatus.CANCELLED;
+            case ASSIGNED -> validTransition = targetStatus == ShipmentStatus.PICKED_UP || targetStatus == ShipmentStatus.FAILED || targetStatus == ShipmentStatus.CANCELLED;
+            case PICKED_UP -> validTransition = targetStatus == ShipmentStatus.DELIVERING || targetStatus == ShipmentStatus.FAILED || targetStatus == ShipmentStatus.CANCELLED;
+            case DELIVERING -> validTransition = targetStatus == ShipmentStatus.COMPLETED || targetStatus == ShipmentStatus.FAILED || targetStatus == ShipmentStatus.CANCELLED;
             default -> validTransition = false;
         }
 
@@ -743,6 +1020,9 @@ public class ShipmentService {
         }
         if (targetStatus == ShipmentStatus.COMPLETED) {
             shipment.setCompletedAt(now);
+            if (shipment.getDeliveredAt() == null) {
+                shipment.setDeliveredAt(now);
+            }
             shipment.setFailedAt(null);
             shipment.setStatusReason(null);
         }
@@ -757,6 +1037,13 @@ public class ShipmentService {
             shipment.setLastDeliveryAttemptAt(now);
             int currentAttemptCount = shipment.getDeliveryAttemptCount() == null ? 0 : shipment.getDeliveryAttemptCount();
             shipment.setDeliveryAttemptCount(currentAttemptCount + 1);
+        } else if (targetStatus == ShipmentStatus.CANCELLED) {
+            String normalizedCancelReason = trimToNull(failureNote);
+            shipment.setFailureNote(null);
+            shipment.setFailureCode(null);
+            if (normalizedCancelReason != null) {
+                shipment.setStatusReason(normalizedCancelReason);
+            }
         } else {
             shipment.setFailureNote(null);
             shipment.setFailureCode(null);
@@ -813,6 +1100,7 @@ public class ShipmentService {
         recordStatusTransition(savedShipment, null, "AUTO_CREATE_ASSIGNED", "source=auto-create", "system-dispatch");
         shipmentOtpAuditService.log(savedShipment, "OTP_GENERATED", "SUCCESS", "AUTO_CREATE_ASSIGNED", null, null);
         markShipperBusy(shipper);
+        publishLiveStatusEvent(savedShipment);
         return savedShipment;
     }
 
@@ -870,6 +1158,7 @@ public class ShipmentService {
         Shipment savedShipment = shipmentRepository.save(shipment);
         recordStatusTransition(savedShipment, previousStatus, "AUTO_DISPATCH_ASSIGN", "source=auto-dispatch", "system-dispatch");
         reconcileShipperAvailabilityAfterMutation(savedShipment, previousStatus, previousShipperId, triggerDispatch);
+        publishLiveStatusEvent(savedShipment);
         return savedShipment;
     }
 
@@ -900,7 +1189,7 @@ public class ShipmentService {
     }
 
     private boolean isTerminalStatus(ShipmentStatus status) {
-        return status == ShipmentStatus.COMPLETED || status == ShipmentStatus.FAILED;
+        return status == ShipmentStatus.COMPLETED || status == ShipmentStatus.FAILED || status == ShipmentStatus.CANCELLED;
     }
 
     private void markShipperBusy(Shipper shipper) {
@@ -931,22 +1220,20 @@ public class ShipmentService {
     }
 
     private Optional<Shipper> findAssignableShipper() {
-        Set<Long> checkedShipperIds = new HashSet<>();
+        return findAssignableShipper(null, null);
+    }
 
-        Optional<Shipper> preferred = shipperRepository.findFirstByStatusAndIsAvailableTrueOrderByIdAsc(ShipperStatus.ACTIVE);
-        if (preferred.isPresent()) {
-            Long preferredId = preferred.get().getId();
-            if (preferredId != null) {
-                checkedShipperIds.add(preferredId);
-                Optional<Shipper> validatedPreferred = lockAndValidateAssignableShipper(preferredId);
-                if (validatedPreferred.isPresent()) {
-                    return validatedPreferred;
-                }
-            }
+    private Optional<Shipper> findAssignableShipper(Double targetLat, Double targetLng) {
+        List<Shipper> activeCandidates = shipperRepository.findByStatusOrderByIdAsc(ShipperStatus.ACTIVE);
+        if (activeCandidates == null || activeCandidates.isEmpty()) {
+            return Optional.empty();
         }
 
-        for (Shipper candidate : shipperRepository.findByStatusOrderByIdAsc(ShipperStatus.ACTIVE)) {
-            if (candidate.getId() == null || checkedShipperIds.contains(candidate.getId())) {
+        List<Shipper> sortedCandidates = sortShippersForDispatch(activeCandidates, targetLat, targetLng);
+        Set<Long> checkedShipperIds = new HashSet<>();
+
+        for (Shipper candidate : sortedCandidates) {
+            if (candidate == null || candidate.getId() == null || checkedShipperIds.contains(candidate.getId())) {
                 continue;
             }
             checkedShipperIds.add(candidate.getId());
@@ -957,6 +1244,82 @@ public class ShipmentService {
         }
 
         return Optional.empty();
+    }
+
+    public List<Shipper> sortShippersForDispatch(List<Shipper> candidates, Double targetLat, Double targetLng) {
+        if (candidates == null || candidates.isEmpty()) {
+            return List.of();
+        }
+        boolean hasTarget = isFiniteCoord(targetLat) && isFiniteCoord(targetLng);
+        List<Shipper> mutable = new ArrayList<>(candidates);
+        mutable.sort(Comparator.comparing((Shipper s) -> s, (a, b) -> {
+            if (hasTarget) {
+                Double distA = isFiniteCoord(a.getCurrentLatitude()) && isFiniteCoord(a.getCurrentLongitude())
+                        ? shippingFeeService.calculateDistanceKm(targetLat, targetLng, a.getCurrentLatitude(), a.getCurrentLongitude())
+                        : null;
+                Double distB = isFiniteCoord(b.getCurrentLatitude()) && isFiniteCoord(b.getCurrentLongitude())
+                        ? shippingFeeService.calculateDistanceKm(targetLat, targetLng, b.getCurrentLatitude(), b.getCurrentLongitude())
+                        : null;
+                if (distA != null && distB != null) {
+                    int distCmp = Double.compare(distA, distB);
+                    if (distCmp != 0) {
+                        return distCmp;
+                    }
+                } else if (distA != null) {
+                    return -1;
+                } else if (distB != null) {
+                    return 1;
+                }
+            }
+            double loadA = safeActiveCount(a) / (double) normalizeCapacity(a);
+            double loadB = safeActiveCount(b) / (double) normalizeCapacity(b);
+            int loadCmp = Double.compare(loadA, loadB);
+            if (loadCmp != 0) {
+                return loadCmp;
+            }
+            int activeCmp = Integer.compare(safeActiveCount(a), safeActiveCount(b));
+            if (activeCmp != 0) {
+                return activeCmp;
+            }
+            boolean availA = Boolean.TRUE.equals(a.getIsAvailable());
+            boolean availB = Boolean.TRUE.equals(b.getIsAvailable());
+            if (availA != availB) {
+                return availA ? -1 : 1;
+            }
+            LocalDateTime lastA = a.getLastAssignmentAt();
+            LocalDateTime lastB = b.getLastAssignmentAt();
+            if (lastA == null && lastB != null) {
+                return -1;
+            }
+            if (lastA != null && lastB == null) {
+                return 1;
+            }
+            if (lastA != null) {
+                int timeCmp = lastA.compareTo(lastB);
+                if (timeCmp != 0) {
+                    return timeCmp;
+                }
+            }
+            long idA = a.getId() == null ? Long.MAX_VALUE : a.getId();
+            long idB = b.getId() == null ? Long.MAX_VALUE : b.getId();
+            return Long.compare(idA, idB);
+        }));
+        return mutable;
+    }
+
+    @Transactional(readOnly = true)
+    public Map<Long, Long> getActiveLoadByShipperId(List<Shipper> shippers) {
+        if (shippers == null || shippers.isEmpty()) {
+            return Map.of();
+        }
+        Map<Long, Long> loadMap = new LinkedHashMap<>();
+        for (Shipper shipper : shippers) {
+            if (shipper != null && shipper.getId() != null) {
+                long count = shipmentRepository.countByShipperIdAndStatusIn(shipper.getId(), IN_PROGRESS_STATUSES);
+                loadMap.put(shipper.getId(), count);
+            }
+        }
+        return loadMap;
     }
 
     private Optional<Shipper> lockAndValidateAssignableShipper(Long shipperId) {
@@ -1069,7 +1432,9 @@ public class ShipmentService {
     }
 
     private void generateNewOtp(Shipment shipment, LocalDateTime now) {
-        shipment.setOtpCode(generateOtp());
+        String plainOtp = generateOtp();
+        shipment.setOtpEncrypted(shipmentOtpCryptoService.encrypt(plainOtp));
+        shipment.setOtpCode(null);
         shipment.setOtpVerified(false);
         shipment.setAdminOverride(false);
         shipment.setAdminOverrideReason(null);
@@ -1124,11 +1489,21 @@ public class ShipmentService {
             throw new IllegalStateException("OTP user binding không hợp lệ");
         }
 
-        String storedOtp = normalizeOtp(shipment.getOtpCode());
+        String storedOtp = resolveStoredOtp(shipment);
         if (storedOtp.length() != 6 || !storedOtp.equals(normalizedOtp)) {
-            registerFailedOtpAttempt(shipment, now);
-            shipmentRepository.save(shipment);
-            shipmentOtpAuditService.log(shipment, "OTP_VERIFY", "FAILED", "OTP_MISMATCH", null, null);
+            if (shipmentOtpStateService != null && shipment.getId() != null) {
+                Shipment updatedState = shipmentOtpStateService.recordFailedOtpAttempt(shipment.getId());
+                if (updatedState != null) {
+                    shipment.setOtpAttemptCount(updatedState.getOtpAttemptCount());
+                    shipment.setOtpLockedUntil(updatedState.getOtpLockedUntil());
+                } else {
+                    registerFailedOtpAttempt(shipment, now);
+                }
+            } else {
+                registerFailedOtpAttempt(shipment, now);
+                shipmentRepository.save(shipment);
+                shipmentOtpAuditService.log(shipment, "OTP_VERIFY", "FAILED", "OTP_MISMATCH", null, null);
+            }
             if (shipment.getOtpLockedUntil() != null && shipment.getOtpLockedUntil().isAfter(now)) {
                 throw new IllegalStateException("Nhập sai OTP quá số lần cho phép. Mã OTP đã bị khóa 15 phút");
             }
@@ -1151,6 +1526,7 @@ public class ShipmentService {
 
     private void clearSensitiveOtpAfterCompletion(Shipment shipment) {
         shipment.setOtpCode(null);
+        shipment.setOtpEncrypted(null);
         shipment.setOtpCreatedAt(null);
         shipment.setOtpExpiresAt(null);
         shipment.setOtpAttemptCount(0);
@@ -1162,6 +1538,7 @@ public class ShipmentService {
 
     private void invalidateOtp(Shipment shipment, LocalDateTime now, OtpDeliveryStatus status) {
         shipment.setOtpCode(null);
+        shipment.setOtpEncrypted(null);
         shipment.setOtpCreatedAt(null);
         shipment.setOtpExpiresAt(null);
         shipment.setOtpAttemptCount(0);
@@ -1267,6 +1644,117 @@ public class ShipmentService {
             return "";
         }
         return otp.replaceAll("\\D", "");
+    }
+
+    private boolean hasOtpSecret(Shipment shipment) {
+        if (shipment == null) {
+            return false;
+        }
+        return (shipment.getOtpEncrypted() != null && !shipment.getOtpEncrypted().isBlank())
+                || (shipment.getOtpCode() != null && !shipment.getOtpCode().isBlank());
+    }
+
+    private String resolveStoredOtp(Shipment shipment) {
+        if (shipment == null) {
+            return "";
+        }
+        if (shipment.getOtpEncrypted() != null && !shipment.getOtpEncrypted().isBlank()) {
+            return shipmentOtpCryptoService.decrypt(shipment.getOtpEncrypted())
+                    .map(this::normalizeOtp)
+                    .orElse("");
+        }
+        return normalizeOtp(shipment.getOtpCode());
+    }
+
+    private void populateCodCollectedAmountIfApplicable(Shipment shipment) {
+        if (shipment == null || shipment.getOrder() == null) {
+            return;
+        }
+        Order order = shipment.getOrder();
+        if (order.getPaymentMethod() == PaymentMethod.COD && shipment.getCodCollectedAmount() == null) {
+            BigDecimal expected = order.getTotalPrice() != null ? order.getTotalPrice() : BigDecimal.ZERO;
+            shipment.setCodCollectedAmount(expected);
+        }
+    }
+
+    private void settleCodOrderAfterCompletion(Shipment savedShipment, String actorUsername, LocalDateTime now) {
+        if (savedShipment == null || savedShipment.getOrder() == null) {
+            return;
+        }
+        Order order = savedShipment.getOrder();
+        if (order.getPaymentMethod() != PaymentMethod.COD || order.getPaymentStatus() == PaymentStatus.SUCCESS) {
+            return;
+        }
+        if (codSettlementPort != null && order.getId() != null) {
+            String actor = trimToNull(actorUsername);
+            codSettlementPort.settleCodOrder(order.getId(), actor != null ? actor : "system");
+            return;
+        }
+        order.setPaymentStatus(PaymentStatus.SUCCESS);
+        order.setStatus(OrderStatus.PAID);
+        order.setPaidAt(now);
+        order.setUpdatedAt(now);
+        orderRepository.save(order);
+    }
+
+    private void publishLiveStatusEvent(Shipment shipment) {
+        if (applicationEventPublisher == null || shipment == null || shipment.getId() == null) {
+            return;
+        }
+        Long orderId = shipment.getOrder() == null ? null : shipment.getOrder().getId();
+        String statusName = shipment.getStatus() == null ? null : shipment.getStatus().name();
+        Shipper shipper = shipment.getShipper();
+        String shipperName = shipper != null ? shipper.getName() : null;
+        String shipperPhone = shipper != null ? shipper.getPhone() : null;
+        String vehiclePlate = shipper != null ? shipper.getVehicleType() : null;
+        applicationEventPublisher.publishEvent(
+                new ShipmentLiveStatusEvent(this, shipment.getId(), orderId, statusName, shipperName, shipperPhone, vehiclePlate)
+        );
+    }
+
+    private Double[] resolveTargetCoordinates(Order order) {
+        if (order == null) {
+            return new Double[]{null, null};
+        }
+        Double lat = order.getShippingLatitude();
+        Double lng = order.getShippingLongitude();
+        if (!isFiniteCoord(lat) || !isFiniteCoord(lng)) {
+            Optional<AddressTextUtils.Coordinates> legacy = AddressTextUtils.extractLegacyCoordinates(order.getShippingAddressRaw());
+            if (legacy.isPresent()) {
+                lat = legacy.get().latitude();
+                lng = legacy.get().longitude();
+            }
+        }
+        if ((!isFiniteCoord(lat) || !isFiniteCoord(lng)) && order.getAllocatedWarehouse() != null) {
+            Warehouse warehouse = order.getAllocatedWarehouse();
+            lat = warehouse.getLatitude();
+            lng = warehouse.getLongitude();
+        }
+        if (!isFiniteCoord(lat) || !isFiniteCoord(lng)) {
+            return new Double[]{null, null};
+        }
+        return new Double[]{lat, lng};
+    }
+
+    private Double[] resolveTargetCoordinates(Shipment shipment) {
+        if (shipment == null) {
+            return new Double[]{null, null};
+        }
+        if (isFiniteCoord(shipment.getShippingLatitude()) && isFiniteCoord(shipment.getShippingLongitude())) {
+            return new Double[]{shipment.getShippingLatitude(), shipment.getShippingLongitude()};
+        }
+        return resolveTargetCoordinates(shipment.getOrder());
+    }
+
+    private boolean isFiniteCoord(Double value) {
+        return value != null && Double.isFinite(value);
+    }
+
+    private int safeActiveCount(Shipper shipper) {
+        if (shipper == null || shipper.getActiveShipmentCount() == null || shipper.getActiveShipmentCount() < 0) {
+            return 0;
+        }
+        return shipper.getActiveShipmentCount();
     }
 }
 

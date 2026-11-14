@@ -65,6 +65,13 @@ public class ShipmentReconciliationCoordinator {
         }
 
         try {
+            if ("startup".equals(source)) {
+                ShipmentService.BackfillSummary summary = shipmentService.backfillMissingShipmentsForPaidOrders();
+                if (summary.created() > 0 || summary.failed() > 0) {
+                    log.info("Startup paid-order shipment backfill: created={}, existed={}, skipped={}, failed={}",
+                            summary.created(), summary.existed(), summary.skipped(), summary.failed());
+                }
+            }
             int processed = shipmentService.dispatchAutoShipmentQueue();
             if (processed > 0) {
                 log.info("Shipment reconciliation from {} processed {} records", source, processed);

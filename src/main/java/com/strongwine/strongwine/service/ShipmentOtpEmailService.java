@@ -13,6 +13,7 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 @Service
@@ -27,14 +28,28 @@ public class ShipmentOtpEmailService {
     private final boolean allowFallbackRecipient;
     private final int retryMaxAttempts;
     private final long retryInitialBackoffMs;
+    private final ShipmentOtpCryptoService shipmentOtpCryptoService;
 
+    public ShipmentOtpEmailService(JavaMailSender mailSender,
+                                   boolean mailEnabled,
+                                   String fromAddress,
+                                   String fallbackRecipient,
+                                   boolean allowFallbackRecipient,
+                                   int retryMaxAttempts,
+                                   long retryInitialBackoffMs) {
+        this(mailSender, mailEnabled, fromAddress, fallbackRecipient, allowFallbackRecipient,
+                retryMaxAttempts, retryInitialBackoffMs, null);
+    }
+
+    @Autowired
     public ShipmentOtpEmailService(@Autowired(required = false) JavaMailSender mailSender,
                                    @Value("${app.mail.enabled:false}") boolean mailEnabled,
                                    @Value("${app.mail.from:no-reply@strongwine.local}") String fromAddress,
                                    @Value("${app.mail.fallback-recipient:}") String fallbackRecipient,
                                    @Value("${app.mail.allow-fallback-recipient:false}") boolean allowFallbackRecipient,
                                    @Value("${app.mail.retry-max-attempts:3}") int retryMaxAttempts,
-                                   @Value("${app.mail.retry-initial-backoff-ms:250}") long retryInitialBackoffMs) {
+                                   @Value("${app.mail.retry-initial-backoff-ms:250}") long retryInitialBackoffMs,
+                                   @Autowired(required = false) ShipmentOtpCryptoService shipmentOtpCryptoService) {
         this.mailSender = mailSender;
         this.mailEnabled = mailEnabled;
         this.fromAddress = fromAddress;
@@ -42,15 +57,17 @@ public class ShipmentOtpEmailService {
         this.allowFallbackRecipient = allowFallbackRecipient;
         this.retryMaxAttempts = Math.max(1, retryMaxAttempts);
         this.retryInitialBackoffMs = Math.max(0L, retryInitialBackoffMs);
+        this.shipmentOtpCryptoService = shipmentOtpCryptoService != null
+                ? shipmentOtpCryptoService
+                : new ShipmentOtpCryptoService("");
     }
 
     public OtpDeliveryResult sendShipmentOtp(Shipment shipment) {
         if (shipment == null || shipment.getId() == null) {
             throw new OtpDeliveryException("Thiếu thông tin đơn giao hàng");
         }
-        if (shipment.getOtpCode() == null || shipment.getOtpCode().isBlank()) {
-            throw new OtpDeliveryException("Thiếu mã OTP giao hàng");
-        }
+        String otpCode = resolvePlainOtp(shipment)
+                .orElseThrow(() -> new OtpDeliveryException("Thiếu mã OTP giao hàng"));
         if (!mailEnabled) {
             throw new OtpDeliveryException("Chức năng gửi email đang tắt. Hãy đặt app.mail.enabled=true để gửi OTP");
         }
@@ -69,7 +86,7 @@ public class ShipmentOtpEmailService {
         message.setFrom(fromAddress);
         message.setTo(recipient);
         message.setSubject("[StrongWine] Mã OTP giao hàng #" + shipment.getId());
-        message.setText(buildEmailBody(customerName, orderInfo, shipment.getOtpCode(), expiresAtText));
+        message.setText(buildEmailBody(customerName, orderInfo, otpCode, expiresAtText));
 
         long backoff = retryInitialBackoffMs;
         for (int attempt = 1; attempt <= retryMaxAttempts; attempt++) {
@@ -120,6 +137,22 @@ public class ShipmentOtpEmailService {
         if (!EMAIL_PATTERN.matcher(email).matches()) {
             throw new InvalidOtpRecipientException("Email người nhận không hợp lệ: " + email);
         }
+    }
+
+    private Optional<String> resolvePlainOtp(Shipment shipment) {
+        if (shipment == null) {
+            return Optional.empty();
+        }
+        if (shipment.getOtpEncrypted() != null && !shipment.getOtpEncrypted().isBlank()) {
+            Optional<String> decrypted = shipmentOtpCryptoService.decrypt(shipment.getOtpEncrypted());
+            if (decrypted.isPresent() && !decrypted.get().isBlank()) {
+                return decrypted;
+            }
+        }
+        if (shipment.getOtpCode() != null && !shipment.getOtpCode().isBlank()) {
+            return Optional.of(shipment.getOtpCode().trim());
+        }
+        return Optional.empty();
     }
 
     private void sleepBackoff(long backoffMs) {

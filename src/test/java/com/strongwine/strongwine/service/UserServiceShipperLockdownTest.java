@@ -92,4 +92,21 @@ class UserServiceShipperLockdownTest {
         assertThat(created).isNotNull();
         assertThat(created.getRole()).isEqualTo("USER");
     }
+
+    @Test
+    @DisplayName("Authenticated non-admin user attempting to create lowercase shipper role throws SecurityException")
+    void testAuthenticatedCustomerCannotCreateShipperRole() {
+        UsernamePasswordAuthenticationToken customerAuth = new UsernamePasswordAuthenticationToken(
+                "customer1", "password", List.of(new SimpleGrantedAuthority("ROLE_USER"))
+        );
+        SecurityContextHolder.getContext().setAuthentication(customerAuth);
+
+        User escalatedUser = new User("rogue_shipper", "secret123", "shipper");
+        escalatedUser.setEmail("rogue@example.com");
+
+        assertThatThrownBy(() -> userService.createUser(escalatedUser))
+                .isInstanceOf(SecurityException.class)
+                .hasMessageContaining("Không được phép tự tạo tài khoản")
+                .hasMessageContaining("shipper");
+    }
 }

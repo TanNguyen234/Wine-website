@@ -34,9 +34,12 @@ public class ShipmentStatusHistoryService {
         history.setShipment(shipment);
         history.setFromStatus(fromStatus == null ? null : fromStatus.name());
         history.setToStatus(toStatus.name());
-        history.setReason(limit(reason, 500));
-        history.setMetadata(limit(metadata, 2000));
-        history.setActorUsername(limit(actorUsername, 255));
+        String knownOtp = shipment.getOtpCode();
+        history.setReason(ShipmentOtpAuditService.limit(
+                ShipmentOtpAuditService.maskSensitiveOtpText(reason, knownOtp), 500));
+        history.setMetadata(ShipmentOtpAuditService.limit(
+                ShipmentOtpAuditService.maskSensitiveOtpText(metadata, knownOtp), 2000));
+        history.setActorUsername(ShipmentOtpAuditService.limit(actorUsername, 255));
 
         if (actorUsername != null && !actorUsername.isBlank()) {
             User actor = userRepository.findByUsername(actorUsername.trim()).orElse(null);
@@ -46,12 +49,5 @@ public class ShipmentStatusHistoryService {
         }
 
         shipmentStatusHistoryRepository.save(history);
-    }
-
-    private String limit(String value, int maxLength) {
-        if (value == null || value.length() <= maxLength) {
-            return value;
-        }
-        return value.substring(0, maxLength);
     }
 }

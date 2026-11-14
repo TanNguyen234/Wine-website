@@ -1,13 +1,18 @@
 package com.strongwine.strongwine.controller;
 
+import com.strongwine.strongwine.entity.CodBatchStatus;
 import com.strongwine.strongwine.entity.Shipper;
 import com.strongwine.strongwine.entity.ShipperStatus;
+import com.strongwine.strongwine.service.ShipperCodBatchService;
 import com.strongwine.strongwine.service.ShipperService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.List;
 import java.util.Map;
 
 @Controller
@@ -15,9 +20,17 @@ import java.util.Map;
 public class AdminShipperController {
 
     private final ShipperService shipperService;
+    private final ShipperCodBatchService shipperCodBatchService;
 
     public AdminShipperController(ShipperService shipperService) {
+        this(shipperService, null);
+    }
+
+    @Autowired
+    public AdminShipperController(ShipperService shipperService,
+                                  @Autowired(required = false) ShipperCodBatchService shipperCodBatchService) {
         this.shipperService = shipperService;
+        this.shipperCodBatchService = shipperCodBatchService;
     }
 
     @GetMapping
@@ -33,8 +46,16 @@ public class AdminShipperController {
         org.springframework.data.domain.Page<Shipper> shipperPage = shipperService.getShippersPage(pageable);
         
         model.addAttribute("shippers", shipperPage.getContent());
+        model.addAttribute("activeLoadByShipperId", shipperService.getActiveLoadByShipperId(shipperPage.getContent()));
         Map<String, Long> stats = shipperService.getShipperOverviewStats();
         model.addAttribute("shipperStats", stats);
+        if (shipperCodBatchService != null) {
+            model.addAttribute("codBatches", shipperCodBatchService.getAllBatches());
+            model.addAttribute("codBatchStatuses", CodBatchStatus.values());
+        } else {
+            model.addAttribute("codBatches", List.of());
+            model.addAttribute("codBatchStatuses", CodBatchStatus.values());
+        }
         
         model.addAttribute("currentPage", page);
         model.addAttribute("pageSize", size);
@@ -128,6 +149,68 @@ public class AdminShipperController {
                     : "Đã tắt nhận phân công cho shipper");
         } catch (RuntimeException ex) {
             redirectAttributes.addFlashAttribute("error", "Không thể cập nhật trạng thái sẵn sàng: " + ex.getMessage());
+        }
+        return "redirect:/admin/shippers";
+    }
+
+    @GetMapping("/cod-batches")
+    public String listCodBatches(@RequestParam(required = false) CodBatchStatus status, Model model) {
+        org.springframework.data.domain.PageRequest pageable = org.springframework.data.domain.PageRequest.of(
+                0, 10, org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "id"));
+        org.springframework.data.domain.Page<Shipper> shipperPage = shipperService.getShippersPage(pageable);
+        model.addAttribute("shippers", shipperPage.getContent());
+        model.addAttribute("activeLoadByShipperId", shipperService.getActiveLoadByShipperId(shipperPage.getContent()));
+        model.addAttribute("shipperStats", shipperService.getShipperOverviewStats());
+        model.addAttribute("currentPage", 0);
+        model.addAttribute("pageSize", 10);
+        model.addAttribute("sortBy", "id");
+        model.addAttribute("sortDir", "desc");
+        model.addAttribute("totalPages", shipperPage.getTotalPages());
+        model.addAttribute("hasNext", shipperPage.hasNext());
+        model.addAttribute("hasPrevious", shipperPage.hasPrevious());
+        model.addAttribute("totalEntries", shipperPage.getTotalElements());
+        model.addAttribute("codBatchStatuses", CodBatchStatus.values());
+        model.addAttribute("filterBatchStatus", status);
+        model.addAttribute("codBatches", shipperCodBatchService == null
+                ? List.of()
+                : shipperCodBatchService.getBatchesByStatus(status));
+        return "admin-shippers";
+    }
+
+    @PostMapping("/cod-batches/{id}/verify")
+    public String verifyCodBatch(@PathVariable Long id,
+                                 @RequestParam(required = false) String note,
+                                 Authentication authentication,
+                                 RedirectAttributes redirectAttributes) {
+        if (shipperCodBatchService == null) {
+            redirectAttributes.addFlashAttribute("error", "Dịch vụ bảng kê COD chưa sẵn sàng");
+            return "redirect:/admin/shippers";
+        }
+        try {
+            String actor = authentication == null ? "admin" : authentication.getName();
+            shipperCodBatchService.verifyBatch(id, actor, note);
+            redirectAttributes.addFlashAttribute("success", "Đã xác nhận quyết toán bảng kê COD #" + id);
+        } catch (Exception ex) {
+            redirectAttributes.addFlashAttribute("error", "Xác nhận bảng kê COD thất bại: " + ex.getMessage());
+        }
+        return "redirect:/admin/shippers";
+    }
+
+    @PostMapping("/cod-batches/{id}/dispute")
+    public String disputeCodBatch(@PathVariable Long id,
+                                  @RequestParam String reason,
+                                  Authentication authentication,
+                                  RedirectAttributes redirectAttributes) {
+        if (shipperCodBatchService == null) {
+            redirectAttributes.addFlashAttribute("error", "Dịch vụ bảng kê COD chưa sẵn sàng");
+            return "redirect:/admin/shippers";
+        }
+        try {
+            String actor = authentication == null ? "admin" : authentication.getName();
+            shipperCodBatchService.disputeBatch(id, actor, reason);
+            redirectAttributes.addFlashAttribute("success", "Đã ghi nhận tranh chấp bảng kê COD #" + id);
+        } catch (Exception ex) {
+            redirectAttributes.addFlashAttribute("error", "Cập nhật tranh chấp thất bại: " + ex.getMessage());
         }
         return "redirect:/admin/shippers";
     }
