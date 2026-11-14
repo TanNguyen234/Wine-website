@@ -4,10 +4,10 @@ import com.strongwine.strongwine.entity.Order;
 import com.strongwine.strongwine.repository.OrderRepository;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.apache.poi.xssf.usermodel.XSSFCellStyle;
 import org.apache.poi.xssf.usermodel.XSSFColor;
 import org.apache.poi.xssf.usermodel.XSSFFont;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
@@ -52,54 +52,55 @@ public class OrderReportGenerator extends AbstractExcelReportGenerator<Void> {
 
     @Override
     public byte[] generateReport(Void criteria) {
-        try (XSSFWorkbook workbook = new XSSFWorkbook()) {
-            Sheet sheet = workbook.createSheet(getSheetName());
+        SXSSFWorkbook workbook = createStreamingWorkbook();
+        try {
+            Sheet sheet = createTrackedSheet(workbook, getSheetName());
             sheet.setDisplayGridlines(true);
 
             DataFormat df = workbook.createDataFormat();
 
             // Fonts
-            XSSFFont titleFont = workbook.createFont();
+            XSSFFont titleFont = (XSSFFont) workbook.createFont();
             titleFont.setFontName(FONT_FAMILY);
             titleFont.setBold(true);
             titleFont.setFontHeightInPoints((short) 13);
             titleFont.setColor(new XSSFColor(new byte[]{(byte) 255, (byte) 255, (byte) 255}, null));
 
-            XSSFFont subFont = workbook.createFont();
+            XSSFFont subFont = (XSSFFont) workbook.createFont();
             subFont.setFontName(FONT_FAMILY);
             subFont.setItalic(true);
             subFont.setFontHeightInPoints((short) 9);
             subFont.setColor(IndexedColors.GREY_50_PERCENT.getIndex());
 
-            XSSFFont headerFont = workbook.createFont();
+            XSSFFont headerFont = (XSSFFont) workbook.createFont();
             headerFont.setFontName(FONT_FAMILY);
             headerFont.setBold(true);
             headerFont.setFontHeightInPoints((short) 10);
             headerFont.setColor(new XSSFColor(new byte[]{(byte) 255, (byte) 255, (byte) 255}, null));
 
-            XSSFFont regularFont = workbook.createFont();
+            XSSFFont regularFont = (XSSFFont) workbook.createFont();
             regularFont.setFontName(FONT_FAMILY);
             regularFont.setFontHeightInPoints((short) 10);
 
-            XSSFFont totalFont = workbook.createFont();
+            XSSFFont totalFont = (XSSFFont) workbook.createFont();
             totalFont.setFontName(FONT_FAMILY);
             totalFont.setBold(true);
             totalFont.setFontHeightInPoints((short) 10);
 
             // Styles
-            XSSFCellStyle titleStyle = workbook.createCellStyle();
+            XSSFCellStyle titleStyle = (XSSFCellStyle) workbook.createCellStyle();
             titleStyle.setFont(titleFont);
             titleStyle.setFillForegroundColor(new XSSFColor(COLOR_BORDEAUX, null));
             titleStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
             titleStyle.setAlignment(HorizontalAlignment.CENTER);
             titleStyle.setVerticalAlignment(VerticalAlignment.CENTER);
 
-            XSSFCellStyle subtitleStyle = workbook.createCellStyle();
+            XSSFCellStyle subtitleStyle = (XSSFCellStyle) workbook.createCellStyle();
             subtitleStyle.setFont(subFont);
             subtitleStyle.setAlignment(HorizontalAlignment.CENTER);
             subtitleStyle.setVerticalAlignment(VerticalAlignment.CENTER);
 
-            XSSFCellStyle headerStyle = workbook.createCellStyle();
+            XSSFCellStyle headerStyle = (XSSFCellStyle) workbook.createCellStyle();
             headerStyle.setFont(headerFont);
             headerStyle.setFillForegroundColor(new XSSFColor(COLOR_BORDEAUX, null));
             headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
@@ -107,26 +108,26 @@ public class OrderReportGenerator extends AbstractExcelReportGenerator<Void> {
             headerStyle.setVerticalAlignment(VerticalAlignment.CENTER);
             setThinBorders(headerStyle);
 
-            XSSFCellStyle centerStyle = workbook.createCellStyle();
+            XSSFCellStyle centerStyle = (XSSFCellStyle) workbook.createCellStyle();
             centerStyle.setFont(regularFont);
             centerStyle.setAlignment(HorizontalAlignment.CENTER);
             centerStyle.setVerticalAlignment(VerticalAlignment.CENTER);
             setThinBorders(centerStyle);
 
-            XSSFCellStyle leftStyle = workbook.createCellStyle();
+            XSSFCellStyle leftStyle = (XSSFCellStyle) workbook.createCellStyle();
             leftStyle.setFont(regularFont);
             leftStyle.setAlignment(HorizontalAlignment.LEFT);
             leftStyle.setVerticalAlignment(VerticalAlignment.CENTER);
             setThinBorders(leftStyle);
 
-            XSSFCellStyle currencyStyle = workbook.createCellStyle();
+            XSSFCellStyle currencyStyle = (XSSFCellStyle) workbook.createCellStyle();
             currencyStyle.setFont(regularFont);
             currencyStyle.setDataFormat(df.getFormat("#,##0 \"₫\""));
             currencyStyle.setAlignment(HorizontalAlignment.RIGHT);
             currencyStyle.setVerticalAlignment(VerticalAlignment.CENTER);
             setThinBorders(currencyStyle);
 
-            XSSFCellStyle totalLabelStyle = workbook.createCellStyle();
+            XSSFCellStyle totalLabelStyle = (XSSFCellStyle) workbook.createCellStyle();
             totalLabelStyle.setFont(totalFont);
             totalLabelStyle.setFillForegroundColor(new XSSFColor(COLOR_LIGHT_BG, null));
             totalLabelStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
@@ -134,7 +135,7 @@ public class OrderReportGenerator extends AbstractExcelReportGenerator<Void> {
             totalLabelStyle.setVerticalAlignment(VerticalAlignment.CENTER);
             setDoubleBottomBorders(totalLabelStyle);
 
-            XSSFCellStyle totalCurrencyStyle = workbook.createCellStyle();
+            XSSFCellStyle totalCurrencyStyle = (XSSFCellStyle) workbook.createCellStyle();
             totalCurrencyStyle.setFont(totalFont);
             totalCurrencyStyle.setFillForegroundColor(new XSSFColor(COLOR_LIGHT_BG, null));
             totalCurrencyStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
@@ -194,19 +195,19 @@ public class OrderReportGenerator extends AbstractExcelReportGenerator<Void> {
                 c2.setCellStyle(centerStyle);
 
                 Cell c3 = row.createCell(3);
-                c3.setCellValue(order.getUser() != null ? order.getUser().getUsername() : "Khách vãng lai");
+                c3.setCellValue(sanitizeExcelText(order.getUser() != null ? order.getUser().getUsername() : "Khách vãng lai"));
                 c3.setCellStyle(leftStyle);
 
                 Cell c4 = row.createCell(4);
-                c4.setCellValue(order.getShippingFullName() != null ? order.getShippingFullName() : "");
+                c4.setCellValue(sanitizeExcelText(order.getShippingFullName() != null ? order.getShippingFullName() : ""));
                 c4.setCellStyle(leftStyle);
 
                 Cell c5 = row.createCell(5);
-                c5.setCellValue(order.getShippingPhone() != null ? order.getShippingPhone() : "");
+                c5.setCellValue(sanitizeExcelText(order.getShippingPhone() != null ? order.getShippingPhone() : ""));
                 c5.setCellStyle(centerStyle);
 
                 Cell c6 = row.createCell(6);
-                c6.setCellValue(order.getShippingAddress() != null ? order.getShippingAddress() : "");
+                c6.setCellValue(sanitizeExcelText(order.getShippingAddress() != null ? order.getShippingAddress() : ""));
                 c6.setCellStyle(leftStyle);
 
                 Cell c7 = row.createCell(7);
@@ -259,6 +260,8 @@ public class OrderReportGenerator extends AbstractExcelReportGenerator<Void> {
 
         } catch (IOException e) {
             throw new RuntimeException("Lỗi khi sinh báo cáo đơn hàng Excel", e);
+        } finally {
+            safeDispose(workbook);
         }
     }
 

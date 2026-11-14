@@ -7,10 +7,11 @@ import com.strongwine.strongwine.entity.Wine;
 import com.strongwine.strongwine.repository.OrderRepository;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.poi.xssf.streaming.SXSSFSheet;
+import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.apache.poi.xssf.usermodel.XSSFCellStyle;
 import org.apache.poi.xssf.usermodel.XSSFColor;
 import org.apache.poi.xssf.usermodel.XSSFFont;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -96,7 +97,8 @@ public class RevenueReportGenerator extends AbstractExcelReportGenerator<Revenue
 
         List<Order> paidOrders = orderRepository.findPaidOrdersWithItemsBetween(startDateTime, endDateTime);
 
-        try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+        SXSSFWorkbook workbook = AbstractExcelReportGenerator.createStreamingWorkbook();
+        try {
             StylesBundle styles = new StylesBundle(workbook);
 
             // 1. Sheet 1: Daily Revenue Summary
@@ -114,13 +116,15 @@ public class RevenueReportGenerator extends AbstractExcelReportGenerator<Revenue
 
         } catch (IOException e) {
             throw new RuntimeException("Lỗi khi xuất file báo cáo doanh thu Excel", e);
+        } finally {
+            AbstractExcelReportGenerator.safeDispose(workbook);
         }
     }
 
-    private void buildDailyRevenueSheet(XSSFWorkbook workbook, StylesBundle styles,
+    private void buildDailyRevenueSheet(SXSSFWorkbook workbook, StylesBundle styles,
                                         LocalDate startDate, LocalDate endDate,
                                         List<Order> paidOrders) {
-        Sheet sheet = workbook.createSheet("Doanh Thu Theo Ngày");
+        Sheet sheet = AbstractExcelReportGenerator.createTrackedSheet(workbook, "Doanh Thu Theo Ngày");
         sheet.setDisplayGridlines(true);
 
         // Title banner
@@ -247,10 +251,10 @@ public class RevenueReportGenerator extends AbstractExcelReportGenerator<Revenue
         }
     }
 
-    private void buildOrderDetailsSheet(XSSFWorkbook workbook, StylesBundle styles,
+    private void buildOrderDetailsSheet(SXSSFWorkbook workbook, StylesBundle styles,
                                         LocalDate startDate, LocalDate endDate,
                                         List<Order> paidOrders) {
-        Sheet sheet = workbook.createSheet("Chi Tiết Giao Dịch");
+        Sheet sheet = AbstractExcelReportGenerator.createTrackedSheet(workbook, "Chi Tiết Giao Dịch");
         sheet.setDisplayGridlines(true);
 
         Row titleRow = sheet.createRow(0);
@@ -294,19 +298,19 @@ public class RevenueReportGenerator extends AbstractExcelReportGenerator<Revenue
             c2.setCellStyle(styles.centerCellStyle);
 
             Cell c3 = row.createCell(3);
-            c3.setCellValue(ord.getUser() != null ? ord.getUser().getUsername() : "Khách vãng lai");
+            c3.setCellValue(AbstractExcelReportGenerator.sanitizeExcelText(ord.getUser() != null ? ord.getUser().getUsername() : "Khách vãng lai"));
             c3.setCellStyle(styles.leftCellStyle);
 
             Cell c4 = row.createCell(4);
-            c4.setCellValue(ord.getShippingFullName() != null ? ord.getShippingFullName() : "");
+            c4.setCellValue(AbstractExcelReportGenerator.sanitizeExcelText(ord.getShippingFullName() != null ? ord.getShippingFullName() : ""));
             c4.setCellStyle(styles.leftCellStyle);
 
             Cell c5 = row.createCell(5);
-            c5.setCellValue(ord.getShippingPhone() != null ? ord.getShippingPhone() : "");
+            c5.setCellValue(AbstractExcelReportGenerator.sanitizeExcelText(ord.getShippingPhone() != null ? ord.getShippingPhone() : ""));
             c5.setCellStyle(styles.centerCellStyle);
 
             Cell c6 = row.createCell(6);
-            c6.setCellValue(ord.getShippingAddress() != null ? ord.getShippingAddress() : "");
+            c6.setCellValue(AbstractExcelReportGenerator.sanitizeExcelText(ord.getShippingAddress() != null ? ord.getShippingAddress() : ""));
             c6.setCellStyle(styles.leftCellStyle);
 
             Cell c7 = row.createCell(7);
@@ -314,7 +318,7 @@ public class RevenueReportGenerator extends AbstractExcelReportGenerator<Revenue
             c7.setCellStyle(styles.centerCellStyle);
 
             Cell c8 = row.createCell(8);
-            c8.setCellValue(ord.getPaymentReference() != null ? ord.getPaymentReference() : "—");
+            c8.setCellValue(AbstractExcelReportGenerator.sanitizeExcelText(ord.getPaymentReference() != null ? ord.getPaymentReference() : "—"));
             c8.setCellStyle(styles.centerCellStyle);
 
             double price = ord.getTotalPrice() != null ? ord.getTotalPrice().doubleValue() : 0.0;
@@ -346,10 +350,10 @@ public class RevenueReportGenerator extends AbstractExcelReportGenerator<Revenue
         }
     }
 
-    private void buildTopProductsSheet(XSSFWorkbook workbook, StylesBundle styles,
+    private void buildTopProductsSheet(SXSSFWorkbook workbook, StylesBundle styles,
                                        LocalDate startDate, LocalDate endDate,
                                        List<Order> paidOrders) {
-        Sheet sheet = workbook.createSheet("Top Rượu Bán Chạy");
+        Sheet sheet = AbstractExcelReportGenerator.createTrackedSheet(workbook, "Top Rượu Bán Chạy");
         sheet.setDisplayGridlines(true);
 
         Row titleRow = sheet.createRow(0);
@@ -417,11 +421,11 @@ public class RevenueReportGenerator extends AbstractExcelReportGenerator<Revenue
             c1.setCellStyle(styles.centerCellStyle);
 
             Cell c2 = row.createCell(2);
-            c2.setCellValue(stat.wine.getName() != null ? stat.wine.getName() : "");
+            c2.setCellValue(AbstractExcelReportGenerator.sanitizeExcelText(stat.wine.getName() != null ? stat.wine.getName() : ""));
             c2.setCellStyle(styles.leftCellStyle);
 
             Cell c3 = row.createCell(3);
-            c3.setCellValue(stat.wine.getType() != null ? stat.wine.getType() : "Vang cao cấp");
+            c3.setCellValue(AbstractExcelReportGenerator.sanitizeExcelText(stat.wine.getType() != null ? stat.wine.getType() : "Vang cao cấp"));
             c3.setCellStyle(styles.centerCellStyle);
 
             Cell c4 = row.createCell(4);
@@ -494,39 +498,39 @@ public class RevenueReportGenerator extends AbstractExcelReportGenerator<Revenue
         final CellStyle totalCurrencyStyle;
         final CellStyle totalPercentStyle;
 
-        StylesBundle(XSSFWorkbook wb) {
+        StylesBundle(SXSSFWorkbook wb) {
             DataFormat df = wb.createDataFormat();
 
             // Fonts
-            XSSFFont titleFont = wb.createFont();
+            XSSFFont titleFont = (XSSFFont) wb.createFont();
             titleFont.setFontName(FONT_FAMILY);
             titleFont.setBold(true);
             titleFont.setFontHeightInPoints((short) 13);
             titleFont.setColor(new XSSFColor(new byte[]{(byte) 255, (byte) 255, (byte) 255}, null));
 
-            XSSFFont headerFont = wb.createFont();
+            XSSFFont headerFont = (XSSFFont) wb.createFont();
             headerFont.setFontName(FONT_FAMILY);
             headerFont.setBold(true);
             headerFont.setFontHeightInPoints((short) 10);
             headerFont.setColor(new XSSFColor(new byte[]{(byte) 255, (byte) 255, (byte) 255}, null));
 
-            XSSFFont subFont = wb.createFont();
+            XSSFFont subFont = (XSSFFont) wb.createFont();
             subFont.setFontName(FONT_FAMILY);
             subFont.setItalic(true);
             subFont.setFontHeightInPoints((short) 9);
             subFont.setColor(IndexedColors.GREY_50_PERCENT.getIndex());
 
-            XSSFFont regularFont = wb.createFont();
+            XSSFFont regularFont = (XSSFFont) wb.createFont();
             regularFont.setFontName(FONT_FAMILY);
             regularFont.setFontHeightInPoints((short) 10);
 
-            XSSFFont totalFont = wb.createFont();
+            XSSFFont totalFont = (XSSFFont) wb.createFont();
             totalFont.setFontName(FONT_FAMILY);
             totalFont.setBold(true);
             totalFont.setFontHeightInPoints((short) 10);
 
             // Title Style
-            XSSFCellStyle ts = wb.createCellStyle();
+            XSSFCellStyle ts = (XSSFCellStyle) wb.createCellStyle();
             ts.setFont(titleFont);
             ts.setFillForegroundColor(new XSSFColor(COLOR_BORDEAUX, null));
             ts.setFillPattern(FillPatternType.SOLID_FOREGROUND);
@@ -535,14 +539,14 @@ public class RevenueReportGenerator extends AbstractExcelReportGenerator<Revenue
             titleStyle = ts;
 
             // Subtitle Style
-            XSSFCellStyle sts = wb.createCellStyle();
+            XSSFCellStyle sts = (XSSFCellStyle) wb.createCellStyle();
             sts.setFont(subFont);
             sts.setAlignment(HorizontalAlignment.CENTER);
             sts.setVerticalAlignment(VerticalAlignment.CENTER);
             subtitleStyle = sts;
 
             // Header Style
-            XSSFCellStyle hs = wb.createCellStyle();
+            XSSFCellStyle hs = (XSSFCellStyle) wb.createCellStyle();
             hs.setFont(headerFont);
             hs.setFillForegroundColor(new XSSFColor(COLOR_BORDEAUX, null));
             hs.setFillPattern(FillPatternType.SOLID_FOREGROUND);
@@ -552,7 +556,7 @@ public class RevenueReportGenerator extends AbstractExcelReportGenerator<Revenue
             headerStyle = hs;
 
             // Center Text Style
-            XSSFCellStyle cs = wb.createCellStyle();
+            XSSFCellStyle cs = (XSSFCellStyle) wb.createCellStyle();
             cs.setFont(regularFont);
             cs.setAlignment(HorizontalAlignment.CENTER);
             cs.setVerticalAlignment(VerticalAlignment.CENTER);
@@ -560,7 +564,7 @@ public class RevenueReportGenerator extends AbstractExcelReportGenerator<Revenue
             centerCellStyle = cs;
 
             // Left Text Style
-            XSSFCellStyle ls = wb.createCellStyle();
+            XSSFCellStyle ls = (XSSFCellStyle) wb.createCellStyle();
             ls.setFont(regularFont);
             ls.setAlignment(HorizontalAlignment.LEFT);
             ls.setVerticalAlignment(VerticalAlignment.CENTER);
@@ -568,7 +572,7 @@ public class RevenueReportGenerator extends AbstractExcelReportGenerator<Revenue
             leftCellStyle = ls;
 
             // Number Style
-            XSSFCellStyle ns = wb.createCellStyle();
+            XSSFCellStyle ns = (XSSFCellStyle) wb.createCellStyle();
             ns.setFont(regularFont);
             ns.setDataFormat(df.getFormat("#,##0"));
             ns.setAlignment(HorizontalAlignment.RIGHT);
@@ -577,7 +581,7 @@ public class RevenueReportGenerator extends AbstractExcelReportGenerator<Revenue
             numberCellStyle = ns;
 
             // Currency Style
-            XSSFCellStyle curs = wb.createCellStyle();
+            XSSFCellStyle curs = (XSSFCellStyle) wb.createCellStyle();
             curs.setFont(regularFont);
             curs.setDataFormat(df.getFormat("#,##0 \"₫\""));
             curs.setAlignment(HorizontalAlignment.RIGHT);
@@ -586,7 +590,7 @@ public class RevenueReportGenerator extends AbstractExcelReportGenerator<Revenue
             currencyCellStyle = curs;
 
             // Percent Style
-            XSSFCellStyle ps = wb.createCellStyle();
+            XSSFCellStyle ps = (XSSFCellStyle) wb.createCellStyle();
             ps.setFont(regularFont);
             ps.setDataFormat(df.getFormat("0.0\"%\""));
             ps.setAlignment(HorizontalAlignment.RIGHT);
@@ -595,7 +599,7 @@ public class RevenueReportGenerator extends AbstractExcelReportGenerator<Revenue
             percentCellStyle = ps;
 
             // Total styles
-            XSSFCellStyle tls = wb.createCellStyle();
+            XSSFCellStyle tls = (XSSFCellStyle) wb.createCellStyle();
             tls.setFont(totalFont);
             tls.setFillForegroundColor(new XSSFColor(COLOR_LIGHT_BG, null));
             tls.setFillPattern(FillPatternType.SOLID_FOREGROUND);
@@ -604,7 +608,7 @@ public class RevenueReportGenerator extends AbstractExcelReportGenerator<Revenue
             setDoubleBottomBorders(tls);
             totalLabelStyle = tls;
 
-            XSSFCellStyle tns = wb.createCellStyle();
+            XSSFCellStyle tns = (XSSFCellStyle) wb.createCellStyle();
             tns.setFont(totalFont);
             tns.setFillForegroundColor(new XSSFColor(COLOR_LIGHT_BG, null));
             tns.setFillPattern(FillPatternType.SOLID_FOREGROUND);
@@ -614,7 +618,7 @@ public class RevenueReportGenerator extends AbstractExcelReportGenerator<Revenue
             setDoubleBottomBorders(tns);
             totalNumberStyle = tns;
 
-            XSSFCellStyle tcs = wb.createCellStyle();
+            XSSFCellStyle tcs = (XSSFCellStyle) wb.createCellStyle();
             tcs.setFont(totalFont);
             tcs.setFillForegroundColor(new XSSFColor(COLOR_LIGHT_BG, null));
             tcs.setFillPattern(FillPatternType.SOLID_FOREGROUND);
@@ -624,7 +628,7 @@ public class RevenueReportGenerator extends AbstractExcelReportGenerator<Revenue
             setDoubleBottomBorders(tcs);
             totalCurrencyStyle = tcs;
 
-            XSSFCellStyle tps = wb.createCellStyle();
+            XSSFCellStyle tps = (XSSFCellStyle) wb.createCellStyle();
             tps.setFont(totalFont);
             tps.setFillForegroundColor(new XSSFColor(COLOR_LIGHT_BG, null));
             tps.setFillPattern(FillPatternType.SOLID_FOREGROUND);

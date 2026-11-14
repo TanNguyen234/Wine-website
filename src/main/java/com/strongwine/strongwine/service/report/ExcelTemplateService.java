@@ -1,10 +1,11 @@
 package com.strongwine.strongwine.service.report;
 
 import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.streaming.SXSSFSheet;
+import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.apache.poi.xssf.usermodel.XSSFCellStyle;
 import org.apache.poi.xssf.usermodel.XSSFColor;
 import org.apache.poi.xssf.usermodel.XSSFFont;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
@@ -17,20 +18,21 @@ public class ExcelTemplateService {
     private static final String FONT_FAMILY = "Segoe UI";
 
     public byte[] generateProductImportTemplate() {
-        try (XSSFWorkbook workbook = new XSSFWorkbook()) {
-            Sheet sheet = workbook.createSheet("Danh Sách Sản Phẩm");
+        SXSSFWorkbook workbook = AbstractExcelReportGenerator.createStreamingWorkbook();
+        try {
+            Sheet sheet = AbstractExcelReportGenerator.createTrackedSheet(workbook, "Danh Sách Sản Phẩm");
             sheet.setDisplayGridlines(true);
 
             DataFormat df = workbook.createDataFormat();
 
             // Header Font & Style
-            XSSFFont headerFont = workbook.createFont();
+            XSSFFont headerFont = (XSSFFont) workbook.createFont();
             headerFont.setFontName(FONT_FAMILY);
             headerFont.setBold(true);
             headerFont.setFontHeightInPoints((short) 10);
             headerFont.setColor(new XSSFColor(new byte[]{(byte) 255, (byte) 255, (byte) 255}, null));
 
-            XSSFCellStyle headerStyle = workbook.createCellStyle();
+            XSSFCellStyle headerStyle = (XSSFCellStyle) workbook.createCellStyle();
             headerStyle.setFont(headerFont);
             headerStyle.setFillForegroundColor(new XSSFColor(COLOR_BORDEAUX, null));
             headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
@@ -39,38 +41,38 @@ public class ExcelTemplateService {
             AbstractExcelReportGenerator.setThinBorders(headerStyle);
 
             // Regular Data Fonts & Styles
-            XSSFFont regularFont = workbook.createFont();
+            XSSFFont regularFont = (XSSFFont) workbook.createFont();
             regularFont.setFontName(FONT_FAMILY);
             regularFont.setFontHeightInPoints((short) 10);
 
-            XSSFCellStyle leftStyle = workbook.createCellStyle();
+            XSSFCellStyle leftStyle = (XSSFCellStyle) workbook.createCellStyle();
             leftStyle.setFont(regularFont);
             leftStyle.setAlignment(HorizontalAlignment.LEFT);
             leftStyle.setVerticalAlignment(VerticalAlignment.CENTER);
             AbstractExcelReportGenerator.setThinBorders(leftStyle);
 
-            XSSFCellStyle centerStyle = workbook.createCellStyle();
+            XSSFCellStyle centerStyle = (XSSFCellStyle) workbook.createCellStyle();
             centerStyle.setFont(regularFont);
             centerStyle.setAlignment(HorizontalAlignment.CENTER);
             centerStyle.setVerticalAlignment(VerticalAlignment.CENTER);
             AbstractExcelReportGenerator.setThinBorders(centerStyle);
 
             // Explicit number format to prevent scientific notation (e.g. 1.25E7)
-            XSSFCellStyle priceStyle = workbook.createCellStyle();
+            XSSFCellStyle priceStyle = (XSSFCellStyle) workbook.createCellStyle();
             priceStyle.setFont(regularFont);
             priceStyle.setDataFormat(df.getFormat("#,##0"));
             priceStyle.setAlignment(HorizontalAlignment.RIGHT);
             priceStyle.setVerticalAlignment(VerticalAlignment.CENTER);
             AbstractExcelReportGenerator.setThinBorders(priceStyle);
 
-            XSSFCellStyle yearStyle = workbook.createCellStyle();
+            XSSFCellStyle yearStyle = (XSSFCellStyle) workbook.createCellStyle();
             yearStyle.setFont(regularFont);
             yearStyle.setDataFormat(df.getFormat("0"));
             yearStyle.setAlignment(HorizontalAlignment.CENTER);
             yearStyle.setVerticalAlignment(VerticalAlignment.CENTER);
             AbstractExcelReportGenerator.setThinBorders(yearStyle);
 
-            XSSFCellStyle qtyStyle = workbook.createCellStyle();
+            XSSFCellStyle qtyStyle = (XSSFCellStyle) workbook.createCellStyle();
             qtyStyle.setFont(regularFont);
             qtyStyle.setDataFormat(df.getFormat("#,##0"));
             qtyStyle.setAlignment(HorizontalAlignment.RIGHT);
@@ -153,12 +155,40 @@ public class ExcelTemplateService {
                 sheet.setColumnWidth(i, Math.max(sheet.getColumnWidth(i) + 1400, 3600));
             }
 
+            Sheet guideSheet = AbstractExcelReportGenerator.createTrackedSheet(workbook, "Hướng Dẫn Nhập Liệu");
+            String[][] guides = {
+                {"Trường dữ liệu", "Quy tắc hợp lệ"},
+                {"Loại Rượu (*)", "Chấp nhận: Red, White, Rose, Sparkling, Traditional"},
+                {"Năm Sản Xuất (*)", "Số nguyên từ 1900 đến năm hiện tại + 1"},
+                {"Giá Bán (VNĐ) (*)", "Số dương lớn hơn 0 (không chứa ký tự chữ)"},
+                {"URL Hình Ảnh", "Chấp nhận https://..., http://..., /uploads/... hoặc /images/..."}
+            };
+            for (int gr = 0; gr < guides.length; gr++) {
+                Row gRow = guideSheet.createRow(gr);
+                gRow.setHeightInPoints(22);
+                Cell c0 = gRow.createCell(0);
+                c0.setCellValue(guides[gr][0]);
+                c0.setCellStyle(gr == 0 ? headerStyle : leftStyle);
+                Cell c1 = gRow.createCell(1);
+                c1.setCellValue(guides[gr][1]);
+                c1.setCellStyle(gr == 0 ? headerStyle : leftStyle);
+            }
+            if (guideSheet instanceof SXSSFSheet sxGuide) {
+                sxGuide.trackAllColumnsForAutoSizing();
+            }
+            guideSheet.autoSizeColumn(0);
+            guideSheet.autoSizeColumn(1);
+            guideSheet.setColumnWidth(0, Math.max(guideSheet.getColumnWidth(0) + 1200, 5000));
+            guideSheet.setColumnWidth(1, Math.max(guideSheet.getColumnWidth(1) + 1200, 12000));
+
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             workbook.write(bos);
             return bos.toByteArray();
 
         } catch (IOException e) {
             throw new RuntimeException("Không thể tạo file template Excel", e);
+        } finally {
+            AbstractExcelReportGenerator.safeDispose(workbook);
         }
     }
 }

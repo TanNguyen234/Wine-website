@@ -304,12 +304,16 @@ public class DataInitializer implements CommandLineRunner {
     }
 
     private void ensureWarehouseAndInventory() {
-        Warehouse warehouse = warehouseRepository.findByName("Main Warehouse")
+        Warehouse warehouse = warehouseRepository.findFirstByIsDefaultTrueAndActiveTrue()
+                .or(() -> warehouseRepository.findByName("Main Warehouse"))
                 .or(() -> warehouseRepository.findByName("Kho Tong TP.HCM"))
                 .orElseGet(() -> {
                     Warehouse w = new Warehouse();
                     w.setName("Main Warehouse");
                     w.setLocation("Thành phố Hồ Chí Minh");
+                    w.setLatitude(10.7769);
+                    w.setLongitude(106.7009);
+                    w.setIsDefault(true);
                     w.setActive(true);
                     return warehouseRepository.save(w);
                 });
@@ -321,7 +325,7 @@ public class DataInitializer implements CommandLineRunner {
 
         List<Wine> wines = wineRepository.findByDeletedFalse();
         for (Wine wine : wines) {
-            Inventory inventory = inventoryRepository.findByWineIdAndWarehouseId(wine.getId(), warehouse.getId())
+            inventoryRepository.findByWineIdAndWarehouseId(wine.getId(), warehouse.getId())
                     .orElseGet(() -> {
                         Inventory inv = new Inventory();
                         inv.setWine(wine);
@@ -331,12 +335,6 @@ public class DataInitializer implements CommandLineRunner {
                         inv.setReorderLevel(15);
                         return inventoryRepository.save(inv);
                     });
-
-            if (inventory.getCurrentQuantity() == null || inventory.getCurrentQuantity() <= 0) {
-                inventory.setCurrentQuantity(80);
-                inventory.setReservedQuantity(0);
-                inventoryRepository.save(inventory);
-            }
         }
     }
 

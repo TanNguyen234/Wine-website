@@ -7,11 +7,13 @@ import com.strongwine.strongwine.repository.CategoryRepository;
 import com.strongwine.strongwine.repository.InventoryRepository;
 import com.strongwine.strongwine.repository.WarehouseRepository;
 import com.strongwine.strongwine.repository.WineRepository;
+import com.strongwine.strongwine.exception.ExcelImportValidationException;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -23,7 +25,6 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -222,15 +223,15 @@ class ExcelWineImportStrategyTest {
     }
 
     @Test
-    void testGenerateAndVerify20RealWinesBulkImportFile() throws IOException {
+    void testGenerateAndVerify20RealWinesBulkImportFile(@TempDir Path tempDir) throws IOException {
         byte[] workbookBytes = buildRealBulkDatasetWorkbook();
 
-        Path sampleDir = Paths.get("sample-data");
+        Path sampleDir = tempDir.resolve("sample-data");
         Files.createDirectories(sampleDir);
         Path sampleXlsxPath = sampleDir.resolve("strongwine-admin-bulk-import-20-wines.xlsx");
         Files.write(sampleXlsxPath, workbookBytes);
 
-        Path staticSamplesDir = Paths.get("src", "main", "resources", "static", "samples");
+        Path staticSamplesDir = tempDir.resolve("static-samples");
         Files.createDirectories(staticSamplesDir);
         Path staticXlsxPath = staticSamplesDir.resolve("strongwine-admin-bulk-import-20-wines.xlsx");
         Files.write(staticXlsxPath, workbookBytes);
@@ -290,5 +291,89 @@ class ExcelWineImportStrategyTest {
             distinctImages.add(w.getImageUrl());
         }
         assertEquals(20, distinctImages.size(), "All 20 bulk-imported wines must have unique image URLs");
+    }
+
+    @Test
+    void testImportTraditionalWineLocalImageAndFormulaCell() throws IOException {
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        try (Workbook wb = new XSSFWorkbook()) {
+            Sheet sheet = wb.createSheet("Wines");
+            Row header = sheet.createRow(0);
+            String[] cols = {"Tên Sản Phẩm", "Loại Rượu", "Năm", "Giá", "Quốc Gia", "Mô Tả", "Danh Mục", "Số Lượng", "Image URL"};
+            for (int i = 0; i < cols.length; i++) {
+                header.createCell(i).setCellValue(cols[i]);
+            }
+
+            Row row = sheet.createRow(1);
+            row.createCell(0).setCellValue("Rượu Mơ Yên Tử Đặc Sản");
+            row.createCell(1).setCellValue("Traditional");
+            row.createCell(2).setCellFormula("2020+4");
+            row.createCell(3).setCellValue(390000);
+            row.createCell(4).setCellValue("Việt Nam");
+            row.createCell(5).setCellValue("Đặc sản núi rừng Yên Tử ngâm ủ truyền thống");
+            row.createCell(6).setCellValue("Rượu truyền thống");
+            row.createCell(7).setCellValue(15);
+            row.createCell(8).setCellValue("/images/bottles/mo-yentu.svg");
+            wb.write(bos);
+        }
+
+        when(wineRepository.findByNameIgnoreCaseAndYearAndDeletedFalse(anyString(), anyInt()))
+                .thenReturn(Optional.empty());
+        when(categoryRepository.findByName("Rượu truyền thống")).thenReturn(Optional.empty());
+        when(categoryRepository.save(any(Category.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(wineRepository.save(any(Wine.class))).thenAnswer(inv -> inv.getArgument(0));
+        Warehouse wh = new Warehouse();
+        wh.setId(1L);
+        wh.setName("Main Warehouse");
+        wh.setActive(true);
+        when(warehouseRepository.findById(1L)).thenReturn(Optional.of(wh));
+
+        ImportOptions options = ImportOptions.builder().dryRun(false).defaultWarehouseId(1L).build();
+        ImportResult<Wine> result = strategy.importData(new ByteArrayInputStream(bos.toByteArray()), options);
+
+        assertEquals(1, result.getSuccessCount());
+        assertEquals(0, result.getErrorCount());
+        ArgumentCaptor<Wine> wineCaptor = ArgumentCaptor.forClass(Wine.class);
+        verify(wineRepository).save(wineCaptor.capture());
+        Wine saved = wineCaptor.getValue();
+        assertEquals("Traditional", saved.getType());
+        assertEquals(2024, saved.getYear());
+        assertEquals("/images/bottles/mo-yentu.svg", saved.getImageUrl());
+    }
+
+    @Test
+    void testStrictModeRollsBackTransactionAtomicallyWhenAnyRowFails() throws IOException {
+        byte[] bytes = createSampleExcel(true);
+        when(wineRepository.findByNameIgnoreCaseAndYearAndDeletedFalse(anyString(), anyInt()))
+                .thenReturn(Optional.empty());
+        when(categoryRepository.findByName(anyString())).thenReturn(Optional.empty());
+        when(categoryRepository.save(any(Category.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(wineRepository.save(any(Wine.class))).thenAnswer(inv -> inv.getArgument(0));
+        Warehouse wh = new Warehouse();
+        wh.setId(1L);
+        wh.setName("Main Warehouse");
+        wh.setActive(true);
+        when(warehouseRepository.findById(1L)).thenReturn(Optional.of(wh));
+
+        org.springframework.transaction.PlatformTransactionManager txManager =
+                mock(org.springframework.transaction.PlatformTransactionManager.class);
+        org.springframework.transaction.TransactionStatus txStatus =
+                new org.springframework.transaction.support.SimpleTransactionStatus();
+        when(txManager.getTransaction(any())).thenReturn(txStatus);
+
+        ExcelWineImportStrategy txStrategy = new ExcelWineImportStrategy(
+                wineRepository, categoryRepository, inventoryRepository, warehouseRepository,
+                new org.springframework.transaction.support.TransactionTemplate(txManager));
+
+        ImportOptions strictOptions = ImportOptions.builder()
+                .dryRun(false)
+                .strictMode(true)
+                .defaultWarehouseId(1L)
+                .build();
+
+        assertThrows(ExcelImportValidationException.class,
+                () -> txStrategy.importData(new ByteArrayInputStream(bytes), strictOptions));
+        verify(txManager).rollback(txStatus);
+        verify(txManager, never()).commit(any());
     }
 }

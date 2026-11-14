@@ -23,6 +23,12 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -120,5 +126,36 @@ class AdminInventoryApiControllerTest {
         inventory.setReorderLevel(3);
         inventory.setUpdatedAt(null);
         return inventory;
+    }
+
+    @Test
+    void stockOperationsRecordAdminAuditLogWhenServicePresent() {
+        com.strongwine.strongwine.service.AdminAuditLogService auditLogService =
+                mock(com.strongwine.strongwine.service.AdminAuditLogService.class);
+        ReflectionTestUtils.setField(controller, "adminAuditLogService", auditLogService);
+
+        Inventory inventory = inventoryWithRelatedUser();
+        when(inventoryService.importStock(11L, 3L, 4, "adminUser", "restock")).thenReturn(inventory);
+        when(inventoryService.exportStock(11L, 3L, 2, "adminUser", "dispatch")).thenReturn(inventory);
+
+        StockOperationRequest importReq = new StockOperationRequest();
+        importReq.setWineId(11L);
+        importReq.setWarehouseId(3L);
+        importReq.setQuantity(4);
+        importReq.setNote("restock");
+
+        org.springframework.security.core.Authentication auth =
+                new org.springframework.security.authentication.UsernamePasswordAuthenticationToken("adminUser", "n/a");
+        controller.importStock(11L, importReq, auth);
+
+        StockOperationRequest exportReq = new StockOperationRequest();
+        exportReq.setWineId(11L);
+        exportReq.setWarehouseId(3L);
+        exportReq.setQuantity(2);
+        exportReq.setNote("dispatch");
+        controller.exportStock(11L, exportReq, auth);
+
+        verify(auditLogService).log(eq("adminUser"), eq("INVENTORY_IMPORT"), eq("INVENTORY"), eq(5L), isNull(), any(), any());
+        verify(auditLogService).log(eq("adminUser"), eq("INVENTORY_EXPORT"), eq("INVENTORY"), eq(5L), isNull(), any(), any());
     }
 }

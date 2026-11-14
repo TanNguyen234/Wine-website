@@ -25,7 +25,7 @@ import java.util.Set;
 @Transactional
 public class WineService {
 
-    private static final Set<String> ALLOWED_WINE_TYPES = new HashSet<>(Arrays.asList("Red", "White", "Rose", "Sparkling"));
+    private static final Set<String> ALLOWED_WINE_TYPES = new HashSet<>(Arrays.asList("Red", "White", "Rose", "Sparkling", "Traditional"));
     private static final String DEFAULT_IMAGE_URL = "https://images.unsplash.com/photo-1516594915697-87eb3b1c14ea?auto=format&fit=crop&w=900&q=80";
     
     @Autowired
@@ -215,10 +215,12 @@ public class WineService {
             return null;
         }
 
-        if (!ALLOWED_WINE_TYPES.contains(normalized)) {
-            throw new IllegalArgumentException("Loại rượu không hợp lệ");
+        for (String allowed : ALLOWED_WINE_TYPES) {
+            if (allowed.equalsIgnoreCase(normalized)) {
+                return allowed;
+            }
         }
-        return normalized;
+        throw new IllegalArgumentException("Loại rượu không hợp lệ");
     }
 
     private String normalizeOptionalText(String value, int maxLength) {
@@ -243,7 +245,11 @@ public class WineService {
             return DEFAULT_IMAGE_URL;
         }
 
-        boolean valid = normalized.startsWith("https://") || normalized.startsWith("http://") || normalized.startsWith("/uploads/");
+        boolean valid = (normalized.startsWith("https://")
+                || normalized.startsWith("http://")
+                || normalized.startsWith("/uploads/")
+                || normalized.startsWith("/images/"))
+                && !normalized.contains("..");
         if (!valid) {
             throw new IllegalArgumentException("Đường dẫn ảnh không hợp lệ");
         }

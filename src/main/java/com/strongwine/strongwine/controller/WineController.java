@@ -1,15 +1,16 @@
 package com.strongwine.strongwine.controller;
 
 import com.strongwine.strongwine.entity.Wine;
-import com.strongwine.strongwine.service.FileStorageService;
 import com.strongwine.strongwine.service.InventoryService;
 import com.strongwine.strongwine.service.ReviewService;
 import com.strongwine.strongwine.service.WineService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -20,7 +21,6 @@ import org.springframework.web.server.ResponseStatusException;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 
 import static org.springframework.http.HttpStatus.NOT_FOUND;
@@ -39,9 +39,9 @@ public class WineController {
     
     @Autowired
     private ReviewService reviewService;
-    
-    @Autowired
-    private FileStorageService fileStorageService;
+
+    @Autowired(required = false)
+    private AdminWineController adminWineController;
 
     @Autowired
     private InventoryService inventoryService;
@@ -145,29 +145,23 @@ public class WineController {
     }
     
     /**
-     * Show create wine form (Admin only)
+     * Redirect legacy create wine form URL to canonical /admin/wines/create
      */
     @GetMapping("/admin/create")
-    public String showCreateForm(Model model) {
-        if (!model.containsAttribute("wine")) {
-            model.addAttribute("wine", new Wine());
-        }
-        return "wine-form";
+    public String showCreateForm() {
+        return "redirect:/admin/wines/create";
     }
-    
+
     /**
-     * Show edit wine form (Admin only)
+     * Redirect legacy edit wine form URL to canonical /admin/wines/edit/{id}
      */
     @GetMapping("/admin/edit/{id}")
-    public String showEditForm(@PathVariable Long id, Model model) {
-        Wine wine = wineService.getWineById(id)
-            .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Wine not found"));
-        model.addAttribute("wine", wine);
-        return "wine-form";
+    public String showEditForm(@PathVariable Long id) {
+        return "redirect:/admin/wines/edit/" + id;
     }
-    
+
     /**
-     * Create a new wine (Admin only)
+     * Delegate legacy admin wine POST create to AdminWineController
      */
     @PostMapping("/admin/create")
     public String createWine(
@@ -179,58 +173,18 @@ public class WineController {
             @RequestParam(required = false) String description,
             @RequestParam(required = false) String imageUrl,
             @RequestParam(required = false) MultipartFile imageFile,
-            RedirectAttributes redirectAttributes) {
-
-        Wine wine = new Wine();
-        try {
-            wine.setName(name);
-            wine.setType(type);
-            wine.setCountry(country);
-            wine.setYear(year);
-            wine.setPrice(price);
-            wine.setDescription(description);
-            
-            // Handle image: either upload file or use URL
-            String finalImageUrl = null;
-            if (imageFile != null && !imageFile.isEmpty()) {
-                // Validate file
-                if (!fileStorageService.isValidImageFile(imageFile)) {
-                    redirectAttributes.addFlashAttribute("error", "Tệp không hợp lệ. Chỉ hỗ trợ JPG và PNG.");
-                    redirectAttributes.addFlashAttribute("wine", wine);
-                    return "redirect:/wines/admin/create";
-                }
-                if (!fileStorageService.isValidFileSize(imageFile)) {
-                    redirectAttributes.addFlashAttribute("error", "Kích thước tệp quá lớn. Tối đa 5MB.");
-                    redirectAttributes.addFlashAttribute("wine", wine);
-                    return "redirect:/wines/admin/create";
-                }
-                // Save uploaded file
-                finalImageUrl = fileStorageService.saveFile(imageFile);
-            } else if (imageUrl != null && !imageUrl.trim().isEmpty()) {
-                // Use provided URL
-                finalImageUrl = imageUrl.trim();
-            }
-            
-            // Validate that at least image URL or file is provided
-            if (finalImageUrl == null || finalImageUrl.isEmpty()) {
-                redirectAttributes.addFlashAttribute("error", "Vui lòng tải ảnh lên hoặc nhập URL ảnh.");
-                redirectAttributes.addFlashAttribute("wine", wine);
-                return "redirect:/wines/admin/create";
-            }
-            
-            wine.setImageUrl(finalImageUrl);
-            wineService.createWine(wine);
-            redirectAttributes.addFlashAttribute("success", "Tạo sản phẩm rượu thành công!");
-            return "redirect:/admin";
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Không thể tạo sản phẩm: " + e.getMessage());
-            redirectAttributes.addFlashAttribute("wine", wine);
-            return "redirect:/wines/admin/create";
+            RedirectAttributes redirectAttributes,
+            Authentication authentication,
+            HttpServletRequest request) {
+        if (adminWineController != null) {
+            return adminWineController.createWine(name, type, country, year, price, description, imageUrl, imageFile,
+                    redirectAttributes, authentication, request);
         }
+        return "redirect:/admin/wines/create";
     }
-    
+
     /**
-     * Update an existing wine (Admin only)
+     * Delegate legacy admin wine POST edit to AdminWineController
      */
     @PostMapping("/admin/edit/{id}")
     public String updateWine(
@@ -243,75 +197,27 @@ public class WineController {
             @RequestParam(required = false) String description,
             @RequestParam(required = false) String imageUrl,
             @RequestParam(required = false) MultipartFile imageFile,
-            RedirectAttributes redirectAttributes) {
-        
-        try {
-            Wine wine = wineService.getWineByIdOrThrow(id);
-            String oldImageUrl = wine.getImageUrl();
-            
-            wine.setName(name);
-            wine.setType(type);
-            wine.setCountry(country);
-            wine.setYear(year);
-            wine.setPrice(price);
-            wine.setDescription(description);
-            
-            // Handle image: either upload file or use URL
-            String finalImageUrl = oldImageUrl; // Keep existing if no new image provided
-            if (imageFile != null && !imageFile.isEmpty()) {
-                // Validate file
-                if (!fileStorageService.isValidImageFile(imageFile)) {
-                    redirectAttributes.addFlashAttribute("error", "Tệp không hợp lệ. Chỉ hỗ trợ JPG và PNG.");
-                    return "redirect:/wines/admin/edit/" + id;
-                }
-                if (!fileStorageService.isValidFileSize(imageFile)) {
-                    redirectAttributes.addFlashAttribute("error", "Kích thước tệp quá lớn. Tối đa 5MB.");
-                    return "redirect:/wines/admin/edit/" + id;
-                }
-                // Save new uploaded file
-                finalImageUrl = fileStorageService.saveFile(imageFile);
-                // Delete old file if it was an uploaded file
-                if (oldImageUrl != null && oldImageUrl.startsWith("/uploads/")) {
-                    fileStorageService.deleteFile(oldImageUrl);
-                }
-            } else if (imageUrl != null && !imageUrl.trim().isEmpty()) {
-                // Use provided URL
-                finalImageUrl = imageUrl.trim();
-                // Delete old file if it was an uploaded file
-                if (!Objects.equals(finalImageUrl, oldImageUrl)
-                        && oldImageUrl != null && oldImageUrl.startsWith("/uploads/")) {
-                    fileStorageService.deleteFile(oldImageUrl);
-                }
-            }
-            
-            wine.setImageUrl(finalImageUrl);
-            wineService.updateWine(id, wine);
-            redirectAttributes.addFlashAttribute("success", "Cập nhật sản phẩm rượu thành công!");
-            return "redirect:/admin";
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Không thể cập nhật sản phẩm: " + e.getMessage());
-            return "redirect:/wines/admin/edit/" + id;
+            RedirectAttributes redirectAttributes,
+            Authentication authentication,
+            HttpServletRequest request) {
+        if (adminWineController != null) {
+            return adminWineController.updateWine(id, name, type, country, year, price, description, imageUrl, imageFile,
+                    redirectAttributes, authentication, request);
         }
+        return "redirect:/admin/wines/edit/" + id;
     }
-    
+
     /**
-     * Delete a wine (Admin only)
+     * Delegate legacy admin wine POST delete to AdminWineController
      */
     @PostMapping("/admin/delete/{id}")
-    public String deleteWine(@PathVariable Long id, RedirectAttributes redirectAttributes) {
-        try {
-            Wine wine = wineService.getWineByIdOrThrow(id);
-            String imageUrl = wine.getImageUrl();
-            
-            // Delete image file if it was uploaded
-            if (imageUrl != null && imageUrl.startsWith("/uploads/")) {
-                fileStorageService.deleteFile(imageUrl);
-            }
-            
-            wineService.deleteWine(id);
-            redirectAttributes.addFlashAttribute("success", "Xóa sản phẩm rượu thành công!");
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Không thể xóa sản phẩm: " + e.getMessage());
+    public String deleteWine(
+            @PathVariable Long id,
+            RedirectAttributes redirectAttributes,
+            Authentication authentication,
+            HttpServletRequest request) {
+        if (adminWineController != null) {
+            return adminWineController.deleteWine(id, redirectAttributes, authentication, request);
         }
         return "redirect:/admin";
     }

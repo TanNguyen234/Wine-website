@@ -1,10 +1,11 @@
 package com.strongwine.strongwine.service.report;
 
 import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.streaming.SXSSFSheet;
+import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.apache.poi.xssf.usermodel.XSSFCellStyle;
 import org.apache.poi.xssf.usermodel.XSSFColor;
 import org.apache.poi.xssf.usermodel.XSSFFont;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -15,9 +16,51 @@ public abstract class AbstractExcelReportGenerator<C> {
     protected static final byte[] COLOR_LIGHT_BG = new byte[]{(byte) 249, (byte) 246, (byte) 240}; // #f9f6f0
     protected static final String FONT_FAMILY = "Segoe UI";
 
+    /**
+     * Neutralizes Excel formula injection prefixes (=, +, -, @, \t, \r) in text cells.
+     */
+    public static String sanitizeExcelText(String value) {
+        if (value == null || value.isEmpty()) {
+            return value;
+        }
+        char first = value.charAt(0);
+        if (first == '=' || first == '+' || first == '-' || first == '@' || first == '\t' || first == '\r') {
+            return "'" + value;
+        }
+        String trimmedLeading = value.stripLeading();
+        if (!trimmedLeading.isEmpty()) {
+            char leading = trimmedLeading.charAt(0);
+            if (leading == '=' || leading == '+' || leading == '-' || leading == '@') {
+                return "'" + value;
+            }
+        }
+        return value;
+    }
+
+    protected static SXSSFWorkbook createStreamingWorkbook() {
+        return new SXSSFWorkbook(100);
+    }
+
+    protected static Sheet createTrackedSheet(SXSSFWorkbook workbook, String sheetName) {
+        SXSSFSheet sheet = workbook.createSheet(sheetName);
+        sheet.trackAllColumnsForAutoSizing();
+        return sheet;
+    }
+
+    protected static void safeDispose(SXSSFWorkbook workbook) {
+        if (workbook != null) {
+            workbook.dispose();
+            try {
+                workbook.close();
+            } catch (IOException ignored) {
+            }
+        }
+    }
+
     public byte[] generateReport(C criteria) {
-        try (Workbook workbook = new XSSFWorkbook()) {
-            Sheet sheet = workbook.createSheet(getSheetName());
+        SXSSFWorkbook workbook = createStreamingWorkbook();
+        try {
+            Sheet sheet = createTrackedSheet(workbook, getSheetName());
             sheet.setDisplayGridlines(true);
 
             CellStyle headerStyle = createHeaderStyle(workbook);
@@ -44,6 +87,8 @@ public abstract class AbstractExcelReportGenerator<C> {
 
         } catch (IOException e) {
             throw new RuntimeException("Lỗi khi sinh báo cáo Excel", e);
+        } finally {
+            safeDispose(workbook);
         }
     }
 
@@ -52,34 +97,29 @@ public abstract class AbstractExcelReportGenerator<C> {
     protected abstract void populateDataRows(Sheet sheet, C criteria);
 
     protected CellStyle createHeaderStyle(Workbook workbook) {
-        if (workbook instanceof XSSFWorkbook xwb) {
-            XSSFCellStyle style = xwb.createCellStyle();
-            XSSFFont font = xwb.createFont();
-            font.setFontName(FONT_FAMILY);
-            font.setBold(true);
-            font.setFontHeightInPoints((short) 10);
-            font.setColor(new XSSFColor(new byte[]{(byte) 255, (byte) 255, (byte) 255}, null));
-            style.setFont(font);
-            style.setFillForegroundColor(new XSSFColor(COLOR_BORDEAUX, null));
-            style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-            style.setAlignment(HorizontalAlignment.CENTER);
-            style.setVerticalAlignment(VerticalAlignment.CENTER);
-            setThinBorders(style);
-            return style;
-        } else {
-            CellStyle style = workbook.createCellStyle();
-            Font font = workbook.createFont();
-            font.setFontName(FONT_FAMILY);
-            font.setBold(true);
-            font.setColor(IndexedColors.WHITE.getIndex());
-            style.setFont(font);
-            style.setFillForegroundColor(IndexedColors.GREY_80_PERCENT.getIndex());
-            style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-            style.setAlignment(HorizontalAlignment.CENTER);
-            style.setVerticalAlignment(VerticalAlignment.CENTER);
-            setThinBorders(style);
-            return style;
+        CellStyle style = workbook.createCellStyle();
+        Font font = workbook.createFont();
+        font.setFontName(FONT_FAMILY);
+        font.setBold(true);
+        font.setFontHeightInPoints((short) 10);
+        if (style instanceof XSSFCellStyle xStyle && font instanceof XSSFFont xFont) {
+            xFont.setColor(new XSSFColor(new byte[]{(byte) 255, (byte) 255, (byte) 255}, null));
+            xStyle.setFont(xFont);
+            xStyle.setFillForegroundColor(new XSSFColor(COLOR_BORDEAUX, null));
+            xStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+            xStyle.setAlignment(HorizontalAlignment.CENTER);
+            xStyle.setVerticalAlignment(VerticalAlignment.CENTER);
+            setThinBorders(xStyle);
+            return xStyle;
         }
+        font.setColor(IndexedColors.WHITE.getIndex());
+        style.setFont(font);
+        style.setFillForegroundColor(IndexedColors.GREY_80_PERCENT.getIndex());
+        style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+        style.setAlignment(HorizontalAlignment.CENTER);
+        style.setVerticalAlignment(VerticalAlignment.CENTER);
+        setThinBorders(style);
+        return style;
     }
 
     public static void setThinBorders(CellStyle cs) {

@@ -4,12 +4,17 @@ import com.strongwine.strongwine.entity.Category;
 import com.strongwine.strongwine.entity.Inventory;
 import com.strongwine.strongwine.entity.Warehouse;
 import com.strongwine.strongwine.entity.Wine;
+import com.strongwine.strongwine.exception.ExcelImportValidationException;
 import com.strongwine.strongwine.repository.CategoryRepository;
 import com.strongwine.strongwine.repository.InventoryRepository;
 import com.strongwine.strongwine.repository.WarehouseRepository;
 import com.strongwine.strongwine.repository.WineRepository;
 import org.apache.poi.ss.usermodel.*;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.io.InputStream;
 import java.math.BigDecimal;
@@ -19,28 +24,47 @@ import java.util.*;
 @Component
 public class ExcelWineImportStrategy implements DataImportStrategy<Wine> {
 
-    private static final Set<String> ALLOWED_TYPES = new HashSet<>(Arrays.asList("Red", "White", "Rose", "Sparkling"));
+    private static final Set<String> ALLOWED_TYPES = new HashSet<>(Arrays.asList("Red", "White", "Rose", "Sparkling", "Traditional"));
 
     private static final Map<String, String> DEFAULT_IMAGE_BY_TYPE = Map.of(
             "Red", "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?auto=format&fit=crop&w=900&q=80",
             "White", "https://images.unsplash.com/photo-1470337458703-46ad1756a187?auto=format&fit=crop&w=900&q=80",
             "Rose", "https://images.unsplash.com/photo-1558001373-7b93ee48ffa0?auto=format&fit=crop&w=900&q=80",
-            "Sparkling", "https://images.unsplash.com/photo-1594498653385-d5172c532c00?auto=format&fit=crop&w=900&q=80"
+            "Sparkling", "https://images.unsplash.com/photo-1594498653385-d5172c532c00?auto=format&fit=crop&w=900&q=80",
+            "Traditional", "/images/bottles/mo-yentu.svg"
     );
 
     private final WineRepository wineRepository;
     private final CategoryRepository categoryRepository;
     private final InventoryRepository inventoryRepository;
     private final WarehouseRepository warehouseRepository;
+    private TransactionTemplate transactionTemplate;
 
+    @Autowired
     public ExcelWineImportStrategy(WineRepository wineRepository,
                                   CategoryRepository categoryRepository,
                                   InventoryRepository inventoryRepository,
                                   WarehouseRepository warehouseRepository) {
+        this(wineRepository, categoryRepository, inventoryRepository, warehouseRepository, null);
+    }
+
+    public ExcelWineImportStrategy(WineRepository wineRepository,
+                                  CategoryRepository categoryRepository,
+                                  InventoryRepository inventoryRepository,
+                                  WarehouseRepository warehouseRepository,
+                                  TransactionTemplate transactionTemplate) {
         this.wineRepository = wineRepository;
         this.categoryRepository = categoryRepository;
         this.inventoryRepository = inventoryRepository;
         this.warehouseRepository = warehouseRepository;
+        this.transactionTemplate = transactionTemplate;
+    }
+
+    @Autowired(required = false)
+    public void setPlatformTransactionManager(PlatformTransactionManager transactionManager) {
+        if (this.transactionTemplate == null && transactionManager != null) {
+            this.transactionTemplate = new TransactionTemplate(transactionManager);
+        }
     }
 
     @Override
@@ -49,10 +73,36 @@ public class ExcelWineImportStrategy implements DataImportStrategy<Wine> {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public ImportResult<Wine> importData(InputStream inputStream, ImportOptions options) {
+        ImportOptions effectiveOptions = options != null ? options : new ImportOptions();
+        if (effectiveOptions.isStrictMode() && !effectiveOptions.isDryRun() && transactionTemplate != null) {
+            return transactionTemplate.execute(status -> {
+                ImportResult<Wine> txResult = executeImportInternal(inputStream, effectiveOptions);
+                if (txResult.getErrorCount() > 0) {
+                    status.setRollbackOnly();
+                    throw new ExcelImportValidationException(
+                            "Strict mode import failed with " + txResult.getErrorCount() + " validation error(s). All changes rolled back.",
+                            txResult.getErrors());
+                }
+                return txResult;
+            });
+        }
+
+        ImportResult<Wine> result = executeImportInternal(inputStream, effectiveOptions);
+        if (effectiveOptions.isStrictMode() && !effectiveOptions.isDryRun() && result.getErrorCount() > 0) {
+            throw new ExcelImportValidationException(
+                    "Strict mode import failed with " + result.getErrorCount() + " validation error(s). All changes rolled back.",
+                    result.getErrors());
+        }
+        return result;
+    }
+
+    private ImportResult<Wine> executeImportInternal(InputStream inputStream, ImportOptions options) {
         ImportResult<Wine> result = new ImportResult<>();
 
         try (Workbook workbook = WorkbookFactory.create(inputStream)) {
+            FormulaEvaluator evaluator = workbook.getCreationHelper().createFormulaEvaluator();
             Sheet sheet = workbook.getSheetAt(0);
             if (sheet == null) {
                 result.addError(new ImportErrorItem(0, "sheet", "", "File Excel không có dữ liệu"));
@@ -66,15 +116,15 @@ public class ExcelWineImportStrategy implements DataImportStrategy<Wine> {
 
                 int rowNum = r + 1;
                 try {
-                    String name = getCellString(row.getCell(0));
-                    String type = normalizeType(getCellString(row.getCell(1)));
-                    Integer year = getCellInteger(row.getCell(2));
-                    BigDecimal price = getCellBigDecimal(row.getCell(3));
-                    String country = getCellString(row.getCell(4));
-                    String description = getCellString(row.getCell(5));
-                    String categoryName = getCellString(row.getCell(6));
-                    Integer quantity = getCellInteger(row.getCell(7));
-                    String imageUrl = getCellString(row.getCell(8));
+                    String name = getCellString(row.getCell(0), evaluator);
+                    String type = normalizeType(getCellString(row.getCell(1), evaluator));
+                    Integer year = getCellInteger(row.getCell(2), evaluator);
+                    BigDecimal price = getCellBigDecimal(row.getCell(3), evaluator);
+                    String country = getCellString(row.getCell(4), evaluator);
+                    String description = getCellString(row.getCell(5), evaluator);
+                    String categoryName = getCellString(row.getCell(6), evaluator);
+                    Integer quantity = getCellInteger(row.getCell(7), evaluator);
+                    String imageUrl = getCellString(row.getCell(8), evaluator);
 
                     // Validation
                     if (name == null || name.isBlank()) {
@@ -82,7 +132,7 @@ public class ExcelWineImportStrategy implements DataImportStrategy<Wine> {
                         continue;
                     }
                     if (type == null || !ALLOWED_TYPES.contains(type)) {
-                        result.addError(new ImportErrorItem(rowNum, "Loại Rượu", type, "Loại rượu phải là: Red, White, Rose, hoặc Sparkling"));
+                        result.addError(new ImportErrorItem(rowNum, "Loại Rượu", type, "Loại rượu phải là: Red, White, Rose, Sparkling, hoặc Traditional"));
                         continue;
                     }
                     int currentYear = Year.now().getValue();
@@ -92,6 +142,10 @@ public class ExcelWineImportStrategy implements DataImportStrategy<Wine> {
                     }
                     if (price == null || price.compareTo(BigDecimal.ZERO) <= 0) {
                         result.addError(new ImportErrorItem(rowNum, "Giá Bán", String.valueOf(price), "Giá bán phải lớn hơn 0"));
+                        continue;
+                    }
+                    if (imageUrl != null && !imageUrl.isBlank() && !isValidImageUrl(imageUrl.trim())) {
+                        result.addError(new ImportErrorItem(rowNum, "Image URL", imageUrl.trim(), "Đường dẫn ảnh phải bắt đầu bằng https://, http://, /uploads/ hoặc /images/"));
                         continue;
                     }
 
@@ -197,7 +251,16 @@ public class ExcelWineImportStrategy implements DataImportStrategy<Wine> {
         if (val.equalsIgnoreCase("vang trắng") || val.equalsIgnoreCase("white")) return "White";
         if (val.equalsIgnoreCase("vang hồng") || val.equalsIgnoreCase("rose") || val.equalsIgnoreCase("rosé")) return "Rose";
         if (val.equalsIgnoreCase("vang sủi") || val.equalsIgnoreCase("sparkling") || val.equalsIgnoreCase("champagne")) return "Sparkling";
+        if (val.equalsIgnoreCase("traditional") || val.equalsIgnoreCase("truyền thống") || val.equalsIgnoreCase("rượu truyền thống")) return "Traditional";
         return val;
+    }
+
+    private boolean isValidImageUrl(String url) {
+        return (url.startsWith("https://")
+                || url.startsWith("http://")
+                || url.startsWith("/uploads/")
+                || url.startsWith("/images/"))
+                && !url.contains("..");
     }
 
     private boolean isRowEmpty(Row row) {
@@ -208,15 +271,35 @@ public class ExcelWineImportStrategy implements DataImportStrategy<Wine> {
         return true;
     }
 
-    private String getCellString(Cell cell) {
+    private String getCellString(Cell cell, FormulaEvaluator evaluator) {
         if (cell == null) return null;
-        if (cell.getCellType() == CellType.STRING) return cell.getStringCellValue().trim();
-        if (cell.getCellType() == CellType.NUMERIC) return String.valueOf((long) cell.getNumericCellValue());
+        CellType effectiveType = cell.getCellType();
+        if (effectiveType == CellType.FORMULA && evaluator != null) {
+            CellValue evaluated = evaluator.evaluate(cell);
+            if (evaluated == null) return null;
+            return switch (evaluated.getCellType()) {
+                case STRING -> evaluated.getStringValue().trim();
+                case NUMERIC -> String.valueOf((long) evaluated.getNumberValue());
+                case BOOLEAN -> String.valueOf(evaluated.getBooleanValue());
+                default -> null;
+            };
+        }
+        if (effectiveType == CellType.STRING) return cell.getStringCellValue().trim();
+        if (effectiveType == CellType.NUMERIC) return String.valueOf((long) cell.getNumericCellValue());
         return null;
     }
 
-    private Integer getCellInteger(Cell cell) {
+    private Integer getCellInteger(Cell cell, FormulaEvaluator evaluator) {
         if (cell == null) return null;
+        if (cell.getCellType() == CellType.FORMULA && evaluator != null) {
+            CellValue evaluated = evaluator.evaluate(cell);
+            if (evaluated == null) return null;
+            if (evaluated.getCellType() == CellType.NUMERIC) return (int) evaluated.getNumberValue();
+            if (evaluated.getCellType() == CellType.STRING) {
+                try { return Integer.parseInt(evaluated.getStringValue().trim()); } catch (NumberFormatException ignored) {}
+            }
+            return null;
+        }
         if (cell.getCellType() == CellType.NUMERIC) return (int) cell.getNumericCellValue();
         if (cell.getCellType() == CellType.STRING) {
             try { return Integer.parseInt(cell.getStringCellValue().trim()); } catch (NumberFormatException ignored) {}
@@ -224,8 +307,17 @@ public class ExcelWineImportStrategy implements DataImportStrategy<Wine> {
         return null;
     }
 
-    private BigDecimal getCellBigDecimal(Cell cell) {
+    private BigDecimal getCellBigDecimal(Cell cell, FormulaEvaluator evaluator) {
         if (cell == null) return null;
+        if (cell.getCellType() == CellType.FORMULA && evaluator != null) {
+            CellValue evaluated = evaluator.evaluate(cell);
+            if (evaluated == null) return null;
+            if (evaluated.getCellType() == CellType.NUMERIC) return BigDecimal.valueOf(evaluated.getNumberValue());
+            if (evaluated.getCellType() == CellType.STRING) {
+                try { return new BigDecimal(evaluated.getStringValue().trim()); } catch (NumberFormatException ignored) {}
+            }
+            return null;
+        }
         if (cell.getCellType() == CellType.NUMERIC) return BigDecimal.valueOf(cell.getNumericCellValue());
         if (cell.getCellType() == CellType.STRING) {
             try { return new BigDecimal(cell.getStringCellValue().trim()); } catch (NumberFormatException ignored) {}

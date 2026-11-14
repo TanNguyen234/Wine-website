@@ -4,6 +4,7 @@ public class ImportOptions {
     private boolean dryRun = false;
     private InventoryMode inventoryMode = InventoryMode.ADD;
     private Long defaultWarehouseId = 1L;
+    private boolean strictMode = false;
 
     public enum InventoryMode {
         ADD,
@@ -14,9 +15,14 @@ public class ImportOptions {
     }
 
     public ImportOptions(boolean dryRun, InventoryMode inventoryMode, Long defaultWarehouseId) {
+        this(dryRun, inventoryMode, defaultWarehouseId, false);
+    }
+
+    public ImportOptions(boolean dryRun, InventoryMode inventoryMode, Long defaultWarehouseId, boolean strictMode) {
         this.dryRun = dryRun;
         this.inventoryMode = inventoryMode != null ? inventoryMode : InventoryMode.ADD;
         this.defaultWarehouseId = defaultWarehouseId != null ? defaultWarehouseId : 1L;
+        this.strictMode = strictMode;
     }
 
     public static ImportOptionsBuilder builder() {
@@ -47,10 +53,19 @@ public class ImportOptions {
         this.defaultWarehouseId = defaultWarehouseId;
     }
 
+    public boolean isStrictMode() {
+        return strictMode;
+    }
+
+    public void setStrictMode(boolean strictMode) {
+        this.strictMode = strictMode;
+    }
+
     public static class ImportOptionsBuilder {
         private boolean dryRun = false;
         private InventoryMode inventoryMode = InventoryMode.ADD;
         private Long defaultWarehouseId = 1L;
+        private boolean strictMode = false;
 
         public ImportOptionsBuilder dryRun(boolean dryRun) {
             this.dryRun = dryRun;
@@ -67,8 +82,13 @@ public class ImportOptions {
             return this;
         }
 
+        public ImportOptionsBuilder strictMode(boolean strictMode) {
+            this.strictMode = strictMode;
+            return this;
+        }
+
         public ImportOptions build() {
-            return new ImportOptions(dryRun, inventoryMode, defaultWarehouseId);
+            return new ImportOptions(dryRun, inventoryMode, defaultWarehouseId, strictMode);
         }
     }
 }

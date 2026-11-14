@@ -1,9 +1,12 @@
 package com.strongwine.strongwine.controller;
 
 import com.strongwine.strongwine.dto.StockOperationRequest;
+import com.strongwine.strongwine.entity.Inventory;
 import com.strongwine.strongwine.entity.User;
 import com.strongwine.strongwine.repository.UserRepository;
+import com.strongwine.strongwine.service.AdminAuditLogService;
 import com.strongwine.strongwine.service.InventoryService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -15,6 +18,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.Map;
+
 @Controller
 @RequestMapping("/admin/inventory")
 public class AdminInventoryController {
@@ -24,6 +29,9 @@ public class AdminInventoryController {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired(required = false)
+    private AdminAuditLogService adminAuditLogService;
 
     @org.springframework.web.bind.annotation.GetMapping
     public String listInventory(
@@ -60,7 +68,8 @@ public class AdminInventoryController {
                               @Valid StockOperationRequest request,
                               BindingResult bindingResult,
                               Authentication authentication,
-                              RedirectAttributes redirectAttributes) {
+                              RedirectAttributes redirectAttributes,
+                              HttpServletRequest httpRequest) {
         if (bindingResult.hasErrors()) {
             String message = bindingResult.getFieldError() != null ? bindingResult.getFieldError().getDefaultMessage() : "Dữ liệu không hợp lệ";
             redirectAttributes.addFlashAttribute("error", message);
@@ -68,9 +77,16 @@ public class AdminInventoryController {
         }
         try {
             Long userId = extractUserId(authentication);
-            inventoryService.importStock(wineId, request.getWarehouseId(), request.getQuantity(),
-                    resolveUsername(userId),
+            String actor = resolveUsername(userId);
+            Inventory updated = inventoryService.importStock(wineId, request.getWarehouseId(), request.getQuantity(),
+                    actor,
                     request.getNote());
+            if (adminAuditLogService != null) {
+                adminAuditLogService.log(actor, "INVENTORY_IMPORT", "INVENTORY",
+                        updated != null ? updated.getId() : wineId, null,
+                        Map.of("wineId", wineId, "quantity", request.getQuantity()),
+                        httpRequest != null ? httpRequest.getRemoteAddr() : null);
+            }
             redirectAttributes.addFlashAttribute("success", "Nhập kho thành công");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Nhập kho thất bại: " + e.getMessage());
@@ -83,7 +99,8 @@ public class AdminInventoryController {
                               @Valid StockOperationRequest request,
                               BindingResult bindingResult,
                               Authentication authentication,
-                              RedirectAttributes redirectAttributes) {
+                              RedirectAttributes redirectAttributes,
+                              HttpServletRequest httpRequest) {
         if (bindingResult.hasErrors()) {
             String message = bindingResult.getFieldError() != null ? bindingResult.getFieldError().getDefaultMessage() : "Dữ liệu không hợp lệ";
             redirectAttributes.addFlashAttribute("error", message);
@@ -91,9 +108,16 @@ public class AdminInventoryController {
         }
         try {
             Long userId = extractUserId(authentication);
-            inventoryService.exportStock(wineId, request.getWarehouseId(), request.getQuantity(),
-                    resolveUsername(userId),
+            String actor = resolveUsername(userId);
+            Inventory updated = inventoryService.exportStock(wineId, request.getWarehouseId(), request.getQuantity(),
+                    actor,
                     request.getNote());
+            if (adminAuditLogService != null) {
+                adminAuditLogService.log(actor, "INVENTORY_EXPORT", "INVENTORY",
+                        updated != null ? updated.getId() : wineId, null,
+                        Map.of("wineId", wineId, "quantity", request.getQuantity()),
+                        httpRequest != null ? httpRequest.getRemoteAddr() : null);
+            }
             redirectAttributes.addFlashAttribute("success", "Xuất kho thành công");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Xuất kho thất bại: " + e.getMessage());

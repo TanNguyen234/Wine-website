@@ -4,10 +4,10 @@ import com.strongwine.strongwine.entity.Inventory;
 import com.strongwine.strongwine.repository.InventoryRepository;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.apache.poi.xssf.usermodel.XSSFCellStyle;
 import org.apache.poi.xssf.usermodel.XSSFColor;
 import org.apache.poi.xssf.usermodel.XSSFFont;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
@@ -50,66 +50,67 @@ public class InventoryStockReportGenerator extends AbstractExcelReportGenerator<
 
     @Override
     public byte[] generateReport(Void criteria) {
-        try (XSSFWorkbook workbook = new XSSFWorkbook()) {
-            Sheet sheet = workbook.createSheet(getSheetName());
+        SXSSFWorkbook workbook = createStreamingWorkbook();
+        try {
+            Sheet sheet = createTrackedSheet(workbook, getSheetName());
             sheet.setDisplayGridlines(true);
 
             DataFormat df = workbook.createDataFormat();
 
             // Fonts
-            XSSFFont titleFont = workbook.createFont();
+            XSSFFont titleFont = (XSSFFont) workbook.createFont();
             titleFont.setFontName(FONT_FAMILY);
             titleFont.setBold(true);
             titleFont.setFontHeightInPoints((short) 13);
             titleFont.setColor(new XSSFColor(new byte[]{(byte) 255, (byte) 255, (byte) 255}, null));
 
-            XSSFFont subFont = workbook.createFont();
+            XSSFFont subFont = (XSSFFont) workbook.createFont();
             subFont.setFontName(FONT_FAMILY);
             subFont.setItalic(true);
             subFont.setFontHeightInPoints((short) 9);
             subFont.setColor(IndexedColors.GREY_50_PERCENT.getIndex());
 
-            XSSFFont headerFont = workbook.createFont();
+            XSSFFont headerFont = (XSSFFont) workbook.createFont();
             headerFont.setFontName(FONT_FAMILY);
             headerFont.setBold(true);
             headerFont.setFontHeightInPoints((short) 10);
             headerFont.setColor(new XSSFColor(new byte[]{(byte) 255, (byte) 255, (byte) 255}, null));
 
-            XSSFFont regularFont = workbook.createFont();
+            XSSFFont regularFont = (XSSFFont) workbook.createFont();
             regularFont.setFontName(FONT_FAMILY);
             regularFont.setFontHeightInPoints((short) 10);
 
-            XSSFFont warnFont = workbook.createFont();
+            XSSFFont warnFont = (XSSFFont) workbook.createFont();
             warnFont.setFontName(FONT_FAMILY);
             warnFont.setBold(true);
             warnFont.setFontHeightInPoints((short) 10);
             warnFont.setColor(IndexedColors.RED.getIndex());
 
-            XSSFFont okFont = workbook.createFont();
+            XSSFFont okFont = (XSSFFont) workbook.createFont();
             okFont.setFontName(FONT_FAMILY);
             okFont.setBold(true);
             okFont.setFontHeightInPoints((short) 10);
             okFont.setColor(IndexedColors.DARK_GREEN.getIndex());
 
-            XSSFFont totalFont = workbook.createFont();
+            XSSFFont totalFont = (XSSFFont) workbook.createFont();
             totalFont.setFontName(FONT_FAMILY);
             totalFont.setBold(true);
             totalFont.setFontHeightInPoints((short) 10);
 
             // Styles
-            XSSFCellStyle titleStyle = workbook.createCellStyle();
+            XSSFCellStyle titleStyle = (XSSFCellStyle) workbook.createCellStyle();
             titleStyle.setFont(titleFont);
             titleStyle.setFillForegroundColor(new XSSFColor(COLOR_BORDEAUX, null));
             titleStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
             titleStyle.setAlignment(HorizontalAlignment.CENTER);
             titleStyle.setVerticalAlignment(VerticalAlignment.CENTER);
 
-            XSSFCellStyle subtitleStyle = workbook.createCellStyle();
+            XSSFCellStyle subtitleStyle = (XSSFCellStyle) workbook.createCellStyle();
             subtitleStyle.setFont(subFont);
             subtitleStyle.setAlignment(HorizontalAlignment.CENTER);
             subtitleStyle.setVerticalAlignment(VerticalAlignment.CENTER);
 
-            XSSFCellStyle headerStyle = workbook.createCellStyle();
+            XSSFCellStyle headerStyle = (XSSFCellStyle) workbook.createCellStyle();
             headerStyle.setFont(headerFont);
             headerStyle.setFillForegroundColor(new XSSFColor(COLOR_BORDEAUX, null));
             headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
@@ -117,38 +118,38 @@ public class InventoryStockReportGenerator extends AbstractExcelReportGenerator<
             headerStyle.setVerticalAlignment(VerticalAlignment.CENTER);
             setThinBorders(headerStyle);
 
-            XSSFCellStyle leftStyle = workbook.createCellStyle();
+            XSSFCellStyle leftStyle = (XSSFCellStyle) workbook.createCellStyle();
             leftStyle.setFont(regularFont);
             leftStyle.setAlignment(HorizontalAlignment.LEFT);
             leftStyle.setVerticalAlignment(VerticalAlignment.CENTER);
             setThinBorders(leftStyle);
 
-            XSSFCellStyle centerStyle = workbook.createCellStyle();
+            XSSFCellStyle centerStyle = (XSSFCellStyle) workbook.createCellStyle();
             centerStyle.setFont(regularFont);
             centerStyle.setAlignment(HorizontalAlignment.CENTER);
             centerStyle.setVerticalAlignment(VerticalAlignment.CENTER);
             setThinBorders(centerStyle);
 
-            XSSFCellStyle numberStyle = workbook.createCellStyle();
+            XSSFCellStyle numberStyle = (XSSFCellStyle) workbook.createCellStyle();
             numberStyle.setFont(regularFont);
             numberStyle.setDataFormat(df.getFormat("#,##0"));
             numberStyle.setAlignment(HorizontalAlignment.RIGHT);
             numberStyle.setVerticalAlignment(VerticalAlignment.CENTER);
             setThinBorders(numberStyle);
 
-            XSSFCellStyle warnStyle = workbook.createCellStyle();
+            XSSFCellStyle warnStyle = (XSSFCellStyle) workbook.createCellStyle();
             warnStyle.setFont(warnFont);
             warnStyle.setAlignment(HorizontalAlignment.CENTER);
             warnStyle.setVerticalAlignment(VerticalAlignment.CENTER);
             setThinBorders(warnStyle);
 
-            XSSFCellStyle okStyle = workbook.createCellStyle();
+            XSSFCellStyle okStyle = (XSSFCellStyle) workbook.createCellStyle();
             okStyle.setFont(okFont);
             okStyle.setAlignment(HorizontalAlignment.CENTER);
             okStyle.setVerticalAlignment(VerticalAlignment.CENTER);
             setThinBorders(okStyle);
 
-            XSSFCellStyle totalLabelStyle = workbook.createCellStyle();
+            XSSFCellStyle totalLabelStyle = (XSSFCellStyle) workbook.createCellStyle();
             totalLabelStyle.setFont(totalFont);
             totalLabelStyle.setFillForegroundColor(new XSSFColor(COLOR_LIGHT_BG, null));
             totalLabelStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
@@ -156,7 +157,7 @@ public class InventoryStockReportGenerator extends AbstractExcelReportGenerator<
             totalLabelStyle.setVerticalAlignment(VerticalAlignment.CENTER);
             setDoubleBottomBorders(totalLabelStyle);
 
-            XSSFCellStyle totalNumberStyle = workbook.createCellStyle();
+            XSSFCellStyle totalNumberStyle = (XSSFCellStyle) workbook.createCellStyle();
             totalNumberStyle.setFont(totalFont);
             totalNumberStyle.setFillForegroundColor(new XSSFColor(COLOR_LIGHT_BG, null));
             totalNumberStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
@@ -194,7 +195,13 @@ public class InventoryStockReportGenerator extends AbstractExcelReportGenerator<
             }
 
             // 4. Data Rows
-            List<Inventory> list = inventoryRepository.findAll();
+            List<Inventory> activeQuery = inventoryRepository.findAllForActiveWines();
+            List<Inventory> sourceList = (activeQuery != null && !activeQuery.isEmpty())
+                    ? activeQuery
+                    : inventoryRepository.findAll();
+            List<Inventory> list = (sourceList == null ? List.<Inventory>of() : sourceList).stream()
+                    .filter(inv -> inv != null && (inv.getWine() == null || !inv.getWine().isDeleted()))
+                    .toList();
             int r = 4;
             int idx = 1;
             int sumCurrent = 0;
@@ -223,11 +230,11 @@ public class InventoryStockReportGenerator extends AbstractExcelReportGenerator<
                 c1.setCellStyle(centerStyle);
 
                 Cell c2 = row.createCell(2);
-                c2.setCellValue(inv.getWine() != null ? inv.getWine().getName() : "N/A");
+                c2.setCellValue(sanitizeExcelText(inv.getWine() != null ? inv.getWine().getName() : "N/A"));
                 c2.setCellStyle(leftStyle);
 
                 Cell c3 = row.createCell(3);
-                c3.setCellValue(inv.getWarehouse() != null ? inv.getWarehouse().getName() : "N/A");
+                c3.setCellValue(sanitizeExcelText(inv.getWarehouse() != null ? inv.getWarehouse().getName() : "N/A"));
                 c3.setCellStyle(leftStyle);
 
                 Cell c4 = row.createCell(4);
@@ -300,6 +307,8 @@ public class InventoryStockReportGenerator extends AbstractExcelReportGenerator<
 
         } catch (IOException e) {
             throw new RuntimeException("Lỗi khi sinh báo cáo tồn kho Excel", e);
+        } finally {
+            safeDispose(workbook);
         }
     }
 

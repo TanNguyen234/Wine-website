@@ -3,6 +3,7 @@ package com.strongwine.strongwine.controller.api;
 import com.strongwine.strongwine.dto.ExcelPreviewResponseDto;
 import com.strongwine.strongwine.dto.RevenueReportCriteria;
 import com.strongwine.strongwine.entity.Wine;
+import com.strongwine.strongwine.service.AdminAuditLogService;
 import com.strongwine.strongwine.service.report.ExcelTemplateService;
 import com.strongwine.strongwine.service.report.InventoryStockReportGenerator;
 import com.strongwine.strongwine.service.report.OrderReportGenerator;
@@ -10,16 +11,19 @@ import com.strongwine.strongwine.service.report.RevenueReportGenerator;
 import com.strongwine.strongwine.service.strategy.ExcelWineImportStrategy;
 import com.strongwine.strongwine.service.strategy.ImportOptions;
 import com.strongwine.strongwine.service.strategy.ImportResult;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/admin/excel")
@@ -30,6 +34,9 @@ public class AdminExcelApiController {
     private final InventoryStockReportGenerator inventoryStockReportGenerator;
     private final OrderReportGenerator orderReportGenerator;
     private final RevenueReportGenerator revenueReportGenerator;
+
+    @Autowired(required = false)
+    private AdminAuditLogService adminAuditLogService;
 
     public AdminExcelApiController(ExcelWineImportStrategy excelImportStrategy,
                                    ExcelTemplateService excelTemplateService,
@@ -125,11 +132,20 @@ public class AdminExcelApiController {
         }
     }
 
+    public ResponseEntity<ExcelPreviewResponseDto> executeImport(
+            MultipartFile file,
+            String inventoryModeStr,
+            Long warehouseId) {
+        return executeImport(file, inventoryModeStr, warehouseId, false, null);
+    }
+
     @PostMapping("/import")
     public ResponseEntity<ExcelPreviewResponseDto> executeImport(
             @RequestParam("file") MultipartFile file,
             @RequestParam(value = "inventoryMode", defaultValue = "ADD") String inventoryModeStr,
-            @RequestParam(value = "warehouseId", defaultValue = "1") Long warehouseId) {
+            @RequestParam(value = "warehouseId", defaultValue = "1") Long warehouseId,
+            @RequestParam(value = "strictMode", defaultValue = "false") boolean strictMode,
+            Authentication authentication) {
 
         if (file.isEmpty()) {
             return ResponseEntity.badRequest().build();
@@ -144,6 +160,7 @@ public class AdminExcelApiController {
                     .dryRun(false)
                     .inventoryMode(mode)
                     .defaultWarehouseId(warehouseId)
+                    .strictMode(strictMode)
                     .build();
 
             ImportResult<Wine> result = excelImportStrategy.importData(file.getInputStream(), options);
@@ -156,6 +173,20 @@ public class AdminExcelApiController {
                     .updateCount(result.getUpdatedCount())
                     .errors(result.getErrors())
                     .build();
+
+            if (adminAuditLogService != null) {
+                String actor = authentication != null && authentication.getName() != null
+                        ? authentication.getName() : "admin";
+                adminAuditLogService.log(actor, "EXCEL_IMPORT_WINES", "WINE_IMPORT", null, null,
+                        Map.of(
+                                "totalRows", result.getTotalCount(),
+                                "insertedCount", result.getInsertedCount(),
+                                "updatedCount", result.getUpdatedCount(),
+                                "errorCount", result.getErrorCount(),
+                                "strictMode", strictMode,
+                                "warehouseId", warehouseId != null ? warehouseId : 1L
+                        ), null);
+            }
 
             return ResponseEntity.ok(dto);
 
