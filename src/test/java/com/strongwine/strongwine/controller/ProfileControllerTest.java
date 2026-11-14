@@ -116,4 +116,51 @@ class ProfileControllerTest {
         assertThat(redirectAttributes.getFlashAttributes()).containsKey("successMessage");
         verify(userShippingProfileService, times(1)).saveProfile(eq(100L), eq("Nguyễn Văn A"), eq("0901234567"), eq(mainlandAddress), isNull(), isNull());
     }
+
+    @Test
+    @DisplayName("updateProfile should allow password-only update even when email parameter is null")
+    void testUpdateProfileUpdatesPasswordWithoutEmail() {
+        RedirectAttributes redirectAttributes = new RedirectAttributesModelMap();
+
+        String redirect = profileController.updateProfile(
+                auth,
+                null,
+                null,
+                null,
+                null,
+                "oldPass123",
+                "newPass456",
+                "newPass456",
+                redirectAttributes
+        );
+
+        assertThat(redirect).isEqualTo("redirect:/profile");
+        verify(userService, times(1)).updateProfile(100L, null, "oldPass123", "newPass456");
+    }
+
+    @Test
+    @DisplayName("showProfile should include saved addresses when UserAddressService is available")
+    void testShowProfilePopulatesSavedAddresses() {
+        com.strongwine.strongwine.service.UserAddressService userAddressService =
+                mock(com.strongwine.strongwine.service.UserAddressService.class);
+        org.springframework.test.util.ReflectionTestUtils.setField(profileController, "userAddressService", userAddressService);
+
+        com.strongwine.strongwine.entity.UserAddress addr = new com.strongwine.strongwine.entity.UserAddress();
+        addr.setId(5L);
+        addr.setLabel("Nhà riêng");
+        addr.setIsDefault(true);
+
+        when(userShippingProfileService.getProfile(100L)).thenReturn(
+                new ShippingProfileData(null, null, "test@example.com", null, null, null));
+        when(orderService.getOrdersByUserId(100L)).thenReturn(Collections.emptyList());
+        when(userAddressService.getAddressesForUser(100L)).thenReturn(java.util.List.of(addr));
+        when(userAddressService.getDefaultAddress(100L)).thenReturn(Optional.of(addr));
+
+        Model model = new ConcurrentModel();
+        String view = profileController.showProfile(auth, model);
+
+        assertThat(view).isEqualTo("user-profile");
+        assertThat(model.getAttribute("savedAddresses")).isEqualTo(java.util.List.of(addr));
+        assertThat(model.getAttribute("defaultAddress")).isEqualTo(addr);
+    }
 }

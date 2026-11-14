@@ -18,6 +18,9 @@ public class AdminCategoryApiController {
     @Autowired
     private CategoryService categoryService;
 
+    @Autowired(required = false)
+    private com.strongwine.strongwine.service.AdminAuditLogService adminAuditLogService;
+
     @GetMapping
     public ResponseEntity<List<CategoryDto>> getAllCategories() {
         return ResponseEntity.ok(categoryService.getAllCategories().stream().map(this::toDto).toList());
@@ -38,7 +41,9 @@ public class AdminCategoryApiController {
         category.setName(dto.getName());
         category.setDescription(dto.getDescription());
         Category created = categoryService.createCategory(category);
-        return ResponseEntity.status(HttpStatus.CREATED).body(toDto(created));
+        CategoryDto result = toDto(created);
+        logAudit("CATEGORY_CREATED", created.getId(), null, result);
+        return ResponseEntity.status(HttpStatus.CREATED).body(result);
     }
 
     @PutMapping("/{id}")
@@ -48,7 +53,9 @@ public class AdminCategoryApiController {
             category.setName(dto.getName());
             category.setDescription(dto.getDescription());
             Category updated = categoryService.updateCategory(id, category);
-            return ResponseEntity.ok(toDto(updated));
+            CategoryDto result = toDto(updated);
+            logAudit("CATEGORY_UPDATED", id, null, result);
+            return ResponseEntity.ok(result);
         } catch (RuntimeException ex) {
             return ResponseEntity.notFound().build();
         }
@@ -58,10 +65,21 @@ public class AdminCategoryApiController {
     public ResponseEntity<Void> deleteCategory(@PathVariable Long id) {
         try {
             categoryService.deleteCategory(id);
+            logAudit("CATEGORY_DELETED", id, null, null);
             return ResponseEntity.noContent().build();
         } catch (RuntimeException ex) {
             return ResponseEntity.notFound().build();
         }
+    }
+
+    private void logAudit(String action, Long targetId, Object before, Object after) {
+        if (adminAuditLogService == null) {
+            return;
+        }
+        org.springframework.security.core.Authentication auth =
+                org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        String actor = auth != null && auth.getName() != null ? auth.getName() : "ADMIN";
+        adminAuditLogService.log(actor, action, "Category", targetId, before, after, null);
     }
 
     private CategoryDto toDto(Category category) {

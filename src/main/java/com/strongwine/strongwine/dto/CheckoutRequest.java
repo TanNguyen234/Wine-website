@@ -12,6 +12,8 @@ public class CheckoutRequest {
     private String checkoutToken;
     private Double deliveryLat;
     private Double deliveryLng;
+    private String voucherCode;
+    private Long savedAddressId;
     private List<CartItemRequest> items;
 
     public String getFullName() {
@@ -92,5 +94,21 @@ public class CheckoutRequest {
 
     public void setItems(List<CartItemRequest> items) {
         this.items = items;
+    }
+
+    public String getVoucherCode() {
+        return voucherCode;
+    }
+
+    public void setVoucherCode(String voucherCode) {
+        this.voucherCode = voucherCode;
+    }
+
+    public Long getSavedAddressId() {
+        return savedAddressId;
+    }
+
+    public void setSavedAddressId(Long savedAddressId) {
+        this.savedAddressId = savedAddressId;
     }
 }

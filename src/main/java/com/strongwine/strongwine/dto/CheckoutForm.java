@@ -81,6 +81,25 @@ public class CheckoutForm {
     public void setDeliveryLng(Double deliveryLng) {
         this.deliveryLng = deliveryLng;
     }
+
+    private String voucherCode;
+    private Long savedAddressId;
+
+    public String getVoucherCode() {
+        return voucherCode;
+    }
+
+    public void setVoucherCode(String voucherCode) {
+        this.voucherCode = voucherCode;
+    }
+
+    public Long getSavedAddressId() {
+        return savedAddressId;
+    }
+
+    public void setSavedAddressId(Long savedAddressId) {
+        this.savedAddressId = savedAddressId;
+    }
 }
 
 

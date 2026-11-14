@@ -30,6 +30,9 @@ public class ProfileController {
     private final UserShippingProfileService userShippingProfileService;
     private final VietnamGeoValidationService geoValidationService;
 
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private com.strongwine.strongwine.service.UserAddressService userAddressService;
+
     public ProfileController(UserService userService,
                              OrderService orderService,
                              UserShippingProfileService userShippingProfileService,
@@ -80,6 +83,13 @@ public class ProfileController {
         model.addAttribute("latestFullName", latestFullName);
         model.addAttribute("latestPhone", latestPhone);
         model.addAttribute("latestAddress", latestAddress);
+        if (userAddressService != null) {
+            model.addAttribute("savedAddresses", userAddressService.getAddressesForUser(currentUser.getId()));
+            model.addAttribute("defaultAddress", userAddressService.getDefaultAddress(currentUser.getId()).orElse(null));
+        } else {
+            model.addAttribute("savedAddresses", List.of());
+            model.addAttribute("defaultAddress", null);
+        }
 
         return "user-profile";
     }
@@ -109,7 +119,9 @@ public class ProfileController {
                 }
             }
 
-            if (email != null && !email.trim().isEmpty()) {
+            boolean hasEmailUpdate = email != null && !email.trim().isEmpty();
+            boolean hasPasswordUpdate = newPassword != null && !newPassword.trim().isEmpty();
+            if (hasEmailUpdate || hasPasswordUpdate) {
                 userService.updateProfile(currentUser.getId(), email, currentPassword, newPassword);
             }
 

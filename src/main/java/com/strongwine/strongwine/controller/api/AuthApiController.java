@@ -26,11 +26,17 @@ public class AuthApiController {
 
     @PostMapping("/login")
     public ResponseEntity<?> authenticateUser(@RequestBody Map<String, String> loginRequest) {
+        if (loginRequest == null) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Thông tin đăng nhập không hợp lệ"));
+        }
         String username = loginRequest.get("username");
         String password = loginRequest.get("password");
+        if (username == null || username.isBlank() || password == null || password.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Vui lòng nhập tên đăng nhập và mật khẩu"));
+        }
 
         Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(username, password)
+                new UsernamePasswordAuthenticationToken(username.trim(), password)
         );
 
         SecurityContextHolder.getContext().setAuthentication(authentication);

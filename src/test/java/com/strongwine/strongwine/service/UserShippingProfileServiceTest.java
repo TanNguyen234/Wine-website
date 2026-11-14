@@ -82,4 +82,14 @@ class UserShippingProfileServiceTest {
         assertThat(profile.phone()).isEqualTo("0912345678");
         assertThat(profile.address()).isEqualTo("123 Phố Huế, Hai Bà Trưng, Hà Nội");
     }
+
+    @Test
+    @DisplayName("Saving profile rejects null or negative userId and non-mainland coordinates")
+    void testSaveProfileRejectsInvalidUserIdAndForeignCoordinates() {
+        assertThatThrownBy(() -> profileService.saveProfile(null, "Khách", "0900000000", "72 Lê Thánh Tôn, Quận 1, TP. Hồ Chí Minh", 10.77, 106.70))
+                .isInstanceOf(IllegalArgumentException.class);
+
+        assertThatThrownBy(() -> profileService.saveProfile(999L, "Khách", "0900000000", "72 Lê Thánh Tôn, Quận 1, TP. Hồ Chí Minh", 35.6762, 139.6503))
+                .isInstanceOf(DeliveryAddressNotSupportedException.class);
+    }
 }

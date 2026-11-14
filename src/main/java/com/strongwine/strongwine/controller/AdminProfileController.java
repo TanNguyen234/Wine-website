@@ -26,6 +26,9 @@ public class AdminProfileController {
     private final OrderService orderService;
     private final ShipperService shipperService;
 
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private com.strongwine.strongwine.service.AdminAuditLogService adminAuditLogService;
+
     public AdminProfileController(UserService userService,
                                   WineService wineService,
                                   OrderService orderService,
@@ -81,6 +84,10 @@ public class AdminProfileController {
             }
 
             userService.updateProfile(currentAdmin.getId(), email, currentPassword, newPassword);
+            if (adminAuditLogService != null) {
+                adminAuditLogService.log(currentAdmin.getUsername(), "ADMIN_PROFILE_UPDATED", "User",
+                        currentAdmin.getId(), null, com.strongwine.strongwine.dto.UserDto.from(currentAdmin), null);
+            }
             redirectAttributes.addFlashAttribute("successMessage", "Cập nhật hồ sơ quản trị thành công!");
         } catch (Exception ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());

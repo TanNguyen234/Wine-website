@@ -80,7 +80,7 @@ public class UserShippingProfileService {
     }
 
     public ShippingProfileData saveProfile(Long userId, String fullName, String phone, String address, Double lat, Double lng) {
-        if (userId == null) {
+        if (userId == null || userId <= 0) {
             throw new IllegalArgumentException("User ID is required");
         }
 
@@ -91,12 +91,12 @@ public class UserShippingProfileService {
         Double safeLat = lat;
         Double safeLng = lng;
 
-        // If address is provided, validate strictly for Vietnam mainland (exception on remote islands)
-        if (!safeAddress.isEmpty()) {
+        // If address or coordinates are provided, validate strictly for Vietnam mainland (exception on remote islands / foreign coords)
+        if (!safeAddress.isEmpty() || (safeLat != null && safeLng != null)) {
             geoValidationService.validateMainlandDeliveryAddress(safeAddress, safeLat, safeLng);
 
             // Auto-resolve fallback coordinates if not provided on map
-            if (safeLat == null || safeLng == null) {
+            if ((safeLat == null || safeLng == null) && !safeAddress.isEmpty()) {
                 double[] defaultCoords = geoValidationService.resolveDefaultCoordinates(safeAddress);
                 safeLat = defaultCoords[0];
                 safeLng = defaultCoords[1];

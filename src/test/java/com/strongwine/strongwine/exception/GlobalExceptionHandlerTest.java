@@ -4,12 +4,21 @@ import com.strongwine.strongwine.service.strategy.ImportErrorItem;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 class GlobalExceptionHandlerTest {
 
     private final GlobalExceptionHandler handler = new GlobalExceptionHandler();
+
+    @Test
+    void testGlobalExceptionHandlerScopedToApiControllersOnly() {
+        RestControllerAdvice advice = GlobalExceptionHandler.class.getAnnotation(RestControllerAdvice.class);
+        assertNotNull(advice);
+        assertTrue(advice.basePackages().length > 0, "GlobalExceptionHandler must be scoped to API controllers");
+    }
 
     @Test
     void testHandleResourceNotFoundException() {
@@ -31,5 +40,15 @@ class GlobalExceptionHandlerTest {
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertNotNull(response.getBody());
         assertEquals(1, response.getBody().getDetails().size());
+    }
+
+    @Test
+    void testHandleAccessDeniedAndDeliveryAddressExceptions() {
+        ResponseEntity<ApiErrorResponse> denied = handler.handleAccessDenied(new AccessDeniedException("Forbidden"));
+        assertEquals(HttpStatus.FORBIDDEN, denied.getStatusCode());
+
+        ResponseEntity<ApiErrorResponse> geo = handler.handleDeliveryAddressNotSupported(
+                new DeliveryAddressNotSupportedException("Ngoài vùng giao"));
+        assertEquals(HttpStatus.BAD_REQUEST, geo.getStatusCode());
     }
 }

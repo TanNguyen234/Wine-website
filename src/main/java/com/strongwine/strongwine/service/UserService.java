@@ -73,12 +73,11 @@ public class UserService {
         if ("SHIPPER".equalsIgnoreCase(role) || "ADMIN".equalsIgnoreCase(role)) {
             org.springframework.security.core.Authentication auth =
                     org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
-            if (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getPrincipal())) {
-                boolean isAdmin = auth.getAuthorities().stream().anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
-                if (!isAdmin) {
-                    throw new SecurityException("Không được phép tự tạo tài khoản " + role + ". Tài khoản này chỉ được cấp bởi Quản trị viên (ADMIN).");
-                }
-            } else if (auth != null && "anonymousUser".equals(auth.getPrincipal())) {
+            boolean isAdmin = auth != null
+                    && auth.isAuthenticated()
+                    && !"anonymousUser".equals(auth.getPrincipal())
+                    && auth.getAuthorities().stream().anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
+            if (!isAdmin) {
                 throw new SecurityException("Không được phép tự tạo tài khoản " + role + ". Tài khoản này chỉ được cấp bởi Quản trị viên (ADMIN).");
             }
         }

@@ -56,6 +56,9 @@ public class AdminUserController {
         return "admin-user-form";
     }
 
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private com.strongwine.strongwine.service.AdminAuditLogService adminAuditLogService;
+
     @PostMapping("/create")
     public String createUser(@RequestParam String username,
                              @RequestParam(required = false) String email,
@@ -68,7 +71,9 @@ public class AdminUserController {
             user.setEmail(email);
             user.setPassword(password);
             user.setRole(normalizeRole(role));
-            userService.createUser(user);
+            User created = userService.createUser(user);
+            recordAudit("USER_CREATED", created != null ? created.getId() : null, null,
+                    created != null ? com.strongwine.strongwine.dto.UserDto.from(created) : username);
 
             redirectAttributes.addFlashAttribute("success", "Tạo người dùng thành công");
             return "redirect:/admin/users";
@@ -100,13 +105,17 @@ public class AdminUserController {
                              @RequestParam String role,
                              RedirectAttributes redirectAttributes) {
         try {
+            com.strongwine.strongwine.dto.UserDto before = userService.getUserById(id)
+                    .map(com.strongwine.strongwine.dto.UserDto::from).orElse(null);
             User userDetails = new User();
             userDetails.setUsername(username);
             userDetails.setEmail(email);
             userDetails.setPassword(password);
             userDetails.setRole(normalizeRole(role));
 
-            userService.updateUser(id, userDetails);
+            User updated = userService.updateUser(id, userDetails);
+            recordAudit("USER_UPDATED", id, before,
+                    updated != null ? com.strongwine.strongwine.dto.UserDto.from(updated) : username);
             redirectAttributes.addFlashAttribute("success", "Cập nhật người dùng thành công");
             return "redirect:/admin/users";
         } catch (RuntimeException ex) {
@@ -118,12 +127,25 @@ public class AdminUserController {
     @PostMapping("/delete/{id}")
     public String deleteUser(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         try {
+            com.strongwine.strongwine.dto.UserDto before = userService.getUserById(id)
+                    .map(com.strongwine.strongwine.dto.UserDto::from).orElse(null);
             userService.deleteUser(id);
+            recordAudit("USER_DELETED", id, before, null);
             redirectAttributes.addFlashAttribute("success", "Xóa người dùng thành công");
         } catch (RuntimeException ex) {
             redirectAttributes.addFlashAttribute("error", "Xóa người dùng thất bại: " + ex.getMessage());
         }
         return "redirect:/admin/users";
+    }
+
+    private void recordAudit(String action, Long targetId, Object before, Object after) {
+        if (adminAuditLogService == null) {
+            return;
+        }
+        org.springframework.security.core.Authentication auth =
+                org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        String actor = auth != null && auth.getName() != null ? auth.getName() : "ADMIN";
+        adminAuditLogService.log(actor, action, "User", targetId, before, after, null);
     }
 
     private String normalizeRole(String role) {

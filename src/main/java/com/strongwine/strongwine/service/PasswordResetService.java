@@ -74,6 +74,7 @@ public class PasswordResetService {
         }
 
         passwordResetTokenRepository.deleteByUserId(user.getId());
+        passwordResetTokenRepository.flush();
 
         PasswordResetToken resetToken = new PasswordResetToken();
         resetToken.setUser(user);

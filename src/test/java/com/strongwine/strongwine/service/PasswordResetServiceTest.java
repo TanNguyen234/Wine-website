@@ -126,4 +126,45 @@ class PasswordResetServiceTest {
 
         verify(userRepository, never()).save(any(User.class));
     }
+
+    @Test
+    void requestResetForUser_flushesDeleteBeforeSavingNewToken() {
+        User user = new User();
+        user.setId(11L);
+        user.setEmail("flush@example.com");
+        user.setRole("USER");
+        user.setUsername("flush-user");
+
+        when(userRepository.findByEmail("flush@example.com")).thenReturn(Optional.of(user));
+        when(passwordResetTokenRepository.save(any(PasswordResetToken.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        passwordResetService.requestResetForUser("flush@example.com", "http://localhost:8080");
+
+        org.mockito.InOrder inOrder = org.mockito.Mockito.inOrder(passwordResetTokenRepository);
+        inOrder.verify(passwordResetTokenRepository).deleteByUserId(11L);
+        inOrder.verify(passwordResetTokenRepository).flush();
+        inOrder.verify(passwordResetTokenRepository).save(any(PasswordResetToken.class));
+    }
+
+    @Test
+    void resetPasswordForUser_rejectsAlreadyUsedToken() {
+        User user = new User();
+        user.setId(32L);
+        user.setRole("USER");
+
+        PasswordResetToken token = new PasswordResetToken();
+        token.setToken("used-token");
+        token.setUser(user);
+        token.setExpiresAt(LocalDateTime.now().plusMinutes(15));
+        token.setUsedAt(LocalDateTime.now().minusMinutes(1));
+
+        when(passwordResetTokenRepository.findByToken("used-token")).thenReturn(Optional.of(token));
+
+        assertThatThrownBy(() -> passwordResetService.resetPasswordForUser("used-token", "new-password"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("không hợp lệ");
+
+        verify(userRepository, never()).save(any(User.class));
+    }
 }

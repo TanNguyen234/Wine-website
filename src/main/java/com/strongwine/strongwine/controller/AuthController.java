@@ -136,7 +136,8 @@ public class AuthController {
                                       RedirectAttributes redirectAttributes) {
         if (!password.equals(confirmPassword)) {
             redirectAttributes.addFlashAttribute("error", "Mật khẩu xác nhận không khớp");
-            return "redirect:/reset-password?token=" + token;
+            return "redirect:/reset-password?token=" + org.springframework.web.util.UriUtils.encodeQueryParam(
+                    token != null ? token : "", java.nio.charset.StandardCharsets.UTF_8);
         }
 
         try {
@@ -145,7 +146,8 @@ public class AuthController {
             return "redirect:/login";
         } catch (Exception ex) {
             redirectAttributes.addFlashAttribute("error", ex.getMessage());
-            return "redirect:/reset-password?token=" + token;
+            return "redirect:/reset-password?token=" + org.springframework.web.util.UriUtils.encodeQueryParam(
+                    token != null ? token : "", java.nio.charset.StandardCharsets.UTF_8);
         }
     }
 
@@ -153,12 +155,24 @@ public class AuthController {
         if (request == null) {
             return "http://localhost:8080";
         }
-        String scheme = request.getScheme();
+        String scheme = "https".equalsIgnoreCase(request.getScheme()) ? "https" : "http";
         String serverName = request.getServerName();
+        if (serverName == null || !isTrustedHost(serverName)) {
+            return "http://localhost:8080";
+        }
         int serverPort = request.getServerPort();
         boolean isDefaultPort = ("http".equalsIgnoreCase(scheme) && serverPort == 80)
-                || ("https".equalsIgnoreCase(scheme) && serverPort == 443);
+                || ("https".equalsIgnoreCase(scheme) && serverPort == 443)
+                || serverPort <= 0;
         return scheme + "://" + serverName + (isDefaultPort ? "" : ":" + serverPort);
+    }
+
+    private boolean isTrustedHost(String host) {
+        String lower = host.trim().toLowerCase(java.util.Locale.ROOT);
+        return "localhost".equals(lower)
+                || "127.0.0.1".equals(lower)
+                || "strongwine.vn".equals(lower)
+                || lower.endsWith(".strongwine.vn");
     }
 }
 

@@ -25,6 +25,14 @@ public class CartService {
     @Autowired
     private InventoryService inventoryService;
 
+    @Transactional(readOnly = true)
+    public CartDto getCartDetails() {
+        CartDto emptyCart = new CartDto();
+        emptyCart.setEmpty(true);
+        emptyCart.setSubtotal(BigDecimal.ZERO);
+        emptyCart.setTotal(BigDecimal.ZERO);
+        return emptyCart;
+    }
 
     @Transactional(readOnly = true)
     public CartDto validateCheckoutCart(List<CartItemRequest> cartItems) {

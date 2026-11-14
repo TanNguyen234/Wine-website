@@ -66,6 +66,18 @@ public class CartController {
     @Autowired
     private UserShippingProfileService userShippingProfileService;
 
+    @Autowired(required = false)
+    private com.strongwine.strongwine.service.port.VoucherPricingPort voucherPricingPort;
+
+    @Autowired(required = false)
+    private com.strongwine.strongwine.service.ShippingFeeService shippingFeeService;
+
+    @Autowired(required = false)
+    private com.strongwine.strongwine.repository.WarehouseRepository warehouseRepository;
+
+    @Autowired(required = false)
+    private com.strongwine.strongwine.service.UserAddressService userAddressService;
+
     private Long getUserId(Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getPrincipal())) {
             return null;
@@ -110,6 +122,13 @@ public class CartController {
 
         model.addAttribute("checkoutForm", checkoutForm);
         model.addAttribute("paymentMethods", SUPPORTED_PAYMENT_METHODS);
+        if (userAddressService != null) {
+            model.addAttribute("savedAddresses", userAddressService.getAddressesForUser(userId));
+            model.addAttribute("defaultAddress", userAddressService.getDefaultAddress(userId).orElse(null));
+        } else {
+            model.addAttribute("savedAddresses", List.of());
+            model.addAttribute("defaultAddress", null);
+        }
 
         String checkoutToken = UUID.randomUUID().toString();
         session.setAttribute(CHECKOUT_TOKEN_SESSION_KEY, checkoutToken);
@@ -142,7 +161,45 @@ public class CartController {
         if (sessionCheckoutToken == null || !sessionCheckoutToken.equals(checkoutRequest.getCheckoutToken())) {
             return badRequest("Yêu cầu thanh toán không hợp lệ hoặc đã được xử lý.");
         }
-        
+
+        // Resolve savedAddressId if supplied
+        if (checkoutRequest.getSavedAddressId() != null) {
+            if (userAddressService == null) {
+                return badRequest("Không thể truy xuất sổ địa chỉ");
+            }
+            try {
+                com.strongwine.strongwine.entity.UserAddress savedAddress =
+                        userAddressService.getOwnedAddress(userId, checkoutRequest.getSavedAddressId());
+                if (checkoutRequest.getFullName() == null || checkoutRequest.getFullName().isBlank()) {
+                    checkoutRequest.setFullName(savedAddress.getRecipientName());
+                }
+                if (checkoutRequest.getPhone() == null || checkoutRequest.getPhone().isBlank()) {
+                    checkoutRequest.setPhone(savedAddress.getPhone());
+                }
+                if (checkoutRequest.getAddress() == null || checkoutRequest.getAddress().isBlank()) {
+                    checkoutRequest.setAddress(userAddressService.formatFullAddress(savedAddress));
+                }
+                if (checkoutRequest.getDeliveryLat() == null && savedAddress.getLatitude() != null) {
+                    checkoutRequest.setDeliveryLat(savedAddress.getLatitude());
+                }
+                if (checkoutRequest.getDeliveryLng() == null && savedAddress.getLongitude() != null) {
+                    checkoutRequest.setDeliveryLng(savedAddress.getLongitude());
+                }
+            } catch (org.springframework.security.access.AccessDeniedException ex) {
+                return ResponseEntity.status(org.springframework.http.HttpStatus.FORBIDDEN)
+                        .body(Map.of("error", ex.getMessage()));
+            } catch (RuntimeException ex) {
+                return badRequest(ex.getMessage());
+            }
+        }
+
+        if (checkoutRequest.getEmail() == null || checkoutRequest.getEmail().trim().isEmpty()) {
+            String fallbackEmail = resolveUserEmail(authentication, userId);
+            if (fallbackEmail != null && !fallbackEmail.isBlank()) {
+                checkoutRequest.setEmail(fallbackEmail);
+            }
+        }
+
         // Validate form fields
         if (checkoutRequest.getFullName() == null || checkoutRequest.getFullName().trim().isEmpty()) {
             return badRequest("Vui lòng nhập họ tên");
@@ -219,17 +276,79 @@ public class CartController {
 
             Map<Long, Integer> itemsMap = cartService.toItemMap(cartDto);
 
-            order = orderService.createPendingOrder(
-                    userId,
-                    itemsMap,
-                    checkoutRequest.getFullName(),
-                    checkoutRequest.getPhone(),
-                    normalizedEmail,
-                    normalizedAddress,
-                    deliveryLat,
-                    deliveryLng,
-                    checkoutRequest.getNote(),
-                    normalizedPaymentMethod);
+            boolean useV3ServerPricing = shippingFeeService != null
+                    || voucherPricingPort != null
+                    || warehouseRepository != null
+                    || checkoutRequest.getSavedAddressId() != null
+                    || (checkoutRequest.getVoucherCode() != null && !checkoutRequest.getVoucherCode().isBlank());
+
+            if (useV3ServerPricing) {
+                java.math.BigDecimal subtotal = resolveServerSubtotal(cartDto);
+                com.strongwine.strongwine.entity.Warehouse allocatedWarehouse =
+                        resolveNearestWarehouse(deliveryLat, deliveryLng);
+                java.math.BigDecimal baseShippingFee = calculateServerShippingFee(
+                        allocatedWarehouse, deliveryLat, deliveryLng, subtotal);
+                java.math.BigDecimal discountAmount = java.math.BigDecimal.ZERO;
+                java.math.BigDecimal finalShippingFee = baseShippingFee;
+                String appliedVoucherCode = null;
+
+                if (checkoutRequest.getVoucherCode() != null && !checkoutRequest.getVoucherCode().trim().isEmpty()) {
+                    if (voucherPricingPort == null) {
+                        return badRequest("Hệ thống mã giảm giá hiện không khả dụng");
+                    }
+                    String candidateCode = checkoutRequest.getVoucherCode().trim();
+                    com.strongwine.strongwine.dto.VoucherValidationResult voucherResult =
+                            voucherPricingPort.validateAndQuote(candidateCode, userId, subtotal, baseShippingFee);
+                    if (voucherResult == null || !voucherResult.valid()) {
+                        return badRequest(voucherResult != null && voucherResult.message() != null
+                                ? voucherResult.message()
+                                : "Mã giảm giá không hợp lệ");
+                    }
+                    discountAmount = voucherResult.discountAmount() != null
+                            ? voucherResult.discountAmount()
+                            : java.math.BigDecimal.ZERO;
+                    finalShippingFee = voucherResult.finalShippingFee() != null
+                            ? voucherResult.finalShippingFee()
+                            : baseShippingFee;
+                    appliedVoucherCode = voucherResult.code() != null ? voucherResult.code() : candidateCode;
+                }
+
+                order = orderService.createPendingOrder(
+                        userId,
+                        itemsMap,
+                        checkoutRequest.getFullName(),
+                        checkoutRequest.getPhone(),
+                        normalizedEmail,
+                        normalizedAddress,
+                        deliveryLat,
+                        deliveryLng,
+                        checkoutRequest.getNote(),
+                        normalizedPaymentMethod,
+                        subtotal,
+                        discountAmount,
+                        finalShippingFee,
+                        appliedVoucherCode,
+                        allocatedWarehouse);
+
+                if (appliedVoucherCode != null && voucherPricingPort != null && order != null) {
+                    User orderUser = order.getUser() != null
+                            ? order.getUser()
+                            : resolveCurrentUser(authentication, userId);
+                    voucherPricingPort.redeemForOrder(appliedVoucherCode, orderUser, order);
+                }
+            } else {
+                order = orderService.createPendingOrder(
+                        userId,
+                        itemsMap,
+                        checkoutRequest.getFullName(),
+                        checkoutRequest.getPhone(),
+                        normalizedEmail,
+                        normalizedAddress,
+                        deliveryLat,
+                        deliveryLng,
+                        checkoutRequest.getNote(),
+                        normalizedPaymentMethod);
+            }
 
             // Persist the customer's verified shipping details into their profile for subsequent checkouts
             try {
@@ -296,6 +415,163 @@ public class CartController {
             throw new IllegalArgumentException("Email không hợp lệ");
         }
         return normalizedEmail;
+    }
+
+    @PostMapping(value = "/checkout/quote", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> quoteCheckout(
+            @RequestBody(required = false) CheckoutRequest checkoutRequest,
+            Authentication authentication) {
+        Long userId = getUserId(authentication);
+        CheckoutRequest req = checkoutRequest != null ? checkoutRequest : new CheckoutRequest();
+
+        CartDto cartDto;
+        if (req.getItems() != null && !req.getItems().isEmpty()) {
+            cartDto = cartService.validateCheckoutCart(req.getItems());
+        } else {
+            cartDto = cartService.getCartDetails();
+        }
+        java.math.BigDecimal subtotal = resolveServerSubtotal(cartDto);
+
+        Double lat = req.getDeliveryLat();
+        Double lng = req.getDeliveryLng();
+        if (req.getSavedAddressId() != null && userAddressService != null && userId != null) {
+            try {
+                com.strongwine.strongwine.entity.UserAddress addr =
+                        userAddressService.getOwnedAddress(userId, req.getSavedAddressId());
+                if (lat == null) lat = addr.getLatitude();
+                if (lng == null) lng = addr.getLongitude();
+            } catch (Exception ignored) {
+            }
+        } else if ((lat == null || lng == null) && req.getAddress() != null && !req.getAddress().isBlank()) {
+            double[] resolved = vietnamGeoValidationService.resolveDefaultCoordinates(req.getAddress());
+            if (resolved != null && resolved.length == 2) {
+                lat = resolved[0];
+                lng = resolved[1];
+            }
+        }
+
+        com.strongwine.strongwine.entity.Warehouse warehouse = resolveNearestWarehouse(lat, lng);
+        java.math.BigDecimal baseShippingFee = calculateServerShippingFee(warehouse, lat, lng, subtotal);
+        java.math.BigDecimal discountAmount = java.math.BigDecimal.ZERO;
+        java.math.BigDecimal shippingDiscount = java.math.BigDecimal.ZERO;
+        java.math.BigDecimal finalShippingFee = baseShippingFee;
+        boolean voucherValid = true;
+        String voucherMessage = "";
+
+        if (req.getVoucherCode() != null && !req.getVoucherCode().trim().isEmpty()) {
+            if (voucherPricingPort == null) {
+                voucherValid = false;
+                voucherMessage = "Hệ thống mã giảm giá hiện không khả dụng";
+            } else {
+                com.strongwine.strongwine.dto.VoucherValidationResult quote =
+                        voucherPricingPort.validateAndQuote(req.getVoucherCode().trim(), userId, subtotal, baseShippingFee);
+                if (quote != null && quote.valid()) {
+                    voucherValid = true;
+                    voucherMessage = quote.message() != null ? quote.message() : "Hợp lệ";
+                    discountAmount = quote.discountAmount() != null ? quote.discountAmount() : java.math.BigDecimal.ZERO;
+                    shippingDiscount = quote.shippingDiscount() != null ? quote.shippingDiscount() : java.math.BigDecimal.ZERO;
+                    finalShippingFee = quote.finalShippingFee() != null ? quote.finalShippingFee() : baseShippingFee;
+                } else {
+                    voucherValid = false;
+                    voucherMessage = quote != null && quote.message() != null ? quote.message() : "Mã giảm giá không hợp lệ";
+                }
+            }
+        }
+
+        java.math.BigDecimal finalTotal = subtotal.subtract(discountAmount)
+                .max(java.math.BigDecimal.ZERO)
+                .add(finalShippingFee);
+
+        java.util.Map<String, Object> body = new java.util.LinkedHashMap<>();
+        body.put("subtotal", subtotal);
+        body.put("originalShippingFee", baseShippingFee);
+        body.put("shippingDiscount", shippingDiscount);
+        body.put("shippingFee", finalShippingFee);
+        body.put("discountAmount", discountAmount);
+        body.put("finalTotal", finalTotal);
+        body.put("voucherValid", voucherValid);
+        body.put("voucherMessage", voucherMessage);
+        return ResponseEntity.ok(body);
+    }
+
+    private java.math.BigDecimal resolveServerSubtotal(CartDto cartDto) {
+        if (cartDto == null) {
+            return java.math.BigDecimal.ZERO;
+        }
+        if (cartDto.getSubtotal() != null && cartDto.getSubtotal().compareTo(java.math.BigDecimal.ZERO) > 0) {
+            return cartDto.getSubtotal();
+        }
+        java.math.BigDecimal sum = java.math.BigDecimal.ZERO;
+        if (cartDto.getItems() != null) {
+            for (CartItemDto item : cartDto.getItems()) {
+                if (item != null && item.getLineTotal() != null) {
+                    sum = sum.add(item.getLineTotal());
+                }
+            }
+        }
+        return sum;
+    }
+
+    private com.strongwine.strongwine.entity.Warehouse resolveNearestWarehouse(Double destLat, Double destLng) {
+        if (warehouseRepository == null) {
+            return null;
+        }
+        List<com.strongwine.strongwine.entity.Warehouse> active = warehouseRepository.findByActiveTrue();
+        if (active == null || active.isEmpty()) {
+            return warehouseRepository.findFirstByIsDefaultTrueAndActiveTrue().orElse(null);
+        }
+        if (destLat == null || destLng == null || shippingFeeService == null) {
+            return active.stream()
+                    .filter(w -> Boolean.TRUE.equals(w.getIsDefault()))
+                    .findFirst()
+                    .orElse(active.get(0));
+        }
+        com.strongwine.strongwine.entity.Warehouse best = null;
+        double bestDist = Double.MAX_VALUE;
+        for (com.strongwine.strongwine.entity.Warehouse w : active) {
+            Double dist = shippingFeeService.calculateDistanceKm(w.getLatitude(), w.getLongitude(), destLat, destLng);
+            if (dist != null && dist < bestDist) {
+                bestDist = dist;
+                best = w;
+            }
+        }
+        return best != null ? best : active.get(0);
+    }
+
+    private java.math.BigDecimal calculateServerShippingFee(
+            com.strongwine.strongwine.entity.Warehouse warehouse,
+            Double destLat,
+            Double destLng,
+            java.math.BigDecimal subtotal) {
+        if (shippingFeeService == null) {
+            return java.math.BigDecimal.ZERO;
+        }
+        Double distanceKm = null;
+        if (warehouse != null && warehouse.getLatitude() != null && warehouse.getLongitude() != null
+                && destLat != null && destLng != null) {
+            distanceKm = shippingFeeService.calculateDistanceKm(
+                    warehouse.getLatitude(), warehouse.getLongitude(), destLat, destLng);
+        }
+        return shippingFeeService.calculateFee(distanceKm, subtotal);
+    }
+
+    private User resolveCurrentUser(Authentication authentication, Long userId) {
+        if (authentication != null && authentication.getPrincipal() instanceof UserDetails userDetails) {
+            User byUsername = userRepository.findByUsername(userDetails.getUsername()).orElse(null);
+            if (byUsername != null) {
+                return byUsername;
+            }
+        }
+        if (userId != null) {
+            return userRepository.findById(userId).orElse(null);
+        }
+        return null;
+    }
+
+    private String resolveUserEmail(Authentication authentication, Long userId) {
+        User currentUser = resolveCurrentUser(authentication, userId);
+        return currentUser != null ? currentUser.getEmail() : null;
     }
     
 }

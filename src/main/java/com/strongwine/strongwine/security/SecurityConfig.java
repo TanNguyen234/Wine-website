@@ -53,7 +53,16 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+            .csrf(csrf -> csrf
+                .ignoringRequestMatchers(
+                    "/payment/webhook",
+                    "/api/payments/vnpay/ipn",
+                    "/api/auth/**"
+                )
+            )
             .authorizeHttpRequests(authz -> authz
+                // Block direct web access to private user shipping profiles and proof-of-delivery files
+                .requestMatchers("/uploads/profiles/**", "/uploads/pods/**").denyAll()
                 // Admin only pages
                 .requestMatchers("/admin/**", "/api/admin/**", "/wines/admin/**").hasRole("ADMIN")
                 // Shipper pages for SHIPPER and ADMIN
@@ -64,13 +73,21 @@ public class SecurityConfig {
                 .requestMatchers("/api/live/orders/**").authenticated()
                 // Inventory mutations are restricted to administrators
                 .requestMatchers("/inventory/**", "/api/inventory/**").hasRole("ADMIN")
-                // Public pages
-                .requestMatchers("/", "/home", "/wines", "/wines/**", "/cart/**", "/register", "/login", "/forgot-password", "/reset-password", "/css/**", "/js/**", "/images/**", "/uploads/**", "/payment/webhook", "/api/payments/vnpay/**").permitAll()
-                // API Auth endpoint
+                // Public pages & static/PWA assets
+                .requestMatchers(
+                    "/", "/home", "/wines", "/wines/**", "/cart/**",
+                    "/register", "/login", "/forgot-password", "/reset-password",
+                    "/css/**", "/js/**", "/images/**", "/uploads/**",
+                    "/manifest.webmanifest", "/sw-shipper.js",
+                    "/payment/webhook", "/api/payments/vnpay/**"
+                ).permitAll()
+                // API Auth & public assistant endpoint
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/assistant/**").permitAll()
                 // User pages (authenticated users)
                 .requestMatchers("/order-confirmation", "/orders/**", "/reviews/create", "/profile", "/profile/**").authenticated()
+                // Authenticated user APIs
+                .requestMatchers("/api/notifications/**", "/api/wishlist/**", "/api/profile/**", "/api/vouchers/**").authenticated()
                 // REST API endpoints
                 .requestMatchers(HttpMethod.GET, "/api/wines/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/wines/**").hasRole("ADMIN")

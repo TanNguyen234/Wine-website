@@ -48,6 +48,15 @@ public class AdminController {
     private final ShipperService shipperService;
     private final ShipmentService shipmentService;
 
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private com.strongwine.strongwine.repository.ReturnRequestRepository returnRequestRepository;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private com.strongwine.strongwine.repository.ShipperCodBatchRepository shipperCodBatchRepository;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private com.strongwine.strongwine.repository.PaymentRepository paymentRepository;
+
     public AdminController(WineService wineService,
                            UserService userService,
                            OrderService orderService,
@@ -143,6 +152,7 @@ public class AdminController {
         typeCounts.put("Vang trắng", 0L);
         typeCounts.put("Vang hồng", 0L);
         typeCounts.put("Vang sủi", 0L);
+        typeCounts.put("Rượu truyền thống", 0L);
         for (Wine w : allWines) {
             String t = w.getType() == null ? "" : w.getType().trim().toLowerCase(Locale.ROOT);
             if (t.contains("red") || t.contains("đỏ")) {
@@ -151,10 +161,22 @@ public class AdminController {
                 typeCounts.put("Vang trắng", typeCounts.get("Vang trắng") + 1);
             } else if (t.contains("rose") || t.contains("rosé") || t.contains("hồng")) {
                 typeCounts.put("Vang hồng", typeCounts.get("Vang hồng") + 1);
+            } else if (t.contains("traditional") || t.contains("truyền thống") || t.contains("truyen thong")) {
+                typeCounts.put("Rượu truyền thống", typeCounts.get("Rượu truyền thống") + 1);
             } else {
                 typeCounts.put("Vang sủi", typeCounts.get("Vang sủi") + 1);
             }
         }
+
+        long pendingReturnsCount = returnRequestRepository != null
+                ? returnRequestRepository.countByStatus(com.strongwine.strongwine.entity.ReturnStatus.REQUESTED)
+                : 0L;
+        long pendingCodBatchesCount = shipperCodBatchRepository != null
+                ? shipperCodBatchRepository.countByStatus(com.strongwine.strongwine.entity.CodBatchStatus.PENDING_SETTLEMENT)
+                : 0L;
+        long refundRequiredCount = paymentRepository != null
+                ? paymentRepository.countByStatus(PaymentStatus.REFUND_REQUIRED)
+                : paymentService.countRefundRequiredPayments();
 
         model.addAttribute("totalWines", totalWines);
         model.addAttribute("totalUsers", totalUsers);
@@ -164,6 +186,9 @@ public class AdminController {
         model.addAttribute("lowStockItems", lowStockItems);
         model.addAttribute("recentOrders", recentOrders);
         model.addAttribute("pendingPayments", pendingPayments);
+        model.addAttribute("pendingReturnsCount", pendingReturnsCount);
+        model.addAttribute("pendingCodBatchesCount", pendingCodBatchesCount);
+        model.addAttribute("refundRequiredCount", refundRequiredCount);
         model.addAttribute("shipperStats", shipperStats);
         model.addAttribute("shipmentStats", shipmentStats);
         model.addAttribute("totalShipments", totalShipments);
@@ -174,7 +199,7 @@ public class AdminController {
         model.addAttribute("rangeRevenue", rangeRevenue);
         model.addAttribute("revenueLabelsJson", "[" + String.join(",", revLabels) + "]");
         model.addAttribute("revenueValuesJson", revValues.toString());
-        model.addAttribute("categoryLabelsJson", "[\"Vang đỏ\",\"Vang trắng\",\"Vang hồng\",\"Vang sủi\"]");
+        model.addAttribute("categoryLabelsJson", "[\"Vang đỏ\",\"Vang trắng\",\"Vang hồng\",\"Vang sủi\",\"Rượu truyền thống\"]");
         model.addAttribute("categoryValuesJson", typeCounts.values().stream().map(String::valueOf).collect(Collectors.joining(",", "[", "]")));
         model.addAttribute("categoryCounts", typeCounts);
         
