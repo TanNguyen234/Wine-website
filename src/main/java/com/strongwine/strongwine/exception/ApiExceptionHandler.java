@@ -14,7 +14,15 @@ import java.util.Map;
 public class ApiExceptionHandler {
 
     @ExceptionHandler({IllegalArgumentException.class, IllegalStateException.class})
-    public ResponseEntity<Map<String, String>> handleIllegalArgument(RuntimeException ex) {
+    public ResponseEntity<Map<String, String>> handleIllegalArgument(
+            RuntimeException ex,
+            jakarta.servlet.http.HttpServletResponse response) {
+        if (response != null) {
+            String contentType = response.getContentType();
+            if (response.isCommitted() || (contentType != null && contentType.contains("text/event-stream"))) {
+                return ResponseEntity.status(HttpStatus.OK).build();
+            }
+        }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorBody(ex.getMessage()));
     }
 

@@ -24,11 +24,11 @@ public class WebConfig implements WebMvcConfigurer {
 
         registry.addResourceHandler("/css/**")
                 .addResourceLocations("classpath:/static/css/")
-                .setCacheControl(CacheControl.maxAge(7, TimeUnit.DAYS).cachePublic());
+                .setCacheControl(CacheControl.noCache());
 
         registry.addResourceHandler("/js/**")
                 .addResourceLocations("classpath:/static/js/")
-                .setCacheControl(CacheControl.maxAge(7, TimeUnit.DAYS).cachePublic());
+                .setCacheControl(CacheControl.noCache());
 
         registry.addResourceHandler("/manifest.webmanifest", "/sw-shipper.js", "/favicon.svg")
                 .addResourceLocations("classpath:/static/")

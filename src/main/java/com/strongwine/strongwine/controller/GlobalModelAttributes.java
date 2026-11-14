@@ -4,6 +4,9 @@ import com.strongwine.strongwine.entity.User;
 import com.strongwine.strongwine.repository.UserRepository;
 import com.strongwine.strongwine.repository.WishlistItemRepository;
 import com.strongwine.strongwine.service.NotificationService;
+import jakarta.servlet.DispatcherType;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -23,11 +26,17 @@ public class GlobalModelAttributes {
     private UserRepository userRepository;
 
     @ModelAttribute("cartCount")
-    public int cartCount(HttpSession session, Authentication authentication) {
-        if (session == null) {
+    public int cartCount(HttpServletRequest request,
+                         HttpServletResponse response,
+                         Authentication authentication) {
+        if (isAsyncOrCommitted(request, response)) {
             return 0;
         }
         try {
+            HttpSession session = request != null ? request.getSession(false) : null;
+            if (session == null) {
+                return 0;
+            }
             Object attr = session.getAttribute("cartCount");
             if (attr instanceof Number num) {
                 return Math.max(0, num.intValue());
@@ -38,8 +47,10 @@ public class GlobalModelAttributes {
     }
 
     @ModelAttribute("wishlistCount")
-    public long wishlistCount(Authentication authentication) {
-        if (wishlistItemRepository == null) {
+    public long wishlistCount(HttpServletRequest request,
+                              HttpServletResponse response,
+                              Authentication authentication) {
+        if (wishlistItemRepository == null || isAsyncOrCommitted(request, response)) {
             return 0L;
         }
         User user = resolveUser(authentication);
@@ -54,8 +65,11 @@ public class GlobalModelAttributes {
     }
 
     @ModelAttribute("unreadNotificationCount")
-    public long unreadNotificationCount(Authentication authentication) {
-        if (notificationService == null || authentication == null || !authentication.isAuthenticated()
+    public long unreadNotificationCount(HttpServletRequest request,
+                                        HttpServletResponse response,
+                                        Authentication authentication) {
+        if (notificationService == null || isAsyncOrCommitted(request, response)
+                || authentication == null || !authentication.isAuthenticated()
                 || "anonymousUser".equals(authentication.getPrincipal())) {
             return 0L;
         }
@@ -73,6 +87,19 @@ public class GlobalModelAttributes {
         } catch (Exception ignored) {
         }
         return 0L;
+    }
+
+    private boolean isAsyncOrCommitted(HttpServletRequest request, HttpServletResponse response) {
+        if (response != null) {
+            if (response.isCommitted()) {
+                return true;
+            }
+            String contentType = response.getContentType();
+            if (contentType != null && contentType.contains("text/event-stream")) {
+                return true;
+            }
+        }
+        return request != null && request.getDispatcherType() == DispatcherType.ASYNC;
     }
 
     private User resolveUser(Authentication authentication) {
