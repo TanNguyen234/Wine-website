@@ -12,12 +12,16 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
 @Controller
 @RequestMapping("/admin/users")
 public class AdminUserController {
 
     private static final List<String> ALLOWED_ROLES = List.of("ADMIN", "USER", "SHIPPER");
+    private static final Set<String> ALLOWED_SORT_FIELDS = Set.of(
+            "id", "username", "email", "role", "fullName", "createdAt");
 
     private final UserService userService;
 
@@ -32,21 +36,28 @@ public class AdminUserController {
             @RequestParam(defaultValue = "id") String sortBy,
             @RequestParam(defaultValue = "desc") String sortDir,
             Model model) {
-            
-        org.springframework.data.domain.Sort.Direction direction = "asc".equalsIgnoreCase(sortDir) ? org.springframework.data.domain.Sort.Direction.ASC : org.springframework.data.domain.Sort.Direction.DESC;
-        org.springframework.data.domain.PageRequest pageable = org.springframework.data.domain.PageRequest.of(page, size, org.springframework.data.domain.Sort.by(direction, sortBy));
+
+        int safePage = Math.max(0, page);
+        int safeSize = Math.min(Math.max(size, 1), 100);
+        String safeSortBy = (sortBy != null && ALLOWED_SORT_FIELDS.contains(sortBy)) ? sortBy : "id";
+        String safeSortDir = "asc".equalsIgnoreCase(sortDir) ? "asc" : "desc";
+        org.springframework.data.domain.Sort.Direction direction = "asc".equalsIgnoreCase(safeSortDir)
+                ? org.springframework.data.domain.Sort.Direction.ASC
+                : org.springframework.data.domain.Sort.Direction.DESC;
+        org.springframework.data.domain.PageRequest pageable = org.springframework.data.domain.PageRequest.of(
+                safePage, safeSize, org.springframework.data.domain.Sort.by(direction, safeSortBy));
         org.springframework.data.domain.Page<User> userPage = userService.getAllUsersPage(pageable);
-        
+
         model.addAttribute("users", userPage.getContent());
-        model.addAttribute("currentPage", page);
-        model.addAttribute("pageSize", size);
-        model.addAttribute("sortBy", sortBy);
-        model.addAttribute("sortDir", sortDir.toLowerCase());
+        model.addAttribute("currentPage", safePage);
+        model.addAttribute("pageSize", safeSize);
+        model.addAttribute("sortBy", safeSortBy);
+        model.addAttribute("sortDir", safeSortDir);
         model.addAttribute("totalPages", userPage.getTotalPages());
         model.addAttribute("hasNext", userPage.hasNext());
         model.addAttribute("hasPrevious", userPage.hasPrevious());
         model.addAttribute("totalEntries", userPage.getTotalElements());
-        
+
         return "admin-users";
     }
 
@@ -97,21 +108,42 @@ public class AdminUserController {
         });
     }
 
+    public String updateUser(Long id,
+                             String username,
+                             String email,
+                             String password,
+                             String role,
+                             RedirectAttributes redirectAttributes) {
+        return updateUser(id, username, email, password, role, null, redirectAttributes);
+    }
+
     @PostMapping("/edit/{id}")
     public String updateUser(@PathVariable Long id,
                              @RequestParam String username,
                              @RequestParam(required = false) String email,
                              @RequestParam(required = false) String password,
                              @RequestParam String role,
+                             org.springframework.security.core.Authentication authentication,
                              RedirectAttributes redirectAttributes) {
         try {
-            com.strongwine.strongwine.dto.UserDto before = userService.getUserById(id)
+            String normalizedRole = normalizeRole(role);
+            Optional<User> targetOpt = userService.getUserById(id);
+            String currentActor = resolveAuthenticatedUsername(authentication);
+            if (targetOpt.isPresent()
+                    && currentActor != null
+                    && currentActor.equalsIgnoreCase(targetOpt.get().getUsername())
+                    && !"ADMIN".equalsIgnoreCase(normalizedRole)) {
+                redirectAttributes.addFlashAttribute("error", "Không thể tự hạ quyền tài khoản quản trị viên đang đăng nhập.");
+                return "redirect:/admin/users/edit/" + id;
+            }
+
+            com.strongwine.strongwine.dto.UserDto before = targetOpt
                     .map(com.strongwine.strongwine.dto.UserDto::from).orElse(null);
             User userDetails = new User();
             userDetails.setUsername(username);
             userDetails.setEmail(email);
             userDetails.setPassword(password);
-            userDetails.setRole(normalizeRole(role));
+            userDetails.setRole(normalizedRole);
 
             User updated = userService.updateUser(id, userDetails);
             recordAudit("USER_UPDATED", id, before,
@@ -124,10 +156,25 @@ public class AdminUserController {
         }
     }
 
+    public String deleteUser(Long id, RedirectAttributes redirectAttributes) {
+        return deleteUser(id, null, redirectAttributes);
+    }
+
     @PostMapping("/delete/{id}")
-    public String deleteUser(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+    public String deleteUser(@PathVariable Long id,
+                             org.springframework.security.core.Authentication authentication,
+                             RedirectAttributes redirectAttributes) {
         try {
-            com.strongwine.strongwine.dto.UserDto before = userService.getUserById(id)
+            Optional<User> targetOpt = userService.getUserById(id);
+            String currentActor = resolveAuthenticatedUsername(authentication);
+            if (targetOpt.isPresent()
+                    && currentActor != null
+                    && currentActor.equalsIgnoreCase(targetOpt.get().getUsername())) {
+                redirectAttributes.addFlashAttribute("error", "Không thể tự xóa tài khoản quản trị viên đang đăng nhập.");
+                return "redirect:/admin/users";
+            }
+
+            com.strongwine.strongwine.dto.UserDto before = targetOpt
                     .map(com.strongwine.strongwine.dto.UserDto::from).orElse(null);
             userService.deleteUser(id);
             recordAudit("USER_DELETED", id, before, null);
@@ -136,6 +183,17 @@ public class AdminUserController {
             redirectAttributes.addFlashAttribute("error", "Xóa người dùng thất bại: " + ex.getMessage());
         }
         return "redirect:/admin/users";
+    }
+
+    private String resolveAuthenticatedUsername(org.springframework.security.core.Authentication authentication) {
+        org.springframework.security.core.Authentication auth = authentication != null
+                ? authentication
+                : org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
+            return null;
+        }
+        String name = auth.getName();
+        return (name != null && !name.isBlank()) ? name.trim() : null;
     }
 
     private void recordAudit(String action, Long targetId, Object before, Object after) {

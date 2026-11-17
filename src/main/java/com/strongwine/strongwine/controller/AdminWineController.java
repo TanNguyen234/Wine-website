@@ -90,7 +90,8 @@ public class AdminWineController {
                     .filter(Objects::nonNull)
                     .toList();
             if (!wineIds.isEmpty()) {
-                availableStockByWineId = inventoryService.getAvailableStockByWineIds(wineIds);
+                availableStockByWineId = Objects.requireNonNullElse(
+                        inventoryService.getAvailableStockByWineIds(wineIds), Collections.emptyMap());
             }
         }
 
@@ -177,7 +178,7 @@ public class AdminWineController {
             auditWineAction(authentication, "WINE_CREATE", saved.getId(), null,
                     Map.of("name", saved.getName(), "type", saved.getType(), "price", saved.getPrice()), request);
             redirectAttributes.addFlashAttribute("success", "Tạo sản phẩm rượu thành công!");
-            return "redirect:/admin";
+            return "redirect:/admin/wines";
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Không thể tạo sản phẩm: " + e.getMessage());
             redirectAttributes.addFlashAttribute("wine", wine);
@@ -243,7 +244,7 @@ public class AdminWineController {
             auditWineAction(authentication, "WINE_UPDATE", id, beforeState,
                     Map.of("name", updated.getName(), "type", updated.getType(), "price", updated.getPrice()), request);
             redirectAttributes.addFlashAttribute("success", "Cập nhật sản phẩm rượu thành công!");
-            return "redirect:/admin";
+            return "redirect:/admin/wines";
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Không thể cập nhật sản phẩm: " + e.getMessage());
             return "redirect:/admin/wines/edit/" + id;
@@ -258,10 +259,6 @@ public class AdminWineController {
             HttpServletRequest request) {
         try {
             Wine wine = wineService.getWineByIdOrThrow(id);
-            String imageUrl = wine.getImageUrl();
-            if (imageUrl != null && imageUrl.startsWith("/uploads/")) {
-                fileStorageService.deleteFile(imageUrl);
-            }
             wineService.deleteWine(id);
             auditWineAction(authentication, "WINE_DELETE", id,
                     Map.of("name", String.valueOf(wine.getName())), Map.of("deleted", true), request);
@@ -269,7 +266,7 @@ public class AdminWineController {
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Không thể xóa sản phẩm: " + e.getMessage());
         }
-        return "redirect:/admin";
+        return "redirect:/admin/wines";
     }
 
     private void auditWineAction(Authentication authentication,

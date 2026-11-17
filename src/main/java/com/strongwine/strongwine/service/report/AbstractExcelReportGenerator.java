@@ -37,7 +37,15 @@ public abstract class AbstractExcelReportGenerator<C> {
         return value;
     }
 
-    protected static SXSSFWorkbook createStreamingWorkbook() {
+    protected static synchronized SXSSFWorkbook createStreamingWorkbook() {
+        try {
+            java.nio.file.Path poiDir = java.nio.file.Paths.get(System.getProperty("java.io.tmpdir"), "poifiles");
+            java.nio.file.Files.createDirectories(poiDir);
+            org.apache.poi.util.TempFile.setTempFileCreationStrategy(
+                    new org.apache.poi.util.DefaultTempFileCreationStrategy(poiDir.toFile()));
+        } catch (IOException e) {
+            throw new IllegalStateException("Không thể khởi tạo thư mục tạm để xuất báo cáo Excel.", e);
+        }
         return new SXSSFWorkbook(100);
     }
 
@@ -86,7 +94,7 @@ public abstract class AbstractExcelReportGenerator<C> {
             return bos.toByteArray();
 
         } catch (IOException e) {
-            throw new RuntimeException("Lỗi khi sinh báo cáo Excel", e);
+            throw new IllegalStateException("Lỗi khi sinh báo cáo Excel.", e);
         } finally {
             safeDispose(workbook);
         }

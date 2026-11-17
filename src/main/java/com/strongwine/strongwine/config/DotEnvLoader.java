@@ -41,7 +41,7 @@ public class DotEnvLoader implements ApplicationContextInitializer<ConfigurableA
                              String key = line.substring(0, separatorIndex).trim();
                              String value = line.substring(separatorIndex + 1).trim();
                              
-                             if (value.startsWith("\"") && value.endsWith("\"")) {
+                             if (value.length() >= 2 && value.startsWith("\"") && value.endsWith("\"")) {
                                  value = value.substring(1, value.length() - 1);
                              }
                              

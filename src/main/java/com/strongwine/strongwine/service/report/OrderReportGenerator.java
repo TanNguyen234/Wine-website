@@ -1,6 +1,8 @@
 package com.strongwine.strongwine.service.report;
 
 import com.strongwine.strongwine.entity.Order;
+import com.strongwine.strongwine.entity.OrderStatus;
+import com.strongwine.strongwine.entity.PaymentStatus;
 import com.strongwine.strongwine.repository.OrderRepository;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
@@ -173,10 +175,14 @@ public class OrderReportGenerator extends AbstractExcelReportGenerator<Void> {
             }
 
             // 4. Data Rows
-            List<Order> list = orderRepository.findAll(Sort.by(Sort.Direction.DESC, "orderDate"));
+            List<Order> sortedList = orderRepository.findAll(Sort.by(Sort.Direction.DESC, "orderDate"));
+            List<Order> list = (sortedList != null && !sortedList.isEmpty())
+                    ? sortedList
+                    : java.util.Objects.requireNonNullElse(orderRepository.findAll(), List.of());
             int r = 4;
             int idx = 1;
-            double sumTotal = 0.0;
+            double paidRevenueTotal = 0.0;
+            int paidOrderCount = 0;
 
             for (Order order : list) {
                 Row row = sheet.createRow(r++);
@@ -223,19 +229,22 @@ public class OrderReportGenerator extends AbstractExcelReportGenerator<Void> {
                 c9.setCellStyle(centerStyle);
 
                 double price = order.getTotalPrice() != null ? order.getTotalPrice().doubleValue() : 0.0;
-                sumTotal += price;
+                if (order.getStatus() == OrderStatus.PAID && order.getPaymentStatus() == PaymentStatus.SUCCESS) {
+                    paidRevenueTotal += price;
+                    paidOrderCount++;
+                }
 
                 Cell c10 = row.createCell(10);
                 c10.setCellValue(price);
                 c10.setCellStyle(currencyStyle);
             }
 
-            // 5. Total Row
+            // 5. Total Row (only sum paid & valid orders so cancelled/unpaid orders do not inflate revenue)
             Row sumRow = sheet.createRow(r);
             sumRow.setHeightInPoints(24);
 
             Cell s0 = sumRow.createCell(0);
-            s0.setCellValue("TỔNG CỘNG (" + list.size() + " đơn hàng)");
+            s0.setCellValue(String.format("DOANH THU ĐÃ THANH TOÁN (%d/%d đơn hàng)", paidOrderCount, list.size()));
             s0.setCellStyle(totalLabelStyle);
 
             for (int i = 1; i <= 9; i++) {
@@ -245,7 +254,7 @@ public class OrderReportGenerator extends AbstractExcelReportGenerator<Void> {
             sheet.addMergedRegion(new CellRangeAddress(r, r, 0, 9));
 
             Cell s10 = sumRow.createCell(10);
-            s10.setCellValue(sumTotal);
+            s10.setCellValue(paidRevenueTotal);
             s10.setCellStyle(totalCurrencyStyle);
 
             // Auto-size columns with padding
@@ -259,7 +268,7 @@ public class OrderReportGenerator extends AbstractExcelReportGenerator<Void> {
             return bos.toByteArray();
 
         } catch (IOException e) {
-            throw new RuntimeException("Lỗi khi sinh báo cáo đơn hàng Excel", e);
+            throw new IllegalStateException("Lỗi khi sinh báo cáo đơn hàng Excel.", e);
         } finally {
             safeDispose(workbook);
         }

@@ -30,6 +30,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -75,14 +76,20 @@ public class AdminController {
         this.shipmentService = shipmentService;
     }
     
+    public String dashboard(int days, LocalDate fromDate, LocalDate toDate, Model model) {
+        return dashboard(days, fromDate, toDate, 0, 10, model);
+    }
+
     /**
-     * Admin dashboard with configurable daily revenue range
+     * Admin dashboard with configurable daily revenue range and quick wine catalog pagination
      */
     @GetMapping({"", "/dashboard"})
     public String dashboard(
             @RequestParam(defaultValue = "7") int days,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
             Model model) {
         long totalWines = wineService.countWines();
         long totalUsers = userService.countUsers();
@@ -90,17 +97,22 @@ public class AdminController {
         Double totalRevenue = orderService.getTotalRevenue();
         long lowStockCount = inventoryService.countLowStockInventories();
         long pendingPayments = paymentService.countPendingPayments();
-        Map<String, Long> shipperStats = shipperService.getShipperOverviewStats();
-        Map<?, Long> shipmentStats = shipmentService.getShipmentStatusStats();
-        long totalShipments = shipmentStats.values().stream().mapToLong(Long::longValue).sum();
+        Map<String, Long> shipperStats = Objects.requireNonNullElse(shipperService.getShipperOverviewStats(), Map.of());
+        Map<?, Long> shipmentStats = Objects.requireNonNullElse(shipmentService.getShipmentStatusStats(), Map.of());
+        long totalShipments = shipmentStats.values().stream()
+                .filter(Objects::nonNull)
+                .mapToLong(Long::longValue)
+                .sum();
 
-        List<Inventory> lowStockItems = inventoryService.getLowStockInventories().stream().limit(6).toList();
-        List<Order> recentOrders = orderService.getAllOrdersPage(
+        List<Inventory> rawLowStock = inventoryService.getLowStockInventories();
+        List<Inventory> lowStockItems = (rawLowStock == null ? List.<Inventory>of() : rawLowStock).stream().limit(6).toList();
+        var recentPage = orderService.getAllOrdersPage(
                 PageRequest.of(0, 5, Sort.by(Sort.Direction.DESC, "orderDate"))
-        ).getContent();
+        );
+        List<Order> recentOrders = recentPage != null ? recentPage.getContent() : List.of();
 
         // Calculate dynamic date range: defaults to today and 7 days prior (today - 6 days through today)
-        List<Order> allOrders = orderService.getAllOrders();
+        List<Order> allOrders = Objects.requireNonNullElse(orderService.getAllOrders(), List.of());
         LocalDate today = LocalDate.now();
         LocalDate start;
         LocalDate end;
@@ -127,26 +139,29 @@ public class AdminController {
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM");
         DateTimeFormatter fullFmt = DateTimeFormatter.ofPattern("dd/MM/yyyy");
         List<String> revLabels = new ArrayList<>();
-        List<Double> revValues = new ArrayList<>();
+        List<Long> revValues = new ArrayList<>();
         double rangeRevenue = 0.0;
 
         for (LocalDate d = start; !d.isAfter(end); d = d.plusDays(1)) {
             final LocalDate currentDay = d;
             revLabels.add("\"" + currentDay.format(fmt) + "\"");
-            double daySum = allOrders.stream()
-                    .filter(o -> o.getPaymentStatus() == PaymentStatus.SUCCESS
+            double daySumVnd = allOrders.stream()
+                    .filter(o -> o != null
+                            && o.getPaymentStatus() == PaymentStatus.SUCCESS
+                            && o.getStatus() != com.strongwine.strongwine.entity.OrderStatus.CANCELLED
+                            && o.getStatus() != com.strongwine.strongwine.entity.OrderStatus.RETURNED
                             && o.getOrderDate() != null
                             && o.getOrderDate().toLocalDate().equals(currentDay)
                             && o.getTotalPrice() != null)
-                    .mapToDouble(o -> o.getTotalPrice().doubleValue() / 1_000_000.0)
+                    .mapToDouble(o -> o.getTotalPrice().doubleValue())
                     .sum();
-            double rounded = Math.round(daySum * 100.0) / 100.0;
-            revValues.add(rounded);
-            rangeRevenue += daySum * 1_000_000.0;
+            revValues.add(Math.round(daySumVnd));
+            rangeRevenue += daySumVnd;
         }
 
-        // Real category breakdown from Wine table
-        List<Wine> allWines = wineService.getAllWines();
+        // Real category breakdown & paged quick-catalog table from Wine table
+        List<Wine> rawAllWines = wineService.getAllWines();
+        List<Wine> allWines = rawAllWines == null ? List.of() : rawAllWines;
         Map<String, Long> typeCounts = new LinkedHashMap<>();
         typeCounts.put("Vang đỏ", 0L);
         typeCounts.put("Vang trắng", 0L);
@@ -154,6 +169,9 @@ public class AdminController {
         typeCounts.put("Vang sủi", 0L);
         typeCounts.put("Rượu truyền thống", 0L);
         for (Wine w : allWines) {
+            if (w == null) {
+                continue;
+            }
             String t = w.getType() == null ? "" : w.getType().trim().toLowerCase(Locale.ROOT);
             if (t.contains("red") || t.contains("đỏ")) {
                 typeCounts.put("Vang đỏ", typeCounts.get("Vang đỏ") + 1);
@@ -167,6 +185,26 @@ public class AdminController {
                 typeCounts.put("Vang sủi", typeCounts.get("Vang sủi") + 1);
             }
         }
+
+        int safePage = Math.max(0, page);
+        int safeSize = Math.min(Math.max(size, 1), 100);
+        int totalWineEntries = allWines.size();
+        int totalPages = totalWineEntries == 0 ? 0 : (int) Math.ceil((double) totalWineEntries / safeSize);
+        if (totalPages > 0 && safePage >= totalPages) {
+            safePage = totalPages - 1;
+        }
+        int fromIndex = Math.min(safePage * safeSize, totalWineEntries);
+        int toIndex = Math.min(fromIndex + safeSize, totalWineEntries);
+        List<Wine> pagedWines = allWines.subList(fromIndex, toIndex);
+
+        List<Long> wineIds = pagedWines.stream()
+                .filter(Objects::nonNull)
+                .map(Wine::getId)
+                .filter(Objects::nonNull)
+                .toList();
+        Map<Long, Integer> availableStockByWineId = !wineIds.isEmpty()
+                ? Objects.requireNonNullElse(inventoryService.getAvailableStockByWineIds(wineIds), Map.of())
+                : Map.of();
 
         long pendingReturnsCount = returnRequestRepository != null
                 ? returnRequestRepository.countByStatus(com.strongwine.strongwine.entity.ReturnStatus.REQUESTED)
@@ -196,6 +234,14 @@ public class AdminController {
         model.addAttribute("shipperStats", shipperStats);
         model.addAttribute("shipmentStats", shipmentStats);
         model.addAttribute("totalShipments", totalShipments);
+        model.addAttribute("wines", pagedWines);
+        model.addAttribute("availableStockByWineId", availableStockByWineId);
+        model.addAttribute("currentPage", safePage);
+        model.addAttribute("pageSize", safeSize);
+        model.addAttribute("totalPages", totalPages);
+        model.addAttribute("hasNext", safePage + 1 < totalPages);
+        model.addAttribute("hasPrevious", safePage > 0 && totalPages > 0);
+        model.addAttribute("totalEntries", (long) totalWineEntries);
         model.addAttribute("selectedDays", daysSpan);
         model.addAttribute("startDate", start.toString());
         model.addAttribute("endDate", end.toString());

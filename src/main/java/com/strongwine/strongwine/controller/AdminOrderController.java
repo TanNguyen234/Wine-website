@@ -15,14 +15,25 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.Optional;
+import java.util.Set;
+
 @Controller
 @RequestMapping("/admin/orders")
 public class AdminOrderController {
+
+    private static final Set<String> ALLOWED_SORT_FIELDS = Set.of(
+            "id", "orderDate", "totalPrice", "status", "paymentStatus", "paymentMethod", "updatedAt");
 
     private final OrderService orderService;
 
     public AdminOrderController(OrderService orderService) {
         this.orderService = orderService;
+    }
+
+    @GetMapping("/{id}")
+    public String viewOrderDetail(@PathVariable Long id) {
+        return "redirect:/orders/" + id;
     }
 
     @GetMapping
@@ -34,9 +45,13 @@ public class AdminOrderController {
             @RequestParam(required = false) com.strongwine.strongwine.entity.OrderStatus status,
             Model model) {
 
-        Sort.Direction direction = "asc".equalsIgnoreCase(sortDir) ? Sort.Direction.ASC : Sort.Direction.DESC;
-        PageRequest pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
-        
+        int safePage = Math.max(0, page);
+        int safeSize = Math.min(Math.max(size, 1), 100);
+        String safeSortBy = (sortBy != null && ALLOWED_SORT_FIELDS.contains(sortBy)) ? sortBy : "orderDate";
+        String safeSortDir = "asc".equalsIgnoreCase(sortDir) ? "asc" : "desc";
+        Sort.Direction direction = "asc".equalsIgnoreCase(safeSortDir) ? Sort.Direction.ASC : Sort.Direction.DESC;
+        PageRequest pageable = PageRequest.of(safePage, safeSize, Sort.by(direction, safeSortBy));
+
         Page<Order> orderPage = orderService.getOrdersPage(status, pageable);
 
         model.addAttribute("orders", orderPage.getContent());
@@ -46,10 +61,10 @@ public class AdminOrderController {
         model.addAttribute("paidCount", orderService.countOrdersByStatus(com.strongwine.strongwine.entity.OrderStatus.PAID));
         model.addAttribute("cancelledCount", orderService.countOrdersByStatus(com.strongwine.strongwine.entity.OrderStatus.CANCELLED));
 
-        model.addAttribute("currentPage", page);
-        model.addAttribute("pageSize", size);
-        model.addAttribute("sortBy", sortBy);
-        model.addAttribute("sortDir", sortDir.toLowerCase());
+        model.addAttribute("currentPage", safePage);
+        model.addAttribute("pageSize", safeSize);
+        model.addAttribute("sortBy", safeSortBy);
+        model.addAttribute("sortDir", safeSortDir);
         model.addAttribute("totalPages", orderPage.getTotalPages());
         model.addAttribute("hasNext", orderPage.hasNext());
         model.addAttribute("hasPrevious", orderPage.hasPrevious());
@@ -92,6 +107,15 @@ public class AdminOrderController {
                               Authentication authentication,
                               RedirectAttributes redirectAttributes) {
         try {
+            Optional<Order> existingOpt = orderService.getOrderById(id);
+            if (existingOpt.isPresent()
+                    && existingOpt.get().getStatus() != com.strongwine.strongwine.entity.OrderStatus.PENDING) {
+                redirectAttributes.addFlashAttribute("error",
+                        "Chỉ có thể hủy trực tiếp đơn hàng đang chờ thanh toán (PENDING). Đơn #"
+                                + id + " hiện ở trạng thái " + existingOpt.get().getStatus()
+                                + " — vui lòng xử lý qua quy trình trả hàng / hoàn tiền.");
+                return "redirect:/admin/orders";
+            }
             String actor = authentication != null ? authentication.getName() : "admin";
             String effectiveReason = (reason != null && !reason.isBlank()) ? reason.trim() : "ADMIN_CANCEL";
             orderService.cancelPendingOrder(id, actor, effectiveReason);

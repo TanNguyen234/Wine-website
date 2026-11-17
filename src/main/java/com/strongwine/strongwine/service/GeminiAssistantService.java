@@ -42,6 +42,8 @@ public class GeminiAssistantService {
     private static final int MAX_CONTEXT_LENGTH = 300;
     private static final int MAX_ERROR_BODY_LOG_LENGTH = 600;
     private static final int MAX_CARDS = 4;
+    private static final String EMPTY_GENERATION_MESSAGE =
+            "Mình chưa tạo được câu trả lời phù hợp. Bạn thử hỏi cụ thể hơn nhé.";
 
     private static final Pattern SPECIAL_TOKEN_PATTERN = Pattern.compile("<\\|[^|>]*\\|>");
     private static final Pattern ROLE_XML_TAG_PATTERN = Pattern.compile(
@@ -113,7 +115,12 @@ public class GeminiAssistantService {
             try {
                 String omniAnswer = sendOmniGatewayRequest(normalizedPrompt, normalizedContext, snapshot);
                 if (omniAnswer != null && !omniAnswer.isBlank()) {
-                    return parseStructuredLlmResponse(omniAnswer, snapshot);
+                    StructuredAssistantResponse omniParsed =
+                            parseStructuredLlmResponse(omniAnswer, normalizedPrompt, normalizedContext, snapshot);
+                    if (!isEmptyGeneration(omniParsed)) {
+                        return omniParsed;
+                    }
+                    logger.warn("Omni Vercel Gateway returned empty generation. Continuing to direct Gemini.");
                 }
             } catch (Exception ex) {
                 logger.warn("Omni Vercel Gateway request attempt skipped or failed: {}. Continuing to direct Gemini.", ex.getMessage());
@@ -145,7 +152,19 @@ public class GeminiAssistantService {
                         GeminiHttpResult result = sendGeminiRequest(requestBody, candidateModel);
                         if (result.isSuccess()) {
                             String rawText = parseAssistantResponse(result.body());
-                            return parseStructuredLlmResponse(rawText, snapshot);
+                            if (rawText == null || rawText.isBlank() || EMPTY_GENERATION_MESSAGE.equals(rawText.trim())) {
+                                logger.warn("Gemini model {} returned HTTP 200 with empty/thought-only content. Trying next fallback.",
+                                        candidateModel);
+                                continue;
+                            }
+                            StructuredAssistantResponse parsed =
+                                    parseStructuredLlmResponse(rawText, normalizedPrompt, normalizedContext, snapshot);
+                            if (!isEmptyGeneration(parsed)) {
+                                return parsed;
+                            }
+                            logger.warn("Gemini model {} produced empty structured response. Trying next fallback.",
+                                    candidateModel);
+                            continue;
                         }
                         lastFailure = result;
                         logger.warn("Gemini model {} returned status {}: {}. Trying next fallback.",
@@ -281,11 +300,22 @@ public class GeminiAssistantService {
         return stockMap;
     }
 
-    private StructuredAssistantResponse parseStructuredLlmResponse(String rawText, CatalogSnapshot snapshot) {
+    private boolean isEmptyGeneration(StructuredAssistantResponse response) {
+        if (response == null || response.answer() == null || response.answer().isBlank()) {
+            return true;
+        }
+        return EMPTY_GENERATION_MESSAGE.equals(response.answer().trim())
+                && (response.recommendations() == null || response.recommendations().isEmpty());
+    }
+
+    private StructuredAssistantResponse parseStructuredLlmResponse(String rawText,
+                                                                   String prompt,
+                                                                   String context,
+                                                                   CatalogSnapshot snapshot) {
         if (rawText == null || rawText.isBlank()) {
             return new StructuredAssistantResponse(
-                    "Mình chưa tạo được câu trả lời phù hợp. Bạn thử hỏi cụ thể hơn nhé.",
-                    "Mình chưa tạo được câu trả lời phù hợp. Bạn thử hỏi cụ thể hơn nhé.",
+                    EMPTY_GENERATION_MESSAGE,
+                    EMPTY_GENERATION_MESSAGE,
                     List.of(),
                     true
             );
@@ -327,8 +357,10 @@ public class GeminiAssistantService {
             return new StructuredAssistantResponse(recoveredAnswer, recoveredAnswer, recoveredCards, true);
         }
 
-        if (trimmed.startsWith("{") && trimmed.contains("\"answer\"")) {
-            return buildLocalAdviceStructured("", "", snapshot);
+        String fenceCleaned = FENCE_PATTERN.matcher(trimmed).replaceAll("").trim();
+        if ((trimmed.startsWith("{") || fenceCleaned.startsWith("{"))
+                && (trimmed.contains("\"answer\"") || trimmed.contains("\"reply\""))) {
+            return buildLocalAdviceStructured(prompt, context, snapshot);
         }
 
         List<WineRecommendationCard> cards = resolveVerifiedCards(mentionedIds, snapshot.wines(), snapshot.stockByWineId());
@@ -438,13 +470,13 @@ public class GeminiAssistantService {
         JsonNode root = objectMapper.readTree(body);
         JsonNode candidates = root.path("candidates");
         if (!candidates.isArray() || candidates.isEmpty()) {
-            return "Mình chưa tạo được câu trả lời phù hợp. Bạn thử hỏi cụ thể hơn nhé.";
+            return EMPTY_GENERATION_MESSAGE;
         }
 
         JsonNode firstCandidate = candidates.get(0);
         JsonNode parts = firstCandidate.path("content").path("parts");
         if (!parts.isArray() || parts.isEmpty()) {
-            return "Mình chưa tạo được câu trả lời phù hợp. Bạn thử hỏi cụ thể hơn nhé.";
+            return EMPTY_GENERATION_MESSAGE;
         }
 
         StringBuilder textBuilder = new StringBuilder();
@@ -462,7 +494,7 @@ public class GeminiAssistantService {
         }
 
         if (textBuilder.isEmpty()) {
-            return "Mình chưa tạo được câu trả lời phù hợp. Bạn thử hỏi cụ thể hơn nhé.";
+            return EMPTY_GENERATION_MESSAGE;
         }
         return textBuilder.toString();
     }

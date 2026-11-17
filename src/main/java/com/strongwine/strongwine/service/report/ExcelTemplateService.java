@@ -186,7 +186,7 @@ public class ExcelTemplateService {
             return bos.toByteArray();
 
         } catch (IOException e) {
-            throw new RuntimeException("Không thể tạo file template Excel", e);
+            throw new IllegalStateException("Không thể tạo file template Excel.", e);
         } finally {
             AbstractExcelReportGenerator.safeDispose(workbook);
         }

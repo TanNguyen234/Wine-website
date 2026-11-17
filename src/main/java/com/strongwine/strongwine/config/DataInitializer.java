@@ -69,11 +69,13 @@ public class DataInitializer implements CommandLineRunner {
 
         ensureDefaultUsers();
         ensureDefaultWines();
-        updateExistingWinesToTransparentImages();
         ensureVietnameseCategoriesAndWines();
+        updateExistingWinesToTransparentImages();
         ensureWarehouseAndInventory();
         ensureDefaultShippers();
         ensureComprehensivePaymentsAndOrders();
+        healShipperCapacityAndAvailability();
+        healNonCompletedShipmentOtps();
     }
 
     private void ensureDefaultUsers() {
@@ -106,37 +108,47 @@ public class DataInitializer implements CommandLineRunner {
     }
 
     private void updateExistingWinesToTransparentImages() {
-        // Upgrade legacy uploaded images with solid white backgrounds to transparent cutout SVGs
-        wineRepository.findByNameContainingIgnoreCaseAndDeletedFalse("Margaux").forEach(wine -> {
-            wine.setImageUrl("/images/bottles/margaux-grand-cru.svg");
-            wineRepository.save(wine);
-        });
-        wineRepository.findByNameContainingIgnoreCaseAndDeletedFalse("Perignon").forEach(wine -> {
-            wine.setImageUrl("/images/bottles/champagne-brut.svg");
-            wineRepository.save(wine);
-        });
-        wineRepository.findByNameContainingIgnoreCaseAndDeletedFalse("Sancerre").forEach(wine -> {
-            wine.setImageUrl("/images/bottles/sauvignon-blanc.svg");
-            wineRepository.save(wine);
-        });
-        wineRepository.findByNameContainingIgnoreCaseAndDeletedFalse("Pinot Noir").forEach(wine -> {
-            wine.setImageUrl("/images/bottles/margaux-grand-cru.svg");
-            wineRepository.save(wine);
-        });
-        wineRepository.findByNameContainingIgnoreCaseAndDeletedFalse("Prosecco").forEach(wine -> {
-            wine.setImageUrl("/images/bottles/champagne-brut.svg");
-            wineRepository.save(wine);
-        });
-        wineRepository.findByNameContainingIgnoreCaseAndDeletedFalse("Chardonnay").forEach(wine -> {
-            wine.setImageUrl("/images/bottles/sauvignon-blanc.svg");
-            wineRepository.save(wine);
-        });
-        wineRepository.findByNameContainingIgnoreCaseAndDeletedFalse("Syrah").forEach(wine -> {
-            if (wine.getImageUrl() == null || wine.getImageUrl().contains("/uploads/")) {
-                wine.setImageUrl("/images/bottles/ninhthuan-reserve.svg");
+        // Only fill missing/blank image URLs; never overwrite existing valid https://, /uploads/, or /images/ URLs
+        for (Wine wine : wineRepository.findByDeletedFalse()) {
+            if (wine == null) {
+                continue;
+            }
+            if (wine.getImageUrl() == null || wine.getImageUrl().trim().isEmpty()) {
+                wine.setImageUrl(resolveFallbackBottleSvg(wine));
                 wineRepository.save(wine);
             }
-        });
+        }
+    }
+
+    private String resolveFallbackBottleSvg(Wine wine) {
+        String type = wine.getType() != null ? wine.getType().trim().toLowerCase(java.util.Locale.ROOT) : "";
+        String country = wine.getCountry() != null ? wine.getCountry().trim().toLowerCase(java.util.Locale.ROOT) : "";
+        String name = wine.getName() != null ? wine.getName().trim().toLowerCase(java.util.Locale.ROOT) : "";
+
+        if (type.contains("traditional") || type.contains("truyền thống")) {
+            return "/images/bottles/mo-yentu.svg";
+        }
+        if (type.contains("sparkling") || type.contains("sủi")
+                || name.contains("perignon") || name.contains("prosecco") || name.contains("champagne")) {
+            return "/images/bottles/champagne-brut.svg";
+        }
+        if (type.contains("white") || type.contains("trắng")
+                || name.contains("sancerre") || name.contains("chardonnay")) {
+            return "/images/bottles/sauvignon-blanc.svg";
+        }
+        if (country.contains("vietnam") || country.contains("việt nam")
+                || name.contains("ninh thuận") || name.contains("phan rang")
+                || name.contains("đà lạt") || name.contains("dalat")) {
+            if (name.contains("ninh thuận") || name.contains("phan rang")
+                    || name.contains("syrah") || type.contains("rose") || type.contains("rosé") || type.contains("hồng")) {
+                return "/images/bottles/ninhthuan-reserve.svg";
+            }
+            return "/images/bottles/dalat-signature.svg";
+        }
+        if (name.contains("syrah")) {
+            return "/images/bottles/ninhthuan-reserve.svg";
+        }
+        return "/images/bottles/margaux-grand-cru.svg";
     }
 
     private void ensureDefaultWines() {
@@ -570,6 +582,75 @@ public class DataInitializer implements CommandLineRunner {
         ensureShipperProfile("shipper.ops.hcm", "Trần Minh Hùng", "0909123456", "Xe máy bảo ôn chuyên dụng");
         ensureShipperProfile("shipper.q7.hcm", "Võ Tuấn Kiệt", "0903888912", "Xe van lạnh 500kg");
         ensureShipperProfile("shipper.hn.ops", "Ngô Quốc Tuấn", "0912666839", "Xe máy bảo ôn chuyên dụng");
+    }
+
+    private void healShipperCapacityAndAvailability() {
+        List<ShipmentStatus> inProgressStatuses = List.of(
+                ShipmentStatus.ASSIGNED,
+                ShipmentStatus.PICKED_UP,
+                ShipmentStatus.DELIVERING
+        );
+        LocalDateTime now = LocalDateTime.now();
+        for (Shipper shipper : shipperRepository.findAll()) {
+            if (shipper == null || shipper.getId() == null) {
+                continue;
+            }
+            boolean changed = false;
+            if (shipper.getMaxConcurrentShipments() == null || shipper.getMaxConcurrentShipments() < 5) {
+                shipper.setMaxConcurrentShipments(5);
+                changed = true;
+            }
+            int inProgress = (int) shipmentRepository.countByShipperIdAndStatusIn(shipper.getId(), inProgressStatuses);
+            if (shipper.getActiveShipmentCount() == null || shipper.getActiveShipmentCount() != inProgress) {
+                shipper.setActiveShipmentCount(inProgress);
+                changed = true;
+            }
+            if (shipper.getStatus() == ShipperStatus.ACTIVE) {
+                boolean available = inProgress < shipper.getMaxConcurrentShipments();
+                if (!Boolean.valueOf(available).equals(shipper.getIsAvailable())) {
+                    shipper.setIsAvailable(available);
+                    changed = true;
+                }
+            }
+            if (changed) {
+                if (shipper.getCreatedAt() == null) {
+                    shipper.setCreatedAt(now);
+                }
+                shipper.setUpdatedAt(now);
+                shipperRepository.save(shipper);
+            }
+        }
+    }
+
+    private void healNonCompletedShipmentOtps() {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime minValidThreshold = now.plusHours(2);
+        LocalDateTime extendedExpiry = now.plusHours(48);
+        for (Shipment shipment : shipmentRepository.findAll()) {
+            if (shipment == null || shipment.getStatus() == null) {
+                continue;
+            }
+            ShipmentStatus st = shipment.getStatus();
+            boolean nonTerminal = st == ShipmentStatus.PENDING_ASSIGNMENT
+                    || st == ShipmentStatus.ASSIGNED
+                    || st == ShipmentStatus.PICKED_UP
+                    || st == ShipmentStatus.DELIVERING;
+            if (!nonTerminal) {
+                continue;
+            }
+            if (shipment.getOtpExpiresAt() == null || shipment.getOtpExpiresAt().isBefore(minValidThreshold)) {
+                if ((shipment.getOtpCode() == null || shipment.getOtpCode().isBlank())
+                        && (shipment.getOtpEncrypted() == null || shipment.getOtpEncrypted().isBlank())) {
+                    long seed = shipment.getId() != null ? shipment.getId() : 1L;
+                    shipment.setOtpCode(String.format("%06d", (seed * 38291L + 123456L) % 1_000_000L));
+                }
+                if (shipment.getOtpCreatedAt() == null) {
+                    shipment.setOtpCreatedAt(now);
+                }
+                shipment.setOtpExpiresAt(extendedExpiry);
+                shipmentRepository.save(shipment);
+            }
+        }
     }
 
     private void ensureShipperProfile(String username, String name, String phone, String vehicleType) {

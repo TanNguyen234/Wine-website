@@ -131,6 +131,11 @@ public class ExcelWineImportStrategy implements DataImportStrategy<Wine> {
                         result.addError(new ImportErrorItem(rowNum, "Tên Sản Phẩm", "", "Tên sản phẩm không được để trống"));
                         continue;
                     }
+                    String trimmedName = name.trim();
+                    if (trimmedName.length() > 255) {
+                        result.addError(new ImportErrorItem(rowNum, "Tên Sản Phẩm", trimmedName.substring(0, 50) + "...", "Tên sản phẩm không được vượt quá 255 ký tự"));
+                        continue;
+                    }
                     if (type == null || !ALLOWED_TYPES.contains(type)) {
                         result.addError(new ImportErrorItem(rowNum, "Loại Rượu", type, "Loại rượu phải là: Red, White, Rose, Sparkling, hoặc Traditional"));
                         continue;
@@ -144,56 +149,99 @@ public class ExcelWineImportStrategy implements DataImportStrategy<Wine> {
                         result.addError(new ImportErrorItem(rowNum, "Giá Bán", String.valueOf(price), "Giá bán phải lớn hơn 0"));
                         continue;
                     }
-                    if (imageUrl != null && !imageUrl.isBlank() && !isValidImageUrl(imageUrl.trim())) {
-                        result.addError(new ImportErrorItem(rowNum, "Image URL", imageUrl.trim(), "Đường dẫn ảnh phải bắt đầu bằng https://, http://, /uploads/ hoặc /images/"));
+                    if (quantity != null && quantity < 0) {
+                        result.addError(new ImportErrorItem(rowNum, "Số Lượng Kho", String.valueOf(quantity), "Số lượng kho không được nhỏ hơn 0"));
                         continue;
+                    }
+                    String trimmedCountry = (country != null && !country.isBlank()) ? country.trim() : null;
+                    if (trimmedCountry != null && trimmedCountry.length() > 100) {
+                        result.addError(new ImportErrorItem(rowNum, "Xuất Xứ", trimmedCountry.substring(0, 50) + "...", "Xuất xứ không được vượt quá 100 ký tự"));
+                        continue;
+                    }
+                    String trimmedDescription = (description != null && !description.isBlank()) ? description.trim() : null;
+                    if (trimmedDescription != null && trimmedDescription.length() > 1000) {
+                        result.addError(new ImportErrorItem(rowNum, "Mô Tả", trimmedDescription.substring(0, 50) + "...", "Mô tả không được vượt quá 1000 ký tự"));
+                        continue;
+                    }
+                    String trimmedCategoryName = (categoryName != null && !categoryName.isBlank()) ? categoryName.trim() : null;
+                    if (trimmedCategoryName != null && trimmedCategoryName.length() > 255) {
+                        result.addError(new ImportErrorItem(rowNum, "Tên Danh Mục", trimmedCategoryName.substring(0, 50) + "...", "Tên danh mục không được vượt quá 255 ký tự"));
+                        continue;
+                    }
+                    String trimmedImageUrl = (imageUrl != null && !imageUrl.isBlank()) ? imageUrl.trim() : null;
+                    if (trimmedImageUrl != null && trimmedImageUrl.length() > 500) {
+                        result.addError(new ImportErrorItem(rowNum, "Image URL", trimmedImageUrl.substring(0, 50) + "...", "Đường dẫn ảnh không được vượt quá 500 ký tự"));
+                        continue;
+                    }
+                    if (trimmedImageUrl != null && !isValidImageUrl(trimmedImageUrl)) {
+                        result.addError(new ImportErrorItem(rowNum, "Image URL", trimmedImageUrl, "Đường dẫn ảnh phải bắt đầu bằng https://, http://, /uploads/ hoặc /images/"));
+                        continue;
+                    }
+
+                    // Pre-validate REPLACE inventory mode against active order reservations before saving Wine
+                    Optional<Wine> existingOpt = wineRepository.findByNameIgnoreCaseAndYearAndDeletedFalse(trimmedName, year);
+                    if (existingOpt.isPresent()
+                            && existingOpt.get().getId() != null
+                            && quantity != null
+                            && options.getDefaultWarehouseId() != null
+                            && options.getInventoryMode() == ImportOptions.InventoryMode.REPLACE) {
+                        Optional<Inventory> preInvOpt = inventoryRepository.findByWineIdAndWarehouseId(
+                                existingOpt.get().getId(), options.getDefaultWarehouseId());
+                        if (preInvOpt.isPresent()) {
+                            int reservedQty = preInvOpt.get().getReservedQuantity() != null
+                                    ? Math.max(0, preInvOpt.get().getReservedQuantity()) : 0;
+                            if (quantity < reservedQty) {
+                                result.addError(new ImportErrorItem(rowNum, "Số Lượng Kho", String.valueOf(quantity),
+                                        "Số lượng tồn kho thay thế không được nhỏ hơn số lượng đang giữ chỗ (" + reservedQty + ")"));
+                                continue;
+                            }
+                        }
                     }
 
                     // Tự động phân giải hoặc tạo mới Category
                     Category category = null;
-                    if (categoryName != null && !categoryName.isBlank()) {
-                        category = categoryRepository.findByName(categoryName.trim())
+                    if (trimmedCategoryName != null) {
+                        category = categoryRepository.findByName(trimmedCategoryName)
                                 .orElseGet(() -> {
                                     if (options.isDryRun()) {
                                         Category dummyCat = new Category();
-                                        dummyCat.setName(categoryName.trim());
+                                        dummyCat.setName(trimmedCategoryName);
                                         return dummyCat;
                                     }
                                     Category newCat = new Category();
-                                    newCat.setName(categoryName.trim());
+                                    newCat.setName(trimmedCategoryName);
                                     newCat.setDescription("Tự động tạo từ import Excel");
                                     return categoryRepository.save(newCat);
                                 });
                     }
 
-                    String resolvedImageUrl = (imageUrl != null && !imageUrl.isBlank())
-                            ? imageUrl.trim()
+                    String resolvedImageUrl = trimmedImageUrl != null
+                            ? trimmedImageUrl
                             : DEFAULT_IMAGE_BY_TYPE.getOrDefault(type, DEFAULT_IMAGE_BY_TYPE.get("Red"));
 
                     // Cơ chế Upsert theo (Tên + Năm)
-                    Optional<Wine> existingOpt = wineRepository.findByNameIgnoreCaseAndYearAndDeletedFalse(name.trim(), year);
                     Wine wine;
                     if (existingOpt.isPresent()) {
                         wine = existingOpt.get();
                         wine.setType(type);
                         wine.setPrice(price);
-                        if (country != null) wine.setCountry(country);
-                        if (description != null) wine.setDescription(description);
+                        if (trimmedCountry != null) wine.setCountry(trimmedCountry);
+                        if (trimmedDescription != null) wine.setDescription(trimmedDescription);
                         if (category != null) wine.setCategory(category);
-                        if (imageUrl != null && !imageUrl.isBlank()) {
-                            wine.setImageUrl(imageUrl.trim());
+                        if (trimmedImageUrl != null) {
+                            wine.setImageUrl(trimmedImageUrl);
                         } else if (wine.getImageUrl() == null || wine.getImageUrl().isBlank()) {
                             wine.setImageUrl(resolvedImageUrl);
                         }
                         result.setUpdatedCount(result.getUpdatedCount() + 1);
                     } else {
                         wine = new Wine();
-                        wine.setName(name.trim());
+                        wine.setName(trimmedName);
                         wine.setType(type);
                         wine.setYear(year);
                         wine.setPrice(price);
-                        wine.setCountry(country);
-                        wine.setDescription(description);
+                        wine.setCountry(trimmedCountry);
+                        wine.setDescription(trimmedDescription);
                         wine.setCategory(category);
                         wine.setImageUrl(resolvedImageUrl);
                         wine.setDeleted(false);
@@ -212,11 +260,20 @@ public class ExcelWineImportStrategy implements DataImportStrategy<Wine> {
                                 Inventory inventory;
                                 if (invOpt.isPresent()) {
                                     inventory = invOpt.get();
+                                    int currentQty = inventory.getCurrentQuantity() != null ? inventory.getCurrentQuantity() : 0;
+                                    int reservedQty = inventory.getReservedQuantity() != null ? Math.max(0, inventory.getReservedQuantity()) : 0;
                                     if (options.getInventoryMode() == ImportOptions.InventoryMode.ADD) {
-                                        inventory.setCurrentQuantity(inventory.getCurrentQuantity() + quantity);
+                                        inventory.setCurrentQuantity(currentQty + quantity);
                                     } else {
-                                        inventory.setCurrentQuantity(quantity);
+                                        inventory.setCurrentQuantity(Math.max(quantity, reservedQty));
                                     }
+                                    if (inventory.getReservedQuantity() == null) {
+                                        inventory.setReservedQuantity(0);
+                                    }
+                                    if (inventory.getReorderLevel() == null) {
+                                        inventory.setReorderLevel(10);
+                                    }
+                                    inventory.setUpdatedAt(java.time.LocalDateTime.now());
                                 } else {
                                     inventory = new Inventory();
                                     inventory.setWine(wine);

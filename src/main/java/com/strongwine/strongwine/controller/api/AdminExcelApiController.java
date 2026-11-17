@@ -152,7 +152,9 @@ public class AdminExcelApiController {
         }
 
         try {
-            ImportOptions.InventoryMode mode = "REPLACE".equalsIgnoreCase(inventoryModeStr)
+            String normalizedMode = inventoryModeStr != null ? inventoryModeStr.trim() : "";
+            ImportOptions.InventoryMode mode = ("REPLACE".equalsIgnoreCase(normalizedMode)
+                    || "ABSOLUTE".equalsIgnoreCase(normalizedMode))
                     ? ImportOptions.InventoryMode.REPLACE
                     : ImportOptions.InventoryMode.ADD;
 

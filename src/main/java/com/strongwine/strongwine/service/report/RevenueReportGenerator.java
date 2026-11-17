@@ -95,7 +95,12 @@ public class RevenueReportGenerator extends AbstractExcelReportGenerator<Revenue
         LocalDateTime startDateTime = startDate.atStartOfDay();
         LocalDateTime endDateTime = endDate.atTime(LocalTime.MAX);
 
-        List<Order> paidOrders = orderRepository.findPaidOrdersWithItemsBetween(startDateTime, endDateTime);
+        List<Order> rawPaidOrders = orderRepository.findPaidOrdersWithItemsBetween(startDateTime, endDateTime);
+        List<Order> paidOrders = (rawPaidOrders == null ? List.<Order>of() : rawPaidOrders).stream()
+                .filter(o -> o != null
+                        && o.getStatus() != com.strongwine.strongwine.entity.OrderStatus.CANCELLED
+                        && o.getStatus() != com.strongwine.strongwine.entity.OrderStatus.RETURNED)
+                .toList();
 
         SXSSFWorkbook workbook = AbstractExcelReportGenerator.createStreamingWorkbook();
         try {
@@ -115,7 +120,7 @@ public class RevenueReportGenerator extends AbstractExcelReportGenerator<Revenue
             return bos.toByteArray();
 
         } catch (IOException e) {
-            throw new RuntimeException("Lỗi khi xuất file báo cáo doanh thu Excel", e);
+            throw new IllegalStateException("Lỗi khi xuất file báo cáo doanh thu Excel.", e);
         } finally {
             AbstractExcelReportGenerator.safeDispose(workbook);
         }

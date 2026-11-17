@@ -67,33 +67,63 @@ public class DatabaseMigrationInitializer implements ApplicationRunner {
     private void initializeWarehouseAndInventory() {
         jdbcTemplate.execute("""
                 DECLARE @warehouseId BIGINT;
-                SELECT TOP 1 @warehouseId = id FROM warehouse WHERE name = 'Main Warehouse';
+                SELECT TOP 1 @warehouseId = id FROM warehouse WHERE is_default = 1 AND active = 1;
 
                 IF @warehouseId IS NULL
                 BEGIN
-                    INSERT INTO warehouse (name, location, active, created_at)
-                    VALUES ('Main Warehouse', N'Thành phố Hồ Chí Minh', 1, GETDATE());
+                    SELECT TOP 1 @warehouseId = id FROM warehouse WHERE name = 'Main Warehouse';
+                END
+
+                IF @warehouseId IS NULL
+                BEGIN
+                    INSERT INTO warehouse (name, location, is_default, active, created_at)
+                    VALUES ('Main Warehouse', N'Thành phố Hồ Chí Minh', 1, 1, GETDATE());
                     SET @warehouseId = SCOPE_IDENTITY();
                 END
 
                 INSERT INTO inventory (wine_id, warehouse_id, current_quantity, reserved_quantity, reorder_level, updated_at)
                 SELECT w.id, @warehouseId, 50, 0, 10, GETDATE()
                 FROM wines w
-                WHERE NOT EXISTS (
-                    SELECT 1 FROM inventory i WHERE i.wine_id = w.id AND i.warehouse_id = @warehouseId
-                );
+                WHERE w.deleted = 0
+                  AND NOT EXISTS (
+                      SELECT 1 FROM inventory i WHERE i.wine_id = w.id AND i.warehouse_id = @warehouseId
+                  );
 
                 UPDATE inventory
-                SET current_quantity = CASE WHEN current_quantity IS NULL OR current_quantity <= 0 THEN 50 ELSE current_quantity END,
+                SET current_quantity = COALESCE(current_quantity, 50),
                     reserved_quantity = CASE WHEN reserved_quantity IS NULL OR reserved_quantity < 0 THEN 0 ELSE reserved_quantity END,
                     reorder_level = CASE WHEN reorder_level IS NULL OR reorder_level <= 0 THEN 10 ELSE reorder_level END,
                     updated_at = GETDATE()
-                WHERE warehouse_id = @warehouseId;
+                WHERE warehouse_id = @warehouseId
+                  AND (current_quantity IS NULL OR reserved_quantity IS NULL OR reserved_quantity < 0 OR reorder_level IS NULL OR reorder_level <= 0);
                 """);
     }
 
     private void repairInventoryLinksOnly() {
-        initializeWarehouseAndInventory();
+        jdbcTemplate.execute("""
+                DECLARE @warehouseId BIGINT;
+                SELECT TOP 1 @warehouseId = id FROM warehouse WHERE is_default = 1 AND active = 1;
+
+                IF @warehouseId IS NULL
+                BEGIN
+                    SELECT TOP 1 @warehouseId = id FROM warehouse WHERE name = 'Main Warehouse';
+                END
+
+                IF @warehouseId IS NULL
+                BEGIN
+                    INSERT INTO warehouse (name, location, is_default, active, created_at)
+                    VALUES ('Main Warehouse', N'Thành phố Hồ Chí Minh', 1, 1, GETDATE());
+                    SET @warehouseId = SCOPE_IDENTITY();
+                END
+
+                INSERT INTO inventory (wine_id, warehouse_id, current_quantity, reserved_quantity, reorder_level, updated_at)
+                SELECT w.id, @warehouseId, 50, 0, 10, GETDATE()
+                FROM wines w
+                WHERE w.deleted = 0
+                  AND NOT EXISTS (
+                      SELECT 1 FROM inventory i WHERE i.wine_id = w.id AND i.warehouse_id = @warehouseId
+                  );
+                """);
     }
 
     private void repairInventoryVersionNullValues() {
