@@ -143,8 +143,8 @@ class StrongwineV3LifecycleE2ETest {
         order.setId(9001L);
         order.setUser(customer);
         order.setOrderDate(LocalDateTime.now());
-        order.setStatus(OrderStatus.PAID);
-        order.setPaymentStatus(PaymentStatus.SUCCESS);
+        order.setStatus(OrderStatus.PENDING);
+        order.setPaymentStatus(PaymentStatus.PENDING);
         order.setPaymentMethod(PaymentMethod.COD);
         order.setAllocatedWarehouse(hcmWarehouse);
         order.setShippingFullName(customer.getFullName());
@@ -217,6 +217,11 @@ class StrongwineV3LifecycleE2ETest {
         ShipperCodBatch batch = codBatchService.createBatchForShipper(
                 5L, List.of(701L), quote.finalTotal(), "Nộp cuối ca chiều", "shipper-a");
         assertThat(batch.getTotalExpectedAmount()).isEqualByComparingTo("1755000.00");
+        org.mockito.Mockito.doAnswer(inv -> {
+            order.setStatus(OrderStatus.PAID);
+            order.setPaymentStatus(PaymentStatus.SUCCESS);
+            return null;
+        }).when(codSettlementPort).settleCodOrder(9001L, "admin");
         ShipperCodBatch verifiedBatch = codBatchService.verifyBatch(301L, "admin", "Đã đối soát đủ tiền mặt");
         assertThat(verifiedBatch.getStatus()).isEqualTo(CodBatchStatus.VERIFIED);
         verify(codSettlementPort).settleCodOrder(9001L, "admin");

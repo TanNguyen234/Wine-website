@@ -18,6 +18,8 @@ import java.util.Optional;
 @Transactional
 public class ShipperService {
 
+    private static final int DEFAULT_MAX_CONCURRENT_SHIPMENTS = 5;
+
     private final ShipperRepository shipperRepository;
     private final UserRepository userRepository;
     private final ShipmentService shipmentService;
@@ -128,23 +130,37 @@ public class ShipperService {
                                  String vehicleType,
                                  ShipperStatus status,
                                  Boolean isAvailable) {
+        return createShipper(userId, name, phone, vehicleType, status, isAvailable, DEFAULT_MAX_CONCURRENT_SHIPMENTS);
+    }
+
+    public Shipper createShipper(Long userId,
+                                 String name,
+                                 String phone,
+                                 String vehicleType,
+                                 ShipperStatus status,
+                                 Boolean isAvailable,
+                                 Integer maxConcurrentShipments) {
         User user = getShipperUser(userId);
         if (shipperRepository.existsByUserId(user.getId())) {
             throw new IllegalArgumentException("Selected user already has a shipper profile");
         }
+        int resolvedCapacity = resolveCapacityForCreate(maxConcurrentShipments);
+        ShipperStatus resolvedStatus = status == null ? ShipperStatus.ACTIVE : status;
+        boolean effectiveAvailable = Boolean.TRUE.equals(isAvailable) && resolvedStatus == ShipperStatus.ACTIVE;
 
         Shipper shipper = new Shipper();
         shipper.setUser(user);
         shipper.setName(requireText(name, "Shipper name is required"));
         shipper.setPhone(requireText(phone, "Shipper phone is required"));
         shipper.setVehicleType(trimToNull(vehicleType));
-        shipper.setStatus(status == null ? ShipperStatus.ACTIVE : status);
-        shipper.setIsAvailable(isAvailable != null && isAvailable);
+        shipper.setStatus(resolvedStatus);
+        shipper.setMaxConcurrentShipments(resolvedCapacity);
+        shipper.setIsAvailable(effectiveAvailable);
         shipper.setCreatedAt(LocalDateTime.now());
         shipper.setUpdatedAt(LocalDateTime.now());
 
         Shipper saved = shipperRepository.save(shipper);
-        shipmentService.onShipperProfileUpdated(saved.getId(), Boolean.TRUE.equals(isAvailable));
+        shipmentService.onShipperProfileUpdated(saved.getId(), effectiveAvailable);
         return saved;
     }
 
@@ -155,6 +171,17 @@ public class ShipperService {
                                  String vehicleType,
                                  ShipperStatus status,
                                  Boolean isAvailable) {
+        return updateShipper(id, userId, name, phone, vehicleType, status, isAvailable, null);
+    }
+
+    public Shipper updateShipper(Long id,
+                                 Long userId,
+                                 String name,
+                                 String phone,
+                                 String vehicleType,
+                                 ShipperStatus status,
+                                 Boolean isAvailable,
+                                 Integer maxConcurrentShipments) {
         Shipper shipper = getShipperById(id);
         User user = getShipperUser(userId);
 
@@ -162,21 +189,71 @@ public class ShipperService {
             throw new IllegalArgumentException("Selected user already belongs to another shipper profile");
         }
 
+        int existingCap = (shipper.getMaxConcurrentShipments() != null && shipper.getMaxConcurrentShipments() >= 1)
+                ? shipper.getMaxConcurrentShipments()
+                : DEFAULT_MAX_CONCURRENT_SHIPMENTS;
+        int resolvedCapacity;
+        if (maxConcurrentShipments != null) {
+            if (maxConcurrentShipments < 1) {
+                throw new IllegalArgumentException("Số đơn giao đồng thời tối đa phải từ 1 trở lên");
+            }
+            resolvedCapacity = maxConcurrentShipments;
+        } else {
+            resolvedCapacity = Math.max(DEFAULT_MAX_CONCURRENT_SHIPMENTS, existingCap);
+        }
+
+        ShipperStatus resolvedStatus = status == null ? ShipperStatus.ACTIVE : status;
+        boolean requestedAvailable = Boolean.TRUE.equals(isAvailable) && resolvedStatus == ShipperStatus.ACTIVE;
+
+        if (requestedAvailable) {
+            int currentActive = shipper.getActiveShipmentCount() != null ? Math.max(0, shipper.getActiveShipmentCount()) : 0;
+            Map<Long, Long> liveLoad = shipmentService.getActiveLoadByShipperId(List.of(shipper));
+            if (liveLoad != null && liveLoad.containsKey(id) && liveLoad.get(id) != null) {
+                currentActive = liveLoad.get(id).intValue();
+            }
+            if (currentActive >= resolvedCapacity && resolvedCapacity < DEFAULT_MAX_CONCURRENT_SHIPMENTS) {
+                resolvedCapacity = Math.max(DEFAULT_MAX_CONCURRENT_SHIPMENTS, currentActive + 1);
+            }
+            if (currentActive >= resolvedCapacity) {
+                throw new IllegalStateException("Shipper đang phụ trách " + currentActive + "/" + resolvedCapacity
+                        + " vận đơn tối đa. Vui lòng tăng hạn mức đơn giao đồng thời trước khi bật sẵn sàng.");
+            }
+        }
+
         shipper.setUser(user);
         shipper.setName(requireText(name, "Shipper name is required"));
         shipper.setPhone(requireText(phone, "Shipper phone is required"));
         shipper.setVehicleType(trimToNull(vehicleType));
-        shipper.setStatus(status == null ? ShipperStatus.ACTIVE : status);
-        shipper.setIsAvailable(isAvailable != null && isAvailable);
+        shipper.setStatus(resolvedStatus);
+        shipper.setMaxConcurrentShipments(resolvedCapacity);
+        shipper.setIsAvailable(requestedAvailable);
         shipper.setUpdatedAt(LocalDateTime.now());
 
         Shipper saved = shipperRepository.save(shipper);
-        shipmentService.onShipperProfileUpdated(saved.getId(), Boolean.TRUE.equals(isAvailable));
+        shipmentService.onShipperProfileUpdated(saved.getId(), requestedAvailable);
         return saved;
     }
 
     public void updateAvailability(Long id, boolean available) {
+        if (available) {
+            Shipper shipper = getShipperById(id);
+            if (shipper.getMaxConcurrentShipments() == null || shipper.getMaxConcurrentShipments() < DEFAULT_MAX_CONCURRENT_SHIPMENTS) {
+                shipper.setMaxConcurrentShipments(DEFAULT_MAX_CONCURRENT_SHIPMENTS);
+                shipper.setUpdatedAt(LocalDateTime.now());
+                shipperRepository.save(shipper);
+            }
+        }
         shipmentService.setShipperAvailability(id, available);
+    }
+
+    private int resolveCapacityForCreate(Integer maxConcurrentShipments) {
+        if (maxConcurrentShipments == null) {
+            return DEFAULT_MAX_CONCURRENT_SHIPMENTS;
+        }
+        if (maxConcurrentShipments < 1) {
+            throw new IllegalArgumentException("Số đơn giao đồng thời tối đa phải từ 1 trở lên");
+        }
+        return maxConcurrentShipments;
     }
 
     public void deleteShipper(Long id) {

@@ -3,6 +3,7 @@ package com.strongwine.strongwine.service;
 import com.strongwine.strongwine.entity.CodBatchStatus;
 import com.strongwine.strongwine.entity.Order;
 import com.strongwine.strongwine.entity.PaymentMethod;
+import com.strongwine.strongwine.entity.PaymentStatus;
 import com.strongwine.strongwine.entity.Shipment;
 import com.strongwine.strongwine.entity.ShipmentStatus;
 import com.strongwine.strongwine.entity.Shipper;
@@ -14,6 +15,7 @@ import com.strongwine.strongwine.repository.ShipperCodBatchRepository;
 import com.strongwine.strongwine.repository.ShipperRepository;
 import com.strongwine.strongwine.repository.UserRepository;
 import com.strongwine.strongwine.service.port.CodSettlementPort;
+import com.strongwine.strongwine.service.realtime.SseNotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Lazy;
@@ -47,6 +49,7 @@ public class ShipperCodBatchService {
     private final CodSettlementPort codSettlementPort;
     private final AdminAuditLogService adminAuditLogService;
     private final ApplicationEventPublisher applicationEventPublisher;
+    private SseNotificationService sseNotificationService;
 
     @Autowired
     public ShipperCodBatchService(ShipperCodBatchRepository shipperCodBatchRepository,
@@ -63,6 +66,11 @@ public class ShipperCodBatchService {
         this.codSettlementPort = codSettlementPort;
         this.adminAuditLogService = adminAuditLogService;
         this.applicationEventPublisher = applicationEventPublisher;
+    }
+
+    @Autowired(required = false)
+    public void setSseNotificationService(SseNotificationService sseNotificationService) {
+        this.sseNotificationService = sseNotificationService;
     }
 
     @Transactional(readOnly = true)
@@ -234,8 +242,9 @@ public class ShipperCodBatchService {
         List<Shipment> batchShipments = shipmentRepository.findByCodBatchId(batchId);
         if (codSettlementPort != null) {
             for (Shipment shipment : batchShipments) {
-                if (shipment.getOrder() != null && shipment.getOrder().getId() != null) {
-                    codSettlementPort.settleCodOrder(shipment.getOrder().getId(), actorUsername);
+                Order order = shipment.getOrder();
+                if (order != null && order.getId() != null && order.getPaymentStatus() == PaymentStatus.PENDING) {
+                    codSettlementPort.settleCodOrder(order.getId(), actorUsername);
                 }
             }
         }
@@ -261,6 +270,8 @@ public class ShipperCodBatchService {
                     null
             );
         }
+        broadcastCodBatchUpdateToShipper(saved,
+                "Bảng kê COD " + (saved.getBatchCode() != null ? saved.getBatchCode() : "#" + saved.getId()) + " đã được xác nhận quyết toán.");
         return saved;
     }
 
@@ -295,7 +306,22 @@ public class ShipperCodBatchService {
                 "Lý do: " + normalizedReason,
                 "WARN"
         );
+        broadcastCodBatchUpdateToShipper(saved,
+                "Bảng kê COD " + (saved.getBatchCode() != null ? saved.getBatchCode() : "#" + saved.getId()) + " cần đối soát lại: " + normalizedReason);
         return saved;
+    }
+
+    private void broadcastCodBatchUpdateToShipper(ShipperCodBatch batch, String message) {
+        if (sseNotificationService == null || batch == null || batch.getShipper() == null || batch.getShipper().getId() == null) {
+            return;
+        }
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("batchId", batch.getId());
+        payload.put("batchCode", batch.getBatchCode() != null ? batch.getBatchCode() : "");
+        payload.put("status", batch.getStatus() != null ? batch.getStatus().name() : "");
+        payload.put("message", message != null ? message : "");
+        payload.put("timestamp", System.currentTimeMillis());
+        sseNotificationService.broadcastToShipper(batch.getShipper().getId(), "cod_batch_updated", payload);
     }
 
     private void publishAdminAlert(String title, String message, String severity) {

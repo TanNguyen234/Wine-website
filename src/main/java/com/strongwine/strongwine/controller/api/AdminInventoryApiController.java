@@ -48,7 +48,9 @@ public class AdminInventoryApiController {
     public ResponseEntity<AdminInventoryDto> importStock(@PathVariable Long wineId,
                                                           @Valid @RequestBody StockOperationRequest request,
                                                           Authentication authentication) {
-        if (request.getWineId() != null && !wineId.equals(request.getWineId())) {
+        if (request.getWineId() == null) {
+            request.setWineId(wineId);
+        } else if (!wineId.equals(request.getWineId())) {
             throw new IllegalArgumentException("wineId in path and body do not match");
         }
         String actor = extractUsername(authentication);
@@ -61,7 +63,9 @@ public class AdminInventoryApiController {
     public ResponseEntity<AdminInventoryDto> exportStock(@PathVariable Long wineId,
                                                           @Valid @RequestBody StockOperationRequest request,
                                                           Authentication authentication) {
-        if (request.getWineId() != null && !wineId.equals(request.getWineId())) {
+        if (request.getWineId() == null) {
+            request.setWineId(wineId);
+        } else if (!wineId.equals(request.getWineId())) {
             throw new IllegalArgumentException("wineId in path and body do not match");
         }
         String actor = extractUsername(authentication);

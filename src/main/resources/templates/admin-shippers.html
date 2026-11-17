@@ -32,17 +32,17 @@
             <section class="kpi-grid mb-4" th:if="${shipperStats != null}">
                 <article class="kpi-card">
                     <span class="kpi-label">Tổng shipper</span>
-                    <strong class="kpi-value admin-num" th:text="${shipperStats['totalShippers'] ?: 0}">0</strong>
+                    <strong class="kpi-value admin-num" th:text="${shipperStats['total'] ?: 0}">0</strong>
                     <span class="kpi-meta">Hồ sơ giao nhận đã đăng ký</span>
                 </article>
                 <article class="kpi-card">
                     <span class="kpi-label">Đang hoạt động</span>
-                    <strong class="kpi-value admin-num" th:text="${shipperStats['activeShippers'] ?: 0}">0</strong>
+                    <strong class="kpi-value admin-num" th:text="${shipperStats['active'] ?: 0}">0</strong>
                     <span class="kpi-meta">Trạng thái ACTIVE</span>
                 </article>
                 <article class="kpi-card">
                     <span class="kpi-label">Sẵn sàng nhận đơn</span>
-                    <strong class="kpi-value admin-num" th:text="${shipperStats['availableShippers'] ?: 0}">0</strong>
+                    <strong class="kpi-value admin-num" th:text="${shipperStats['available'] ?: 0}">0</strong>
                     <span class="kpi-meta">Đang bật chế độ trực tuyến</span>
                 </article>
             </section>

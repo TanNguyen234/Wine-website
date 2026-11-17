@@ -153,9 +153,13 @@ public class AdminShipmentController {
 
     @PostMapping("/{id}/assign")
     public String assignShipper(@PathVariable Long id,
-                                @RequestParam Long shipperId,
+                                @RequestParam(required = false) Long shipperId,
                                 Authentication authentication,
                                 RedirectAttributes redirectAttributes) {
+        if (shipperId == null) {
+            redirectAttributes.addFlashAttribute("error", "Vui lòng chọn shipper trước khi phân công");
+            return "redirect:/admin/shipments";
+        }
         try {
             shipmentService.assignShipperToShipment(
                     id,

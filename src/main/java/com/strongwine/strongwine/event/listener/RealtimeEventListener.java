@@ -37,12 +37,13 @@ public class RealtimeEventListener {
 
     @EventListener
     public void handleOrderStatusUpdated(OrderStatusUpdatedEvent event) {
-        Map<String, Object> payload = Map.of(
-                "orderId", event.getOrderId(),
-                "status", event.getStatus(),
-                "message", event.getMessage() != null ? event.getMessage() : "",
-                "timestamp", System.currentTimeMillis()
-        );
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("orderId", event.getOrderId());
+        payload.put("status", event.getStatus() != null ? event.getStatus() : "");
+        payload.put("title", "Đơn hàng #" + event.getOrderId() + " cập nhật");
+        payload.put("message", event.getMessage() != null ? event.getMessage() : "");
+        payload.put("linkUrl", "/admin/orders");
+        payload.put("timestamp", System.currentTimeMillis());
         sseService.broadcastToOrder(event.getOrderId(), "order_status_updated", payload);
         sseService.broadcastToAdmin("admin_order_notification", payload);
 
@@ -70,17 +71,35 @@ public class RealtimeEventListener {
 
     @EventListener
     public void handleShipmentLiveStatus(ShipmentLiveStatusEvent event) {
-        Map<String, Object> payload = Map.of(
-                "shipmentId", event.getShipmentId(),
-                "orderId", event.getOrderId(),
-                "status", event.getStatus(),
-                "shipperName", event.getShipperName() != null ? event.getShipperName() : "",
-                "shipperPhone", event.getShipperPhone() != null ? event.getShipperPhone() : "",
-                "vehiclePlate", event.getVehiclePlate() != null ? event.getVehiclePlate() : "",
-                "timestamp", System.currentTimeMillis()
-        );
+        String status = event.getStatus() != null ? event.getStatus() : "";
+        String shipperName = event.getShipperName() != null ? event.getShipperName() : "";
+        String adminTitle = "Vận đơn #" + event.getShipmentId()
+                + (event.getOrderId() != null ? " · Đơn #" + event.getOrderId() : "");
+        String adminMessage = (!shipperName.isBlank() ? shipperName + " · " : "") + "Trạng thái: " + status;
+
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("shipmentId", event.getShipmentId());
+        payload.put("orderId", event.getOrderId());
+        payload.put("status", status);
+        if (event.getShipperId() != null) {
+            payload.put("shipperId", event.getShipperId());
+        }
+        payload.put("shipperName", shipperName);
+        payload.put("shipperPhone", event.getShipperPhone() != null ? event.getShipperPhone() : "");
+        payload.put("vehiclePlate", event.getVehiclePlate() != null ? event.getVehiclePlate() : "");
+        payload.put("title", adminTitle);
+        payload.put("message", adminMessage);
+        payload.put("linkUrl", "/admin/shipments");
+        payload.put("timestamp", System.currentTimeMillis());
+
         sseService.broadcastToOrder(event.getOrderId(), "shipment_step_updated", payload);
         sseService.broadcastToAdmin("admin_shipment_notification", payload);
+        if (event.getShipperId() != null) {
+            String shipperEventName = "ASSIGNED".equalsIgnoreCase(status)
+                    ? "new_shipment_assigned"
+                    : "shipment_step_updated";
+            sseService.broadcastToShipper(event.getShipperId(), shipperEventName, payload);
+        }
 
         if (notificationService != null && orderRepository != null && event.getOrderId() != null
                 && isCustomerFacingShipmentMilestone(event.getStatus())) {
@@ -158,18 +177,21 @@ public class RealtimeEventListener {
         if (event == null || event.orderId() == null) {
             return;
         }
+        String refSuffix = event.paymentReference() != null && !event.paymentReference().isBlank()
+                ? " (Ref: " + event.paymentReference() + ")"
+                : "";
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("orderId", event.orderId());
         payload.put("paymentReference", event.paymentReference() != null ? event.paymentReference() : "");
+        payload.put("title", "Đơn hàng #" + event.orderId() + " đã thanh toán");
+        payload.put("message", "Xác nhận thanh toán đơn #" + event.orderId() + refSuffix);
+        payload.put("linkUrl", "/orders/" + event.orderId());
         payload.put("timestamp", System.currentTimeMillis());
 
         sseService.broadcastToOrder(event.orderId(), "order_paid", payload);
         sseService.broadcastToAdmin("admin_order_paid", payload);
 
         if (notificationService != null) {
-            String refSuffix = event.paymentReference() != null && !event.paymentReference().isBlank()
-                    ? " (Ref: " + event.paymentReference() + ")"
-                    : "";
             notificationService.createAdminNotification(
                     "Order #" + event.orderId() + " Paid",
                     "Payment confirmed for order #" + event.orderId() + refSuffix,

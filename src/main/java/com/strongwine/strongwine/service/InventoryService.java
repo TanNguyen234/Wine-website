@@ -441,14 +441,11 @@ public class InventoryService {
         inventory.setReservedQuantity(0);
         inventory.setReorderLevel(10);
         inventory.setUpdatedAt(LocalDateTime.now());
-        if (inventory.getVersion() == null) {
-            inventory.setVersion(0L);
-        }
         return saveInventory(inventory);
     }
 
     private Inventory saveInventory(Inventory inventory) {
-        if (inventory.getVersion() == null) {
+        if (inventory.getId() != null && inventory.getVersion() == null) {
             inventory.setVersion(0L);
         }
         return inventoryRepository.save(inventory);
@@ -461,6 +458,9 @@ public class InventoryService {
     }
 
     private Wine getActiveWine(Long wineId) {
+        if (wineId == null) {
+            throw new IllegalArgumentException("wineId is required");
+        }
         Wine wine = wineRepository.findById(wineId)
                 .orElseThrow(() -> new IllegalArgumentException("Wine not found with id: " + wineId));
         if (wine.isDeleted()) {
@@ -470,6 +470,9 @@ public class InventoryService {
     }
 
     private Warehouse getActiveWarehouse(Long warehouseId) {
+        if (warehouseId == null) {
+            throw new IllegalArgumentException("warehouseId is required");
+        }
         Warehouse warehouse = warehouseRepository.findById(warehouseId)
                 .orElseThrow(() -> new IllegalArgumentException("Warehouse not found with id: " + warehouseId));
         if (Boolean.FALSE.equals(warehouse.getActive())) {

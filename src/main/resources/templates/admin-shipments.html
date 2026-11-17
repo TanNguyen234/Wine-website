@@ -84,7 +84,7 @@
                                       th:action="@{/admin/shipments/{id}/assign(id=${s.id})}" method="post"
                                       class="d-flex gap-2 align-items-center">
                                     <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-                                    <select name="shipperId" class="form-select form-select-sm" style="max-width: 170px;" aria-label="Chọn shipper">
+                                    <select name="shipperId" class="form-select form-select-sm" style="max-width: 170px;" aria-label="Chọn shipper" required>
                                         <option value="">-- Chọn shipper --</option>
                                         <option th:each="sp : ${shippers}"
                                                 th:value="${sp.id}"

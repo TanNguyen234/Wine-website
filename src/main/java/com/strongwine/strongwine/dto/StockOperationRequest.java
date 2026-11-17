@@ -5,7 +5,6 @@ import jakarta.validation.constraints.Positive;
 
 public class StockOperationRequest {
 
-    @NotNull(message = "wineId is required")
     private Long wineId;
 
     @NotNull(message = "warehouseId is required")

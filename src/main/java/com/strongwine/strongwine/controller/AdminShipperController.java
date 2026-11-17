@@ -77,6 +77,16 @@ public class AdminShipperController {
         return "admin-shipper-form";
     }
 
+    public String createShipper(Long userId,
+                                String name,
+                                String phone,
+                                String vehicleType,
+                                ShipperStatus status,
+                                boolean isAvailable,
+                                RedirectAttributes redirectAttributes) {
+        return createShipper(userId, name, phone, vehicleType, status, isAvailable, null, redirectAttributes);
+    }
+
     @PostMapping("/create")
     public String createShipper(@RequestParam Long userId,
                                 @RequestParam String name,
@@ -84,9 +94,10 @@ public class AdminShipperController {
                                 @RequestParam(required = false) String vehicleType,
                                 @RequestParam(defaultValue = "ACTIVE") ShipperStatus status,
                                 @RequestParam(defaultValue = "false") boolean isAvailable,
+                                @RequestParam(required = false) Integer maxConcurrentShipments,
                                 RedirectAttributes redirectAttributes) {
         try {
-            shipperService.createShipper(userId, name, phone, vehicleType, status, isAvailable);
+            shipperService.createShipper(userId, name, phone, vehicleType, status, isAvailable, maxConcurrentShipments);
             redirectAttributes.addFlashAttribute("success", "Tạo shipper thành công");
             return "redirect:/admin/shippers";
         } catch (Exception ex) {
@@ -109,6 +120,17 @@ public class AdminShipperController {
         }
     }
 
+    public String updateShipper(Long id,
+                                Long userId,
+                                String name,
+                                String phone,
+                                String vehicleType,
+                                ShipperStatus status,
+                                boolean isAvailable,
+                                RedirectAttributes redirectAttributes) {
+        return updateShipper(id, userId, name, phone, vehicleType, status, isAvailable, null, redirectAttributes);
+    }
+
     @PostMapping("/edit/{id}")
     public String updateShipper(@PathVariable Long id,
                                 @RequestParam Long userId,
@@ -117,9 +139,10 @@ public class AdminShipperController {
                                 @RequestParam(required = false) String vehicleType,
                                 @RequestParam(defaultValue = "ACTIVE") ShipperStatus status,
                                 @RequestParam(defaultValue = "false") boolean isAvailable,
+                                @RequestParam(required = false) Integer maxConcurrentShipments,
                                 RedirectAttributes redirectAttributes) {
         try {
-            shipperService.updateShipper(id, userId, name, phone, vehicleType, status, isAvailable);
+            shipperService.updateShipper(id, userId, name, phone, vehicleType, status, isAvailable, maxConcurrentShipments);
             redirectAttributes.addFlashAttribute("success", "Cập nhật shipper thành công");
             return "redirect:/admin/shippers";
         } catch (Exception ex) {

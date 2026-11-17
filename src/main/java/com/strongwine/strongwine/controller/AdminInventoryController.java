@@ -50,7 +50,8 @@ public class AdminInventoryController {
 
         model.addAttribute("inventories", inventoryPage.getContent());
         model.addAttribute("inventoryTransactions", inventoryService.getRecentTransactions());
-        
+        model.addAttribute("defaultWarehouse", inventoryService.getDefaultWarehouse());
+
         model.addAttribute("currentPage", page);
         model.addAttribute("pageSize", size);
         model.addAttribute("sortBy", sortBy);
@@ -70,10 +71,13 @@ public class AdminInventoryController {
                               Authentication authentication,
                               RedirectAttributes redirectAttributes,
                               HttpServletRequest httpRequest) {
+        if (request.getWineId() == null) {
+            request.setWineId(wineId);
+        }
         if (bindingResult.hasErrors()) {
             String message = bindingResult.getFieldError() != null ? bindingResult.getFieldError().getDefaultMessage() : "Dữ liệu không hợp lệ";
             redirectAttributes.addFlashAttribute("error", message);
-            return "redirect:/admin";
+            return "redirect:/admin/inventory";
         }
         try {
             Long userId = extractUserId(authentication);
@@ -91,7 +95,7 @@ public class AdminInventoryController {
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Nhập kho thất bại: " + e.getMessage());
         }
-        return "redirect:/admin";
+        return "redirect:/admin/inventory";
     }
 
     @PostMapping("/export/{wineId}")
@@ -101,10 +105,13 @@ public class AdminInventoryController {
                               Authentication authentication,
                               RedirectAttributes redirectAttributes,
                               HttpServletRequest httpRequest) {
+        if (request.getWineId() == null) {
+            request.setWineId(wineId);
+        }
         if (bindingResult.hasErrors()) {
             String message = bindingResult.getFieldError() != null ? bindingResult.getFieldError().getDefaultMessage() : "Dữ liệu không hợp lệ";
             redirectAttributes.addFlashAttribute("error", message);
-            return "redirect:/admin";
+            return "redirect:/admin/inventory";
         }
         try {
             Long userId = extractUserId(authentication);
@@ -122,7 +129,7 @@ public class AdminInventoryController {
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Xuất kho thất bại: " + e.getMessage());
         }
-        return "redirect:/admin";
+        return "redirect:/admin/inventory";
     }
 
     private Long extractUserId(Authentication authentication) {

@@ -88,7 +88,13 @@ public class SseNotificationService {
         adminEmitters.add(emitter);
 
         emitter.onCompletion(() -> adminEmitters.remove(emitter));
-        emitter.onTimeout(() -> adminEmitters.remove(emitter));
+        emitter.onTimeout(() -> {
+            adminEmitters.remove(emitter);
+            try {
+                emitter.complete();
+            } catch (Exception ignored) {
+            }
+        });
         emitter.onError(e -> adminEmitters.remove(emitter));
 
         try {
@@ -200,7 +206,13 @@ public class SseNotificationService {
         });
 
         emitter.onCompletion(() -> removeFromRegistry(registry, targetId, emitter));
-        emitter.onTimeout(() -> removeFromRegistry(registry, targetId, emitter));
+        emitter.onTimeout(() -> {
+            removeFromRegistry(registry, targetId, emitter);
+            try {
+                emitter.complete();
+            } catch (Exception ignored) {
+            }
+        });
         emitter.onError(e -> removeFromRegistry(registry, targetId, emitter));
 
         try {

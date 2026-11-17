@@ -40,7 +40,7 @@ public class Shipper {
     private LocalDateTime locationUpdatedAt;
 
     @Column(name = "max_concurrent_shipments", nullable = false)
-    private Integer maxConcurrentShipments = 1;
+    private Integer maxConcurrentShipments = 5;
 
     @Column(name = "active_shipment_count", nullable = false)
     private Integer activeShipmentCount = 0;

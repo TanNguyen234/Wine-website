@@ -3,6 +3,7 @@ package com.strongwine.strongwine.service;
 import com.strongwine.strongwine.entity.Order;
 import com.strongwine.strongwine.entity.OrderStatus;
 import com.strongwine.strongwine.entity.OtpDeliveryStatus;
+import com.strongwine.strongwine.entity.Payment;
 import com.strongwine.strongwine.entity.PaymentMethod;
 import com.strongwine.strongwine.entity.PaymentStatus;
 import com.strongwine.strongwine.entity.Shipment;
@@ -11,6 +12,7 @@ import com.strongwine.strongwine.entity.Shipper;
 import com.strongwine.strongwine.entity.ShipperStatus;
 import com.strongwine.strongwine.entity.User;
 import com.strongwine.strongwine.entity.Warehouse;
+import com.strongwine.strongwine.event.OrderStatusUpdatedEvent;
 import com.strongwine.strongwine.event.ShipmentLiveStatusEvent;
 import com.strongwine.strongwine.exception.OtpDeliveryException;
 import com.strongwine.strongwine.repository.OrderRepository;
@@ -50,7 +52,7 @@ public class ShipmentService implements ShipmentOrderLifecyclePort {
     private static final SecureRandom OTP_RANDOM = new SecureRandom();
 
     private static final int AUTO_DISPATCH_BATCH_LIMIT = 200;
-    private static final int OTP_TTL_MINUTES = 10;
+    private static final int OTP_TTL_MINUTES = 1440;
     private static final int OTP_MAX_ATTEMPTS = 5;
     private static final int OTP_LOCK_MINUTES = 15;
     private static final int OTP_RESEND_COOLDOWN_SECONDS = 60;
@@ -76,6 +78,8 @@ public class ShipmentService implements ShipmentOrderLifecyclePort {
     private final AdminAuditLogService adminAuditLogService;
     private final CodSettlementPort codSettlementPort;
     private final ApplicationEventPublisher applicationEventPublisher;
+    private InventoryService inventoryService;
+    private com.strongwine.strongwine.service.port.VoucherPricingPort voucherPricingPort;
 
     public ShipmentService(ShipmentRepository shipmentRepository,
                            ShipperRepository shipperRepository,
@@ -120,6 +124,16 @@ public class ShipmentService implements ShipmentOrderLifecyclePort {
         this.adminAuditLogService = adminAuditLogService;
         this.codSettlementPort = codSettlementPort;
         this.applicationEventPublisher = applicationEventPublisher;
+    }
+
+    @Autowired(required = false)
+    public void setInventoryService(InventoryService inventoryService) {
+        this.inventoryService = inventoryService;
+    }
+
+    @Autowired(required = false)
+    public void setVoucherPricingPort(com.strongwine.strongwine.service.port.VoucherPricingPort voucherPricingPort) {
+        this.voucherPricingPort = voucherPricingPort;
     }
 
     public enum EnsureShipmentResult {
@@ -587,17 +601,23 @@ public class ShipmentService implements ShipmentOrderLifecyclePort {
         shipment.setShippingPhone(requireText(shippingPhone, "Vui lòng nhập số điện thoại người nhận"));
         shipment.setShippingAddress(requireText(shippingAddress, "Vui lòng nhập địa chỉ người nhận"));
 
+        LocalDateTime now = LocalDateTime.now();
+        boolean completedNow = false;
+        boolean failedNow = false;
         if (targetStatus != null && targetStatus != shipment.getStatus()) {
             if (targetStatus == ShipmentStatus.COMPLETED) {
                 applyStrictTransition(shipment, ShipmentStatus.COMPLETED, null);
                 applyAdminOverrideState(shipment, resolveAdminOverrideReason(failureNote));
+                populateCodCollectedAmountIfApplicable(shipment);
                 clearSensitiveOtpAfterCompletion(shipment);
                 shipmentOtpAuditService.log(shipment, "ADMIN_OVERRIDE_COMPLETED", "SUCCESS",
                         shipment.getAdminOverrideReason(), "source=admin-edit", actorUsername);
+                completedNow = true;
             } else {
                 applyStrictTransition(shipment, targetStatus, failureNote);
                 if (targetStatus == ShipmentStatus.FAILED) {
-                    invalidateOtp(shipment, LocalDateTime.now(), OtpDeliveryStatus.FAILED);
+                    invalidateOtp(shipment, now, OtpDeliveryStatus.FAILED);
+                    failedNow = true;
                 }
                 shipment.setAdminOverride(false);
                 shipment.setAdminOverrideReason(null);
@@ -607,8 +627,13 @@ public class ShipmentService implements ShipmentOrderLifecyclePort {
             shipment.setStatusReason(trimToNull(failureNote));
         }
 
-        shipment.setUpdatedAt(LocalDateTime.now());
+        shipment.setUpdatedAt(now);
         Shipment savedShipment = shipmentRepository.save(shipment);
+        if (completedNow) {
+            settleCodOrderAfterCompletion(savedShipment, actorUsername, now);
+        } else if (failedNow) {
+            releasePendingCodOrderOnTerminalFailure(savedShipment, actorUsername, failureNote, now);
+        }
         recordStatusTransition(savedShipment, previousStatus,
                 targetStatus == ShipmentStatus.FAILED ? trimToNull(failureNote) : savedShipment.getStatusReason(),
                 "source=admin-edit",
@@ -643,15 +668,19 @@ public class ShipmentService implements ShipmentOrderLifecyclePort {
 
         Long previousShipperId = shipment.getShipper() == null ? null : shipment.getShipper().getId();
         ShipmentStatus previousStatus = shipment.getStatus();
+        LocalDateTime now = LocalDateTime.now();
         applyStrictTransition(shipment, targetStatus, failureNote);
         if (targetStatus == ShipmentStatus.FAILED || targetStatus == ShipmentStatus.CANCELLED) {
-            invalidateOtp(shipment, LocalDateTime.now(),
+            invalidateOtp(shipment, now,
                     targetStatus == ShipmentStatus.FAILED ? OtpDeliveryStatus.FAILED : OtpDeliveryStatus.PENDING);
         }
         shipment.setAdminOverride(false);
         shipment.setAdminOverrideReason(null);
-        shipment.setUpdatedAt(LocalDateTime.now());
+        shipment.setUpdatedAt(now);
         Shipment savedShipment = shipmentRepository.save(shipment);
+        if (targetStatus == ShipmentStatus.FAILED) {
+            releasePendingCodOrderOnTerminalFailure(savedShipment, actorUsername, failureNote, now);
+        }
         recordStatusTransition(savedShipment, previousStatus,
             (targetStatus == ShipmentStatus.FAILED || targetStatus == ShipmentStatus.CANCELLED)
                     ? trimToNull(failureNote)
@@ -832,6 +861,13 @@ public class ShipmentService implements ShipmentOrderLifecyclePort {
         Long previousShipperId = shipment.getShipper() == null ? null : shipment.getShipper().getId();
         ShipmentStatus previousStatus = shipment.getStatus();
         applyStrictTransition(shipment, ShipmentStatus.DELIVERING, null);
+        LocalDateTime now = LocalDateTime.now();
+        if (!hasOtpSecret(shipment)) {
+            generateNewOtp(shipment, now);
+        } else if (shipment.getOtpExpiresAt() == null || !shipment.getOtpExpiresAt().isAfter(now.plusMinutes(30))) {
+            shipment.setOtpExpiresAt(now.plusHours(24));
+        }
+        shipment.setUpdatedAt(now);
         Shipment savedShipment = shipmentRepository.save(shipment);
         recordStatusTransition(savedShipment, previousStatus, null, "source=shipper-start", username);
         reconcileShipperAvailabilityAfterMutation(savedShipment, previousStatus, previousShipperId, true);
@@ -950,9 +986,11 @@ public class ShipmentService implements ShipmentOrderLifecyclePort {
         Shipment shipment = getShipmentForShipper(shipmentId, username);
         Long previousShipperId = shipment.getShipper() == null ? null : shipment.getShipper().getId();
         ShipmentStatus previousStatus = shipment.getStatus();
+        LocalDateTime now = LocalDateTime.now();
         applyStrictTransition(shipment, ShipmentStatus.FAILED, note);
-        invalidateOtp(shipment, LocalDateTime.now(), OtpDeliveryStatus.FAILED);
+        invalidateOtp(shipment, now, OtpDeliveryStatus.FAILED);
         Shipment savedShipment = shipmentRepository.save(shipment);
+        releasePendingCodOrderOnTerminalFailure(savedShipment, username, note, now);
         recordStatusTransition(savedShipment, previousStatus, trimToNull(note), "source=shipper-fail", username);
         reconcileShipperAvailabilityAfterMutation(savedShipment, previousStatus, previousShipperId, true);
         publishLiveStatusEvent(savedShipment);
@@ -1697,6 +1735,49 @@ public class ShipmentService implements ShipmentOrderLifecyclePort {
         orderRepository.save(order);
     }
 
+    private void releasePendingCodOrderOnTerminalFailure(Shipment savedShipment,
+                                                         String actorUsername,
+                                                         String failureReason,
+                                                         LocalDateTime now) {
+        if (savedShipment == null || savedShipment.getOrder() == null) {
+            return;
+        }
+        Order order = savedShipment.getOrder();
+        if (order.getPaymentMethod() != PaymentMethod.COD
+                || order.getStatus() != OrderStatus.PENDING
+                || order.getPaymentStatus() != PaymentStatus.PENDING) {
+            return;
+        }
+        order.setStatus(OrderStatus.CANCELLED);
+        order.setPaymentStatus(PaymentStatus.CANCELLED);
+        order.setUpdatedAt(now);
+        if (order.getPayments() != null) {
+            for (Payment payment : order.getPayments()) {
+                if (payment != null && payment.getStatus() == PaymentStatus.PENDING) {
+                    payment.setStatus(PaymentStatus.CANCELLED);
+                    payment.setUpdatedAt(now);
+                }
+            }
+        }
+        orderRepository.save(order);
+        if (inventoryService != null) {
+            inventoryService.releaseOrderReservation(order);
+        }
+        if (voucherPricingPort != null && order.getId() != null) {
+            voucherPricingPort.releaseForOrder(order.getId());
+        }
+        if (applicationEventPublisher != null && order.getId() != null) {
+            String trimmedReason = trimToNull(failureReason);
+            applicationEventPublisher.publishEvent(new OrderStatusUpdatedEvent(
+                    this,
+                    order.getId(),
+                    OrderStatus.CANCELLED.name(),
+                    "Đơn COD #" + order.getId() + " đã hủy và hoàn kho do giao hàng thất bại"
+                            + (trimmedReason != null ? " (" + trimmedReason + ")" : "")
+            ));
+        }
+    }
+
     private void publishLiveStatusEvent(Shipment shipment) {
         if (applicationEventPublisher == null || shipment == null || shipment.getId() == null) {
             return;
@@ -1704,11 +1785,12 @@ public class ShipmentService implements ShipmentOrderLifecyclePort {
         Long orderId = shipment.getOrder() == null ? null : shipment.getOrder().getId();
         String statusName = shipment.getStatus() == null ? null : shipment.getStatus().name();
         Shipper shipper = shipment.getShipper();
+        Long shipperId = shipper != null ? shipper.getId() : null;
         String shipperName = shipper != null ? shipper.getName() : null;
         String shipperPhone = shipper != null ? shipper.getPhone() : null;
         String vehiclePlate = shipper != null ? shipper.getVehicleType() : null;
         applicationEventPublisher.publishEvent(
-                new ShipmentLiveStatusEvent(this, shipment.getId(), orderId, statusName, shipperName, shipperPhone, vehiclePlate)
+                new ShipmentLiveStatusEvent(this, shipment.getId(), orderId, statusName, shipperId, shipperName, shipperPhone, vehiclePlate)
         );
     }
 

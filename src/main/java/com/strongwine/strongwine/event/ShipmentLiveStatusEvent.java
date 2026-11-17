@@ -6,16 +6,23 @@ public class ShipmentLiveStatusEvent extends ApplicationEvent {
     private final Long shipmentId;
     private final Long orderId;
     private final String status;
+    private final Long shipperId;
     private final String shipperName;
     private final String shipperPhone;
     private final String vehiclePlate;
 
     public ShipmentLiveStatusEvent(Object source, Long shipmentId, Long orderId, String status,
                                    String shipperName, String shipperPhone, String vehiclePlate) {
+        this(source, shipmentId, orderId, status, null, shipperName, shipperPhone, vehiclePlate);
+    }
+
+    public ShipmentLiveStatusEvent(Object source, Long shipmentId, Long orderId, String status,
+                                   Long shipperId, String shipperName, String shipperPhone, String vehiclePlate) {
         super(source);
         this.shipmentId = shipmentId;
         this.orderId = orderId;
         this.status = status;
+        this.shipperId = shipperId;
         this.shipperName = shipperName;
         this.shipperPhone = shipperPhone;
         this.vehiclePlate = vehiclePlate;
@@ -31,6 +38,10 @@ public class ShipmentLiveStatusEvent extends ApplicationEvent {
 
     public String getStatus() {
         return status;
+    }
+
+    public Long getShipperId() {
+        return shipperId;
     }
 
     public String getShipperName() {

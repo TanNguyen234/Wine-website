@@ -74,7 +74,14 @@ public class ShipperController {
             }
         } else {
             String username = authentication.getName();
-            shipments = shipmentService.getMyShipments(username);
+            try {
+                shipments = shipmentService.getMyShipments(username);
+            } catch (IllegalArgumentException ex) {
+                shipments = List.of();
+                if (!model.containsAttribute("error")) {
+                    model.addAttribute("error", "Tài khoản chưa được liên kết hồ sơ Shipper. Vui lòng liên hệ quản trị viên để kích hoạt hồ sơ giao nhận.");
+                }
+            }
             String shipperName = username;
             Long shipperId = null;
             if (shipperService != null) {

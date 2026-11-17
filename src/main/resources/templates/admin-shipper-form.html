@@ -69,6 +69,15 @@
                         </select>
                     </div>
 
+                    <div class="form-group">
+                        <label for="shipperMaxConcurrent" class="form-label">Số đơn giao đồng thời tối đa</label>
+                        <input type="number" id="shipperMaxConcurrent" name="maxConcurrentShipments" class="form-control"
+                               min="1" max="50"
+                               th:value="${sp != null and sp.maxConcurrentShipments != null ? sp.maxConcurrentShipments : 5}"
+                               required/>
+                        <div class="small text-secondary mt-1">Hạn mức vận đơn đang giao tối đa cùng lúc (mặc định: 5).</div>
+                    </div>
+
                     <div class="form-group d-flex align-items-end">
                         <label class="d-flex align-items-center gap-2 mb-2">
                             <input type="checkbox" name="isAvailable" value="true"
