@@ -302,11 +302,17 @@ public class ReturnRequestService {
     }
 
     private void restockOrderItems(Order order, String actor) {
-        if (order.getOrderItems() == null) {
+        if (order.getOrderItems() == null || order.getOrderItems().isEmpty()) {
+            return;
+        }
+        String note = "Hoàn kho trả hàng đơn #" + order.getId();
+        boolean hasDeletedWine = order.getOrderItems().stream()
+                .anyMatch(item -> item != null && item.getWine() != null && item.getWine().isDeleted());
+        if (hasDeletedWine) {
+            inventoryService.restockForOrderReturn(order, actor, note);
             return;
         }
         Long warehouseId = order.getAllocatedWarehouse() != null ? order.getAllocatedWarehouse().getId() : null;
-        String note = "Hoàn kho trả hàng đơn #" + order.getId();
         for (OrderItem item : order.getOrderItems()) {
             if (item == null || item.getWine() == null || item.getWine().getId() == null
                     || item.getQuantity() == null || item.getQuantity() <= 0) {

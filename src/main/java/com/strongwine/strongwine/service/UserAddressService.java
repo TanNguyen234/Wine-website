@@ -161,12 +161,15 @@ public class UserAddressService {
 
     private void applyAndValidateFields(UserAddress target, AddressInput input) {
         String recipientName = trimOrEmpty(input.recipientName());
-        String phone = trimOrEmpty(input.phone());
+        String phone = trimOrEmpty(input.phone()).replaceAll("[\\s.-]", "");
         String addressLine = trimOrEmpty(input.addressLine());
         String province = trimOrEmpty(input.province());
 
         if (recipientName.isEmpty() || phone.isEmpty() || addressLine.isEmpty() || province.isEmpty()) {
             throw new IllegalArgumentException("Vui lòng điền đầy đủ họ tên người nhận, số điện thoại, địa chỉ và tỉnh/thành phố");
+        }
+        if (!phone.matches("^(0|\\+84)[0-9]{9,10}$")) {
+            throw new IllegalArgumentException("Số điện thoại không hợp lệ");
         }
 
         target.setLabel(input.label() != null && !input.label().isBlank() ? input.label().trim() : "Nhà riêng");

@@ -76,6 +76,9 @@ public class CartController {
     private com.strongwine.strongwine.repository.WarehouseRepository warehouseRepository;
 
     @Autowired(required = false)
+    private com.strongwine.strongwine.repository.InventoryRepository inventoryRepository;
+
+    @Autowired(required = false)
     private com.strongwine.strongwine.service.UserAddressService userAddressService;
 
     private Long getUserId(Authentication authentication) {
@@ -109,26 +112,44 @@ public class CartController {
             return "redirect:/login";
         }
         
+        List<com.strongwine.strongwine.entity.UserAddress> savedAddresses =
+                userAddressService != null ? userAddressService.getAddressesForUser(userId) : List.of();
+        com.strongwine.strongwine.entity.UserAddress defaultAddress =
+                userAddressService != null ? userAddressService.getDefaultAddress(userId).orElse(null) : null;
+
         // Load default shipping profile saved by customer
         ShippingProfileData profile = userShippingProfileService.getProfile(userId);
         CheckoutForm checkoutForm = new CheckoutForm();
         String userEmail = userRepository.findById(userId).map(User::getEmail).orElse("");
-        checkoutForm.setEmail(profile.email() != null && !profile.email().isBlank() ? profile.email() : userEmail);
-        checkoutForm.setFullName(profile.fullName() != null ? profile.fullName() : "");
-        checkoutForm.setPhone(profile.phone() != null ? profile.phone() : "");
-        checkoutForm.setAddress(profile.address() != null ? profile.address() : "");
-        checkoutForm.setDeliveryLat(profile.deliveryLat());
-        checkoutForm.setDeliveryLng(profile.deliveryLng());
+        checkoutForm.setEmail(profile != null && profile.email() != null && !profile.email().isBlank() ? profile.email() : userEmail);
+
+        if (defaultAddress != null) {
+            String formattedAddress = userAddressService.formatFullAddress(defaultAddress);
+            checkoutForm.setFullName(defaultAddress.getRecipientName() != null ? defaultAddress.getRecipientName() : "");
+            checkoutForm.setPhone(defaultAddress.getPhone() != null ? defaultAddress.getPhone() : "");
+            checkoutForm.setAddress(formattedAddress != null ? formattedAddress : "");
+            checkoutForm.setDeliveryLat(defaultAddress.getLatitude() != null
+                    ? defaultAddress.getLatitude()
+                    : (profile != null ? profile.deliveryLat() : null));
+            checkoutForm.setDeliveryLng(defaultAddress.getLongitude() != null
+                    ? defaultAddress.getLongitude()
+                    : (profile != null ? profile.deliveryLng() : null));
+        } else if (profile != null) {
+            checkoutForm.setFullName(profile.fullName() != null ? profile.fullName() : "");
+            checkoutForm.setPhone(profile.phone() != null ? profile.phone() : "");
+            checkoutForm.setAddress(profile.address() != null ? profile.address() : "");
+            checkoutForm.setDeliveryLat(profile.deliveryLat());
+            checkoutForm.setDeliveryLng(profile.deliveryLng());
+        } else {
+            checkoutForm.setFullName("");
+            checkoutForm.setPhone("");
+            checkoutForm.setAddress("");
+        }
 
         model.addAttribute("checkoutForm", checkoutForm);
         model.addAttribute("paymentMethods", SUPPORTED_PAYMENT_METHODS);
-        if (userAddressService != null) {
-            model.addAttribute("savedAddresses", userAddressService.getAddressesForUser(userId));
-            model.addAttribute("defaultAddress", userAddressService.getDefaultAddress(userId).orElse(null));
-        } else {
-            model.addAttribute("savedAddresses", List.of());
-            model.addAttribute("defaultAddress", null);
-        }
+        model.addAttribute("savedAddresses", savedAddresses);
+        model.addAttribute("defaultAddress", defaultAddress);
 
         String checkoutToken = UUID.randomUUID().toString();
         session.setAttribute(CHECKOUT_TOKEN_SESSION_KEY, checkoutToken);
@@ -209,9 +230,11 @@ public class CartController {
             return badRequest("Vui lòng nhập số điện thoại");
         }
 
-        if (!checkoutRequest.getPhone().matches("^(0|\\+84)[0-9]{9,10}$")) {
+        String normalizedPhone = checkoutRequest.getPhone().trim().replaceAll("[\\s.-]", "");
+        if (!normalizedPhone.matches("^(0|\\+84)[0-9]{9,10}$")) {
             return badRequest("Số điện thoại không hợp lệ");
         }
+        checkoutRequest.setPhone(normalizedPhone);
 
         if (checkoutRequest.getEmail() == null || checkoutRequest.getEmail().trim().isEmpty()) {
             return badRequest("Vui lòng nhập email nhận OTP giao hàng");
@@ -285,7 +308,7 @@ public class CartController {
             if (useV3ServerPricing) {
                 java.math.BigDecimal subtotal = resolveServerSubtotal(cartDto);
                 com.strongwine.strongwine.entity.Warehouse allocatedWarehouse =
-                        resolveNearestWarehouse(deliveryLat, deliveryLng);
+                        resolveNearestWarehouse(deliveryLat, deliveryLng, cartDto);
                 java.math.BigDecimal baseShippingFee = calculateServerShippingFee(
                         allocatedWarehouse, deliveryLat, deliveryLng, subtotal);
                 java.math.BigDecimal discountAmount = java.math.BigDecimal.ZERO;
@@ -457,7 +480,7 @@ public class CartController {
             }
         }
 
-        com.strongwine.strongwine.entity.Warehouse warehouse = resolveNearestWarehouse(lat, lng);
+        com.strongwine.strongwine.entity.Warehouse warehouse = resolveNearestWarehouse(lat, lng, cartDto);
         java.math.BigDecimal baseShippingFee = calculateServerShippingFee(warehouse, lat, lng, subtotal);
         java.math.BigDecimal discountAmount = java.math.BigDecimal.ZERO;
         java.math.BigDecimal shippingDiscount = java.math.BigDecimal.ZERO;
@@ -519,7 +542,7 @@ public class CartController {
         return sum;
     }
 
-    private com.strongwine.strongwine.entity.Warehouse resolveNearestWarehouse(Double destLat, Double destLng) {
+    private com.strongwine.strongwine.entity.Warehouse resolveNearestWarehouse(Double destLat, Double destLng, CartDto cartDto) {
         if (warehouseRepository == null) {
             return null;
         }
@@ -527,22 +550,73 @@ public class CartController {
         if (active == null || active.isEmpty()) {
             return warehouseRepository.findFirstByIsDefaultTrueAndActiveTrue().orElse(null);
         }
+        List<com.strongwine.strongwine.entity.Warehouse> candidates = filterStockCapableWarehouses(active, cartDto);
         if (destLat == null || destLng == null || shippingFeeService == null) {
-            return active.stream()
+            return candidates.stream()
                     .filter(w -> Boolean.TRUE.equals(w.getIsDefault()))
                     .findFirst()
-                    .orElse(active.get(0));
+                    .orElse(candidates.get(0));
         }
         com.strongwine.strongwine.entity.Warehouse best = null;
         double bestDist = Double.MAX_VALUE;
-        for (com.strongwine.strongwine.entity.Warehouse w : active) {
+        for (com.strongwine.strongwine.entity.Warehouse w : candidates) {
             Double dist = shippingFeeService.calculateDistanceKm(w.getLatitude(), w.getLongitude(), destLat, destLng);
             if (dist != null && dist < bestDist) {
                 bestDist = dist;
                 best = w;
             }
         }
-        return best != null ? best : active.get(0);
+        return best != null ? best : candidates.get(0);
+    }
+
+    private List<com.strongwine.strongwine.entity.Warehouse> filterStockCapableWarehouses(
+            List<com.strongwine.strongwine.entity.Warehouse> activeWarehouses,
+            CartDto cartDto) {
+        if (inventoryRepository == null || cartDto == null || cartDto.getItems() == null || cartDto.getItems().isEmpty()) {
+            return activeWarehouses;
+        }
+        Map<Long, Integer> requiredByWine = new LinkedHashMap<>();
+        for (CartItemDto item : cartDto.getItems()) {
+            if (item != null && item.getWine() != null && item.getWine().getId() != null
+                    && item.getQuantity() != null && item.getQuantity() > 0) {
+                requiredByWine.merge(item.getWine().getId(), item.getQuantity(), Integer::sum);
+            }
+        }
+        if (requiredByWine.isEmpty()) {
+            return activeWarehouses;
+        }
+        List<com.strongwine.strongwine.entity.Inventory> inventories =
+                inventoryRepository.findAllActiveByWineIdIn(new ArrayList<>(requiredByWine.keySet()));
+        if (inventories == null || inventories.isEmpty()) {
+            return activeWarehouses;
+        }
+        Map<Long, Map<Long, Integer>> stockByWarehouse = new HashMap<>();
+        for (com.strongwine.strongwine.entity.Inventory inv : inventories) {
+            if (inv != null && inv.getWarehouse() != null && inv.getWarehouse().getId() != null
+                    && inv.getWine() != null && inv.getWine().getId() != null) {
+                stockByWarehouse
+                        .computeIfAbsent(inv.getWarehouse().getId(), ignored -> new HashMap<>())
+                        .merge(inv.getWine().getId(), inv.getAvailableQuantity(), Integer::sum);
+            }
+        }
+        List<com.strongwine.strongwine.entity.Warehouse> eligible = new ArrayList<>();
+        for (com.strongwine.strongwine.entity.Warehouse w : activeWarehouses) {
+            if (w.getId() == null) {
+                continue;
+            }
+            Map<Long, Integer> whStock = stockByWarehouse.getOrDefault(w.getId(), Collections.emptyMap());
+            boolean sufficient = true;
+            for (Map.Entry<Long, Integer> req : requiredByWine.entrySet()) {
+                if (whStock.getOrDefault(req.getKey(), 0) < req.getValue()) {
+                    sufficient = false;
+                    break;
+                }
+            }
+            if (sufficient) {
+                eligible.add(w);
+            }
+        }
+        return eligible.isEmpty() ? activeWarehouses : eligible;
     }
 
     private java.math.BigDecimal calculateServerShippingFee(

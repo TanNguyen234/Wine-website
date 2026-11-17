@@ -123,6 +123,41 @@ public class VoucherService implements VoucherPricingPort {
         voucherUsageRepository.save(usage);
     }
 
+    @Override
+    @Transactional
+    public void releaseForOrder(Long orderId) {
+        if (orderId == null) {
+            return;
+        }
+        List<VoucherUsage> usages = voucherUsageRepository.findByOrderId(orderId);
+        if (usages == null || usages.isEmpty()) {
+            return;
+        }
+        for (VoucherUsage usage : usages) {
+            if (usage == null) {
+                continue;
+            }
+            Voucher usageVoucher = usage.getVoucher();
+            if (usageVoucher != null) {
+                Voucher locked = null;
+                if (usageVoucher.getCode() != null && !usageVoucher.getCode().isBlank()) {
+                    locked = voucherRepository.findByCodeIgnoreCaseWithLock(normalizeCode(usageVoucher.getCode()))
+                            .orElse(null);
+                }
+                if (locked == null && usageVoucher.getId() != null) {
+                    locked = voucherRepository.findById(usageVoucher.getId()).orElse(usageVoucher);
+                }
+                if (locked == null) {
+                    locked = usageVoucher;
+                }
+                int currentUsed = locked.getUsedCount() != null ? locked.getUsedCount() : 0;
+                locked.setUsedCount(Math.max(0, currentUsed - 1));
+                voucherRepository.save(locked);
+            }
+            voucherUsageRepository.delete(usage);
+        }
+    }
+
     @Transactional(readOnly = true)
     public List<Voucher> listAllVouchers() {
         return voucherRepository.findAllByOrderByCreatedAtDesc();

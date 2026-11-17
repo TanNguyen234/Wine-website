@@ -69,7 +69,7 @@ public class VoucherAdminController {
                               @RequestParam(required = false) Integer usageLimit,
                               @RequestParam(required = false) String startsAt,
                               @RequestParam(required = false) String expiresAt,
-                              @RequestParam(required = false) Boolean active,
+                              @RequestParam(defaultValue = "false") boolean active,
                               Authentication authentication,
                               HttpServletRequest request,
                               RedirectAttributes redirectAttributes) {

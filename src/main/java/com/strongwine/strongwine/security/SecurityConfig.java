@@ -76,6 +76,8 @@ public class SecurityConfig {
                 .requestMatchers("/api/live/orders/**").authenticated()
                 // Inventory mutations are restricted to administrators
                 .requestMatchers("/inventory/**", "/api/inventory/**").hasRole("ADMIN")
+                // Checkout requires authentication before generic /cart/** permitAll
+                .requestMatchers("/cart/checkout", "/cart/checkout/**").authenticated()
                 // Public pages & static/PWA assets
                 .requestMatchers(
                     "/", "/home", "/wines", "/wines/**", "/cart/**",
@@ -84,11 +86,13 @@ public class SecurityConfig {
                     "/manifest.webmanifest", "/sw-shipper.js", "/favicon.svg", "/favicon.ico",
                     "/payment/webhook", "/api/payments/vnpay/**"
                 ).permitAll()
-                // API Auth & public assistant endpoint
+                // API Auth, public assistant, guest voucher preview, and public review read endpoints
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/assistant/**").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/vouchers/validate").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/reviews/**").permitAll()
                 // User pages (authenticated users)
-                .requestMatchers("/order-confirmation", "/orders/**", "/reviews/create", "/profile", "/profile/**").authenticated()
+                .requestMatchers("/order-confirmation", "/orders/**", "/reviews/create", "/profile", "/profile/**", "/wishlist").authenticated()
                 // Authenticated user APIs
                 .requestMatchers("/api/notifications/**", "/api/wishlist/**", "/api/profile/**", "/api/vouchers/**").authenticated()
                 // REST API endpoints

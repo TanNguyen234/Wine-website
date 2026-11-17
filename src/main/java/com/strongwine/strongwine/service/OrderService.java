@@ -25,6 +25,7 @@ import com.strongwine.strongwine.repository.UserRepository;
 import com.strongwine.strongwine.repository.WineRepository;
 import com.strongwine.strongwine.service.port.CodSettlementPort;
 import com.strongwine.strongwine.service.port.ShipmentOrderLifecyclePort;
+import com.strongwine.strongwine.service.port.VoucherPricingPort;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -89,6 +90,9 @@ public class OrderService implements CodSettlementPort {
     @Lazy
     @Autowired(required = false)
     private ShipmentOrderLifecyclePort shipmentOrderLifecyclePort;
+
+    @Autowired(required = false)
+    private VoucherPricingPort voucherPricingPort;
 
 
     /**
@@ -297,6 +301,9 @@ public class OrderService implements CodSettlementPort {
         }
 
         inventoryService.releaseOrderReservation(order);
+        if (voucherPricingPort != null) {
+            voucherPricingPort.releaseForOrder(id);
+        }
         orderRepository.delete(order);
         return OrderDeletionResult.DELETED;
     }
@@ -410,11 +417,30 @@ public class OrderService implements CodSettlementPort {
         String effectiveReason = (reason == null || reason.isBlank()) ? "ORDER_CANCELLED" : reason.trim();
         Map<String, Object> beforeState = statusSnapshot(order);
 
+        LocalDateTime now = LocalDateTime.now();
         order.setStatus(OrderStatus.CANCELLED);
         order.setPaymentStatus(PaymentStatus.CANCELLED);
-        order.setUpdatedAt(LocalDateTime.now());
+        order.setUpdatedAt(now);
         orderRepository.save(order);
+
+        if (paymentRepository != null) {
+            List<Payment> payments = paymentRepository.findByOrderIdForUpdate(orderId);
+            if (payments != null) {
+                for (Payment payment : payments) {
+                    if (payment != null && payment.getStatus() == PaymentStatus.PENDING) {
+                        payment.setStatus(PaymentStatus.CANCELLED);
+                        payment.setUpdatedAt(now);
+                        paymentRepository.save(payment);
+                    }
+                }
+            }
+        }
+
         inventoryService.releaseOrderReservation(order);
+
+        if (voucherPricingPort != null) {
+            voucherPricingPort.releaseForOrder(orderId);
+        }
 
         if (shipmentOrderLifecyclePort != null) {
             shipmentOrderLifecyclePort.cancelShipmentForOrder(orderId, actor, effectiveReason);

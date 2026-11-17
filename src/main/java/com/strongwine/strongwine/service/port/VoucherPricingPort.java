@@ -10,4 +10,7 @@ public interface VoucherPricingPort {
     VoucherValidationResult validateAndQuote(String code, Long userId, BigDecimal subtotal, BigDecimal shippingFee);
 
     void redeemForOrder(String code, User user, Order order);
+
+    default void releaseForOrder(Long orderId) {
+    }
 }

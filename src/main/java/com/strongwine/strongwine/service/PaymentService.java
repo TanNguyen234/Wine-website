@@ -737,7 +737,7 @@ public class PaymentService {
                 paymentId,
                 "VNPAY_EXPIRED",
                 "VNPAY_EXPIRE",
-                "Không nhận được kết quả từ VNPay trong thời gian chờ");
+                "VNPAY_PENDING_TIMEOUT");
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -746,7 +746,7 @@ public class PaymentService {
                 paymentId,
                 "STRIPE_EXPIRED",
                 "STRIPE_EXPIRE",
-                "Phiên thanh toán Stripe đã quá hạn chờ xác nhận");
+                "STRIPE_PENDING_TIMEOUT");
     }
 
     private boolean expirePaymentIfPending(Long paymentId,

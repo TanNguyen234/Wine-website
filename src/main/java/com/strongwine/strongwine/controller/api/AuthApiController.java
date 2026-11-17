@@ -30,6 +30,9 @@ public class AuthApiController {
             return ResponseEntity.badRequest().body(Map.of("error", "Thông tin đăng nhập không hợp lệ"));
         }
         String username = loginRequest.get("username");
+        if (username == null || username.isBlank()) {
+            username = loginRequest.get("email");
+        }
         String password = loginRequest.get("password");
         if (username == null || username.isBlank() || password == null || password.isBlank()) {
             return ResponseEntity.badRequest().body(Map.of("error", "Vui lòng nhập tên đăng nhập và mật khẩu"));

@@ -20,9 +20,9 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -92,31 +92,37 @@ public class OrderController {
                 && currentUser.getId() != null
                 && currentUser.getId().equals(order.getUser().getId());
 
-        model.addAttribute("isAdmin", admin);
+        model.addAttribute("isAdmin", admin && !isOwner);
         model.addAttribute("shipment", shipment);
         model.addAttribute("order", order);
-        if (!admin && isOwner && shipment != null && shipmentOrderLifecyclePort != null) {
+        if (isOwner && shipment != null && shipmentOrderLifecyclePort != null) {
             shipmentOrderLifecyclePort.decryptOtpForOrderView(shipment)
                     .ifPresent(otp -> model.addAttribute("decryptedOtp", otp));
         }
         return "order-detail";
     }
-    
+
+    @GetMapping("/wishlist")
+    public String redirectWishlist() {
+        return "redirect:/profile#wishlist";
+    }
+
     /**
      * Order confirmation page
      */
     @GetMapping("/order-confirmation")
-    public String orderConfirmation(@ModelAttribute("orderId") Long orderId,
-                                   @ModelAttribute("fullName") String fullName,
-                                   @ModelAttribute("phone") String phone,
-                                   @ModelAttribute("address") String address,
-                                   Authentication authentication,
-                                   Model model) {
+    public String orderConfirmation(@RequestParam(value = "orderId", required = false) Long orderIdParam,
+                                    @RequestParam(value = "fullName", required = false) String fullNameParam,
+                                    @RequestParam(value = "phone", required = false) String phoneParam,
+                                    @RequestParam(value = "address", required = false) String addressParam,
+                                    Authentication authentication,
+                                    Model model) {
         User currentUser = requireCurrentUser(authentication);
         if (currentUser == null) {
             return "redirect:/login";
         }
 
+        Long orderId = resolveFlashLong(model, "orderId", orderIdParam);
         if (orderId == null) {
             return "redirect:/orders";
         }
@@ -129,12 +135,15 @@ public class OrderController {
         }
 
         Order order = orderOpt.get();
+        String fullName = resolveFlashString(model, "fullName", fullNameParam);
         if (fullName == null || fullName.isBlank()) {
             fullName = order.getShippingFullName();
         }
+        String phone = resolveFlashString(model, "phone", phoneParam);
         if (phone == null || phone.isBlank()) {
             phone = order.getShippingPhone();
         }
+        String address = resolveFlashString(model, "address", addressParam);
         if (address == null || address.isBlank()) {
             address = order.getShippingAddress();
         }
@@ -147,6 +156,32 @@ public class OrderController {
         model.addAttribute("address", address);
         
         return "order-confirmation";
+    }
+
+    private Long resolveFlashLong(Model model, String key, Long fallback) {
+        if (model != null) {
+            Object raw = model.asMap().get(key);
+            if (raw instanceof Number number) {
+                return number.longValue();
+            }
+            if (raw instanceof String str && !str.isBlank()) {
+                try {
+                    return Long.parseLong(str.trim());
+                } catch (NumberFormatException ignored) {
+                }
+            }
+        }
+        return fallback;
+    }
+
+    private String resolveFlashString(Model model, String key, String fallback) {
+        if (model != null) {
+            Object raw = model.asMap().get(key);
+            if (raw instanceof String str && !str.isBlank()) {
+                return str;
+            }
+        }
+        return fallback;
     }
 
     @PostMapping("/orders/{id}/pay")

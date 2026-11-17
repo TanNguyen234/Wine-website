@@ -1,6 +1,8 @@
 package com.strongwine.strongwine.controller;
 
 import com.strongwine.strongwine.entity.Order;
+import com.strongwine.strongwine.entity.OrderStatus;
+import com.strongwine.strongwine.entity.PaymentStatus;
 import com.strongwine.strongwine.entity.User;
 import com.strongwine.strongwine.exception.DeliveryAddressNotSupportedException;
 import com.strongwine.strongwine.service.OrderService;
@@ -43,6 +45,11 @@ public class ProfileController {
         this.geoValidationService = geoValidationService;
     }
 
+    @GetMapping("/wishlist")
+    public String redirectWishlist() {
+        return "redirect:/profile#wishlist";
+    }
+
     @GetMapping
     public String showProfile(Authentication authentication, Model model) {
         User currentUser = requireCurrentUser(authentication);
@@ -52,6 +59,7 @@ public class ProfileController {
 
         List<Order> orders = orderService.getOrdersByUserId(currentUser.getId());
         BigDecimal totalSpent = orders.stream()
+                .filter(o -> o.getStatus() == OrderStatus.PAID && o.getPaymentStatus() == PaymentStatus.SUCCESS)
                 .filter(o -> o.getTotalPrice() != null)
                 .map(Order::getTotalPrice)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
