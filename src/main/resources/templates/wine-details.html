@@ -31,13 +31,13 @@
                         <div class="wine-carousel-track">
                             <div class="wine-carousel-slide active" style="display:grid;place-items:center;padding:24px;">
                                 <span class="slide-badge" th:text="${@enumDisplayService.wineType(wine.type)}">Vang đỏ</span>
-                                <img th:if="${wine.imageUrl != null and !#strings.isEmpty(wine.imageUrl)}"
+                                <img th:if="${wine.imageUrl != null and !#strings.isEmpty(#strings.trim(wine.imageUrl))}"
                                      th:src="${wine.imageUrl}"
                                      th:alt="${wine.name}"
                                      data-bottle-fallback="detailBottleFallback"
-                                     style="max-height:420px;object-fit:contain;">
+                                     style="height:380px;max-height:420px;width:auto;object-fit:contain;">
                                 <div id="detailBottleFallback"
-                                     th:classappend="${wine.imageUrl != null and !#strings.isEmpty(wine.imageUrl)} ? ' d-none' : ''">
+                                     th:classappend="${wine.imageUrl != null and !#strings.isEmpty(#strings.trim(wine.imageUrl))} ? ' d-none' : ''">
                                     <div th:replace="~{fragments/store-shell :: bottleSvg('wine-svg')}"></div>
                                 </div>
                             </div>

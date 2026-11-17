@@ -115,6 +115,10 @@
       <th:block th:replace="~{fragments/icons :: icon('search')}"/>
       <span>Nhật ký Audit</span>
     </a>
+    <a th:href="@{/admin/profile}" class="admin-nav-link" th:classappend="${activeMenu == 'profile'} ? ' active' : ''">
+      <th:block th:replace="~{fragments/icons :: icon('shield')}"/>
+      <span>Hồ sơ quản trị</span>
+    </a>
   </nav>
 
   <div class="admin-sidebar-footer">
@@ -164,13 +168,16 @@
       </button>
 
       <div id="adminNotifBellMenu" popover="auto" class="sw-notif-popover">
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
           <strong>Thông báo hệ thống</strong>
-          <a th:href="@{/admin/audit-logs}" class="small" style="color:var(--accent-gold-ink);">Nhật ký Audit</a>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <button type="button" id="adminMarkAllReadBtn" class="btn btn-secondary btn-sm">Đánh dấu đã đọc</button>
+            <a th:href="@{/admin/audit-logs}" class="small" style="color:var(--accent-gold-ink);">Nhật ký Audit</a>
+          </div>
         </div>
-        <div id="adminNotifList" class="small text-secondary">
-          <p style="margin:0;">Cảnh báo SSE và thông báo mới sẽ hiển thị tại đây.</p>
-        </div>
+        <ul id="adminNotifList" class="small text-secondary">
+          <li data-empty-placeholder="true">Cảnh báo SSE và thông báo mới sẽ hiển thị tại đây.</li>
+        </ul>
       </div>
     </div>
 

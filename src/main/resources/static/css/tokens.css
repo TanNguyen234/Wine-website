@@ -43,6 +43,11 @@
         color: inherit;
         text-decoration: none;
     }
+
+    option {
+        background-color: var(--surface-elevated);
+        color: var(--text-primary);
+    }
 }
 
 @layer tokens {
@@ -85,6 +90,15 @@
         --container-max: 1240px;
         --header-height: 74px;
         --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+        --dur-fast: 150ms;
+        --dur-mid: 220ms;
+        --ease-out: var(--ease-out-expo);
+
+        /* Z-Index Scale */
+        --z-sticky: 40;
+        --z-drawer: 70;
+        --z-modal: 80;
+        --z-toast: 90;
 
         /* Default Theme: Cool Obsidian & Champagne Stone Atelier ([data-theme="cellar"]) */
         --surface-canvas: #0c0d10;
@@ -106,32 +120,40 @@
         --border-hairline: rgba(244, 243, 239, 0.08);
         --border-strong: rgba(244, 243, 239, 0.16);
 
+        --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.18);
         --shadow-card: 0 12px 32px rgba(0, 0, 0, 0.34);
         --shadow-elevated: 0 22px 54px rgba(0, 0, 0, 0.52);
+        --shadow-lg: var(--shadow-elevated);
 
         /* Semantic Status Tones (WCAG AA >= 4.5:1 on Cellar surfaces) */
         --status-ok-bg: rgba(34, 139, 94, 0.22);
         --status-ok-ink: #7ce2b3;
+        --status-ok-text: var(--status-ok-ink);
         --status-ok-border: rgba(124, 226, 179, 0.36);
 
         --status-warn-bg: rgba(201, 138, 36, 0.22);
         --status-warn-ink: #f6c972;
+        --status-warn-text: var(--status-warn-ink);
         --status-warn-border: rgba(246, 201, 114, 0.36);
 
         --status-danger-bg: rgba(196, 52, 59, 0.24);
         --status-danger-ink: #fca5a5;
+        --status-danger-text: var(--status-danger-ink);
         --status-danger-border: rgba(252, 165, 165, 0.38);
 
         --status-info-bg: rgba(59, 130, 246, 0.22);
         --status-info-ink: #93c5fd;
+        --status-info-text: var(--status-info-ink);
         --status-info-border: rgba(147, 197, 253, 0.36);
 
         --status-wine-bg: rgba(111, 29, 43, 0.28);
         --status-wine-ink: #ecc8ce;
+        --status-wine-text: var(--status-wine-ink);
         --status-wine-border: rgba(181, 166, 142, 0.28);
 
         --status-neutral-bg: rgba(244, 243, 239, 0.08);
         --status-neutral-ink: #cbc9c3;
+        --status-neutral-text: var(--status-neutral-ink);
         --status-neutral-border: rgba(244, 243, 239, 0.15);
 
         /* Legacy Variable Aliases (Smooth V2 -> V3 Transition) */
@@ -198,26 +220,32 @@
 
         --status-ok-bg: rgba(34, 139, 94, 0.22);
         --status-ok-ink: #7ce2b3;
+        --status-ok-text: var(--status-ok-ink);
         --status-ok-border: rgba(124, 226, 179, 0.36);
 
         --status-warn-bg: rgba(201, 138, 36, 0.22);
         --status-warn-ink: #f6c972;
+        --status-warn-text: var(--status-warn-ink);
         --status-warn-border: rgba(246, 201, 114, 0.36);
 
         --status-danger-bg: rgba(196, 52, 59, 0.24);
         --status-danger-ink: #fca5a5;
+        --status-danger-text: var(--status-danger-ink);
         --status-danger-border: rgba(252, 165, 165, 0.38);
 
         --status-info-bg: rgba(59, 130, 246, 0.22);
         --status-info-ink: #93c5fd;
+        --status-info-text: var(--status-info-ink);
         --status-info-border: rgba(147, 197, 253, 0.36);
 
         --status-wine-bg: rgba(111, 29, 43, 0.28);
         --status-wine-ink: #ecc8ce;
+        --status-wine-text: var(--status-wine-ink);
         --status-wine-border: rgba(181, 166, 142, 0.28);
 
         --status-neutral-bg: rgba(244, 243, 239, 0.08);
         --status-neutral-ink: #cbc9c3;
+        --status-neutral-text: var(--status-neutral-ink);
         --status-neutral-border: rgba(244, 243, 239, 0.15);
     }
 
@@ -247,26 +275,32 @@
 
         --status-ok-bg: #e3f2ea;
         --status-ok-ink: #1e5b41;
+        --status-ok-text: var(--status-ok-ink);
         --status-ok-border: #b4dbc6;
 
         --status-warn-bg: #fcf0d8;
         --status-warn-ink: #7a4b10;
+        --status-warn-text: var(--status-warn-ink);
         --status-warn-border: #e6c88e;
 
         --status-danger-bg: #fce8e8;
         --status-danger-ink: #8e2329;
+        --status-danger-text: var(--status-danger-ink);
         --status-danger-border: #ecc0c2;
 
         --status-info-bg: #e6effc;
         --status-info-ink: #1c4c85;
+        --status-info-text: var(--status-info-ink);
         --status-info-border: #bad2f4;
 
         --status-wine-bg: #f6eaec;
         --status-wine-ink: #6e1f2a;
+        --status-wine-text: var(--status-wine-ink);
         --status-wine-border: #dec1c5;
 
         --status-neutral-bg: #efede8;
         --status-neutral-ink: #52504c;
+        --status-neutral-text: var(--status-neutral-ink);
         --status-neutral-border: #dad6ce;
     }
 }

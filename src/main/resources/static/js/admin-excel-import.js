@@ -130,8 +130,8 @@
                 notify("Định dạng không hợp lệ", "Vui lòng chọn tệp Excel đúng định dạng .xlsx.", "bad");
                 return;
             }
-            if (file.size > 10 * 1024 * 1024) {
-                notify("Tệp vượt quá dung lượng", "Dung lượng tệp tối đa là 10MB.", "bad");
+            if (file.size > 5 * 1024 * 1024) {
+                notify("Tệp vượt quá dung lượng", "Dung lượng tệp tối đa là 5MB.", "bad");
                 return;
             }
             selectedFile = file;
@@ -268,7 +268,7 @@
                             tdField.setAttribute("data-label", "Trường lỗi");
                             var badge = document.createElement("span");
                             badge.className = "status bad";
-                            badge.textContent = err.column || "Dữ liệu";
+                            badge.textContent = err.fieldName || err.column || "Dữ liệu";
                             tdField.appendChild(badge);
 
                             var tdVal = document.createElement("td");
@@ -342,15 +342,19 @@
                     throw new Error((data && data.message) ? data.message : ("HTTP " + response.status));
                 }
 
+                var insertedCount = data.insertCount ?? data.insertedCount ?? 0;
+                var updatedCount = data.updateCount ?? data.updatedCount ?? 0;
+                var skippedCount = data.errorRowsCount ?? data.skippedCount ?? 0;
+                var processedCount = data.validRowsCount ?? data.inventoryProcessedCount ?? 0;
                 var lines = [
                     "Tổng dòng đã đọc: " + (data.totalRows != null ? data.totalRows : 0),
-                    "Sản phẩm tạo mới: " + (data.insertedCount != null ? data.insertedCount : 0),
-                    "Sản phẩm cập nhật: " + (data.updatedCount != null ? data.updatedCount : 0),
-                    "Dòng bỏ qua / lỗi: " + (data.skippedCount != null ? data.skippedCount : 0),
-                    "Tồn kho đã xử lý: " + (data.inventoryProcessedCount != null ? data.inventoryProcessedCount : 0)
+                    "Sản phẩm tạo mới: " + insertedCount,
+                    "Sản phẩm cập nhật: " + updatedCount,
+                    "Dòng bỏ qua / lỗi: " + skippedCount,
+                    "Tồn kho đã xử lý: " + processedCount
                 ];
                 renderImportResult(resultPanel, resultTitle, resultBody, true, "Nhập dữ liệu rượu thành công", lines);
-                notify("Nhập Excel thành công", "Đã tạo mới " + (data.insertedCount || 0) + " và cập nhật " + (data.updatedCount || 0) + " sản phẩm.", "good");
+                notify("Nhập Excel thành công", "Đã tạo mới " + insertedCount + " và cập nhật " + updatedCount + " sản phẩm.", "good");
             } catch (err) {
                 renderImportResult(resultPanel, resultTitle, resultBody, false, "Nhập dữ liệu thất bại", [
                     err.message || "Không thể ghi dữ liệu vào hệ thống."

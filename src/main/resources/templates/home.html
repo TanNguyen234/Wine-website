@@ -35,12 +35,12 @@
             <div class="hero-visual">
                 <div th:if="${featuredWines != null and !featuredWines.isEmpty()}">
                     <th:block th:with="heroWine=${featuredWines[0]}">
-                        <img th:if="${heroWine.imageUrl != null and !#strings.isEmpty(heroWine.imageUrl)}"
+                        <img th:if="${heroWine.imageUrl != null and !#strings.isEmpty(#strings.trim(heroWine.imageUrl))}"
                              th:src="${heroWine.imageUrl}"
                              th:alt="${heroWine.name}"
                              style="height:400px;max-width:160px;aspect-ratio:150/400;width:auto;margin:0 auto;object-fit:contain;filter:drop-shadow(0 28px 34px rgba(0,0,0,.42));"
                              onerror="this.classList.add('d-none');this.nextElementSibling.classList.remove('d-none');">
-                        <div th:classappend="${heroWine.imageUrl != null and !#strings.isEmpty(heroWine.imageUrl)} ? ' d-none' : ''">
+                        <div th:classappend="${heroWine.imageUrl != null and !#strings.isEmpty(#strings.trim(heroWine.imageUrl))} ? ' d-none' : ''">
                             <div th:replace="~{fragments/store-shell :: bottleSvg('bottle-svg')}"></div>
                         </div>
                         <a class="hero-bottle-card" th:href="@{/wines/{id}(id=${heroWine.id})}">
@@ -177,12 +177,11 @@
                             <th:block th:replace="~{fragments/icons :: icon('heart')}"/>
                         </button>
                         <a th:href="@{/wines/{id}(id=${wine.id})}" th:aria-label="'Xem chi tiết ' + ${wine.name}">
-                            <img th:if="${wine.imageUrl != null and !#strings.isEmpty(wine.imageUrl)}"
+                            <img th:if="${wine.imageUrl != null and !#strings.isEmpty(#strings.trim(wine.imageUrl))}"
                                  th:src="${wine.imageUrl}"
                                  th:alt="${wine.name}"
-                                 loading="lazy"
                                  onerror="this.classList.add('d-none');this.nextElementSibling.classList.remove('d-none');">
-                            <div th:classappend="${wine.imageUrl != null and !#strings.isEmpty(wine.imageUrl)} ? ' d-none' : ''">
+                            <div th:classappend="${wine.imageUrl != null and !#strings.isEmpty(#strings.trim(wine.imageUrl))} ? ' d-none' : ''">
                                 <div th:replace="~{fragments/store-shell :: bottleSvg('wine-svg')}"></div>
                             </div>
                         </a>
@@ -247,12 +246,11 @@
                             <th:block th:replace="~{fragments/icons :: icon('heart')}"/>
                         </button>
                         <a th:href="@{/wines/{id}(id=${wine.id})}" th:aria-label="'Xem chi tiết ' + ${wine.name}">
-                            <img th:if="${wine.imageUrl != null and !#strings.isEmpty(wine.imageUrl)}"
+                            <img th:if="${wine.imageUrl != null and !#strings.isEmpty(#strings.trim(wine.imageUrl))}"
                                  th:src="${wine.imageUrl}"
                                  th:alt="${wine.name}"
-                                 loading="lazy"
                                  onerror="this.classList.add('d-none');this.nextElementSibling.classList.remove('d-none');">
-                            <div th:classappend="${wine.imageUrl != null and !#strings.isEmpty(wine.imageUrl)} ? ' d-none' : ''">
+                            <div th:classappend="${wine.imageUrl != null and !#strings.isEmpty(#strings.trim(wine.imageUrl))} ? ' d-none' : ''">
                                 <div th:replace="~{fragments/store-shell :: bottleSvg('wine-svg')}"></div>
                             </div>
                         </a>

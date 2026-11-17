@@ -6,6 +6,7 @@
     var reconnectTimer = null;
     var reconnectAttempt = 0;
     var seenEventIds = Object.create(null);
+    var recentEventSlots = Object.create(null);
     var lastEventId = "";
 
     try {
@@ -132,7 +133,7 @@
 
         var link = document.createElement("a");
         link.className = "notif-link";
-        link.href = sanitizeInternalLink(item.link || item.targetUrl || "/admin/orders");
+        link.href = sanitizeInternalLink(item.linkUrl || item.link || item.targetUrl || "/admin/orders");
 
         var title = document.createElement("strong");
         title.className = "notif-title";
@@ -267,6 +268,20 @@
         }
     }
 
+    function resolveDedupKey(eventName, payload, title, message, linkUrl) {
+        if (eventName === "low_stock_alert" || (eventName === "notification_created" && linkUrl === "/admin/inventory")) {
+            return "low_stock:" + String(payload.wineName || title || "").toLowerCase().replace(/^low stock alert:\s*/i, "");
+        }
+        var orderMatch = String(payload.orderId || "") || (String(linkUrl || "").match(/\/admin\/orders\/(\d+)/) || [])[1] || "";
+        if (eventName === "admin_order_paid" || (eventName === "notification_created" && orderMatch && /paid|thanh toán/i.test(String(title) + " " + String(message)))) {
+            return "order_paid:" + orderMatch;
+        }
+        if (eventName === "admin_alert" || eventName === "notification_created") {
+            return "alert:" + String(title || "").trim() + "|" + String(message || "").trim();
+        }
+        return eventName + ":" + String(orderMatch || payload.shipmentId || title || "") + "|" + String(message || "");
+    }
+
     function handleBusinessEvent(eventName, event) {
         if (event.lastEventId) {
             if (seenEventIds[event.lastEventId]) {
@@ -293,20 +308,39 @@
         };
 
         var tone = "info";
-        if (eventName === "low_stock_alert" || eventName === "admin_alert") {
+        if (eventName === "low_stock_alert" || eventName === "admin_alert" || String(payload.severity || "").toUpperCase() === "WARNING") {
             tone = "warn";
         } else if (eventName === "admin_order_paid") {
             tone = "good";
         }
 
         var title = payload.title || defaultTitles[eventName] || "Thông báo vận hành";
-        var message = payload.message || payload.content || payload.body || "Có sự kiện mới trong hệ thống.";
+        var fallbackMsg = "Có sự kiện mới trong hệ thống.";
+        if (eventName === "admin_order_paid" && payload.orderId != null) {
+            fallbackMsg = "Đơn hàng #" + payload.orderId + " đã hoàn tất thanh toán.";
+        } else if (eventName === "low_stock_alert" && payload.wineName) {
+            fallbackMsg = payload.wineName + " còn " + (payload.availableQuantity != null ? payload.availableQuantity : 0) + " chai khả dụng.";
+        } else if (eventName === "admin_shipment_notification" && payload.orderId != null) {
+            fallbackMsg = "Đơn #" + payload.orderId + " chuyển trạng thái vận đơn: " + (payload.status || "");
+        } else if (eventName === "admin_order_notification" && payload.orderId != null) {
+            fallbackMsg = "Đơn #" + payload.orderId + ": " + (payload.status || "");
+        }
+        var message = payload.message || payload.content || payload.body || fallbackMsg;
+        var resolvedLink = payload.linkUrl || payload.link || payload.targetUrl || (eventName === "low_stock_alert" ? "/admin/inventory" : (payload.orderId != null ? ("/admin/orders") : "/admin/orders"));
+
+        var now = Date.now();
+        var dedupKey = resolveDedupKey(eventName, payload, title, message, resolvedLink);
+        var prevTimestamp = recentEventSlots[dedupKey] || 0;
+        recentEventSlots[dedupKey] = now;
+        if (now - prevTimestamp < 2500) {
+            return;
+        }
 
         prependLiveNotification({
             id: payload.id || null,
             title: title,
             message: message,
-            link: payload.link || payload.targetUrl || (eventName === "low_stock_alert" ? "/admin/inventory" : "/admin/orders"),
+            linkUrl: resolvedLink,
             createdAt: payload.createdAt || null,
             read: false
         });

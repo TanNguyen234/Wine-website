@@ -10,7 +10,8 @@
                 <span class="logo-txt">StrongWine</span>
             </a>
             <button type="button" class="icon-btn" data-theme-toggle aria-label="Chuyển chế độ giao diện" style="border-color:rgba(244,243,239,0.22);color:#f4f3ef;background:rgba(255,255,255,0.06);">
-                <th:block th:replace="~{fragments/icons :: icon('sun')}"/>
+                <span data-theme-icon="sun"><th:block th:replace="~{fragments/icons :: icon('sun')}"/></span>
+                <span data-theme-icon="moon" hidden><th:block th:replace="~{fragments/icons :: icon('moon')}"/></span>
             </button>
         </div>
         <div>
@@ -19,7 +20,7 @@
             <p style="color:#b7b9c0;max-width:46ch;line-height:1.65;">Đăng nhập để quản lý bộ sưu tập rượu vang yêu thích, sử dụng sổ địa chỉ giao nhanh và theo dõi vận đơn thời gian thực.</p>
         </div>
         <div class="display-flex gap8" style="color:#8b8e96;font-size:13px;">
-            <th:block th:replace="~{fragments/icons :: icon('wax-seal')}"/>
+            <th:block th:replace="~{fragments/icons :: icon('shield')}"/>
             <span>&copy; 2026 StrongWine · Thưởng thức có trách nhiệm (18+)</span>
         </div>
     </aside>

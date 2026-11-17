@@ -103,11 +103,13 @@
                                    placeholder="khachhang@example.com"
                                    th:value="${checkoutForm != null ? checkoutForm.email : ''}">
                         </div>
-                        <div class="mt12">
+                        <div class="mt12"
+                             th:with="defaultFullAddress=${defaultAddress != null ? ((defaultAddress.addressLine ?: '') + (defaultAddress.ward != null and !#strings.isEmpty(defaultAddress.ward) ? ', ' + defaultAddress.ward : '') + (defaultAddress.district != null and !#strings.isEmpty(defaultAddress.district) ? ', ' + defaultAddress.district : '') + (defaultAddress.province != null and !#strings.isEmpty(defaultAddress.province) ? ', ' + defaultAddress.province : '')) : (latestAddress ?: '')}">
                             <label class="label" for="address">Địa chỉ giao hàng chi tiết (Đất liền Việt Nam) *</label>
-                            <input type="text" id="address" name="address" class="field" required autocomplete="street-address"
-                                   placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành phố"
-                                   th:value="${checkoutForm != null and checkoutForm.address != null and !#strings.isEmpty(checkoutForm.address) ? checkoutForm.address : ''}">
+                            <input type="text" id="address" name="address" class="field"
+                                   th:value="${checkoutForm != null and !#strings.isEmpty(checkoutForm.address) ? checkoutForm.address : (defaultAddress != null ? defaultFullAddress : (latestAddress ?: ''))}"
+                                   required autocomplete="street-address"
+                                   placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành phố">
                         </div>
                         <div class="mt12">
                             <label class="label" for="note">Ghi chú cho tài xế bảo ôn</label>
@@ -152,7 +154,9 @@
                         <h2 class="serif sw-section-heading mt8 mb16">Chọn hình thức thanh toán</h2>
                         <div class="stack">
                             <label class="panel-soft p12" style="cursor:pointer;display:flex;align-items:center;gap:12px;">
-                                <input type="radio" name="paymentMethod" value="STRIPE" checked style="accent-color:var(--accent-gold);">
+                                <input type="radio" name="paymentMethod" value="STRIPE"
+                                       th:checked="${checkoutForm != null and checkoutForm.paymentMethod == 'STRIPE'}"
+                                       style="accent-color:var(--accent-gold);">
                                 <th:block th:replace="~{fragments/icons :: icon('shield')}"/>
                                 <span>
                                     <strong style="display:block;">Thẻ quốc tế (Stripe Checkout)</strong>
@@ -160,7 +164,9 @@
                                 </span>
                             </label>
                             <label class="panel-soft p12" style="cursor:pointer;display:flex;align-items:center;gap:12px;">
-                                <input type="radio" name="paymentMethod" value="VNPAY" style="accent-color:var(--accent-gold);">
+                                <input type="radio" name="paymentMethod" value="VNPAY"
+                                       th:checked="${checkoutForm != null and checkoutForm.paymentMethod == 'VNPAY'}"
+                                       style="accent-color:var(--accent-gold);">
                                 <th:block th:replace="~{fragments/icons :: icon('check')}"/>
                                 <span>
                                     <strong style="display:block;">Cổng thanh toán VNPay / QR Ngân hàng</strong>
@@ -168,7 +174,9 @@
                                 </span>
                             </label>
                             <label class="panel-soft p12" style="cursor:pointer;display:flex;align-items:center;gap:12px;">
-                                <input type="radio" name="paymentMethod" value="COD" style="accent-color:var(--accent-gold);">
+                                <input type="radio" name="paymentMethod" value="COD"
+                                       th:checked="${checkoutForm == null or checkoutForm.paymentMethod == null or #strings.isEmpty(checkoutForm.paymentMethod) or checkoutForm.paymentMethod == 'COD'}"
+                                       style="accent-color:var(--accent-gold);">
                                 <th:block th:replace="~{fragments/icons :: icon('cod-wallet')}"/>
                                 <span>
                                     <strong style="display:block;">Thanh toán khi nhận hàng (COD)</strong>

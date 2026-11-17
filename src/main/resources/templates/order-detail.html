@@ -235,7 +235,7 @@
                 </div>
 
                 <div class="panel"
-                     th:if="${order.status != null and (order.status.name() == 'RETURN_REQUESTED' or order.status.name() == 'RETURN_APPROVED' or order.status.name() == 'REFUNDED')}">
+                     th:if="${order.status != null and (order.status.name() == 'RETURN_REQUESTED' or order.status.name() == 'RETURNED' or order.status.name() == 'RETURN_APPROVED' or order.status.name() == 'REFUNDED')}">
                     <span class="badge badge-warn mb8" th:text="${@enumDisplayService.orderStatus(order.status)}">Yêu cầu trả hàng</span>
                     <p class="small muted mb0">Yêu cầu đổi trả / hoàn tiền cho đơn hàng này đã được ghi nhận trên hệ thống StrongWine.</p>
                 </div>

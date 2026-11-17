@@ -451,7 +451,15 @@
     }
 
     function syncTabFromHash() {
-        var hash = (window.location.hash || "").replace("#", "").trim().toLowerCase();
+        var rawHash = window.location.hash || "";
+        if (rawHash === "#wishlist") {
+            activateTab("wishlist", false);
+            if (window.StrongWineWishlist && typeof window.StrongWineWishlist.refresh === "function") {
+                window.StrongWineWishlist.refresh();
+            }
+            return;
+        }
+        var hash = rawHash.replace(/^#+/, "").split("?")[0].trim().toLowerCase();
         if (validTabs.indexOf(hash) !== -1) {
             activateTab(hash, false);
         }
@@ -726,7 +734,23 @@
                 activateTab(btn.getAttribute("data-profile-tab"), true);
             });
         });
+        document.addEventListener("click", function (event) {
+            var link = event.target.closest('a[href*="#"]');
+            if (!link) {
+                return;
+            }
+            try {
+                var parsed = new URL(link.href, window.location.origin);
+                if (parsed.pathname === window.location.pathname && parsed.hash) {
+                    var tabCandidate = parsed.hash.replace(/^#+/, "").trim().toLowerCase();
+                    if (validTabs.indexOf(tabCandidate) !== -1) {
+                        activateTab(tabCandidate, true);
+                    }
+                }
+            } catch (_e) {}
+        });
         window.addEventListener("hashchange", syncTabFromHash);
+        window.addEventListener("load", syncTabFromHash);
         syncTabFromHash();
         wireAddressBook();
         loadAddresses();

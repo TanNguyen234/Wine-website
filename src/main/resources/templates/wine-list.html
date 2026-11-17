@@ -83,7 +83,7 @@
                             <div class="filter-group">
                                 <label class="label" for="filterYear">Niên vụ (Năm)</label>
                                 <input type="number" id="filterYear" name="year" class="field tabular-nums"
-                                       min="1900" max="2099" placeholder="Ví dụ: 2019"
+                                       min="1900" max="2027" placeholder="Ví dụ: 2019"
                                        th:value="${year}">
                             </div>
 
@@ -144,7 +144,7 @@
                         Hiển thị <strong class="tabular-nums" style="color:var(--text-primary);"
                                          th:text="${totalEntries != null ? totalEntries : (wines != null ? #lists.size(wines) : 0)}">0</strong> chai rượu phù hợp
                     </div>
-                    <a th:href="@{/wines}" class="btn btn-outline btn-sm" th:if="${(name != null and !#strings.isEmpty(name)) or (type != null and !#strings.isEmpty(type)) or (country != null and !#strings.isEmpty(country)) or year != null or (inStock != null and inStock)}">
+                    <a th:href="@{/wines}" class="btn btn-outline btn-sm" th:if="${(name != null and !#strings.isEmpty(name)) or (type != null and !#strings.isEmpty(type)) or (country != null and !#strings.isEmpty(country)) or year != null or minPrice != null or maxPrice != null or (inStock != null and inStock)}">
                         Xóa bộ lọc
                     </a>
                 </div>
@@ -173,12 +173,12 @@
                                 <th:block th:replace="~{fragments/icons :: icon('heart')}"/>
                             </button>
                             <a th:href="@{/wines/{id}(id=${wine.id})}" th:aria-label="'Xem chi tiết ' + ${wine.name}">
-                                <img th:if="${wine.imageUrl != null and !#strings.isEmpty(wine.imageUrl)}"
+                                <img th:if="${wine.imageUrl != null and !#strings.isEmpty(#strings.trim(wine.imageUrl))}"
                                      th:src="${wine.imageUrl}"
                                      th:alt="${wine.name}"
                                      loading="lazy"
                                      onerror="this.classList.add('d-none');this.nextElementSibling.classList.remove('d-none');">
-                                <div th:classappend="${wine.imageUrl != null and !#strings.isEmpty(wine.imageUrl)} ? ' d-none' : ''">
+                                <div th:classappend="${wine.imageUrl != null and !#strings.isEmpty(#strings.trim(wine.imageUrl))} ? ' d-none' : ''">
                                     <div th:replace="~{fragments/store-shell :: bottleSvg('wine-svg')}"></div>
                                 </div>
                             </a>

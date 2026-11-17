@@ -786,8 +786,8 @@
                     if (fullNameInput && recName) fullNameInput.value = recName;
                     if (phoneInput && recPhone) phoneInput.value = recPhone;
                     if (addressInput && fullAddr) addressInput.value = fullAddr;
-                    if (latInput && lat) latInput.value = lat;
-                    if (lngInput && lng) lngInput.value = lng;
+                    if (latInput) latInput.value = lat || "";
+                    if (lngInput) lngInput.value = lng || "";
 
                     if (lat && lng) {
                         document.dispatchEvent(new CustomEvent("strongwine:set-map-pin", {
@@ -850,7 +850,7 @@
                 email: form.querySelector("#email") ? form.querySelector("#email").value : "",
                 address: form.querySelector("#address") ? form.querySelector("#address").value : "",
                 note: form.querySelector("#note") ? form.querySelector("#note").value : "",
-                paymentMethod: paymentMethodEl ? paymentMethodEl.value : "STRIPE",
+                paymentMethod: paymentMethodEl ? paymentMethodEl.value : "COD",
                 checkoutToken: checkoutTokenInput ? checkoutTokenInput.value : "",
                 savedAddressId: Number.isFinite(savedIdVal) ? savedIdVal : null,
                 voucherCode: voucherInput && voucherInput.value ? voucherInput.value.trim() : "",
@@ -859,18 +859,20 @@
                 items: toCheckoutPayload()
             };
 
-            var latRaw = form.querySelector("#deliveryLat") ? form.querySelector("#deliveryLat").value : "";
-            var lngRaw = form.querySelector("#deliveryLng") ? form.querySelector("#deliveryLng").value : "";
-            if (!latRaw || !lngRaw) {
-                setCheckoutError("Vui lòng chọn vị trí giao hàng trên bản đồ hoặc chọn địa chỉ đã lưu có tọa độ.");
+            var latRaw = form.querySelector("#deliveryLat") ? form.querySelector("#deliveryLat").value.trim() : "";
+            var lngRaw = form.querySelector("#deliveryLng") ? form.querySelector("#deliveryLng").value.trim() : "";
+            var hasAddressOrSaved = Boolean(requestBody.address && requestBody.address.trim()) || requestBody.savedAddressId != null;
+            if (latRaw && lngRaw) {
+                requestBody.deliveryLat = Number(latRaw);
+                requestBody.deliveryLng = Number(lngRaw);
+                if (!Number.isFinite(requestBody.deliveryLat) || !Number.isFinite(requestBody.deliveryLng)) {
+                    setCheckoutError("Tọa độ giao hàng không hợp lệ. Vui lòng chọn lại trên bản đồ.");
+                    return;
+                }
+            } else if (!hasAddressOrSaved) {
+                setCheckoutError("Vui lòng nhập địa chỉ giao hàng hoặc chọn vị trí trên bản đồ.");
                 var mapSearch = document.getElementById("mapSearchInput");
                 if (mapSearch) mapSearch.focus();
-                return;
-            }
-            requestBody.deliveryLat = Number(latRaw);
-            requestBody.deliveryLng = Number(lngRaw);
-            if (!Number.isFinite(requestBody.deliveryLat) || !Number.isFinite(requestBody.deliveryLng)) {
-                setCheckoutError("Tọa độ giao hàng không hợp lệ. Vui lòng chọn lại trên bản đồ.");
                 return;
             }
 

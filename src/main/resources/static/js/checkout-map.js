@@ -377,17 +377,23 @@
             map.invalidateSize();
             var initLat = parseFloat(latInput.value);
             var initLng = parseFloat(lngInput.value);
+            var initialAddressText = addressInput ? addressInput.value.trim() : "";
+            var hasInitialAddress = Boolean(initialAddressText && initialAddressText !== "Vị trí được chọn trên bản đồ");
             if (!Number.isNaN(initLat) && !Number.isNaN(initLng) && Math.abs(initLat) > 0.001 && Math.abs(initLng) > 0.001) {
-                if (setMarkerAt(initLat, initLng)) {
+                if (setMarkerAt(initLat, initLng, hasInitialAddress)) {
                     map.setView([initLat, initLng], 15);
+                    if (hasInitialAddress) {
+                        setLocationLabel(buildDisplayLabel(initialAddressText, initLat, initLng));
+                    }
                 }
-            } else if (addressInput && addressInput.value.trim() && addressInput.value.trim() !== "Vị trí được chọn trên bản đồ") {
-                searchLocationByName(addressInput.value.trim()).then(function (items) {
+            } else if (hasInitialAddress) {
+                searchLocationByName(initialAddressText).then(function (items) {
                     if (items && items.length > 0) {
                         var lat = Number(items[0].lat);
                         var lng = Number(items[0].lon);
-                        if (!Number.isNaN(lat) && !Number.isNaN(lng) && setMarkerAt(lat, lng)) {
+                        if (!Number.isNaN(lat) && !Number.isNaN(lng) && setMarkerAt(lat, lng, true)) {
                             map.setView([lat, lng], 15);
+                            setLocationLabel(buildDisplayLabel(initialAddressText, lat, lng));
                         }
                     }
                 }).catch(function () {});

@@ -12,6 +12,9 @@
                     if (["page", "size", "sortBy", "sortDir"].indexOf(field.name) !== -1) {
                         return false;
                     }
+                    if (field.type === "range" && field.value === field.max) {
+                        return false;
+                    }
                     return field.type === "checkbox" ? field.checked : field.value.trim() !== "";
                 });
             };
@@ -26,13 +29,43 @@
             }
         }
 
+        var filterForm = document.getElementById("filterForm");
         var priceSlider = document.getElementById("priceRangeSlider");
         var priceOutput = document.getElementById("priceRangeOutput");
+        var priceSliderAdjusted = false;
+        var initialUrlHasMaxPrice = false;
+        try {
+            var searchParams = new window.URLSearchParams(window.location.search || "");
+            initialUrlHasMaxPrice = Boolean(searchParams.get("maxPrice") && searchParams.get("maxPrice").trim());
+        } catch (_e) {
+            initialUrlHasMaxPrice = false;
+        }
+
         if (priceSlider && priceOutput) {
             priceSlider.addEventListener("input", function (event) {
                 var val = parseInt(event.target.value, 10);
+                var maxVal = parseInt(priceSlider.max, 10);
+                if (Number.isFinite(val) && Number.isFinite(maxVal) && val < maxVal) {
+                    priceSliderAdjusted = true;
+                }
                 priceOutput.textContent = new Intl.NumberFormat("vi-VN").format(Number.isFinite(val) ? val : 0) + " ₫";
             });
+        }
+
+        if (filterForm && priceSlider) {
+            var disableDefaultMaxPriceIfUnchanged = function () {
+                if (!initialUrlHasMaxPrice && !priceSliderAdjusted && priceSlider.value === priceSlider.max) {
+                    priceSlider.disabled = true;
+                }
+            };
+            filterForm.addEventListener("submit", disableDefaultMaxPriceIfUnchanged);
+            if (typeof filterForm.submit === "function") {
+                var nativeFormSubmit = filterForm.submit.bind(filterForm);
+                filterForm.submit = function () {
+                    disableDefaultMaxPriceIfUnchanged();
+                    nativeFormSubmit();
+                };
+            }
         }
 
         document.querySelectorAll(".btn-quick-view").forEach(function (btn) {

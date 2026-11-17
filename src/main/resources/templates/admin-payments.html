@@ -30,6 +30,22 @@
                 <span class="ms-2" th:text="${error}">Không thể cập nhật thanh toán.</span>
             </div>
 
+            <nav class="admin-quick-tabs mb-4" aria-label="Lọc theo trạng thái thanh toán"
+                 th:with="activePayStatus=${currentStatus != null ? currentStatus.toString() : (selectedStatus != null ? selectedStatus.toString() : (status != null ? status.toString() : null))}">
+                <a th:href="@{/admin/payments}"
+                   class="admin-quick-tab"
+                   th:classappend="${activePayStatus == null or #strings.isEmpty(activePayStatus) ? ' is-active' : ''}">Tất cả</a>
+                <a th:href="@{/admin/payments(status='SUCCESS')}"
+                   class="admin-quick-tab"
+                   th:classappend="${activePayStatus == 'SUCCESS' ? ' is-active' : ''}">Thành công</a>
+                <a th:href="@{/admin/payments(status='PENDING')}"
+                   class="admin-quick-tab"
+                   th:classappend="${activePayStatus == 'PENDING' ? ' is-active' : ''}">Chờ thanh toán</a>
+                <a th:href="@{/admin/payments(status='REFUND_REQUIRED')}"
+                   class="admin-quick-tab"
+                   th:classappend="${activePayStatus == 'REFUND_REQUIRED' ? ' is-active' : ''}">Cần hoàn tiền</a>
+            </nav>
+
             <!-- Priority REFUND_REQUIRED Queue -->
             <section class="admin-card mb-4"
                      th:if="${refundRequiredPayments != null and !#lists.isEmpty(refundRequiredPayments)}"

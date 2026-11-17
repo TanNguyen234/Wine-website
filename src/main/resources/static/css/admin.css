@@ -44,7 +44,7 @@
   .admin-topbar {
     position: sticky;
     top: 0;
-    z-index: calc(var(--z-sticky) - 2);
+    z-index: var(--z-sticky);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -401,7 +401,8 @@
   }
 
   .admin-quick-tab:hover,
-  .admin-quick-tab.active {
+  .admin-quick-tab.active,
+  .admin-quick-tab.is-active {
     background: color-mix(in srgb, var(--accent-gold) 14%, transparent);
     border-color: var(--accent-gold);
     color: var(--accent-gold-ink);
@@ -447,10 +448,11 @@
   .kpi-value {
     font-family: var(--font-mono);
     font-variant-numeric: tabular-nums;
-    font-size: clamp(1.35rem, 1.1rem + 1vw, 1.9rem);
+    font-size: clamp(1rem, 0.85rem + 0.65vw, 1.38rem);
     font-weight: 700;
     color: var(--text-primary);
     line-height: 1.15;
+    white-space: nowrap;
   }
 
   .kpi-meta {
@@ -460,7 +462,8 @@
 
   /* Status badges (reused cleanly across W3-A + existing templates) */
   .status,
-  .sw-badge {
+  .sw-badge,
+  .badge {
     display: inline-flex;
     align-items: center;
     gap: 0.4rem;
@@ -477,14 +480,16 @@
 
   .status.good,
   .status.ok,
-  .sw-badge--ok {
+  .sw-badge--ok,
+  .badge.badge-ok {
     background: var(--status-ok-bg);
     color: var(--status-ok-text);
     border-color: var(--status-ok-border);
   }
 
   .status.warn,
-  .sw-badge--warn {
+  .sw-badge--warn,
+  .badge.badge-warn {
     background: var(--status-warn-bg);
     color: var(--status-warn-text);
     border-color: var(--status-warn-border);
@@ -492,24 +497,34 @@
 
   .status.bad,
   .status.danger,
-  .sw-badge--bad {
+  .sw-badge--bad,
+  .badge.badge-bad {
     background: var(--status-danger-bg);
     color: var(--status-danger-text);
     border-color: var(--status-danger-border);
   }
 
   .status.info,
-  .sw-badge--info {
+  .sw-badge--info,
+  .badge.badge-info {
     background: var(--status-info-bg);
     color: var(--status-info-text);
     border-color: var(--status-info-border);
   }
 
   .status.wine,
-  .sw-badge--wine {
+  .sw-badge--wine,
+  .badge.badge-wine {
     background: var(--status-wine-bg);
     color: var(--status-wine-text);
     border-color: var(--status-wine-border);
+  }
+
+  .status.gold,
+  .badge.badge-gold {
+    background: color-mix(in srgb, var(--accent-gold) 14%, transparent);
+    color: var(--accent-gold-ink);
+    border-color: color-mix(in srgb, var(--accent-gold) 38%, transparent);
   }
 
   .status.neutral,
@@ -860,16 +875,19 @@
   }
 
   dialog.sw-dialog[open] {
+    position: fixed;
+    inset: 0;
+    margin: auto;
     opacity: 1;
     transform: translateY(0) scale(1);
-    transition: opacity var(--dur-mid) var(--ease-out),
-      transform var(--dur-mid) var(--ease-out);
+    transition: opacity 0.12s var(--ease-out),
+      transform 0.12s var(--ease-out);
   }
 
   @starting-style {
     dialog.sw-dialog[open] {
-      opacity: 0;
-      transform: translateY(10px) scale(0.98);
+      opacity: 1;
+      transform: translateY(4px) scale(0.99);
     }
   }
 
@@ -914,6 +932,62 @@
     background: var(--surface-modal);
     color: var(--text-primary);
     box-shadow: var(--shadow-lg);
+  }
+
+  #adminNotifList,
+  #dashboardLiveActivityList {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .notif-item {
+    list-style: none;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-hairline);
+    background: var(--surface-card);
+    transition: border-color var(--dur-fast) var(--ease-out),
+      background-color var(--dur-fast) var(--ease-out);
+  }
+
+  .notif-item.is-unread {
+    border-left: 3px solid var(--accent-gold);
+    background: color-mix(in srgb, var(--accent-gold) 8%, var(--surface-card));
+  }
+
+  .notif-item:hover {
+    border-color: var(--accent-gold);
+    background: var(--surface-subtle);
+  }
+
+  .notif-link {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    padding: var(--space-3);
+    color: var(--text-primary);
+    text-decoration: none;
+  }
+
+  .notif-title {
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .notif-body {
+    font-size: var(--text-xs);
+    color: var(--text-secondary);
+    line-height: 1.45;
+  }
+
+  .notif-time {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--text-muted);
   }
 
   /* Live SSE Admin Toast + Global SwToast Popover Stack */
@@ -1139,7 +1213,9 @@
    Unlayered on purpose: .status/.sw-badge are declared in @layer components, which outranks @layer layout for
    normal declarations, so these overrides sit outside the layers instead of relying on importance flags. */
 @media (min-width: 900px) {
-  .admin-main .admin-table--compact {
+  .admin-main .admin-table--compact,
+  .table-container > table.admin-table,
+  .admin-table-wrap > table.admin-table {
     display: table;
     width: 100%;
   }

@@ -69,6 +69,9 @@
   function applyTheme(theme, persist) {
     var resolved = normalizeTheme(theme);
     document.documentElement.setAttribute("data-theme", resolved);
+    if (document.body) {
+      document.body.setAttribute("data-theme", resolved);
+    }
     if (persist) {
       try {
         window.localStorage.setItem(STORAGE_KEY, resolved);
@@ -94,7 +97,11 @@
   }
 
   function bindControls() {
-    syncButtons(getTheme());
+    var activeTheme = getTheme();
+    if (document.body) {
+      document.body.setAttribute("data-theme", activeTheme);
+    }
+    syncButtons(activeTheme);
     document.addEventListener("click", function (event) {
       var trigger = event.target.closest("[data-theme-toggle]");
       if (!trigger) {

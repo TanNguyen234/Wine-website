@@ -4,8 +4,9 @@
     var orderStatuses = {
         PENDING: "Chờ xử lý",
         PAID: "Đã thanh toán",
-        RETURN_REQUESTED: "Yêu cầu trả hàng",
+        RETURN_REQUESTED: "Yêu cầu hoàn trả",
         RETURN_APPROVED: "Đã duyệt trả hàng",
+        RETURNED: "Đã hoàn trả",
         REFUNDED: "Đã hoàn tiền",
         CANCELLED: "Đã hủy"
     };

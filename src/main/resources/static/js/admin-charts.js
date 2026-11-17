@@ -5,7 +5,8 @@
 
     function readCssToken(name, fallback) {
         try {
-            var val = window.getComputedStyle(document.documentElement).getPropertyValue(name);
+            var rootEl = document.body || document.documentElement;
+            var val = window.getComputedStyle(rootEl).getPropertyValue(name);
             return val && val.trim() ? val.trim() : fallback;
         } catch (_e) {
             return fallback;
@@ -64,7 +65,7 @@
 
     function formatCurrencyVnd(value) {
         var num = Number(value) || 0;
-        return new Intl.NumberFormat("vi-VN").format(num) + " d";
+        return new Intl.NumberFormat("vi-VN").format(num) + " ₫";
     }
 
     function drawCanvasFallbackRevenue(canvas, labels, values, palette) {

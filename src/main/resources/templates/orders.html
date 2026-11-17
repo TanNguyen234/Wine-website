@@ -74,9 +74,10 @@
                 <div class="between mt16 pt12" style="border-top:1px dashed var(--border-hairline);flex-wrap:wrap;gap:12px">
                     <div class="display-flex gap8 small muted">
                         <th:block th:replace="~{fragments/icons :: icon('truck')}"></th:block>
-                        <span th:if="${shipment != null and shipment.shipper != null}"
+                        <span th:if="${order.status != null and order.status.name() == 'CANCELLED'}">Đơn hàng đã hủy — tồn kho đã hoàn trả về hầm rượu</span>
+                        <span th:if="${(order.status == null or order.status.name() != 'CANCELLED') and shipment != null and shipment.shipper != null}"
                               th:text="'Tài xế phụ trách: ' + ${shipment.shipper.name} + ' (' + ${shipment.shipper.phone} + ')'">Tài xế</span>
-                        <span th:if="${shipment == null or shipment.shipper == null}">Hầm rượu đang chuẩn bị và điều phối tài xế bảo ôn</span>
+                        <span th:if="${(order.status == null or order.status.name() != 'CANCELLED') and (shipment == null or shipment.shipper == null)}">Hầm rượu đang chuẩn bị và điều phối tài xế bảo ôn</span>
                     </div>
 
                     <div class="display-flex gap8" style="flex-wrap:wrap">
