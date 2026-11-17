@@ -152,15 +152,15 @@
                             <td data-label="Giá trị" class="admin-num">
                                 <div th:text="${v.type != null and v.type.name() == 'PERCENT' ? (v.value + '%') : ((v.value != null ? #numbers.formatDecimal(v.value, 0, 'COMMA', 0, 'POINT') : 0) + ' ₫')}">10%</div>
                                 <div class="small text-secondary" th:if="${v.maxDiscount != null}"
-                                     th:text="'Tối đa: ' + #numbers.formatDecimal(v.maxDiscount, 0, 'COMMA', 0, 'POINT') + ' ₫'">Tối đa</div>
+                                     th:text="${'Tối đa: ' + #numbers.formatDecimal(v.maxDiscount, 0, 'COMMA', 0, 'POINT') + ' ₫'}">Tối đa</div>
                             </td>
                             <td data-label="Đơn tối thiểu" class="admin-num"
                                 th:text="${v.minOrderValue != null ? (#numbers.formatDecimal(v.minOrderValue, 0, 'COMMA', 0, 'POINT') + ' ₫') : '0 ₫'}">0 ₫</td>
                             <td data-label="Lượt dùng" class="admin-num"
                                 th:text="${(v.usedCount ?: 0) + ' / ' + (v.usageLimit != null ? v.usageLimit : '∞')}">0 / ∞</td>
                             <td data-label="Thời hạn" class="small text-secondary">
-                                <div th:if="${v.startsAt != null}" th:text="'Từ: ' + #temporals.format(v.startsAt, 'dd/MM/yyyy HH:mm')">Từ</div>
-                                <div th:if="${v.expiresAt != null}" th:text="'Đến: ' + #temporals.format(v.expiresAt, 'dd/MM/yyyy HH:mm')">Đến</div>
+                                <div th:if="${v.startsAt != null}" th:text="${'Từ: ' + #temporals.format(v.startsAt, 'dd/MM/yyyy HH:mm')}">Từ</div>
+                                <div th:if="${v.expiresAt != null}" th:text="${'Đến: ' + #temporals.format(v.expiresAt, 'dd/MM/yyyy HH:mm')}">Đến</div>
                                 <span th:if="${v.startsAt == null and v.expiresAt == null}">Không giới hạn</span>
                             </td>
                             <td data-label="Trạng thái">

@@ -182,6 +182,10 @@ public class AdminController {
         model.addAttribute("totalUsers", totalUsers);
         model.addAttribute("totalOrders", totalOrders);
         model.addAttribute("totalRevenue", totalRevenue != null ? totalRevenue : 0.0);
+        // Names below are read by admin-dashboard.html; they were missing and the KPI cards always showed 0.
+        model.addAttribute("paidRevenue", totalRevenue != null ? totalRevenue : 0.0);
+        model.addAttribute("ordersPending", orderService.countOrdersByStatus(com.strongwine.strongwine.entity.OrderStatus.PENDING));
+        model.addAttribute("shippingActive", countActiveShipments(shipmentStats));
         model.addAttribute("lowStockCount", lowStockCount);
         model.addAttribute("lowStockItems", lowStockItems);
         model.addAttribute("recentOrders", recentOrders);
@@ -202,8 +206,19 @@ public class AdminController {
         model.addAttribute("categoryLabelsJson", "[\"Vang đỏ\",\"Vang trắng\",\"Vang hồng\",\"Vang sủi\",\"Rượu truyền thống\"]");
         model.addAttribute("categoryValuesJson", typeCounts.values().stream().map(String::valueOf).collect(Collectors.joining(",", "[", "]")));
         model.addAttribute("categoryCounts", typeCounts);
-        
+
         return "admin-dashboard";
+    }
+
+    /** Shipments still on the delivery route: assigned, picked up or out for delivery. */
+    static long countActiveShipments(Map<?, Long> shipmentStats) {
+        return shipmentStats.entrySet().stream()
+                .filter(e -> e.getKey() instanceof com.strongwine.strongwine.entity.ShipmentStatus status
+                        && (status == com.strongwine.strongwine.entity.ShipmentStatus.ASSIGNED
+                        || status == com.strongwine.strongwine.entity.ShipmentStatus.PICKED_UP
+                        || status == com.strongwine.strongwine.entity.ShipmentStatus.DELIVERING))
+                .mapToLong(e -> e.getValue() == null ? 0L : e.getValue())
+                .sum();
     }
 
     @GetMapping("/wines/import")

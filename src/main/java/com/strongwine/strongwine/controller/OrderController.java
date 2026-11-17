@@ -5,6 +5,7 @@ import com.strongwine.strongwine.entity.OrderStatus;
 import com.strongwine.strongwine.entity.PaymentMethod;
 import com.strongwine.strongwine.entity.PaymentStatus;
 import com.strongwine.strongwine.entity.Shipment;
+import com.strongwine.strongwine.entity.ShipmentStatus;
 import com.strongwine.strongwine.entity.User;
 import com.strongwine.strongwine.exception.ResourceNotFoundException;
 import com.strongwine.strongwine.repository.UserRepository;
@@ -204,7 +205,7 @@ public class OrderController {
         }
 
         Order order = orderOpt.get();
-        if (!isCancellableByCustomer(order) || resolveShipmentByOrderId(orderId).isPresent()) {
+        if (!isCustomerCancellable(order, resolveShipmentByOrderId(orderId))) {
             redirectAttributes.addFlashAttribute("error", "Đơn hàng này không thể hủy vì đã thanh toán hoặc đã được chuyển vận chuyển");
             return "redirect:/orders/" + orderId;
         }
@@ -275,7 +276,18 @@ public class OrderController {
         return Optional.empty();
     }
 
-    private boolean isCancellableByCustomer(Order order) {
+    /**
+     * Customer may cancel only an unpaid PENDING order whose shipment, if any, is still PENDING_ASSIGNMENT.
+     * Checkout creates that shipment immediately, so it must not block cancellation (regression: F-SW-04).
+     */
+    static boolean isCustomerCancellable(Order order, Optional<Shipment> shipment) {
+        boolean notHandedToShipping = shipment
+                .map(s -> s.getStatus() == ShipmentStatus.PENDING_ASSIGNMENT)
+                .orElse(true);
+        return isCancellableByCustomer(order) && notHandedToShipping;
+    }
+
+    private static boolean isCancellableByCustomer(Order order) {
         return order.getStatus() == OrderStatus.PENDING
                 && order.getPaymentStatus() != PaymentStatus.SUCCESS;
     }
