@@ -230,8 +230,8 @@
                     }
 
                     var totalRows = Number(data.totalRows) || 0;
-                    var validCount = Number(data.validCount) || 0;
-                    var errorCount = Number(data.errorCount) || 0;
+                    var validCount = Number(data.validRowsCount) || 0;
+                    var errorCount = Number(data.errorRowsCount) || 0;
                     lastPreviewValidCount = validCount;
 
                     if (previewSection) {

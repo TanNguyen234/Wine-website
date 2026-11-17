@@ -38,7 +38,7 @@
                         <img th:if="${heroWine.imageUrl != null and !#strings.isEmpty(heroWine.imageUrl)}"
                              th:src="${heroWine.imageUrl}"
                              th:alt="${heroWine.name}"
-                             style="max-height:400px;max-width:160px;aspect-ratio:150/400;width:auto;margin:0 auto;object-fit:contain;filter:drop-shadow(0 28px 34px rgba(0,0,0,.42));"
+                             style="height:400px;max-width:160px;aspect-ratio:150/400;width:auto;margin:0 auto;object-fit:contain;filter:drop-shadow(0 28px 34px rgba(0,0,0,.42));"
                              onerror="this.classList.add('d-none');this.nextElementSibling.classList.remove('d-none');">
                         <div th:classappend="${heroWine.imageUrl != null and !#strings.isEmpty(heroWine.imageUrl)} ? ' d-none' : ''">
                             <div th:replace="~{fragments/store-shell :: bottleSvg('bottle-svg')}"></div>

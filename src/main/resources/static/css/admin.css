@@ -66,6 +66,21 @@
     min-width: 0;
   }
 
+  /* 2026-11-17 layout fix: admin tables are not wrapped in .admin-table-wrap; without this, wide tables push the
+     page past the viewport and the right 10-30% is clipped. Tables scroll inside their own box instead. */
+  .admin-main > * {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .admin-main table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+  }
+
+  /* compact payment tables: rules live at the end of this file, unlayered (see below) */
+
   .admin-page-header {
     display: flex;
     flex-wrap: wrap;
@@ -1118,4 +1133,40 @@
   .p-3 { padding: var(--space-3); }
   .p-4 { padding: var(--space-4); }
   .w-100 { width: 100%; }
+}
+
+/* 2026-11-17: compact payment tables (fit 1024-1440px without horizontal page clipping).
+   Unlayered on purpose: .status/.sw-badge are declared in @layer components, which outranks @layer layout for
+   normal declarations, so these overrides sit outside the layers instead of relying on importance flags. */
+@media (min-width: 900px) {
+  .admin-main .admin-table--compact {
+    display: table;
+    width: 100%;
+  }
+}
+
+.admin-main table.admin-table--compact.admin-table th,
+.admin-main table.admin-table--compact.admin-table td {
+  padding: 10px 8px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+
+.admin-main table.admin-table--compact.admin-table td code {
+  font-size: 11px;
+}
+
+.admin-main table.admin-table--compact.admin-table td[data-label='Số tiền'] {
+  white-space: nowrap;
+  font-size: 12px;
+}
+
+.admin-main table.admin-table--compact.admin-table td .btn,
+.admin-main table.admin-table--compact.admin-table td button,
+.admin-main table.admin-table--compact.admin-table td a,
+.admin-main table.admin-table--compact.admin-table td .status,
+.admin-main table.admin-table--compact.admin-table td code {
+  white-space: normal;
+  word-break: break-word;
 }

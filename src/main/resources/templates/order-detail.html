@@ -240,7 +240,7 @@
                     <p class="small muted mb0">Yêu cầu đổi trả / hoàn tiền cho đơn hàng này đã được ghi nhận trên hệ thống StrongWine.</p>
                 </div>
 
-                <div class="panel" th:if="${!isAdmin and order.status != null and order.status.name() == 'PENDING' and order.paymentStatus != null and order.paymentStatus.name() != 'SUCCESS' and shipment == null}">
+                <div class="panel" th:if="${!isAdmin and order.status != null and order.status.name() == 'PENDING' and order.paymentStatus != null and order.paymentStatus.name() != 'SUCCESS' and (shipment == null or (shipment.status != null and shipment.status.name() == 'PENDING_ASSIGNMENT'))}">
                     <div class="eyebrow">HỦY ĐƠN</div>
                     <p class="small muted mt8 mb12">Đơn chưa thanh toán và chưa bàn giao vận chuyển có thể hủy. Số lượng rượu sẽ được hoàn lại kho.</p>
                     <button type="button" class="btn btn-danger btn-sm w100" data-dialog-open="cancelOrderModal">
@@ -282,7 +282,7 @@
 
 <!-- Native Cancel Order Dialog -->
 <dialog id="cancelOrderModal" class="sw-dialog" closedby="any" aria-labelledby="cancelOrderModalTitle"
-        th:if="${!isAdmin and order.status != null and order.status.name() == 'PENDING' and order.paymentStatus != null and order.paymentStatus.name() != 'SUCCESS' and shipment == null}">
+        th:if="${!isAdmin and order.status != null and order.status.name() == 'PENDING' and order.paymentStatus != null and order.paymentStatus.name() != 'SUCCESS' and (shipment == null or (shipment.status != null and shipment.status.name() == 'PENDING_ASSIGNMENT'))}">
     <div class="dialog-surface">
         <div class="dialog-head">
             <div>

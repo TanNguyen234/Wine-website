@@ -100,7 +100,7 @@
 
                         <button type="button"
                                 class="btn btn-danger btn-sm js-open-cancel-order"
-                                th:if="${order.status != null and order.status.name() == 'PENDING' and order.paymentStatus != null and order.paymentStatus.name() != 'SUCCESS' and shipment == null}"
+                                th:if="${order.status != null and order.status.name() == 'PENDING' and order.paymentStatus != null and order.paymentStatus.name() != 'SUCCESS' and (shipment == null or (shipment.status != null and shipment.status.name() == 'PENDING_ASSIGNMENT'))}"
                                 th:attr="data-cancel-url=@{/orders/{id}/cancel(id=${order.id})}, data-order-id=${order.id}">
                             Hủy đơn
                         </button>
